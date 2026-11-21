@@ -1662,7 +1662,7 @@ func totpRow(cx *core.Scope, m *AppModel, c *state.Cipher) core.Node {
 									if code == "" {
 										return "––– –––"
 									}
-									if c.Reprompt == 1 && !m.RevealTOTP.Get() {
+									if c.Reprompt == 1 && m.TOTPRevealedID.Get() != c.ID {
 										return strings.Repeat("•", len(code)/2) + " " + strings.Repeat("•", len(code)-len(code)/2)
 									}
 									return FormatTOTPCode(code)
@@ -1709,18 +1709,23 @@ func totpRow(cx *core.Scope, m *AppModel, c *state.Cipher) core.Node {
 				Then: func(cx *core.Scope) core.Node {
 					return ui.Button{
 						TestID:   "detail-reveal-totp",
-						Icon:     func() *core.SVG { return eyeIcon(m.RevealTOTP.Get()) },
+						Icon:     func() *core.SVG { return eyeIcon(m.TOTPRevealedID.Get() == c.ID) },
 						Label:    "Reveal verification code",
 						Variant:  ui.ButtonGhost,
 						Side:     28,
 						IconSize: 14,
 						Tint:     func() core.Color { return themeColor(cx, "gv-fg2") },
 						OnPress: func() {
-							if m.RevealTOTP.Get() {
-								m.RevealTOTP.Set(false)
+							if m.TOTPRevealedID.Get() == c.ID {
+								m.TOTPRevealedID.Set("")
 								return
 							}
-							m.GateReprompt(cx, c, "reveal verification code", func() { m.RevealTOTP.Set(true) })
+							id := c.ID
+							m.GateReprompt(cx, c, "reveal verification code", func() {
+								if cur := m.ActiveCipher.Get(); cur != nil && cur.ID == id {
+									m.TOTPRevealedID.Set(id)
+								}
+							})
 						},
 					}
 				},

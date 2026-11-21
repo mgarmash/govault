@@ -131,13 +131,22 @@ func (o *op) refreshToken(ctx context.Context) (string, error) {
 		return "", err
 	}
 
+	// Keychain writes can be slow or interactive, so they run outside s.mu.
+	// secretMu orders them with logout, which advances the session first.
+	if resp.RefreshToken != "" {
+		o.s.secretMu.Lock()
+		if !o.current() {
+			o.s.secretMu.Unlock()
+			return "", ErrLocked
+		}
+		_ = o.s.cfg.Secrets.Set(refreshTokenKeyPrefix+o.accountID, resp.RefreshToken)
+		o.s.secretMu.Unlock()
+	}
+
 	o.s.mu.Lock()
 	defer o.s.mu.Unlock()
 	if !o.currentLocked() {
 		return "", ErrLocked
-	}
-	if resp.RefreshToken != "" {
-		_ = o.s.cfg.Secrets.Set(refreshTokenKeyPrefix+o.accountID, resp.RefreshToken)
 	}
 	o.s.accessToken = resp.AccessToken
 	return resp.AccessToken, nil

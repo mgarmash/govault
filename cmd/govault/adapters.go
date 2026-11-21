@@ -57,10 +57,10 @@ func (c *ClipboardAdapter) IsConcealed() bool {
 
 func (c *ClipboardAdapter) CopySecret(secret string, clearAfter time.Duration) (bool, error) {
 	if runtime.GOOS == "darwin" {
-		_, err := c.concealed.Copy(secret, clearAfter)
-		if err == nil {
-			return true, nil
+		if _, err := c.concealed.Copy(secret, clearAfter); err != nil {
+			return false, err
 		}
+		return true, nil
 	}
 
 	c.scope.SetClipboard(secret)

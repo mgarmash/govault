@@ -2,10 +2,12 @@ package ui
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/nsgo-dev/nsgo/core"
 	"github.com/nsgo-dev/nsgo/icons/lucide"
@@ -33,10 +35,9 @@ func (m *AppModel) CanDownloadAttachments(c *state.Cipher) bool {
 }
 
 // DownloadAttachment decrypts the attachment and writes it where the user
-// chooses. The NSGo save dialog only writes what it is given and publishes
-// it as 0644, so it saves an empty placeholder and the plaintext replaces it
-// through a private 0600 temporary file. A lock or logout in the meantime
-// drops the plaintext unsaved.
+// chooses. The destination is only replaced, atomically, once the plaintext
+// sits in a private 0600 temporary file beside it and the vault is still
+// unlocked; a failed or revoked save leaves an existing file untouched.
 func (m *AppModel) DownloadAttachment(cx *core.Scope, c *state.Cipher, att state.Attachment) {
 	if !m.CanDownloadAttachments(c) || m.AttachmentBusy.Get() != "" {
 		return
@@ -61,29 +62,23 @@ func (m *AppModel) DownloadAttachment(cx *core.Scope, c *state.Cipher, att state
 				if name == "" {
 					name = att.FileName
 				}
-				cx.SaveFile(core.SaveOptions{Name: name, Data: []byte{}}, func(saved bool, path string, err error) {
-					if err != nil || !saved || path == "" || !m.StillUnlocked(gen) {
+				m.chooseSavePath(cx, name, func(path string, err error) {
+					if err != nil || path == "" || !m.StillUnlocked(gen) {
 						crypto.ZeroBytes(data)
-						if path != "" {
-							_ = os.Remove(path)
-						}
 						if err != nil {
 							m.ShowToast(ui.ToastError, "Save failed", err.Error())
 						}
 						return
 					}
 					go func() {
-						err := writePrivateFile(path, data)
-						crypto.ZeroBytes(data)
-						if err != nil {
-							_ = os.Remove(path)
-						}
+						published, err := m.savePrivateFile(gen, path, data)
 						m.Scope.Post(func() {
-							if err != nil {
+							switch {
+							case err != nil:
 								m.ShowToast(ui.ToastError, "Save failed", err.Error())
-								return
+							case published:
+								m.ShowToast(ui.ToastSuccess, "Attachment saved", filepath.Base(path))
 							}
-							m.ShowToast(ui.ToastSuccess, "Attachment saved", name)
 						})
 					}()
 				})
@@ -92,12 +87,53 @@ func (m *AppModel) DownloadAttachment(cx *core.Scope, c *state.Cipher, att state
 	})
 }
 
-// writePrivateFile atomically replaces path with data through a 0600
-// temporary file in the same directory.
-func writePrivateFile(path string, data []byte) error {
+// chooseSavePath reports a destination on the engine goroutine, or "" when
+// the user cancelled. Without a native path-only dialog it asks for a folder
+// and picks a file name there that does not exist yet.
+func (m *AppModel) chooseSavePath(cx *core.Scope, name string, done func(path string, err error)) {
+	name = filepath.Base(filepath.Clean("/" + name))
+	if name == "/" || name == "." {
+		name = "attachment"
+	}
+	if choose := m.Hooks.ChooseSavePath; choose != nil {
+		choose(name, func(path string, ok bool, err error) {
+			m.Scope.Post(func() {
+				if !ok {
+					path = ""
+				}
+				done(path, err)
+			})
+		})
+		return
+	}
+	cx.PickDirectories(core.PickDirectoriesOptions{Title: "Save Attachment", Button: "Save Here"}, func(dirs []core.Directory, err error) {
+		if err != nil || len(dirs) == 0 || dirs[0].Path == "" {
+			done("", err)
+			return
+		}
+		done(unusedPath(dirs[0].Path, name), nil)
+	})
+}
+
+func unusedPath(dir, name string) string {
+	ext := filepath.Ext(name)
+	stem := strings.TrimSuffix(name, ext)
+	path := filepath.Join(dir, name)
+	for i := 2; ; i++ {
+		if _, err := os.Lstat(path); errors.Is(err, os.ErrNotExist) {
+			return path
+		}
+		path = filepath.Join(dir, fmt.Sprintf("%s (%d)%s", stem, i, ext))
+	}
+}
+
+// savePrivateFile writes data to a 0600 temporary file beside path, syncs it,
+// and renames it over path only if gen is still current. data is zeroed.
+func (m *AppModel) savePrivateFile(gen uint64, path string, data []byte) (bool, error) {
+	defer crypto.ZeroBytes(data)
 	tmp, err := os.CreateTemp(filepath.Dir(path), "."+filepath.Base(path)+".*")
 	if err != nil {
-		return err
+		return false, err
 	}
 	name := tmp.Name()
 	err = tmp.Chmod(0o600)
@@ -110,13 +146,14 @@ func writePrivateFile(path string, data []byte) error {
 	if cerr := tmp.Close(); err == nil {
 		err = cerr
 	}
+	published := false
 	if err == nil {
-		err = os.Rename(name, path)
+		published, err = m.publishIfUnlocked(gen, func() error { return os.Rename(name, path) })
 	}
-	if err != nil {
+	if !published {
 		_ = os.Remove(name)
 	}
-	return err
+	return published, err
 }
 
 func (m *AppModel) AttachFile(cx *core.Scope, c *state.Cipher) {

@@ -26,7 +26,9 @@ func TestAttachmentsCardUploadDownloadDelete(t *testing.T) {
 	var root *core.Scope
 	app := nsgotest.Start(t, func(cx *core.Scope) core.Node {
 		root = cx
-		model = NewAppModel(cx, svc, PlatformHooks{})
+		model = NewAppModel(cx, svc, PlatformHooks{
+			ChooseSavePath: func(_ string, done func(string, bool, error)) { done(saved, true, nil) },
+		})
 		model.MainWinVisible.Set(true)
 		model.RefreshVaultData()
 		return MainWindowView(cx, model)
@@ -34,7 +36,6 @@ func TestAttachmentsCardUploadDownloadDelete(t *testing.T) {
 	app.PickFiles = func(core.FilesRequest) []core.File {
 		return []core.File{{Name: "invoice.pdf", Size: 8, Path: upload}}
 	}
-	app.SaveFile = func(core.SaveRequest) string { return saved }
 	app.OnAlert = func(core.AlertConfig) int { return 1 }
 
 	app.Post(func() { model.SelectCipher(root, "c-github") })

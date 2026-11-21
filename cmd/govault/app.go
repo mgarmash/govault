@@ -70,6 +70,9 @@ func NewDesktopShell(app *core.Scope, demoMode bool) *DesktopShell {
 		OnStatusChange: func(st state.LockStatus) {
 			if st != state.StatusUnlocked {
 				shell.sshAgent.Clear()
+				if m := shell.model; m != nil {
+					m.RevokePending()
+				}
 			}
 			app.Post(func() {
 				if shell.model == nil {
@@ -130,6 +133,7 @@ func (s *DesktopShell) platformHooks(secrets store.SecretStore) govaultui.Platfo
 		ReleaseSecureInput: ReleaseSecureInput,
 		SleepLockSupported: sleepLockSupported,
 		Favicons:           s.favicons,
+		ChooseSavePath:     chooseSavePath,
 	}
 	if s.sshAgent != nil {
 		hooks.SSHAgent = s.sshAgent

@@ -39,10 +39,11 @@ func (s *memSecrets) Delete(k string) error {
 }
 
 type fakeHardware struct {
-	items   map[string][]byte
-	addErr  error
-	copyErr error
-	prompts int
+	items     map[string][]byte
+	addErr    error
+	copyErr   error
+	deleteErr error
+	prompts   int
 }
 
 func (f *fakeHardware) Add(account string, secret []byte) error {
@@ -77,6 +78,9 @@ func (f *fakeHardware) Exists(account string) (bool, error) {
 }
 
 func (f *fakeHardware) Delete(account string) error {
+	if f.deleteErr != nil {
+		return f.deleteErr
+	}
 	if f.addErr != nil {
 		return f.addErr
 	}
@@ -151,6 +155,13 @@ func TestBiometricSecretStoreUsesHardwareKeychain(t *testing.T) {
 	if err := s.Delete("userkey:acct"); err != nil {
 		t.Fatalf("Delete of a missing item: %v", err)
 	}
+
+	hw.items["userkey:acct"] = []byte("wrapped")
+	hw.deleteErr = errInteractionNotAllowed
+	if err := s.Delete("userkey:acct"); !errors.Is(err, errInteractionNotAllowed) {
+		t.Fatalf("transient hardware delete error = %v, want it surfaced", err)
+	}
+	hw.deleteErr = nil
 
 	fallback.m["userkey:acct"] = "legacy"
 	fallback.deleteErr = errors.New("keychain locked")

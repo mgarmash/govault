@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/txchen/govault/internal/vaultcore/realtime"
 	"github.com/txchen/govault/internal/vaultcore/store"
 )
 
@@ -72,5 +73,48 @@ func TestService_StaleSyncCannotCrossSessions(t *testing.T) {
 	svc.mu.RUnlock()
 	if accountID != "acct-b" || len(svc.Search("", SearchFilter{})) == 0 {
 		t.Fatalf("state of B was overwritten: account=%q", accountID)
+	}
+}
+
+func TestService_StaleRealtimeLogoutIgnored(t *testing.T) {
+	envA := newVaultTestEnv(t)
+	envB := newVaultTestEnv(t)
+	envB.profileID = "acct-b"
+
+	fileStore := store.NewFileStore(t.TempDir())
+	secrets := newMemSecretStore()
+	svc, err := NewService(ServiceConfig{Store: fileStore, Secrets: secrets, HTTPClient: envA.server.Client()})
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx := context.Background()
+	if err := svc.Login(ctx, LoginRequest{ServerURL: envA.server.URL, Email: envA.email, MasterPassword: envA.password}); err != nil {
+		t.Fatalf("Login A: %v", err)
+	}
+	svc.mu.RLock()
+	genA := svc.sessionGen
+	svc.mu.RUnlock()
+	if err := svc.Logout(ctx, secrets); err != nil {
+		t.Fatalf("Logout A: %v", err)
+	}
+	if err := svc.Login(ctx, LoginRequest{ServerURL: envB.server.URL, Email: envB.email, MasterPassword: envB.password}); err != nil {
+		t.Fatalf("Login B: %v", err)
+	}
+
+	if err := svc.handleRealtimeEvent(ctx, genA, realtime.Event{Type: realtime.LogOut}); err != nil {
+		t.Fatalf("stale LogOut: %v", err)
+	}
+	if svc.Status() != StatusUnlocked {
+		t.Fatalf("stale LogOut of A ended session B: status=%v", svc.Status())
+	}
+	if _, err := fileStore.LoadSnapshot("acct-b"); err != nil {
+		t.Fatalf("stale LogOut deleted the snapshot of B: %v", err)
+	}
+	if _, ok, _ := secrets.Get(refreshTokenKeyPrefix + "acct-b"); !ok {
+		t.Fatal("stale LogOut deleted the refresh token of B")
+	}
+
+	if err := svc.HandleRealtimeEvent(ctx, realtime.Event{Type: realtime.LogOut}); err != nil || svc.Status() != StatusLoggedOut {
+		t.Fatalf("current LogOut = %v, status=%v", err, svc.Status())
 	}
 }

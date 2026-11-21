@@ -59,6 +59,7 @@ type Service struct {
 	sessionCtx    context.Context
 	sessionCancel context.CancelFunc
 	persistMu     sync.Mutex
+	secretMu      sync.Mutex
 }
 
 var _ VaultService = (*Service)(nil)
@@ -351,7 +352,21 @@ func (s *Service) Lock() {
 // Logout ends the session and clears memory first, so observers can revoke
 // derived secrets before the slower snapshot and keychain deletion.
 func (s *Service) Logout(ctx context.Context, secrets store.SecretStore) error {
+	return s.logout(secrets, nil)
+}
+
+// logoutIfSession logs out only while gen is still the active session, so a
+// delayed event from an earlier session cannot end a later one.
+func (s *Service) logoutIfSession(gen uint64, secrets store.SecretStore) error {
+	return s.logout(secrets, &gen)
+}
+
+func (s *Service) logout(secrets store.SecretStore, gen *uint64) error {
 	s.mu.Lock()
+	if gen != nil && (s.sessionGen != *gen || s.sessionCtx == nil) {
+		s.mu.Unlock()
+		return nil
+	}
 	s.endSessionLocked()
 	s.stopRealtimeLocked()
 	accountID := s.accountID
@@ -377,6 +392,8 @@ func (s *Service) Logout(ctx context.Context, secrets store.SecretStore) error {
 		errs = append(errs, err)
 	}
 	s.persistMu.Unlock()
+	s.secretMu.Lock()
+	defer s.secretMu.Unlock()
 	stores := []store.SecretStore{secrets}
 	if s.cfg.Secrets != nil && s.cfg.Secrets != secrets {
 		stores = append(stores, s.cfg.Secrets)
@@ -500,15 +517,31 @@ func (s *Service) StartRealtime(ctx context.Context) error {
 
 	go func() {
 		_ = rtClient.Run(o.ctx, o.accessToken, func(ev realtime.Event) {
-			_ = s.HandleRealtimeEvent(o.ctx, ev)
+			_ = s.handleRealtimeEvent(o.ctx, o.gen, ev)
 		})
 	}()
 	return nil
 }
 
+// HandleRealtimeEvent applies ev to the current session.
 func (s *Service) HandleRealtimeEvent(ctx context.Context, ev realtime.Event) error {
+	s.mu.RLock()
+	gen := s.sessionGen
+	s.mu.RUnlock()
+	return s.handleRealtimeEvent(ctx, gen, ev)
+}
+
+// handleRealtimeEvent applies ev only while gen, the session whose stream
+// delivered it, is still active.
+func (s *Service) handleRealtimeEvent(ctx context.Context, gen uint64, ev realtime.Event) error {
 	if ev.Type == realtime.LogOut {
-		return s.Logout(context.WithoutCancel(ctx), s.cfg.Secrets)
+		return s.logoutIfSession(gen, s.cfg.Secrets)
+	}
+	s.mu.RLock()
+	stale := s.sessionGen != gen
+	s.mu.RUnlock()
+	if stale {
+		return nil
 	}
 	if ev.ContextID != "" && ev.ContextID == s.cfg.DeviceID {
 		return nil

@@ -103,7 +103,7 @@ func (s *BiometricSecretStore) Set(account, value string) error {
 func (s *BiometricSecretStore) Delete(account string) error {
 	var firstErr error
 	if s.hw != nil && isBiometricKey(account) {
-		if err := s.hw.Delete(account); err != nil && !errors.Is(err, errItemNotFound) && !hardwareUnavailable(err) {
+		if err := s.hw.Delete(account); err != nil && !errors.Is(err, errItemNotFound) && !errors.Is(err, errMissingEntitlement) {
 			firstErr = err
 		}
 	}

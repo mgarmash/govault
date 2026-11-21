@@ -11,6 +11,7 @@ import (
 	"slices"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/nsgo-dev/nsgo/core"
@@ -145,6 +146,9 @@ type PlatformHooks struct {
 	// BiometricHardwareBound reports whether the biometric key of an account is
 	// in a keychain that macOS releases only after its own Touch ID check.
 	BiometricHardwareBound func(accountID string) bool
+	// ChooseSavePath asks where to save a file without creating or changing
+	// it. done may run on any goroutine.
+	ChooseSavePath func(name string, done func(path string, ok bool, err error))
 }
 
 var ErrBiometricCancelled = errors.New("biometric authentication cancelled")
@@ -376,7 +380,8 @@ type AppModel struct {
 	ActiveCipher  *core.Signal[*state.Cipher]
 	RevealPW      *core.Signal[bool]
 	RevealCard    *core.Signal[bool]
-	RevealTOTP    *core.Signal[bool]
+	// TOTPRevealedID is the item whose protected TOTP code was revealed.
+	TOTPRevealedID *core.Signal[string]
 
 	EditMode  *core.Signal[bool]
 	EditDraft *core.Signal[*EditDraft]
@@ -420,16 +425,38 @@ type AppModel struct {
 	totpCtrl  TOTPController
 	idleTimer IdleTimer
 
-	// lockGen changes on every lock and logout. Pending secret actions that
-	// started under an older generation are dropped.
-	lockGen uint64
+	// lockGen advances on every transition to locked or logged out. Pending
+	// secret actions that started under an older generation are dropped.
+	// publishMu orders that advance with publishing a saved attachment.
+	lockGen   atomic.Uint64
+	publishMu sync.Mutex
 }
 
-func (m *AppModel) LockGeneration() uint64 { return m.lockGen }
+func (m *AppModel) LockGeneration() uint64 { return m.lockGen.Load() }
 
 // StillUnlocked reports whether the vault stayed unlocked since gen.
 func (m *AppModel) StillUnlocked(gen uint64) bool {
-	return m.lockGen == gen && m.LockState.Get() == state.StatusUnlocked
+	return m.lockGen.Load() == gen && m.LockState.Get() == state.StatusUnlocked
+}
+
+// RevokePending invalidates every pending secret action. It is safe to call
+// from any goroutine, and the platform calls it as soon as the vault service
+// leaves the unlocked state.
+func (m *AppModel) RevokePending() {
+	m.publishMu.Lock()
+	m.lockGen.Add(1)
+	m.publishMu.Unlock()
+}
+
+// publishIfUnlocked runs publish only while gen is still current, holding
+// publishMu so a lock cannot interleave.
+func (m *AppModel) publishIfUnlocked(gen uint64, publish func() error) (bool, error) {
+	m.publishMu.Lock()
+	defer m.publishMu.Unlock()
+	if m.lockGen.Load() != gen {
+		return false, nil
+	}
+	return true, publish()
 }
 
 type VaultCounts struct {
@@ -503,7 +530,7 @@ func NewAppModel(app *core.Scope, coreSvc state.VaultService, hooks PlatformHook
 		ActiveCipher:      core.NewSignal[*state.Cipher](app, nil),
 		RevealPW:          core.NewSignal(app, false),
 		RevealCard:        core.NewSignal(app, false),
-		RevealTOTP:        core.NewSignal(app, false),
+		TOTPRevealedID:    core.NewSignal(app, ""),
 		EditMode:          core.NewSignal(app, false),
 		EditDraft:         core.NewSignal[*EditDraft](app, nil),
 		EditDirty:         core.NewSignal(app, false),
@@ -538,6 +565,13 @@ func NewAppModel(app *core.Scope, coreSvc state.VaultService, hooks PlatformHook
 
 	app.Effect(func() {
 		m.reconcileTOTPTicker()
+	})
+
+	app.Effect(func() {
+		if m.LockState.Get() != state.StatusUnlocked {
+			m.RevokePending()
+			m.TOTPRevealedID.Set("")
+		}
 	})
 
 	app.Effect(func() {
@@ -1133,7 +1167,7 @@ func (m *AppModel) ToggleBiometric(cx *core.Scope, enable bool) {
 }
 
 func (m *AppModel) Lock() {
-	m.lockGen++
+	m.RevokePending()
 	m.Core.Lock()
 	if m.Hooks.SSHAgent != nil {
 		m.Hooks.SSHAgent.Clear()
@@ -1142,7 +1176,7 @@ func (m *AppModel) Lock() {
 	m.RepromptPW.Set("")
 	m.RepromptError.Set("")
 	m.AttachmentBusy.Set("")
-	m.RevealTOTP.Set(false)
+	m.TOTPRevealedID.Set("")
 	m.stopTOTP()
 	m.idleTimer.Stop()
 	m.LockAutoFired = false
@@ -1186,7 +1220,7 @@ func (m *AppModel) Logout(cx *core.Scope) {
 		if idx != 1 {
 			return
 		}
-		m.lockGen++
+		m.RevokePending()
 		if m.Hooks.SSHAgent != nil {
 			m.Hooks.SSHAgent.Clear()
 		}
@@ -1508,7 +1542,7 @@ func (m *AppModel) SelectCipher(cx *core.Scope, id string) {
 		m.SelectedID.Set(id)
 		m.RevealPW.Set(false)
 		m.RevealCard.Set(false)
-		m.RevealTOTP.Set(false)
+		m.TOTPRevealedID.Set("")
 		if id == "" {
 			m.ActiveCipher.Set(nil)
 			return
@@ -1850,7 +1884,7 @@ func (m *AppModel) GateReprompt(cx *core.Scope, cipher *state.Cipher, actionLabe
 		allow()
 		return
 	}
-	gen := m.lockGen
+	gen := m.LockGeneration()
 	onAllow := func() {
 		if m.StillUnlocked(gen) {
 			allow()
