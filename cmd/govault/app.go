@@ -152,6 +152,8 @@ func (s *DesktopShell) finishSetup() {
 	shell := s
 	clip := s.clipboard
 
+	desktop.SetApplicationMenu(app, applicationMenu(runtime.GOOS, func() { updater.Check(app) }))
+
 	p := shell.model.Prefs.Get()
 	if runtime.GOOS == "darwin" && p.HideDockIcon && p.ShowTrayIcon {
 		desktop.SetDockVisible(app, false)
@@ -251,6 +253,9 @@ func (s *DesktopShell) OpenMainWindow() {
 		},
 	}, func(cx *core.Scope) core.Node {
 		win := desktop.CurrentWindow(cx)
+		if runtime.GOOS != "darwin" {
+			desktop.SetMenuBar(cx, desktop.MenuBarAutoHide)
+		}
 		cx.Effect(func() {
 			vis := win.Visible() && !desktop.Minimized(cx)
 			s.model.SetMainWindowVisible(vis)
