@@ -183,6 +183,7 @@ type EncryptedCipher struct {
 	SecureNote       *EncryptedSecureNote       `json:"secureNote,omitempty"`
 	Card             *EncryptedCard             `json:"card,omitempty"`
 	Identity         *EncryptedIdentity         `json:"identity,omitempty"`
+	SSHKey           *EncryptedSSHKey           `json:"sshKey,omitempty"`
 	Fields           []EncryptedField           `json:"fields,omitempty"`
 	PasswordHistory  []EncryptedPasswordHistory `json:"passwordHistory,omitempty"`
 	Data             json.RawMessage            `json:"data,omitempty"`
@@ -223,6 +224,7 @@ type CipherPayload struct {
 	SecureNote            *EncryptedSecureNote       `json:"secureNote,omitempty"`
 	Card                  *EncryptedCard             `json:"card,omitempty"`
 	Identity              *EncryptedIdentity         `json:"identity,omitempty"`
+	SSHKey                *EncryptedSSHKey           `json:"sshKey,omitempty"`
 	Fields                []EncryptedField           `json:"fields,omitempty"`
 	PasswordHistory       []EncryptedPasswordHistory `json:"passwordHistory,omitempty"`
 	CollectionIDs         []string                   `json:"collectionIds,omitempty"`
@@ -289,6 +291,12 @@ type EncryptedIdentity struct {
 	Username       *string `json:"username"`
 	PassportNumber *string `json:"passportNumber"`
 	LicenseNumber  *string `json:"licenseNumber"`
+}
+
+type EncryptedSSHKey struct {
+	PrivateKey     *string `json:"privateKey"`
+	PublicKey      *string `json:"publicKey"`
+	KeyFingerprint *string `json:"keyFingerprint"`
 }
 
 type EncryptedField struct {

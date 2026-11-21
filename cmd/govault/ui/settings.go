@@ -124,6 +124,10 @@ func SettingsView(cx *core.Scope, m *AppModel) core.Node {
 						}
 						return card(rows...)
 					})),
+					core.Show{
+						When: func() bool { return m.Hooks.SSHAgent != nil },
+						Then: func(cx *core.Scope) core.Node { return sshAgentSection(m) },
+					},
 					section("Privacy", card(
 						settingsRow(
 							"Show website icons",
@@ -261,6 +265,58 @@ func SettingsView(cx *core.Scope, m *AppModel) core.Node {
 			},
 		},
 	}
+}
+
+func sshAgentSection(m *AppModel) core.Node {
+	return section("SSH Agent", core.Dynamic(func(cx *core.Scope) core.Node {
+		rows := []core.Node{settingsRow(
+			"Enable SSH agent",
+			"Serve SSH keys from the unlocked vault. Keys with master password reprompt are not served.",
+			ui.Switch{
+				TestID:   "settings-ssh-agent",
+				Label:    "Enable SSH agent",
+				Checked:  func() bool { return m.Prefs.Get().SSHAgentEnabled },
+				OnChange: m.SetSSHAgentEnabled,
+			},
+		)}
+		if !m.Prefs.Get().SSHAgentEnabled {
+			return card(rows...)
+		}
+		rows = append(rows, core.View{
+			Class: "flex-row items-center gap-3 pl-4 pr-2.5 py-2.5",
+			Children: []core.Node{
+				core.View{
+					Class: "flex-1 gap-[3px] overflow-hidden",
+					Children: []core.Node{
+						core.Text{Class: "text-[13px] text-gv-fg", Content: "Socket"},
+						core.Text{
+							TestID:     "settings-ssh-agent-socket",
+							Class:      "text-[12px] font-mono text-gv-fg2",
+							Selectable: core.SelectableOn,
+							Content:    m.SSHAgentSocketPath(),
+						},
+					},
+				},
+				ui.Button{
+					TestID:  "settings-ssh-agent-copy",
+					Text:    "Copy SSH_AUTH_SOCK",
+					Icon:    lucide.Copy,
+					Variant: ui.ButtonSecondary,
+					OnPress: m.CopySSHAuthSock,
+				},
+			},
+		})
+		if msg := m.SSHAgentError.Get(); msg != "" {
+			rows = append(rows, core.View{
+				Class: "flex-row items-center gap-2 px-4 py-2.5",
+				Children: []core.Node{
+					icon(lucide.TriangleAlert(), 13, "text-gv-warn"),
+					core.Text{TestID: "settings-ssh-agent-error", Class: "flex-1 text-[12px] text-gv-fg2", Content: "Agent unavailable: " + msg},
+				},
+			})
+		}
+		return card(rows...)
+	}))
 }
 
 func appVersionLabel() string {

@@ -520,14 +520,16 @@ func (s *Service) SaveCipher(ctx context.Context, c *Cipher) (*Cipher, error) {
 	}
 	defer userKey.Zero()
 
+	c = cloneCipher(c)
 	if c.ID != "" {
 		s.mu.RLock()
-		existing := s.ciphers[c.ID]
+		existing := cloneCipher(s.ciphers[c.ID])
 		s.mu.RUnlock()
 		if existing != nil {
 			if existing.ReadOnly {
 				return nil, ErrReadOnlyCipher
 			}
+			recordPasswordChange(existing, c, time.Now().UTC())
 			if c.OrganizationID == nil {
 				c.OrganizationID = cloneStringPtr(existing.OrganizationID)
 			}
@@ -1107,6 +1109,32 @@ func decryptSyncResponse(resp *api.SyncResponse, userKey *crypto.SymmetricKey) (
 		}
 	}
 	return d, nil
+}
+
+const maxPasswordHistory = 5
+
+func recordPasswordChange(existing, updated *Cipher, now time.Time) {
+	if existing.Login == nil || updated.Login == nil {
+		return
+	}
+	old := existing.Login.Password
+	if old == "" || old == updated.Login.Password {
+		return
+	}
+	history := updated.PasswordHistory
+	if history == nil {
+		history = existing.PasswordHistory
+	}
+	next := make([]PasswordHistoryEntry, 0, maxPasswordHistory)
+	next = append(next, PasswordHistoryEntry{Password: old, LastUsedDate: now})
+	for _, h := range history {
+		if len(next) == maxPasswordHistory {
+			break
+		}
+		next = append(next, h)
+	}
+	updated.PasswordHistory = next
+	updated.Login.PasswordRevisionDate = &now
 }
 
 func sameOrg(a, b *string) bool {

@@ -194,6 +194,8 @@ func paletteFor(name string, t api.CipherType, brand string) emblemPalette {
 		return emblemPalette{0xa77bff, 0x7440dd}
 	case api.CipherTypeSecureNote:
 		return emblemPalette{0xffc145, 0xe69400}
+	case api.CipherTypeSSHKey:
+		return emblemPalette{0x7d8a9c, 0x4a5568}
 	}
 	h := fnv.New32a()
 	_, _ = h.Write([]byte(strings.ToLower(name)))
@@ -217,6 +219,8 @@ func typeGlyph(t api.CipherType) func() *core.SVG {
 		return lucide.IdCard
 	case api.CipherTypeSecureNote:
 		return lucide.StickyNote
+	case api.CipherTypeSSHKey:
+		return lucide.KeyRound
 	}
 	return nil
 }

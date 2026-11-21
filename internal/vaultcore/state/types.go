@@ -81,6 +81,7 @@ type Cipher struct {
 	SecureNote       *SecureNote
 	Card             *Card
 	Identity         *Identity
+	SSHKey           *SSHKey
 	Fields           []CustomField
 	PasswordHistory  []PasswordHistoryEntry
 	Data             json.RawMessage
@@ -137,6 +138,12 @@ type Identity struct {
 	Username       string
 	PassportNumber string
 	LicenseNumber  string
+}
+
+type SSHKey struct {
+	PrivateKey     string
+	PublicKey      string
+	KeyFingerprint string
 }
 
 type CustomField struct {

@@ -86,6 +86,13 @@ func decryptCipher(enc *api.EncryptedCipher, userKey *crypto.SymmetricKey) (*Cip
 		}
 		c.Identity = ident
 	}
+	if enc.SSHKey != nil {
+		key, err := decryptSSHKey(enc.SSHKey, activeKey)
+		if err != nil {
+			return nil, err
+		}
+		c.SSHKey = key
+	}
 	if len(enc.Fields) > 0 {
 		c.Fields = make([]CustomField, len(enc.Fields))
 		for i, f := range enc.Fields {
@@ -184,6 +191,13 @@ func encryptCipherPayload(c *Cipher, userKey *crypto.SymmetricKey) (*api.CipherP
 			return nil, err
 		}
 		p.Identity = ident
+	}
+	if c.SSHKey != nil {
+		key, err := encryptSSHKey(c.SSHKey, activeKey)
+		if err != nil {
+			return nil, err
+		}
+		p.SSHKey = key
 	}
 	if len(c.Fields) > 0 {
 		p.Fields = make([]api.EncryptedField, len(c.Fields))
@@ -387,6 +401,32 @@ func encryptIdentity(id *Identity, key *crypto.SymmetricKey) (*api.EncryptedIden
 	}, nil
 }
 
+func decryptSSHKey(enc *api.EncryptedSSHKey, key *crypto.SymmetricKey) (*SSHKey, error) {
+	fields := []*string{enc.PrivateKey, enc.PublicKey, enc.KeyFingerprint}
+	out := make([]string, len(fields))
+	for i, f := range fields {
+		v, err := decryptOptional(f, key)
+		if err != nil {
+			return nil, err
+		}
+		out[i] = v
+	}
+	return &SSHKey{PrivateKey: out[0], PublicKey: out[1], KeyFingerprint: out[2]}, nil
+}
+
+func encryptSSHKey(k *SSHKey, key *crypto.SymmetricKey) (*api.EncryptedSSHKey, error) {
+	vals := []string{k.PrivateKey, k.PublicKey, k.KeyFingerprint}
+	out := make([]*string, len(vals))
+	for i, v := range vals {
+		ev, err := encryptOptional(v, key)
+		if err != nil {
+			return nil, err
+		}
+		out[i] = ev
+	}
+	return &api.EncryptedSSHKey{PrivateKey: out[0], PublicKey: out[1], KeyFingerprint: out[2]}, nil
+}
+
 func decryptBytesFromString(encStr string, key *crypto.SymmetricKey) ([]byte, error) {
 	parsed, err := crypto.ParseEncString(encStr)
 	if err != nil {
@@ -460,6 +500,10 @@ func cloneCipher(c *Cipher) *Cipher {
 		id := *c.Identity
 		cp.Identity = &id
 	}
+	if c.SSHKey != nil {
+		k := *c.SSHKey
+		cp.SSHKey = &k
+	}
 	if len(c.Fields) > 0 {
 		cp.Fields = make([]CustomField, len(c.Fields))
 		for i, f := range c.Fields {
@@ -503,6 +547,10 @@ func summarizeCipher(c *Cipher) CipherSummary {
 			if subtitle == "" {
 				subtitle = c.Identity.Email
 			}
+		}
+	case api.CipherTypeSSHKey:
+		if c.SSHKey != nil {
+			subtitle = c.SSHKey.KeyFingerprint
 		}
 	}
 	return CipherSummary{

@@ -266,6 +266,7 @@ func newVaultTestEnv(t *testing.T) *vaultTestEnv {
 				RevisionDate: &now,
 				Login:        p.Login,
 				SecureNote:   p.SecureNote,
+				SSHKey:       p.SSHKey,
 			}
 			env.mu.Lock()
 			env.ciphers[created.ID] = created
@@ -289,6 +290,7 @@ func newVaultTestEnv(t *testing.T) *vaultTestEnv {
 			updated.Name = p.Name
 			updated.Key = p.Key
 			updated.Login = p.Login
+			updated.PasswordHistory = p.PasswordHistory
 			updated.RevisionDate = &now
 			env.ciphers["c-1"] = updated
 			env.mu.Unlock()

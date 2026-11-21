@@ -18,6 +18,7 @@ import (
 	"github.com/txchen/govault/internal/vaultcore/api"
 	"github.com/txchen/govault/internal/vaultcore/crypto"
 	"github.com/txchen/govault/internal/vaultcore/gen"
+	"github.com/txchen/govault/internal/vaultcore/sshagent"
 	"github.com/txchen/govault/internal/vaultcore/state"
 	"github.com/txchen/govault/internal/vaultcore/store"
 	"github.com/txchen/govault/internal/vaultcore/totp"
@@ -50,6 +51,7 @@ type UserPrefs struct {
 	AutoPromptBiometric   bool                  `json:"autoPromptBiometric"`
 	AutoLockMinutes       int                   `json:"autoLockMinutes"`
 	LockOnSleep           bool                  `json:"lockOnSleep"`
+	SSHAgentEnabled       bool                  `json:"sshAgentEnabled"`
 	ShowFavicons          *bool                 `json:"showFavicons,omitempty"`
 	ClipboardClearSeconds int                   `json:"clipboardClearSeconds"`
 	LaunchAtLogin         bool                  `json:"launchAtLogin"`
@@ -137,6 +139,16 @@ type PlatformHooks struct {
 	DiscoverSnapshot     func(preferredAccountID string) *AccountSnapshotMeta
 	VerifyMasterPassword func(password []byte) error
 	PrefsKey             string
+	SSHAgent             SSHAgentHost
+}
+
+// SSHAgentHost runs the local ssh-agent socket that serves vault SSH keys.
+type SSHAgentHost interface {
+	SocketPath() string
+	Start() error
+	Stop()
+	SetKeys(keys []sshagent.Key)
+	Clear()
 }
 
 const DefaultPrefsKey = "govault.prefs"
@@ -186,6 +198,9 @@ type EditDraft struct {
 	SSN        string
 	Passport   string
 	License    string
+	SSHPrivate string
+	SSHPublic  string
+	SSHFinger  string
 	Fields     []EditFieldDraft
 	Revision   *time.Time
 	Source     *state.Cipher
@@ -380,6 +395,9 @@ type AppModel struct {
 	FolderError  *core.Signal[string]
 	FolderBusy   *core.Signal[bool]
 
+	SSHAgentError *core.Signal[string]
+	vaultRev      *core.Signal[int]
+
 	Toaster *ui.Toaster
 
 	faviconsOn *core.Memo[bool]
@@ -400,6 +418,7 @@ type VaultCounts struct {
 	Card       int
 	Identity   int
 	SecureNote int
+	SSHKey     int
 	ByFolder   map[string]int
 
 	ByCollection map[string]int
@@ -479,6 +498,8 @@ func NewAppModel(app *core.Scope, coreSvc state.VaultService, hooks PlatformHook
 		FolderDialog:      core.NewSignal(app, FolderModal{}),
 		FolderError:       core.NewSignal(app, ""),
 		FolderBusy:        core.NewSignal(app, false),
+		SSHAgentError:     core.NewSignal(app, ""),
+		vaultRev:          core.NewSignal(app, 0),
 		Toaster:           ui.NewToaster(app),
 	}
 	m.IsSelected = core.NewSelector(app, m.SelectedID.Get)
@@ -502,9 +523,20 @@ func NewAppModel(app *core.Scope, coreSvc state.VaultService, hooks PlatformHook
 		}
 	})
 
+	agentOn := core.NewMemo(app, func() bool { return m.Prefs.Get().SSHAgentEnabled })
+	app.Effect(func() {
+		agentOn.Get()
+		m.LockState.Get()
+		m.vaultRev.Get()
+		app.Untrack(m.syncSSHAgent)
+	})
+
 	app.Cleanup(func() {
 		m.totpCtrl.Stop()
 		m.idleTimer.Stop()
+		if m.Hooks.SSHAgent != nil {
+			m.Hooks.SSHAgent.Stop()
+		}
 	})
 
 	if m.LockState.Get() == state.StatusUnlocked {
@@ -1048,6 +1080,9 @@ func (m *AppModel) ToggleBiometric(cx *core.Scope, enable bool) {
 
 func (m *AppModel) Lock() {
 	m.Core.Lock()
+	if m.Hooks.SSHAgent != nil {
+		m.Hooks.SSHAgent.Clear()
+	}
 	m.stopTOTP()
 	m.idleTimer.Stop()
 	m.LockAutoFired = false
@@ -1160,6 +1195,7 @@ func (m *AppModel) RefreshVaultData() {
 	m.Collections.Set(m.Core.Collections())
 	m.recomputeCounts()
 	m.RefreshFilteredList()
+	m.vaultRev.Set(m.vaultRev.GetUntracked() + 1)
 
 	selID := m.SelectedID.Get()
 	if selID != "" {
@@ -1203,6 +1239,8 @@ func (m *AppModel) recomputeCounts() {
 			counts.Identity++
 		case api.CipherTypeSecureNote:
 			counts.SecureNote++
+		case api.CipherTypeSSHKey:
+			counts.SSHKey++
 		}
 	}
 	m.AllCounts.Set(counts)
@@ -1267,6 +1305,62 @@ func (m *AppModel) PasswordHidden(c *state.Cipher) bool {
 	}
 	cols := m.cipherCollections(c)
 	return c.HidePassword || len(cols) > 0 && !slices.ContainsFunc(cols, func(col state.Collection) bool { return !col.HidePasswords })
+}
+
+func (m *AppModel) SSHAgentSocketPath() string {
+	if m.Hooks.SSHAgent == nil {
+		return ""
+	}
+	return m.Hooks.SSHAgent.SocketPath()
+}
+
+func (m *AppModel) SetSSHAgentEnabled(on bool) {
+	m.UpdatePrefs(func(p UserPrefs) UserPrefs {
+		p.SSHAgentEnabled = on
+		return p
+	})
+}
+
+func (m *AppModel) CopySSHAuthSock() {
+	if path := m.SSHAgentSocketPath(); path != "" {
+		m.CopyPlainValue("SSH_AUTH_SOCK", fmt.Sprintf("export SSH_AUTH_SOCK=%q", path))
+	}
+}
+
+func (m *AppModel) syncSSHAgent() {
+	host := m.Hooks.SSHAgent
+	if host == nil {
+		return
+	}
+	if !m.Prefs.Get().SSHAgentEnabled {
+		host.Stop()
+		m.SSHAgentError.Set("")
+		return
+	}
+	if err := host.Start(); err != nil {
+		m.SSHAgentError.Set(err.Error())
+		return
+	}
+	m.SSHAgentError.Set("")
+	if m.LockState.Get() != state.StatusUnlocked {
+		host.Clear()
+		return
+	}
+	host.SetKeys(m.agentKeys())
+}
+
+// agentKeys lists the SSH keys the agent may serve: active, viewable and not behind a master password reprompt.
+func (m *AppModel) agentKeys() []sshagent.Key {
+	t := api.CipherTypeSSHKey
+	var keys []sshagent.Key
+	for _, item := range m.Core.Search("", state.SearchFilter{Category: state.FilterAll, Type: &t}) {
+		c, err := m.Core.GetCipher(item.ID)
+		if err != nil || c.SSHKey == nil || c.SSHKey.PrivateKey == "" || c.DeletedDate != nil || c.Reprompt == 1 || m.PasswordHidden(c) {
+			continue
+		}
+		keys = append(keys, sshagent.Key{PrivateKey: c.SSHKey.PrivateKey, Comment: c.Name})
+	}
+	return keys
 }
 
 func (m *AppModel) EffectiveSearchFilter() state.SearchFilter {
@@ -1850,6 +1944,11 @@ func draftFromCipher(c *state.Cipher) *EditDraft {
 		d.Passport = c.Identity.PassportNumber
 		d.License = c.Identity.LicenseNumber
 	}
+	if c.SSHKey != nil {
+		d.SSHPrivate = c.SSHKey.PrivateKey
+		d.SSHPublic = c.SSHKey.PublicKey
+		d.SSHFinger = c.SSHKey.KeyFingerprint
+	}
 	for _, f := range c.Fields {
 		d.Fields = append(d.Fields, EditFieldDraft{Name: f.Name, Value: f.Value, Type: f.Type})
 	}
@@ -1889,6 +1988,7 @@ func cipherFromDraft(d *EditDraft) *state.Cipher {
 	base.SecureNote = nil
 	base.Card = nil
 	base.Identity = nil
+	base.SSHKey = nil
 
 	switch d.Type {
 	case api.CipherTypeLogin:
@@ -1933,6 +2033,16 @@ func cipherFromDraft(d *EditDraft) *state.Cipher {
 			SSN:            d.SSN,
 			PassportNumber: d.Passport,
 			LicenseNumber:  d.License,
+		}
+	case api.CipherTypeSSHKey:
+		priv := strings.TrimSpace(d.SSHPrivate)
+		if priv != "" {
+			priv += "\n"
+		}
+		base.SSHKey = &state.SSHKey{
+			PrivateKey:     priv,
+			PublicKey:      strings.TrimSpace(d.SSHPublic),
+			KeyFingerprint: strings.TrimSpace(d.SSHFinger),
 		}
 	}
 
@@ -1993,6 +2103,8 @@ func CipherTypeLabel(t api.CipherType) string {
 		return "Card"
 	case api.CipherTypeIdentity:
 		return "Identity"
+	case api.CipherTypeSSHKey:
+		return "SSH Key"
 	default:
 		return "Item"
 	}

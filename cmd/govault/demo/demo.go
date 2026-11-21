@@ -2,6 +2,7 @@ package demo
 
 import (
 	"context"
+	"crypto/ed25519"
 	"encoding/base64"
 	"fmt"
 	"slices"
@@ -12,6 +13,7 @@ import (
 
 	"github.com/txchen/govault/internal/vaultcore/api"
 	"github.com/txchen/govault/internal/vaultcore/crypto"
+	"github.com/txchen/govault/internal/vaultcore/gen"
 	"github.com/txchen/govault/internal/vaultcore/state"
 	"github.com/txchen/govault/internal/vaultcore/store"
 )
@@ -241,6 +243,8 @@ func subtitle(c *state.Cipher) string {
 		return c.Card.Brand
 	case c.Identity != nil:
 		return strings.TrimSpace(c.Identity.FirstName + " " + c.Identity.LastName)
+	case c.SSHKey != nil:
+		return c.SSHKey.KeyFingerprint
 	}
 	return ""
 }
@@ -374,7 +378,11 @@ func seedCiphers() []*state.Cipher {
 				{Name: "Organization", Value: "northwind", Type: 0},
 				{Name: "Recovery code", Value: "a7f2-9c1e-44d0-b8e3", Type: 1},
 			},
-			Notes:        "Primary work account. SSO enforced for the northwind org; hardware key registered as backup.",
+			Notes: "Primary work account. SSO enforced for the northwind org; hardware key registered as backup.",
+			PasswordHistory: []state.PasswordHistoryEntry{
+				{Password: "Gh!2024-northwind", LastUsedDate: *ago(3 * day)},
+				{Password: "octo-cat-42", LastUsedDate: *ago(180 * day)},
+			},
 			CreationDate: ago(412 * day), RevisionDate: ago(3 * day),
 		},
 		{
@@ -473,11 +481,28 @@ func seedCiphers() []*state.Cipher {
 			CreationDate: ago(200 * day), RevisionDate: ago(15 * day),
 		},
 		{
+			ID: "c-deploy-key", Type: api.CipherTypeSSHKey, Name: "Bastion Deploy Key",
+			FolderID:     folder("f-work"),
+			SSHKey:       demoSSHKey("deploy@northwind"),
+			Notes:        "Used by CI to reach the production bastion.",
+			CreationDate: ago(90 * day), RevisionDate: ago(12 * day),
+		},
+		{
 			ID: "c-dropbox", Type: api.CipherTypeLogin, Name: "Dropbox (old)",
 			Login:        login("alex.morgan@icloud.com", "old-password-2019", "", "https://www.dropbox.com"),
 			CreationDate: ago(1500 * day), RevisionDate: ago(400 * day), DeletedDate: ago(5 * day),
 		},
 	}
+}
+
+func demoSSHKey(comment string) *state.SSHKey {
+	seed := make([]byte, ed25519.SeedSize)
+	copy(seed, "govault-demo-ssh-key-seed")
+	k, err := gen.SSHKeyFromEd25519(ed25519.NewKeyFromSeed(seed), comment)
+	if err != nil {
+		return &state.SSHKey{}
+	}
+	return &state.SSHKey{PrivateKey: k.PrivateKey, PublicKey: k.PublicKey, KeyFingerprint: k.KeyFingerprint}
 }
 
 func loginURIs(c *state.Cipher) []string {

@@ -2,12 +2,14 @@ package ui
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/nsgo-dev/nsgo/base"
 	"github.com/nsgo-dev/nsgo/core"
 	"github.com/nsgo-dev/nsgo/icons/lucide"
 	"github.com/nsgo-dev/nsgo/ui"
 	"github.com/txchen/govault/internal/vaultcore/api"
+	"github.com/txchen/govault/internal/vaultcore/gen"
 )
 
 const editorFieldHeight core.Points = 28
@@ -101,6 +103,7 @@ func EditorPaneView(cx *core.Scope, m *AppModel) core.Node {
 											{Value: api.CipherTypeSecureNote, Label: "Secure Note"},
 											{Value: api.CipherTypeCard, Label: "Card"},
 											{Value: api.CipherTypeIdentity, Label: "Identity"},
+											{Value: api.CipherTypeSSHKey, Label: "SSH Key"},
 										},
 										Value:    draftType.Get,
 										OnChange: func(t api.CipherType) { m.MutateDraft(func(d *EditDraft) { d.Type = t }) },
@@ -139,6 +142,8 @@ func EditorPaneView(cx *core.Scope, m *AppModel) core.Node {
 									return editorCardFields(m)
 								case api.CipherTypeIdentity:
 									return editorIdentityFields(m)
+								case api.CipherTypeSSHKey:
+									return editorSSHKeyFields(m)
 								default:
 									return nil
 								}
@@ -377,6 +382,73 @@ func editorIdentityFields(m *AppModel) core.Node {
 			)),
 		},
 	}
+}
+
+func editorSSHKeyFields(m *AppModel) core.Node {
+	keyInput := func(testID, placeholder string, multiline bool, get func(*EditDraft) string, set func(*EditDraft, string)) core.Node {
+		in := ui.Input{
+			TestID:      testID,
+			Placeholder: placeholder,
+			Multiline:   multiline,
+			Class:       "font-mono",
+			Value: func() string {
+				if d := m.EditDraft.Get(); d != nil {
+					return get(d)
+				}
+				return ""
+			},
+			OnChange: func(v string) { m.MutateDraft(func(d *EditDraft) { set(d, v) }) },
+		}
+		if multiline {
+			in.Style = core.Style{MinHeight: core.Pt(120)}
+		}
+		return flexed(in)
+	}
+	return section("SSH Key", card(
+		formRow("Private Key", keyInput("editor-ssh-private", "-----BEGIN OPENSSH PRIVATE KEY-----", true,
+			func(d *EditDraft) string { return d.SSHPrivate },
+			func(d *EditDraft, v string) {
+				d.SSHPrivate = v
+				if k, err := gen.InspectSSHPrivateKey(v, sshKeyComment(d)); err == nil {
+					d.SSHPublic, d.SSHFinger = k.PublicKey, k.KeyFingerprint
+				}
+			})),
+		formRow("Public Key", keyInput("editor-ssh-public", "ssh-ed25519 AAAA…", false,
+			func(d *EditDraft) string { return d.SSHPublic }, func(d *EditDraft, v string) { d.SSHPublic = v })),
+		formRow("Fingerprint", keyInput("editor-ssh-fingerprint", "SHA256:…", false,
+			func(d *EditDraft) string { return d.SSHFinger }, func(d *EditDraft, v string) { d.SSHFinger = v })),
+		core.View{
+			Class: "flex-row items-center justify-end px-4 py-2",
+			Children: []core.Node{
+				ui.Button{
+					TestID:  "editor-ssh-generate",
+					Text:    "Generate Ed25519 Key",
+					Icon:    lucide.WandSparkles,
+					Variant: ui.ButtonSecondary,
+					OnPress: m.GenerateDraftSSHKey,
+				},
+			},
+		},
+	))
+}
+
+func sshKeyComment(d *EditDraft) string {
+	return strings.TrimSpace(d.Name)
+}
+
+func (m *AppModel) GenerateDraftSSHKey() {
+	d := m.EditDraft.Get()
+	if d == nil {
+		return
+	}
+	k, err := gen.GenerateEd25519SSHKey(sshKeyComment(d))
+	if err != nil {
+		m.EditError.Set("Could not generate SSH key: " + err.Error())
+		return
+	}
+	m.MutateDraft(func(d *EditDraft) {
+		d.SSHPrivate, d.SSHPublic, d.SSHFinger = k.PrivateKey, k.PublicKey, k.KeyFingerprint
+	})
 }
 
 func editorCustomFieldsSection(cx *core.Scope, m *AppModel) core.Node {

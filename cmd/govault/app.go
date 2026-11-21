@@ -20,6 +20,7 @@ type DesktopShell struct {
 	dataDir   string
 	clipboard *ClipboardAdapter
 	favicons  *govaultui.FaviconStore
+	sshAgent  *sshAgentHost
 	service   *state.Service
 	model     *govaultui.AppModel
 
@@ -44,6 +45,7 @@ func NewDesktopShell(app *core.Scope, demoMode bool) *DesktopShell {
 		scope:     app,
 		dataDir:   dataDir,
 		clipboard: clip,
+		sshAgent:  newSSHAgentHost(dataDir),
 	}
 	if cacheDir := app.CacheDir(); cacheDir != "" {
 		shell.favicons = govaultui.NewFaviconStore(govaultui.FaviconStoreConfig{CacheDir: filepath.Join(cacheDir, "icons")})
@@ -66,6 +68,9 @@ func NewDesktopShell(app *core.Scope, demoMode bool) *DesktopShell {
 		DeviceName: "GoVault Desktop",
 		DeviceType: deviceTypeForOS(),
 		OnStatusChange: func(st state.LockStatus) {
+			if st != state.StatusUnlocked {
+				shell.sshAgent.Clear()
+			}
 			app.Post(func() {
 				if shell.model == nil {
 					return
@@ -107,7 +112,7 @@ func NewDesktopShell(app *core.Scope, demoMode bool) *DesktopShell {
 
 func (s *DesktopShell) platformHooks(secrets store.SecretStore) govaultui.PlatformHooks {
 	app := s.scope
-	return govaultui.PlatformHooks{
+	hooks := govaultui.PlatformHooks{
 		Secrets:              secrets,
 		CopySecret:           s.clipboard.CopySecret,
 		CopyPlain:            s.clipboard.CopyPlain,
@@ -125,6 +130,10 @@ func (s *DesktopShell) platformHooks(secrets store.SecretStore) govaultui.Platfo
 		SleepLockSupported: sleepLockSupported,
 		Favicons:           s.favicons,
 	}
+	if s.sshAgent != nil {
+		hooks.SSHAgent = s.sshAgent
+	}
+	return hooks
 }
 
 func (s *DesktopShell) finishSetup() {

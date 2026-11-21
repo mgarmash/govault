@@ -100,6 +100,8 @@ func (m *AppModel) sectionTitle() string {
 			return "Identities"
 		case api.CipherTypeSecureNote:
 			return "Secure Notes"
+		case api.CipherTypeSSHKey:
+			return "SSH Keys"
 		}
 	}
 	if f.CollectionID != "" {
@@ -271,6 +273,7 @@ func sidebarView(cx *core.Scope, m *AppModel) core.Node {
 					sidebarRow(typeEntry("sidebar-type-card", "Cards", api.CipherTypeCard, lucide.CreditCard, 0x2fb35a, func(c VaultCounts) int { return c.Card })),
 					sidebarRow(typeEntry("sidebar-type-identity", "Identities", api.CipherTypeIdentity, lucide.IdCard, 0xa25ddc, func(c VaultCounts) int { return c.Identity })),
 					sidebarRow(typeEntry("sidebar-type-note", "Secure Notes", api.CipherTypeSecureNote, lucide.StickyNote, 0xf08a0a, func(c VaultCounts) int { return c.SecureNote })),
+					sidebarRow(typeEntry("sidebar-type-ssh", "SSH Keys", api.CipherTypeSSHKey, lucide.KeyRound, 0x6b7a90, func(c VaultCounts) int { return c.SSHKey })),
 					foldersHeader(m, ui.Button{
 						TestID:   "sidebar-add-folder",
 						Icon:     lucide.Plus,
@@ -714,6 +717,12 @@ func rowMenu(cx *core.Scope, m *AppModel, id string, at core.Point) {
 		}
 		items = append(items, desktop.MenuItem{Separator: true})
 	}
+	if c.SSHKey != nil {
+		items = append(items,
+			desktop.MenuItem{Label: "Copy Public Key", Disabled: c.SSHKey.PublicKey == "", OnSelect: func() { m.CopyPlainValue("Public key", c.SSHKey.PublicKey) }},
+			desktop.MenuItem{Separator: true},
+		)
+	}
 	if c.DeletedDate != nil {
 		items = append(items,
 			desktop.MenuItem{Label: "Restore", Disabled: offline, OnSelect: m.RestoreActive},
@@ -1063,6 +1072,10 @@ func fieldRow(label string, o fieldOpts) core.Node {
 func staticValue(v string) func() string { return func() string { return v } }
 
 func secretRow(cx *core.Scope, m *AppModel, c *state.Cipher, label, value, testID, action string, mono bool, reveal *core.Signal[bool], copySecret func()) core.Node {
+	return namedSecretRow(cx, m, c, label, strings.ToLower(label), value, testID, action, mono, reveal, copySecret)
+}
+
+func namedSecretRow(cx *core.Scope, m *AppModel, c *state.Cipher, label, name, value, testID, action string, mono bool, reveal *core.Signal[bool], copySecret func()) core.Node {
 	if reveal == nil {
 		reveal = core.NewSignal(cx, false)
 	}
@@ -1082,7 +1095,7 @@ func secretRow(cx *core.Scope, m *AppModel, c *state.Cipher, label, value, testI
 			ui.Button{
 				TestID:   testID + "-reveal",
 				Icon:     func() *core.SVG { return eyeIcon(reveal.Get()) },
-				Label:    "Reveal " + strings.ToLower(label),
+				Label:    "Reveal " + name,
 				Variant:  ui.ButtonGhost,
 				Side:     28,
 				IconSize: 14,
@@ -1095,7 +1108,7 @@ func secretRow(cx *core.Scope, m *AppModel, c *state.Cipher, label, value, testI
 					m.GateReprompt(cx, c, "reveal "+action, func() { reveal.Set(true) })
 				},
 			},
-			actionIcon(cx, testID+"-copy", "Copy "+strings.ToLower(label), lucide.Copy, copySecret),
+			actionIcon(cx, testID+"-copy", "Copy "+name, lucide.Copy, copySecret),
 		},
 	})
 }
@@ -1193,6 +1206,10 @@ func detailContent(cx *core.Scope, m *AppModel, c *state.Cipher) core.Node {
 			}
 			blocks = append(blocks, section("Websites", card(uriRows...)))
 		}
+	}
+
+	if k := c.SSHKey; k != nil {
+		blocks = append(blocks, sshKeySection(cx, m, c, k))
 	}
 
 	if c.Card != nil {
@@ -1330,6 +1347,10 @@ func detailContent(cx *core.Scope, m *AppModel, c *state.Cipher) core.Node {
 		blocks = append(blocks, section("Custom Fields", card(rows...)))
 	}
 
+	if c.Login != nil && len(c.PasswordHistory) > 0 && !m.PasswordHidden(c) {
+		blocks = append(blocks, passwordHistorySection(cx, m, c))
+	}
+
 	if strings.TrimSpace(c.Notes) != "" {
 		blocks = append(blocks, section("Notes", card(core.View{
 			Class: "px-4 py-3",
@@ -1358,6 +1379,79 @@ func detailContent(cx *core.Scope, m *AppModel, c *state.Cipher) core.Node {
 							detailHeader(cx, m, c, isTrash, offline),
 						}, blocks...),
 					},
+				},
+			},
+		},
+	}
+}
+
+func sshKeySection(cx *core.Scope, m *AppModel, c *state.Cipher, k *state.SSHKey) core.Node {
+	var rows []core.Node
+	if k.KeyFingerprint != "" {
+		rows = append(rows, fieldRow("Fingerprint", fieldOpts{
+			testID:  "detail-ssh-fingerprint",
+			mono:    true,
+			value:   staticValue(k.KeyFingerprint),
+			actions: []core.Node{actionIcon(cx, "detail-ssh-fingerprint-copy", "Copy fingerprint", lucide.Copy, func() { m.CopyPlainValue("Fingerprint", k.KeyFingerprint) })},
+		}))
+	}
+	if k.PublicKey != "" {
+		rows = append(rows, fieldRow("Public Key", fieldOpts{
+			testID:  "detail-ssh-public",
+			mono:    true,
+			value:   staticValue(k.PublicKey),
+			actions: []core.Node{actionIcon(cx, "detail-ssh-public-copy", "Copy public key", lucide.Copy, func() { m.CopyPlainValue("Public key", k.PublicKey) })},
+		}))
+	}
+	if k.PrivateKey != "" && m.PasswordHidden(c) {
+		rows = append(rows, fieldRow("Private Key", fieldOpts{
+			testID: "detail-ssh-private",
+			value:  staticValue("Hidden by your organization"),
+		}))
+	} else if k.PrivateKey != "" {
+		priv := strings.TrimSpace(k.PrivateKey)
+		rows = append(rows, secretRow(cx, m, c, "Private Key", priv, "detail-ssh-private", "private key", false, nil, func() {
+			m.GateReprompt(cx, c, "copy private key", func() { m.CopySecretValue("Private key", k.PrivateKey) })
+		}))
+	}
+	return section("SSH Key", card(rows...))
+}
+
+func passwordHistorySection(cx *core.Scope, m *AppModel, c *state.Cipher) core.Node {
+	open := core.NewSignal(cx, false)
+	title := fmt.Sprintf("Password History (%d)", len(c.PasswordHistory))
+	return core.View{
+		Class: "gap-1.5",
+		Children: []core.Node{
+			core.View{
+				TestID:   "detail-history-toggle",
+				Role:     core.RoleButton,
+				Label:    title,
+				Expanded: open.Get,
+				Class:    "flex-row items-center gap-1 px-1 self-start",
+				OnPress:  func(core.PressEvent) { open.Set(!open.Get()) },
+				Children: []core.Node{
+					core.Text{Class: "text-[11.5px] font-semibold text-gv-fg2", Content: title},
+					iconFunc(func() *core.SVG {
+						if open.Get() {
+							return lucide.ChevronDown()
+						}
+						return lucide.ChevronRight()
+					}, 11, func() string { return "text-gv-fg2" }),
+				},
+			},
+			core.Show{
+				When: open.Get,
+				Then: func(cx *core.Scope) core.Node {
+					rows := make([]core.Node, 0, len(c.PasswordHistory))
+					for i, h := range c.PasswordHistory {
+						pw := h.Password
+						label := "Used until " + h.LastUsedDate.Local().Format("Jan 2, 2006 at 3:04 PM")
+						rows = append(rows, namedSecretRow(cx, m, c, label, "old password", pw, fmt.Sprintf("detail-history-%d", i), "old password", true, nil, func() {
+							m.GateReprompt(cx, c, "copy old password", func() { m.CopySecretValue("Old password", pw) })
+						}))
+					}
+					return card(rows...)
 				},
 			},
 		},

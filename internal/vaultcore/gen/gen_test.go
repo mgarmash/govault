@@ -100,3 +100,19 @@ func TestGeneratePassphrase(t *testing.T) {
 		t.Fatalf("NumWords=0 got %v, want ErrInvalidOptions", err)
 	}
 }
+
+func TestGenerateEd25519SSHKey(t *testing.T) {
+	k, err := GenerateEd25519SSHKey("me@host")
+	if err != nil {
+		t.Fatalf("GenerateEd25519SSHKey: %v", err)
+	}
+	if !strings.HasPrefix(k.PrivateKey, "-----BEGIN OPENSSH PRIVATE KEY-----") ||
+		!strings.HasPrefix(k.PublicKey, "ssh-ed25519 ") || !strings.HasSuffix(k.PublicKey, " me@host") ||
+		!strings.HasPrefix(k.KeyFingerprint, "SHA256:") {
+		t.Fatalf("unexpected key: %+v", k)
+	}
+	got, err := InspectSSHPrivateKey(k.PrivateKey, "me@host")
+	if err != nil || got != k {
+		t.Fatalf("InspectSSHPrivateKey = (%+v, %v), want %+v", got, err, k)
+	}
+}
