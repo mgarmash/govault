@@ -28,8 +28,8 @@ Deliver a fast, low-memory, zero-CGO native desktop client for self-hosted Vault
 ### Engineering Resource Targets
 
 - Cold start to unlock screen: `< 300 ms` on Apple Silicon macOS.
-- Idle tray-resident memory (locked / window closed): `< 30 MB` RSS.
-- Active unlocked window memory (1,000–3,000 ciphers): `< 70 MB` RSS (excluding transient Argon2id spike, which is reclaimed).
+- Idle tray-resident memory (locked / window closed): `< 30 MB` physical footprint on macOS (`footprint` / Activity Monitor Memory) / RSS on Linux (note: macOS `ps` RSS includes shared AppKit/system framework mappings).
+- Active unlocked window memory (1,000–3,000 ciphers): `< 70 MB` physical footprint on macOS / RSS on Linux (excluding transient Argon2id spike, which is reclaimed).
 - Idle CPU usage (window hidden or static): `~0.0%` (zero background UI timers).
 
 ## Design
@@ -142,7 +142,6 @@ See [`ui-and-state-machine.md`](ui-and-state-machine.md) for complete wireframes
 ```text
 govault/
 ├── go.mod
-├── nsgo.yaml
 ├── docs/
 │   ├── architecture.md
 │   ├── vaultcore-spec.md
@@ -151,6 +150,7 @@ govault/
 │       └── official-client-and-protocol.md
 ├── cmd/
 │   └── govault/
+│       ├── nsgo.yaml           # NSGo build manifest (co-located with package main for `go tool nsgo build ./cmd/govault`)
 │       ├── main.go
 │       ├── app.go              # tray, hotkey, window/panel lifecycle
 │       ├── adapters.go         # NSGo Secrets/Biometric/Clipboard bridges
@@ -176,8 +176,8 @@ govault/
 - [ ] On macOS, Touch ID unlocks the vault without re-entering the master password, and locking clears decrypted keys/ciphers from memory.
 - [ ] On macOS, copied secrets carry `org.nspasteboard.ConcealedType` and `org.nspasteboard.TransientType` pasteboard markers and auto-clear after the configured timeout.
 - [ ] Quick Access floating panel opens via its user-configured global hotkey, filters 1,000+ ciphers with no perceptible lag, copies password with auto-clear, and dismisses cleanly.
-- [ ] Resource targets verified on macOS: idle tray memory `< 30 MB` RSS, active window `< 70 MB` RSS, idle CPU `~0%`.
-- [ ] `go tool nsgo build` from macOS produces runnable macOS (`.app`/`.dmg`) and Linux (`.AppImage`/`.deb`) packages with `CGO_ENABLED=0`.
+- [ ] Resource targets verified on macOS: idle tray memory `< 30 MB` physical footprint (RSS on Linux), active window `< 70 MB` physical footprint (RSS on Linux), idle CPU `~0%`.
+- [ ] `go tool nsgo build ./cmd/govault` from macOS produces runnable macOS (`.app`/`.dmg`) and Linux (`.AppImage`/`.deb`) packages with `CGO_ENABLED=0`.
 
 ## Risks
 

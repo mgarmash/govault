@@ -1,0 +1,11 @@
+name: GoVault
+id: dev.txchen.govault
+version: 0.1.0
+
+dev:
+  target: native
+
+build:
+  output: ../../dist
+  installers: false
+  targets: [macos_arm64]

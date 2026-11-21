@@ -1,6 +1,6 @@
 # Build & packaging outputs
-/dist/
-/.nsgo/
+dist/
+.nsgo/
 *.exe
 *.dll
 *.so
