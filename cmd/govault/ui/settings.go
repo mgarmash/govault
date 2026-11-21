@@ -12,6 +12,7 @@ import (
 
 func SettingsView(cx *core.Scope, m *AppModel) core.Node {
 	m.RefreshBiometricAvailability()
+	m.RefreshBiometricProtection()
 	showBio := runtime.GOOS == "darwin" || m.CanUseBiometric()
 	canBio := core.NewMemo(cx, m.CanUseBiometric)
 	bioOn := core.NewMemo(cx, func() bool { return m.Prefs.Get().BiometricEnabled })
@@ -363,6 +364,27 @@ func biometricRows(cx *core.Scope, m *AppModel, available, enabled bool) []core.
 		},
 	)}
 	if enabled {
+		rows = append(rows, core.View{
+			Class: "flex-row items-center gap-2 px-4 py-2.5",
+			Children: []core.Node{
+				iconFunc(func() *core.SVG {
+					if m.BiometricHardware.Get() {
+						return lucide.ShieldCheck()
+					}
+					return lucide.KeyRound()
+				}, 13, func() string { return "text-gv-fg3" }),
+				core.Text{
+					TestID: "settings-biometric-protection",
+					Class:  "flex-1 text-[12px] text-gv-fg2",
+					ContentFunc: func() string {
+						if m.BiometricHardware.Get() {
+							return "Hardware-enforced: macOS releases the key only after Touch ID."
+						}
+						return "App-gated: the key is in your login keychain and GoVault asks for " + m.BiometricLabel() + " before reading it."
+					},
+				},
+			},
+		})
 		rows = append(rows, settingsRow(
 			"Prompt automatically",
 			"Ask for "+m.BiometricLabel()+" as soon as the locked window opens.",
@@ -391,7 +413,7 @@ func settingsMetaRow(label string, value func() string) core.Node {
 		Class: "flex-row items-center justify-between gap-4 px-4 py-2.5",
 		Children: []core.Node{
 			core.Text{Class: "text-[13px] text-gv-fg", Content: label},
-			core.Text{MaxLines: 1, Class: "flex-shrink text-[12.5px] text-gv-fg2 text-right", ContentFunc: value},
+			core.Text{MaxLines: 1, Class: "shrink text-[12.5px] text-gv-fg2 text-right", ContentFunc: value},
 		},
 	}
 }

@@ -38,7 +38,7 @@ func NewDesktopShell(app *core.Scope, demoMode bool) *DesktopShell {
 	}
 
 	dataDir := ensureDataDir(app)
-	secrets := NewSecretStoreAdapter(app.Secrets())
+	secrets := NewBiometricSecretStore(NewSecretStoreAdapter(app.Secrets()), newHardwareKeychain())
 	clip := NewClipboardAdapter(app)
 
 	shell := &DesktopShell{
@@ -95,6 +95,7 @@ func NewDesktopShell(app *core.Scope, demoMode bool) *DesktopShell {
 	shell.service = svc
 
 	hooks := shell.platformHooks(secrets)
+	hooks.BiometricHardwareBound = secrets.HardwareBound
 	hooks.DiscoverSnapshot = func(preferred string) *govaultui.AccountSnapshotMeta {
 		return DiscoverAccountSnapshot(dataDir, preferred)
 	}

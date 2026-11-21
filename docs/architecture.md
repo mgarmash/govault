@@ -100,6 +100,16 @@ Follows the Bitwarden/Vaultwarden cryptographic specification (see [`vaultcore-s
    - If Touch ID fails, cancels, or is unavailable, seamlessly fall back to Master Password input.
 3. **Keychain Enforcement Note (Verified)**:
    - Verified in `nsgo-dev/nsgo` (`internal/platform/apple/secrets.go` @ `1099393de136`): with empty `AccessGroup`, `core.Secrets` uses the macOS login Keychain (requires no entitlements and works on ad-hoc dev builds; `Accessible` only applies when `AccessGroup` is set on the Data Protection Keychain, which requires a signed app with `keychain-access-groups`). It does **not** set `SecAccessControl` (`biometryCurrentSet`), relying on app-level `LAContext` Touch ID gating (`apple/biometric.go`). Acceptable for MVP; hardware-enforced `SecAccessControl` can be added in Phase 2 for signed release builds.
+   - **Hardware-enforced key with fallback (`cmd/govault/biokeychain*.go`)**: `BiometricSecretStore` wraps `core.Secrets` and handles only `userkey:<accountID>`. On save it first tries the Data Protection Keychain (`kSecUseDataProtectionKeychain`) with a `SecAccessControl` of `kSecAttrAccessibleWhenUnlockedThisDeviceOnly` + `kSecAccessControlBiometryCurrentSet`, through `purego` and `Security.framework`. If that succeeds the login Keychain copy is deleted and unlock reads the item directly, so macOS shows its own Touch ID prompt and GoVault skips `LAContext` (no double prompt). If macOS answers `errSecMissingEntitlement` (`-34018`) or the access control cannot be created, the key goes to the login Keychain and unlock keeps the `LAContext` gate. Delete clears both stores. Settings → Security shows which protection is active.
+   - **Verified behavior** (macOS 27.2.1, arm64, `SecAccessControlCreateWithFlags` succeeds in every case):
+
+     | Binary | `SecItemAdd` (Data Protection + biometry) | `SecItemCopyMatching` | `SecItemDelete` |
+     |---|---|---|---|
+     | Ad-hoc (Go linker signature) | `-34018` | `-25300` | `-34018` |
+     | Developer ID Application + hardened runtime, no profile | `-34018` | `-25300` | `-34018` |
+     | Developer ID + `keychain-access-groups` entitlement, no profile | process killed by AMFI ("restricted entitlements") | — | — |
+
+     The login Keychain round trip through the same bindings succeeds for both binaries. The hardware path therefore needs a build with an embedded provisioning profile that grants `keychain-access-groups` (for example a Mac App Store or profile-signed build). Current Developer ID releases use the app-gated login Keychain path, and the code switches to the hardware path automatically when the entitlement is present. Rerun the probe with `GOVAULT_KEYCHAIN_PROBE=1 go test -run Probe -v ./cmd/govault`, or build it with `go test -c` and sign it first.
 4. **Lock Triggers**:
    - Manual lock (`Cmd+L` / menu bar), configurable idle timeout (default 15 minutes), and, on macOS, system sleep or screen lock (`NSWorkspaceWillSleepNotification` and `com.apple.screenIsLocked`, observed via `purego/objc`; on by default, toggle in Settings).
    - On lock: zero in-memory User Key, org keys and decrypted cipher structs, stop all UI timers, clear UI signals and release Secure Event Input.
@@ -185,7 +195,7 @@ govault/
 
 - **NSGo API churn & Linux desktop parity**: NSGo is pre-1.0; tray behavior on Linux (especially Wayland) may have edge cases. *Mitigation*: Isolate all NSGo calls in `cmd/govault`, keep `vaultcore` 100% decoupled, and validate X11/Wayland behavior early.
 - **Cryptography correctness bugs**: Subtle mistakes in MAC verification, padding, or key stretching can corrupt vault items on write. *Mitigation*: Test against official Bitwarden SDK test vectors and run write tests against a throwaway local Vaultwarden Docker instance first.
-- **Keychain vs hardware-enforced Touch ID**: Without `SecAccessControl`, another process running as the same user with Keychain access could read the login Keychain item. *Mitigation*: Document this trade-off clearly for MVP and optionally add a macOS `SecAccessControl` wrapper in Phase 2 for signed release builds.
+- **Keychain vs hardware-enforced Touch ID**: Without `SecAccessControl`, another process running as the same user with Keychain access could read the login Keychain item. *Mitigation*: `BiometricSecretStore` uses a `SecAccessControl` (`biometryCurrentSet`) item in the Data Protection Keychain whenever the build is entitled to it, and Settings shows when the app-gated fallback is in use.
 - **Argon2id memory retention**: Go's GC may retain 64 MiB after Argon2id unlock. *Mitigation*: Explicitly zero buffers and call `debug.FreeOSMemory()` post-derivation.
 
 ## Related Documents

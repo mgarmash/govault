@@ -142,7 +142,12 @@ type PlatformHooks struct {
 	VerifyMasterPassword func(password []byte) error
 	PrefsKey             string
 	SSHAgent             SSHAgentHost
+	// BiometricHardwareBound reports whether the biometric key of an account is
+	// in a keychain that macOS releases only after its own Touch ID check.
+	BiometricHardwareBound func(accountID string) bool
 }
+
+var ErrBiometricCancelled = errors.New("biometric authentication cancelled")
 
 // SSHAgentHost runs the local ssh-agent socket that serves vault SSH keys.
 type SSHAgentHost interface {
@@ -333,7 +338,8 @@ type AppModel struct {
 	LastSync  *core.Signal[time.Time]
 	Route     *core.Signal[MainRoute]
 
-	BiometricKind *core.Signal[core.BiometricKind]
+	BiometricKind     *core.Signal[core.BiometricKind]
+	BiometricHardware *core.Signal[bool]
 
 	LoginServer   *core.Signal[string]
 	LoginEmail    *core.Signal[string]
@@ -456,6 +462,7 @@ func NewAppModel(app *core.Scope, coreSvc state.VaultService, hooks PlatformHook
 		LastSync:          core.NewSignal(app, time.Time{}),
 		Route:             core.NewSignal(app, RouteVault),
 		BiometricKind:     core.NewSignal(app, core.BiometricNone),
+		BiometricHardware: core.NewSignal(app, false),
 		LoginServer:       core.NewSignal(app, p.ServerURL),
 		LoginEmail:        core.NewSignal(app, p.Email),
 		LoginPassword:     core.NewSignal(app, ""),
@@ -668,6 +675,21 @@ func (m *AppModel) RefreshBiometricAvailability() {
 	m.Scope.BiometricAvailability(func(kind core.BiometricKind) {
 		m.BiometricKind.Set(kind)
 	})
+}
+
+// RefreshBiometricProtection updates whether macOS itself enforces Touch ID
+// for the saved biometric key.
+func (m *AppModel) RefreshBiometricProtection() {
+	check := m.Hooks.BiometricHardwareBound
+	accountID := m.Prefs.Get().AccountID
+	if check == nil || accountID == "" || !m.Prefs.Get().BiometricEnabled {
+		m.BiometricHardware.Set(false)
+		return
+	}
+	go func() {
+		bound := check(accountID)
+		m.Scope.Post(func() { m.BiometricHardware.Set(bound) })
+	}()
 }
 
 func (m *AppModel) SetShowTrayIcon(on bool) {
@@ -996,19 +1018,14 @@ func (m *AppModel) UnlockWithBiometric(cx *core.Scope) {
 	m.LockBusy.Set(true)
 	m.LockError.Set("")
 
-	cx.AuthenticateBiometric("Unlock GoVault", func(res core.BiometricResult) {
-		if res != core.BiometricSuccess {
-			msg := ""
-			if res != core.BiometricCancelled {
-				msg = "Biometric authentication failed. Enter master password."
-			}
-			m.unlockFailed(msg)
-			return
-		}
-
-		secrets := m.Hooks.Secrets
+	secrets := m.Hooks.Secrets
+	readKey := func() {
 		go func() {
 			encoded, ok, err := secrets.Get("userkey:" + accountID)
+			if errors.Is(err, ErrBiometricCancelled) {
+				m.Scope.Post(func() { m.unlockFailed("") })
+				return
+			}
 			if err != nil || !ok || encoded == "" {
 				m.Scope.Post(func() { m.unlockFailed("Saved biometric key unavailable. Unlock with master password.") })
 				return
@@ -1036,6 +1053,22 @@ func (m *AppModel) UnlockWithBiometric(cx *core.Scope) {
 				m.finishUnlock()
 			})
 		}()
+	}
+
+	if m.Hooks.BiometricHardwareBound != nil && m.Hooks.BiometricHardwareBound(accountID) {
+		readKey()
+		return
+	}
+	cx.AuthenticateBiometric("Unlock GoVault", func(res core.BiometricResult) {
+		if res != core.BiometricSuccess {
+			msg := ""
+			if res != core.BiometricCancelled {
+				msg = "Biometric authentication failed. Enter master password."
+			}
+			m.unlockFailed(msg)
+			return
+		}
+		readKey()
 	})
 }
 
@@ -1079,6 +1112,7 @@ func (m *AppModel) ToggleBiometric(cx *core.Scope, enable bool) {
 					p.BiometricEnabled = true
 					return p
 				})
+				m.RefreshBiometricProtection()
 				m.ShowToast(ui.ToastSuccess, m.BiometricLabel()+" enabled", "You can now unlock GoVault with "+m.BiometricLabel()+".")
 			})
 		}()
