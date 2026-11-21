@@ -49,6 +49,7 @@ type UserPrefs struct {
 	BiometricEnabled      bool                  `json:"biometricEnabled"`
 	AutoPromptBiometric   bool                  `json:"autoPromptBiometric"`
 	AutoLockMinutes       int                   `json:"autoLockMinutes"`
+	LockOnSleep           bool                  `json:"lockOnSleep"`
 	ClipboardClearSeconds int                   `json:"clipboardClearSeconds"`
 	LaunchAtLogin         bool                  `json:"launchAtLogin"`
 	HideDockIcon          bool                  `json:"hideDockIcon"`
@@ -65,6 +66,7 @@ func DefaultUserPrefs() UserPrefs {
 	return UserPrefs{
 		AutoPromptBiometric:   true,
 		AutoLockMinutes:       15,
+		LockOnSleep:           true,
 		ClipboardClearSeconds: 30,
 		ShowTrayIcon:          true,
 		SidebarWidth:          DefaultSidebarWidth,
@@ -126,6 +128,7 @@ type PlatformHooks struct {
 	SetDockVisible       func(on bool)
 	SetTrayVisible       func(on bool)
 	ReleaseSecureInput   func(force bool)
+	SleepLockSupported   bool
 	DiscoverSnapshot     func(preferredAccountID string) *AccountSnapshotMeta
 	VerifyMasterPassword func(password []byte) error
 	PrefsKey             string
@@ -1043,6 +1046,15 @@ func (m *AppModel) Lock() {
 	m.Folders.Set(nil)
 	m.FilteredItems.Replace(nil)
 	m.AllCounts.Set(VaultCounts{ByFolder: map[string]int{}})
+	m.ReleaseSecureInput()
+}
+
+func (m *AppModel) LockOnSystemEvent() bool {
+	if !m.Prefs.Get().LockOnSleep || m.LockState.Get() != state.StatusUnlocked {
+		return false
+	}
+	m.Lock()
+	return true
 }
 
 func (m *AppModel) Logout(cx *core.Scope) {

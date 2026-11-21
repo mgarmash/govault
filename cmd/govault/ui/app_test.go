@@ -473,3 +473,51 @@ func TestSearchCoversWholeVaultUnlessNarrowed(t *testing.T) {
 		t.Fatalf("expected no Secure Note named GitHub when narrowed, got %d", n)
 	}
 }
+
+func TestLockOnSleepPreferenceAndSystemEvent(t *testing.T) {
+	var legacy UserPrefs
+	if err := json.Unmarshal([]byte(`{"autoLockMinutes":5}`), &legacy); err != nil || !legacy.LockOnSleep {
+		t.Fatalf("legacy prefs LockOnSleep = %v (err %v), want true", legacy.LockOnSleep, err)
+	}
+
+	svc := newMockVaultService(state.StatusUnlocked)
+	var model *AppModel
+	var releases []bool
+	app := nsgotest.Start(t, func(cx *core.Scope) core.Node {
+		model = NewAppModel(cx, svc, PlatformHooks{
+			SleepLockSupported: true,
+			ReleaseSecureInput: func(force bool) { releases = append(releases, force) },
+		})
+		model.MainWinVisible.Set(true)
+		model.Route.Set(RouteSettings)
+		return MainWindowView(cx, model)
+	}, nsgotest.Size(980, 720))
+
+	app.Press("id:settings-lock-on-sleep")
+	app.WaitUntil(time.Second, func() bool { return !model.Prefs.Get().LockOnSleep })
+
+	systemLock := func() bool {
+		done, result := false, false
+		app.Post(func() { result, done = model.LockOnSystemEvent(), true })
+		app.WaitUntil(time.Second, func() bool { return done })
+		return result
+	}
+	if systemLock() || svc.Status() != state.StatusUnlocked {
+		t.Fatal("system event locked the vault with LockOnSleep off")
+	}
+
+	app.Press("id:settings-lock-on-sleep")
+	app.WaitUntil(time.Second, func() bool { return model.Prefs.Get().LockOnSleep })
+
+	releases = nil
+	if !systemLock() {
+		t.Fatal("system event did not lock the unlocked vault")
+	}
+	app.WaitFor("id:lock-screen", 2*time.Second)
+	if svc.Status() != state.StatusLocked || model.TOTPTickerActive() || len(releases) == 0 || !releases[len(releases)-1] {
+		t.Fatalf("after lock: status=%v ticker=%v releases=%v", svc.Status(), model.TOTPTickerActive(), releases)
+	}
+	if systemLock() {
+		t.Fatal("system event re-locked an already locked vault")
+	}
+}

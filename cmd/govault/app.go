@@ -117,6 +117,7 @@ func (s *DesktopShell) platformHooks(secrets store.SecretStore) govaultui.Platfo
 		},
 		SetTrayVisible:     s.SetTrayVisible,
 		ReleaseSecureInput: ReleaseSecureInput,
+		SleepLockSupported: sleepLockSupported,
 	}
 }
 
@@ -138,6 +139,12 @@ func (s *DesktopShell) finishSetup() {
 			ReleaseSecureInput(true)
 		}
 	})
+
+	if stop, err := startSleepLockListener(func() {
+		app.Post(func() { shell.model.LockOnSystemEvent() })
+	}); err == nil {
+		app.Cleanup(stop)
+	}
 
 	app.Cleanup(func() {
 		clip.Cancel()

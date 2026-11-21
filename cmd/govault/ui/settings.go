@@ -105,6 +105,23 @@ func SettingsView(cx *core.Scope, m *AppModel) core.Node {
 								},
 							},
 						))
+						if m.Hooks.SleepLockSupported {
+							rows = append(rows, settingsRow(
+								"Lock on sleep or screen lock",
+								"Lock the vault when your Mac sleeps or the screen locks.",
+								ui.Switch{
+									TestID:  "settings-lock-on-sleep",
+									Label:   "Lock on sleep or screen lock",
+									Checked: func() bool { return m.Prefs.Get().LockOnSleep },
+									OnChange: func(on bool) {
+										m.UpdatePrefs(func(p UserPrefs) UserPrefs {
+											p.LockOnSleep = on
+											return p
+										})
+									},
+								},
+							))
+						}
 						return card(rows...)
 					})),
 					section("Clipboard", card(
