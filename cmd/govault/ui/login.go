@@ -142,6 +142,7 @@ func passwordField(cx *core.Scope, in base.Input, height core.Points, show *core
 			core.Dynamic(func(cx *core.Scope) core.Node {
 				field := in
 				field.Masked = !show.Get()
+				field.OnBlur = settleSecureInput
 				field.Style = core.Style{Padding: core.Edges{Left: 10, Right: inset}}.Merge(field.Style)
 				return sizedInput(field, height)
 			}),

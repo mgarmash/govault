@@ -31,9 +31,6 @@ func newDemoShell(app *core.Scope) *DesktopShell {
 		p.KDFSummary = demo.KDF
 		p.BiometricEnabled = true
 		p.AutoPromptBiometric = false
-		if p.QuickAccessHotKey == "" {
-			p.QuickAccessHotKey = "mod+shift+space"
-		}
 		return p
 	})
 	shell.model.LastSync.Set(time.Now().Add(-2 * time.Minute))

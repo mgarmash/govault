@@ -1,6 +1,7 @@
 package preview
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 	"testing"
@@ -40,7 +41,6 @@ func previewModel(cx *core.Scope) *AppModel {
 		p.KDFSummary = demo.KDF
 		p.BiometricEnabled = true
 		p.AutoPromptBiometric = false
-		p.QuickAccessHotKey = "mod+shift+space"
 		return p
 	})
 	m.LastSync.Set(time.Now().Add(-2 * time.Minute))
@@ -113,26 +113,20 @@ func TestPreviewMainWindow(t *testing.T) {
 	})
 	scene("09-lock-dark", core.AppearanceDark, func() {})
 	scene("10-login-light", core.AppearanceLight, func() { m.LockState.Set(state.StatusLoggedOut) })
-}
-
-func TestPreviewQuickPanel(t *testing.T) {
-	dir := previewDir(t)
-	var m *AppModel
-	var root *core.Scope
-	app := nsgotest.Start(t, func(cx *core.Scope) core.Node {
-		root = cx
-		m = previewModel(cx)
-		m.MainWinVisible.Set(false)
-		m.QuickPanelVisible.Set(true)
-		m.RefreshQuickItems()
-		return QuickPanelView(cx, m)
-	}, nsgotest.Size(620, 440))
-
-	app.WaitUntil(3*time.Second, func() bool { return m.TOTPCode.Get() != "" || true })
-	savePreview(t, app, dir, "11-quick-panel-light")
-	app.Post(func() {
-		root.SetAppearance(core.AppearanceDark)
-		m.QuickSelectedIdx.Set(1)
+	scene("11-search-scope-light", core.AppearanceLight, func() {
+		_ = m.Core.UnlockWithUserKey(context.Background(), nil)
+		m.LockState.Set(state.StatusUnlocked)
+		m.RefreshVaultData()
+		m.SetSidebarFilter(state.SearchFilter{Category: state.FilterAll, FolderID: "f-finance"})
+		m.SetSearchQuery("alex")
+		m.SelectCipher(m.Scope, "c-netflix")
 	})
-	savePreview(t, app, dir, "12-quick-panel-dark")
+	scene("12-folders-collapsed-dark", core.AppearanceDark, func() {
+		m.SetSearchQuery("")
+		m.SetSidebarFilter(state.SearchFilter{Category: state.FilterAll})
+		m.UpdatePrefs(func(p UserPrefs) UserPrefs { p.FoldersCollapsed = true; return p })
+		m.SidebarW.Set(260)
+		m.ListW.Set(360)
+		m.SelectCipher(m.Scope, "c-stripe")
+	})
 }

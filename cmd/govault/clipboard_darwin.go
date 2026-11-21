@@ -88,6 +88,8 @@ func initPasteboard() error {
 }
 
 func withAutoreleasePool(fn func()) {
+	runtime.LockOSThread()
+	defer runtime.UnlockOSThread()
 	pool := objc.ID(clsNSAutoreleasePool).Send(selAlloc).Send(selInit)
 	defer pool.Send(selDrain)
 	fn()

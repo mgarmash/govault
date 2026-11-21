@@ -138,9 +138,7 @@ func repromptDialog(m *AppModel) core.Node {
 		Open:   func() bool { return m.Reprompt.Get().Open },
 		OnOpenChange: func(open bool, _ base.Reason) {
 			if !open {
-				m.RepromptPW.Set("")
-				m.RepromptError.Set("")
-				m.Reprompt.Set(RepromptModal{})
+				m.CloseReprompt()
 			}
 		},
 		OnConfirm: m.SubmitReprompt,
@@ -155,6 +153,7 @@ func repromptDialog(m *AppModel) core.Node {
 		Children: []core.Node{
 			ui.Input{
 				TestID:        "reprompt-password",
+				OnBlur:        settleSecureInput,
 				Placeholder:   "Master Password",
 				Masked:        true,
 				AutoFocus:     true,
@@ -177,11 +176,7 @@ func repromptDialog(m *AppModel) core.Node {
 			ui.Button{
 				Text:    "Cancel",
 				Variant: ui.ButtonSecondary,
-				OnPress: func() {
-					m.RepromptPW.Set("")
-					m.RepromptError.Set("")
-					m.Reprompt.Set(RepromptModal{})
-				},
+				OnPress: m.CloseReprompt,
 			},
 			ui.Button{
 				TestID:  "reprompt-confirm",

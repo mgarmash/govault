@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
@@ -47,9 +48,12 @@ type UserPrefs struct {
 	AutoPromptBiometric   bool                  `json:"autoPromptBiometric"`
 	AutoLockMinutes       int                   `json:"autoLockMinutes"`
 	ClipboardClearSeconds int                   `json:"clipboardClearSeconds"`
-	QuickAccessHotKey     string                `json:"quickAccessHotKey"`
 	LaunchAtLogin         bool                  `json:"launchAtLogin"`
 	HideDockIcon          bool                  `json:"hideDockIcon"`
+	ShowTrayIcon          bool                  `json:"showTrayIcon"`
+	SidebarWidth          float32               `json:"sidebarWidth"`
+	ListWidth             float32               `json:"listWidth"`
+	FoldersCollapsed      bool                  `json:"foldersCollapsed"`
 	GeneratorMode         string                `json:"generatorMode"`
 	PasswordOpts          gen.PasswordOptions   `json:"passwordOpts"`
 	PassphraseOpts        gen.PassphraseOptions `json:"passphraseOpts"`
@@ -60,7 +64,9 @@ func DefaultUserPrefs() UserPrefs {
 		AutoPromptBiometric:   true,
 		AutoLockMinutes:       15,
 		ClipboardClearSeconds: 30,
-		QuickAccessHotKey:     "",
+		ShowTrayIcon:          true,
+		SidebarWidth:          DefaultSidebarWidth,
+		ListWidth:             DefaultListWidth,
 		GeneratorMode:         "password",
 		PasswordOpts: gen.PasswordOptions{
 			Length:         20,
@@ -81,6 +87,26 @@ func DefaultUserPrefs() UserPrefs {
 	}
 }
 
+func (p *UserPrefs) UnmarshalJSON(data []byte) error {
+	type plain UserPrefs
+	v := plain(DefaultUserPrefs())
+	if err := json.Unmarshal(data, &v); err != nil {
+		return err
+	}
+	*p = UserPrefs(v)
+	return nil
+}
+
+const (
+	DefaultSidebarWidth float32 = 224
+	DefaultListWidth    float32 = 300
+	MinSidebarWidth     float32 = 180
+	MaxSidebarWidth     float32 = 340
+	MinListWidth        float32 = 220
+	MaxListWidth        float32 = 460
+	MinDetailWidth      float32 = 380
+)
+
 type AccountSnapshotMeta struct {
 	AccountID  string
 	ServerURL  string
@@ -94,12 +120,10 @@ type PlatformHooks struct {
 	CopySecret           func(secret string, clearAfter time.Duration) (concealed bool, err error)
 	CopyPlain            func(text string)
 	IsClipboardConcealed func() bool
-	ApplyHotKey          func(shortcut string)
 	SetLaunchAtLogin     func(on bool)
 	SetDockVisible       func(on bool)
-	OpenMainWindow       func()
-	HideQuickPanel       func()
-	ToggleQuickPanel     func()
+	SetTrayVisible       func(on bool)
+	ReleaseSecureInput   func(force bool)
 	DiscoverSnapshot     func(preferredAccountID string) *AccountSnapshotMeta
 	VerifyMasterPassword func(password []byte) error
 	PrefsKey             string
@@ -283,7 +307,6 @@ type AppModel struct {
 	Route     *core.Signal[MainRoute]
 
 	BiometricKind *core.Signal[core.BiometricKind]
-	HotKeyStatus  *core.Signal[string]
 
 	LoginServer   *core.Signal[string]
 	LoginEmail    *core.Signal[string]
@@ -321,20 +344,13 @@ type AppModel struct {
 	TOTPRemaining *core.Signal[int]
 	TOTPPeriod    *core.Signal[int]
 
-	MainWinVisible    *core.Signal[bool]
-	QuickPanelVisible *core.Signal[bool]
+	MainWinVisible  *core.Signal[bool]
+	SearchInSection *core.Signal[bool]
 
-	QuickQuery       *core.Signal[string]
-	QuickItems       *core.Signal[[]state.CipherSummary]
-	QuickSelectedIdx *core.Signal[int]
-	QuickSearchRef   core.Ref
-	QuickPassword    *core.Signal[string]
-	QuickUnlockBusy  *core.Signal[bool]
-	QuickUnlockError *core.Signal[string]
+	SidebarW *core.Signal[float32]
+	ListW    *core.Signal[float32]
 
 	GenResult *core.Signal[string]
-
-	RecordingHotKey *core.Signal[bool]
 
 	Reprompt      *core.Signal[RepromptModal]
 	RepromptPW    *core.Signal[string]
@@ -364,6 +380,11 @@ type VaultCounts struct {
 }
 
 func NewAppModel(app *core.Scope, coreSvc state.VaultService, hooks PlatformHooks) *AppModel {
+	settleSecureInput = func() {
+		if hooks.ReleaseSecureInput != nil {
+			hooks.ReleaseSecureInput(false)
+		}
+	}
 	prefsKey := hooks.PrefsKey
 	if prefsKey == "" {
 		prefsKey = DefaultPrefsKey
@@ -376,69 +397,61 @@ func NewAppModel(app *core.Scope, coreSvc state.VaultService, hooks PlatformHook
 	}
 
 	m := &AppModel{
-		Scope:             app,
-		Core:              coreSvc,
-		Hooks:             hooks,
-		Prefs:             prefs,
-		LockState:         core.NewSignal(app, coreSvc.Status()),
-		SyncState:         core.NewSignal(app, SyncIdle),
-		LastSync:          core.NewSignal(app, time.Time{}),
-		Route:             core.NewSignal(app, RouteVault),
-		BiometricKind:     core.NewSignal(app, core.BiometricNone),
-		HotKeyStatus:      core.NewSignal(app, "Disabled"),
-		LoginServer:       core.NewSignal(app, p.ServerURL),
-		LoginEmail:        core.NewSignal(app, p.Email),
-		LoginPassword:     core.NewSignal(app, ""),
-		LoginBusy:         core.NewSignal(app, false),
-		LoginError:        core.NewSignal(app, ""),
-		LoginShowPW:       core.NewSignal(app, false),
-		LockPassword:      core.NewSignal(app, ""),
-		LockBusy:          core.NewSignal(app, false),
-		LockError:         core.NewSignal(app, ""),
-		LockShowPW:        core.NewSignal(app, false),
-		SidebarFilter:     core.NewSignal(app, state.SearchFilter{Category: state.FilterAll}),
-		SearchQuery:       core.NewSignal(app, ""),
-		Folders:           core.NewSignalFunc(app, []state.Folder(nil), nil),
-		AllCounts:         core.NewSignalFunc(app, VaultCounts{ByFolder: map[string]int{}}, nil),
-		FilteredItems:     core.NewCollectionFunc(app, func(c state.CipherSummary) string { return c.ID }, cipherSummaryEqual, nil),
-		SelectedID:        core.NewSignal(app, ""),
-		ActiveCipher:      core.NewSignal[*state.Cipher](app, nil),
-		RevealPW:          core.NewSignal(app, false),
-		RevealCard:        core.NewSignal(app, false),
-		EditMode:          core.NewSignal(app, false),
-		EditDraft:         core.NewSignal[*EditDraft](app, nil),
-		EditDirty:         core.NewSignal(app, false),
-		EditBusy:          core.NewSignal(app, false),
-		EditError:         core.NewSignal(app, ""),
-		TOTPCode:          core.NewSignal(app, ""),
-		TOTPRemaining:     core.NewSignal(app, 0),
-		TOTPPeriod:        core.NewSignal(app, 30),
-		MainWinVisible:    core.NewSignal(app, false),
-		QuickPanelVisible: core.NewSignal(app, false),
-		QuickQuery:        core.NewSignal(app, ""),
-		QuickItems:        core.NewSignalFunc(app, []state.CipherSummary(nil), nil),
-		QuickSelectedIdx:  core.NewSignal(app, 0),
-		QuickPassword:     core.NewSignal(app, ""),
-		QuickUnlockBusy:   core.NewSignal(app, false),
-		QuickUnlockError:  core.NewSignal(app, ""),
-		GenResult:         core.NewSignal(app, ""),
-		RecordingHotKey:   core.NewSignal(app, false),
-		Reprompt:          core.NewSignalFunc(app, RepromptModal{}, nil),
-		RepromptPW:        core.NewSignal(app, ""),
-		RepromptError:     core.NewSignal(app, ""),
-		RepromptBusy:      core.NewSignal(app, false),
-		FolderDialog:      core.NewSignal(app, FolderModal{}),
-		FolderError:       core.NewSignal(app, ""),
-		FolderBusy:        core.NewSignal(app, false),
-		Toaster:           ui.NewToaster(app),
+		Scope:           app,
+		Core:            coreSvc,
+		Hooks:           hooks,
+		Prefs:           prefs,
+		LockState:       core.NewSignal(app, coreSvc.Status()),
+		SyncState:       core.NewSignal(app, SyncIdle),
+		LastSync:        core.NewSignal(app, time.Time{}),
+		Route:           core.NewSignal(app, RouteVault),
+		BiometricKind:   core.NewSignal(app, core.BiometricNone),
+		LoginServer:     core.NewSignal(app, p.ServerURL),
+		LoginEmail:      core.NewSignal(app, p.Email),
+		LoginPassword:   core.NewSignal(app, ""),
+		LoginBusy:       core.NewSignal(app, false),
+		LoginError:      core.NewSignal(app, ""),
+		LoginShowPW:     core.NewSignal(app, false),
+		LockPassword:    core.NewSignal(app, ""),
+		LockBusy:        core.NewSignal(app, false),
+		LockError:       core.NewSignal(app, ""),
+		LockShowPW:      core.NewSignal(app, false),
+		SidebarFilter:   core.NewSignal(app, state.SearchFilter{Category: state.FilterAll}),
+		SearchQuery:     core.NewSignal(app, ""),
+		Folders:         core.NewSignalFunc(app, []state.Folder(nil), nil),
+		AllCounts:       core.NewSignalFunc(app, VaultCounts{ByFolder: map[string]int{}}, nil),
+		FilteredItems:   core.NewCollectionFunc(app, func(c state.CipherSummary) string { return c.ID }, cipherSummaryEqual, nil),
+		SelectedID:      core.NewSignal(app, ""),
+		ActiveCipher:    core.NewSignal[*state.Cipher](app, nil),
+		RevealPW:        core.NewSignal(app, false),
+		RevealCard:      core.NewSignal(app, false),
+		EditMode:        core.NewSignal(app, false),
+		EditDraft:       core.NewSignal[*EditDraft](app, nil),
+		EditDirty:       core.NewSignal(app, false),
+		EditBusy:        core.NewSignal(app, false),
+		EditError:       core.NewSignal(app, ""),
+		TOTPCode:        core.NewSignal(app, ""),
+		TOTPRemaining:   core.NewSignal(app, 0),
+		TOTPPeriod:      core.NewSignal(app, 30),
+		MainWinVisible:  core.NewSignal(app, false),
+		SearchInSection: core.NewSignal(app, false),
+		SidebarW:        core.NewSignal(app, clampWidth(p.SidebarWidth, MinSidebarWidth, MaxSidebarWidth, DefaultSidebarWidth)),
+		ListW:           core.NewSignal(app, clampWidth(p.ListWidth, MinListWidth, MaxListWidth, DefaultListWidth)),
+		GenResult:       core.NewSignal(app, ""),
+		Reprompt:        core.NewSignalFunc(app, RepromptModal{}, nil),
+		RepromptPW:      core.NewSignal(app, ""),
+		RepromptError:   core.NewSignal(app, ""),
+		RepromptBusy:    core.NewSignal(app, false),
+		FolderDialog:    core.NewSignal(app, FolderModal{}),
+		FolderError:     core.NewSignal(app, ""),
+		FolderBusy:      core.NewSignal(app, false),
+		Toaster:         ui.NewToaster(app),
 	}
 	m.IsSelected = core.NewSelector(app, m.SelectedID.Get)
 
 	m.RegenerateSecret()
 
-	app.BiometricAvailability(func(kind core.BiometricKind) {
-		m.BiometricKind.Set(kind)
-	})
+	m.RefreshBiometricAvailability()
 
 	app.Effect(func() {
 		m.reconcileTOTPTicker()
@@ -487,12 +500,9 @@ func (m *AppModel) TOTPTickerActive() bool {
 func (m *AppModel) reconcileTOTPTicker() {
 	lock := m.LockState.Get()
 	mainVis := m.MainWinVisible.Get()
-	quickVis := m.QuickPanelVisible.Get()
 	route := m.Route.Get()
 	edit := m.EditMode.Get()
 	active := m.ActiveCipher.Get()
-	quickItems := m.QuickItems.Get()
-	quickIdx := m.QuickSelectedIdx.Get()
 
 	if lock != state.StatusUnlocked {
 		m.stopTOTP()
@@ -502,10 +512,6 @@ func (m *AppModel) reconcileTOTPTicker() {
 	var totpSeed string
 	if mainVis && route == RouteVault && !edit && active != nil && active.Login != nil && strings.TrimSpace(active.Login.TOTP) != "" {
 		totpSeed = active.Login.TOTP
-	} else if quickVis && quickIdx >= 0 && quickIdx < len(quickItems) && quickItems[quickIdx].HasTOTP {
-		if c, err := m.Core.GetCipher(quickItems[quickIdx].ID); err == nil && c.Login != nil {
-			totpSeed = c.Login.TOTP
-		}
 	}
 
 	if totpSeed == "" {
@@ -583,19 +589,66 @@ func (m *AppModel) UpdatePrefs(fn func(p UserPrefs) UserPrefs) {
 	_ = m.Prefs.Update(fn)
 }
 
-func (m *AppModel) SetQuickAccessHotKey(shortcut string) {
-	trimmed := strings.TrimSpace(shortcut)
+func (m *AppModel) RefreshBiometricAvailability() {
+	m.Scope.BiometricAvailability(func(kind core.BiometricKind) {
+		m.BiometricKind.Set(kind)
+	})
+}
+
+func (m *AppModel) SetShowTrayIcon(on bool) {
 	m.UpdatePrefs(func(p UserPrefs) UserPrefs {
-		p.QuickAccessHotKey = trimmed
+		p.ShowTrayIcon = on
+		if !on {
+			p.HideDockIcon = false
+		}
 		return p
 	})
-	if m.Hooks.ApplyHotKey != nil {
-		m.Hooks.ApplyHotKey(trimmed)
+	if !on && m.Hooks.SetDockVisible != nil {
+		m.Hooks.SetDockVisible(true)
 	}
-	if trimmed == "" {
-		m.HotKeyStatus.Set("Disabled")
+	if m.Hooks.SetTrayVisible != nil {
+		m.Hooks.SetTrayVisible(on)
 	}
 }
+
+func clampWidth(v, lo, hi, def float32) float32 {
+	if v <= 0 {
+		return def
+	}
+	return min(max(v, lo), hi)
+}
+
+// ClampPaneWidths keeps both panes inside their bounds and leaves the detail pane at least MinDetailWidth of total.
+func ClampPaneWidths(sidebar, list, total float32) (float32, float32) {
+	sidebar = min(max(sidebar, MinSidebarWidth), MaxSidebarWidth)
+	list = min(max(list, MinListWidth), MaxListWidth)
+	if total <= 0 {
+		return sidebar, list
+	}
+	if over := sidebar + list + MinDetailWidth - total; over > 0 {
+		cut := min(over, list-MinListWidth)
+		list -= cut
+		over -= cut
+		sidebar = max(sidebar-over, MinSidebarWidth)
+	}
+	return sidebar, list
+}
+
+func (m *AppModel) PersistPaneWidths() {
+	sw, lw := m.SidebarW.Get(), m.ListW.Get()
+	m.UpdatePrefs(func(p UserPrefs) UserPrefs {
+		p.SidebarWidth, p.ListWidth = sw, lw
+		return p
+	})
+}
+
+func (m *AppModel) ReleaseSecureInput() {
+	if m.Hooks.ReleaseSecureInput != nil {
+		m.Hooks.ReleaseSecureInput(true)
+	}
+}
+
+var settleSecureInput = func() {}
 
 func (m *AppModel) SyncAccountMetaFromSnapshot() {
 	if m.Hooks.DiscoverSnapshot == nil {
@@ -635,6 +688,7 @@ func (m *AppModel) Login() {
 		return
 	}
 
+	m.ReleaseSecureInput()
 	m.LoginBusy.Set(true)
 	m.LoginError.Set("")
 	pwBytes := []byte(password)
@@ -661,41 +715,23 @@ func (m *AppModel) Login() {
 			m.Route.Set(RouteVault)
 			m.RefreshVaultData()
 			m.ResetIdleTimer()
+			m.ReleaseSecureInput()
 		})
 	}()
 }
 
-func (m *AppModel) UnlockWithPassword(fromQuickPanel bool) {
-	if fromQuickPanel {
-		if m.QuickUnlockBusy.Get() {
-			return
-		}
-	} else if m.LockBusy.Get() {
+func (m *AppModel) UnlockWithPassword() {
+	if m.LockBusy.Get() {
 		return
 	}
-
-	var password string
-	if fromQuickPanel {
-		password = m.QuickPassword.Get()
-	} else {
-		password = m.LockPassword.Get()
-	}
+	password := m.LockPassword.Get()
 	if password == "" {
-		if fromQuickPanel {
-			m.QuickUnlockError.Set("Enter your master password.")
-		} else {
-			m.LockError.Set("Enter your master password.")
-		}
+		m.LockError.Set("Enter your master password.")
 		return
 	}
-
-	if fromQuickPanel {
-		m.QuickUnlockBusy.Set(true)
-		m.QuickUnlockError.Set("")
-	} else {
-		m.LockBusy.Set(true)
-		m.LockError.Set("")
-	}
+	m.ReleaseSecureInput()
+	m.LockBusy.Set(true)
+	m.LockError.Set("")
 	pwBytes := []byte(password)
 
 	go func() {
@@ -703,28 +739,33 @@ func (m *AppModel) UnlockWithPassword(fromQuickPanel bool) {
 		err := m.Core.UnlockWithPassword(context.Background(), pwBytes)
 		m.Scope.Post(func() {
 			m.LockBusy.Set(false)
-			m.QuickUnlockBusy.Set(false)
 			if err != nil {
-				msg := friendlyError(err)
-				if fromQuickPanel {
-					m.QuickUnlockError.Set(msg)
-				} else {
-					m.LockError.Set(msg)
-				}
+				m.LockError.Set(friendlyError(err))
+				m.LockPasswordRef.Focus()
 				return
 			}
-			m.LockPassword.Set("")
-			m.QuickPassword.Set("")
-			m.LockAutoFired = false
-			m.LockState.Set(state.StatusUnlocked)
-			m.RefreshVaultData()
-			m.ResetIdleTimer()
-			m.SyncNow(true)
+			m.finishUnlock()
 		})
 	}()
 }
 
-func (m *AppModel) UnlockWithBiometric(cx *core.Scope, fromQuickPanel bool) {
+func (m *AppModel) finishUnlock() {
+	m.LockPassword.Set("")
+	m.LockAutoFired = false
+	m.LockState.Set(state.StatusUnlocked)
+	m.RefreshVaultData()
+	m.ResetIdleTimer()
+	m.ReleaseSecureInput()
+	m.SyncNow(true)
+}
+
+func (m *AppModel) unlockFailed(msg string) {
+	m.LockBusy.Set(false)
+	m.LockError.Set(msg)
+	m.LockPasswordRef.Focus()
+}
+
+func (m *AppModel) UnlockWithBiometric(cx *core.Scope) {
 	if !m.CanUseBiometric() || !m.Prefs.Get().BiometricEnabled || m.Hooks.Secrets == nil {
 		return
 	}
@@ -732,29 +773,17 @@ func (m *AppModel) UnlockWithBiometric(cx *core.Scope, fromQuickPanel bool) {
 	if accountID == "" {
 		return
 	}
-	if fromQuickPanel {
-		m.QuickUnlockBusy.Set(true)
-		m.QuickUnlockError.Set("")
-	} else {
-		m.LockBusy.Set(true)
-		m.LockError.Set("")
-	}
+	m.ReleaseSecureInput()
+	m.LockBusy.Set(true)
+	m.LockError.Set("")
 
 	cx.AuthenticateBiometric("Unlock GoVault", func(res core.BiometricResult) {
 		if res != core.BiometricSuccess {
-			m.LockBusy.Set(false)
-			m.QuickUnlockBusy.Set(false)
+			msg := ""
 			if res != core.BiometricCancelled {
-				msg := "Biometric authentication failed. Enter master password."
-				if fromQuickPanel {
-					m.QuickUnlockError.Set(msg)
-				} else {
-					m.LockError.Set(msg)
-				}
+				msg = "Biometric authentication failed. Enter master password."
 			}
-			if !fromQuickPanel {
-				m.LockPasswordRef.Focus()
-			}
+			m.unlockFailed(msg)
 			return
 		}
 
@@ -762,63 +791,30 @@ func (m *AppModel) UnlockWithBiometric(cx *core.Scope, fromQuickPanel bool) {
 		go func() {
 			encoded, ok, err := secrets.Get("userkey:" + accountID)
 			if err != nil || !ok || encoded == "" {
-				m.Scope.Post(func() {
-					m.LockBusy.Set(false)
-					m.QuickUnlockBusy.Set(false)
-					msg := "Saved biometric key unavailable. Unlock with master password."
-					if fromQuickPanel {
-						m.QuickUnlockError.Set(msg)
-					} else {
-						m.LockError.Set(msg)
-					}
-					if !fromQuickPanel {
-						m.LockPasswordRef.Focus()
-					}
-				})
+				m.Scope.Post(func() { m.unlockFailed("Saved biometric key unavailable. Unlock with master password.") })
 				return
 			}
-
 			raw, err := base64.StdEncoding.DecodeString(encoded)
 			if err != nil {
-				m.Scope.Post(func() {
-					m.LockBusy.Set(false)
-					m.QuickUnlockBusy.Set(false)
-					m.LockError.Set("Corrupt biometric key. Unlock with master password.")
-				})
+				m.Scope.Post(func() { m.unlockFailed("Corrupt biometric key. Unlock with master password.") })
 				return
 			}
 			defer crypto.ZeroBytes(raw)
-
 			key, err := crypto.SymmetricKeyFromBytes(raw)
 			if err != nil {
-				m.Scope.Post(func() {
-					m.LockBusy.Set(false)
-					m.QuickUnlockBusy.Set(false)
-					m.LockError.Set("Invalid biometric key. Unlock with master password.")
-				})
+				m.Scope.Post(func() { m.unlockFailed("Invalid biometric key. Unlock with master password.") })
 				return
 			}
 			defer key.Zero()
 
 			err = m.Core.UnlockWithUserKey(context.Background(), key)
 			m.Scope.Post(func() {
-				m.LockBusy.Set(false)
-				m.QuickUnlockBusy.Set(false)
 				if err != nil {
-					if fromQuickPanel {
-						m.QuickUnlockError.Set(friendlyError(err))
-					} else {
-						m.LockError.Set(friendlyError(err))
-					}
+					m.unlockFailed(friendlyError(err))
 					return
 				}
-				m.LockPassword.Set("")
-				m.QuickPassword.Set("")
-				m.LockAutoFired = false
-				m.LockState.Set(state.StatusUnlocked)
-				m.RefreshVaultData()
-				m.ResetIdleTimer()
-				m.SyncNow(true)
+				m.LockBusy.Set(false)
+				m.finishUnlock()
 			})
 		}()
 	})
@@ -884,8 +880,7 @@ func (m *AppModel) Lock() {
 	m.RevealPW.Set(false)
 	m.RevealCard.Set(false)
 	m.SearchQuery.Set("")
-	m.QuickQuery.Set("")
-	m.QuickItems.Set(nil)
+	m.SearchInSection.Set(false)
 	m.Folders.Set(nil)
 	m.FilteredItems.Replace(nil)
 	m.AllCounts.Set(VaultCounts{ByFolder: map[string]int{}})
@@ -971,7 +966,6 @@ func (m *AppModel) RefreshVaultData() {
 	m.Folders.Set(folders)
 	m.recomputeCounts()
 	m.RefreshFilteredList()
-	m.RefreshQuickItems()
 
 	selID := m.SelectedID.Get()
 	if selID != "" {
@@ -1020,24 +1014,29 @@ func (m *AppModel) RefreshFilteredList() {
 		m.FilteredItems.Replace(nil)
 		return
 	}
-	items := m.Core.Search(m.SearchQuery.Get(), m.SidebarFilter.Get())
-	m.FilteredItems.Replace(items)
+	m.FilteredItems.Replace(m.Core.Search(m.SearchQuery.Get(), m.EffectiveSearchFilter()))
 }
 
-func (m *AppModel) RefreshQuickItems() {
-	if m.LockState.Get() != state.StatusUnlocked {
-		m.QuickItems.Set(nil)
-		m.QuickSelectedIdx.Set(0)
-		return
+// SearchIsGlobal reports whether a non-empty query searches the whole vault rather than the selected sidebar section.
+func (m *AppModel) SearchIsGlobal() bool {
+	f := m.SidebarFilter.Get()
+	return strings.TrimSpace(m.SearchQuery.Get()) != "" && f.Category != state.FilterTrash && !m.SearchInSection.Get() && !IsAllItemsFilter(f)
+}
+
+func IsAllItemsFilter(f state.SearchFilter) bool {
+	return f.Category == state.FilterAll && f.FolderID == "" && f.Type == nil
+}
+
+func (m *AppModel) EffectiveSearchFilter() state.SearchFilter {
+	if m.SearchIsGlobal() {
+		return state.SearchFilter{Category: state.FilterAll}
 	}
-	items := m.Core.Search(m.QuickQuery.Get(), state.SearchFilter{Category: state.FilterAll})
-	if len(items) > 12 {
-		items = items[:12]
-	}
-	m.QuickItems.Set(items)
-	if m.QuickSelectedIdx.Get() >= len(items) {
-		m.QuickSelectedIdx.Set(0)
-	}
+	return m.SidebarFilter.Get()
+}
+
+func (m *AppModel) SetSearchInSection(on bool) {
+	m.SearchInSection.Set(on)
+	m.RefreshFilteredList()
 }
 
 func (m *AppModel) SetSearchQuery(q string) {
@@ -1050,6 +1049,7 @@ func (m *AppModel) SetSidebarFilter(f state.SearchFilter) {
 	m.ResetIdleTimer()
 	m.Route.Set(RouteVault)
 	m.SidebarFilter.Set(f)
+	m.SearchInSection.Set(false)
 	m.RefreshFilteredList()
 }
 
@@ -1168,6 +1168,7 @@ func (m *AppModel) StartEditCipher(cx *core.Scope) {
 
 func (m *AppModel) CancelEdit(cx *core.Scope) {
 	m.GuardDirty(cx, func() {
+		m.ReleaseSecureInput()
 		m.EditMode.Set(false)
 		m.EditDraft.Set(nil)
 		m.EditDirty.Set(false)
@@ -1202,6 +1203,7 @@ func (m *AppModel) SaveDraft(cx *core.Scope) {
 	}
 
 	cipher := cipherFromDraft(draft)
+	m.ReleaseSecureInput()
 	m.EditBusy.Set(true)
 	m.EditError.Set("")
 
@@ -1241,6 +1243,7 @@ func (m *AppModel) SaveDraft(cx *core.Scope) {
 				m.SelectedID.Set(saved.ID)
 				m.ActiveCipher.Set(saved)
 			}
+			m.ReleaseSecureInput()
 			m.ShowToast(ui.ToastSuccess, "Item saved", "")
 		})
 	}()
@@ -1443,6 +1446,13 @@ func (m *AppModel) openRepromptDialog(actionLabel string, onAllow func()) {
 	})
 }
 
+func (m *AppModel) CloseReprompt() {
+	m.RepromptPW.Set("")
+	m.RepromptError.Set("")
+	m.Reprompt.Set(RepromptModal{})
+	m.ReleaseSecureInput()
+}
+
 func (m *AppModel) SubmitReprompt() {
 	if m.RepromptBusy.Get() {
 		return
@@ -1456,6 +1466,7 @@ func (m *AppModel) SubmitReprompt() {
 		m.RepromptError.Set("Master password verification is unavailable.")
 		return
 	}
+	m.ReleaseSecureInput()
 	m.RepromptBusy.Set(true)
 	m.RepromptError.Set("")
 	pwBytes := []byte(pw)
@@ -1472,6 +1483,7 @@ func (m *AppModel) SubmitReprompt() {
 			}
 			m.RepromptPW.Set("")
 			m.Reprompt.Set(RepromptModal{})
+			m.ReleaseSecureInput()
 			if cb != nil {
 				cb()
 			}

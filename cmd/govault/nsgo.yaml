@@ -1,6 +1,9 @@
 name: GoVault
 id: dev.txchen.govault
-version: 0.1.2
+version: 0.2.0
+
+icon:
+  png: assets/Icon.png
 
 dev:
   target: native

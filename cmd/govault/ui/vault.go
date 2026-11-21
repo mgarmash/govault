@@ -15,11 +15,25 @@ import (
 )
 
 func UnlockedShellView(cx *core.Scope, m *AppModel) core.Node {
+	shellW := core.NewSignal[float32](cx, 0)
+	clamp := func() {
+		sw, lw := ClampPaneWidths(m.SidebarW.Get(), m.ListW.Get(), shellW.Get())
+		m.SidebarW.Set(sw)
+		m.ListW.Set(lw)
+	}
 	return core.View{
 		TestID: "vault-shell",
 		Class:  "flex-1 flex-row bg-gv-list",
+		OnLayout: func(b core.Bounds) {
+			shellW.Set(float32(b.Size.Width))
+			clamp()
+		},
 		Children: []core.Node{
 			sidebarView(cx, m),
+			paneHandle("sidebar-resize", m.SidebarW, func(w float32) (float32, float32) {
+				sw, _ := ClampPaneWidths(w, m.ListW.Get(), shellW.Get())
+				return sw, DefaultSidebarWidth
+			}, m.PersistPaneWidths),
 			core.View{
 				Class: "flex-1 overflow-hidden",
 				Children: []core.Node{
@@ -52,7 +66,7 @@ func UnlockedShellView(cx *core.Scope, m *AppModel) core.Node {
 						case RouteSettings:
 							return SettingsView(cx, m)
 						default:
-							return vaultSplitPanes(cx, m)
+							return vaultSplitPanes(cx, m, shellW)
 						}
 					}),
 				},
@@ -68,6 +82,13 @@ func (m *AppModel) filterTitle() string {
 	case RouteSettings:
 		return "Settings"
 	}
+	if m.SearchIsGlobal() {
+		return "All Items"
+	}
+	return m.sectionTitle()
+}
+
+func (m *AppModel) sectionTitle() string {
 	f := m.SidebarFilter.Get()
 	if f.Type != nil {
 		switch *f.Type {
@@ -211,11 +232,14 @@ func sidebarView(cx *core.Scope, m *AppModel) core.Node {
 
 	return core.View{
 		TestID: "vault-sidebar",
-		Class:  sidebarWidth + " bg-gv-sidebar border-r border-gv-line",
+		Class:  "bg-gv-sidebar",
+		StyleFunc: func() core.Style {
+			return core.Style{Width: core.Pt(core.Points(m.SidebarW.Get())), FlexShrink: 0}
+		},
 		Children: []core.Node{
 			core.View{Style: core.Style{Height: core.Pt(titleBarHeight)}, Desktop: dragRegion()},
-			core.Scroll{
-				Class: "flex-1 px-2.5 pb-3",
+			core.View{
+				Class: "px-2.5 pb-1.5 gap-px",
 				Children: []core.Node{
 					sidebarRow(sidebarEntry{
 						testID: "sidebar-all", label: "All Items", glyph: lucide.LayoutGrid, tint: 0x2f6fe4,
@@ -231,12 +255,17 @@ func sidebarView(cx *core.Scope, m *AppModel) core.Node {
 						active: vaultActive(func(f state.SearchFilter) bool { return f.Category == state.FilterFavorites }),
 						press:  func() { m.SetSidebarFilter(state.SearchFilter{Category: state.FilterFavorites}) },
 					}),
+				},
+			},
+			core.Scroll{
+				Class: "flex-1 px-2.5 pb-3",
+				Children: []core.Node{
 					sidebarHeader("Categories", nil),
 					sidebarRow(typeEntry("sidebar-type-login", "Logins", api.CipherTypeLogin, lucide.Globe, 0x0a84ff, func(c VaultCounts) int { return c.Login })),
 					sidebarRow(typeEntry("sidebar-type-card", "Cards", api.CipherTypeCard, lucide.CreditCard, 0x2fb35a, func(c VaultCounts) int { return c.Card })),
 					sidebarRow(typeEntry("sidebar-type-identity", "Identities", api.CipherTypeIdentity, lucide.IdCard, 0xa25ddc, func(c VaultCounts) int { return c.Identity })),
 					sidebarRow(typeEntry("sidebar-type-note", "Secure Notes", api.CipherTypeSecureNote, lucide.StickyNote, 0xf08a0a, func(c VaultCounts) int { return c.SecureNote })),
-					sidebarHeader("Folders", ui.Button{
+					foldersHeader(m, ui.Button{
 						TestID:   "sidebar-add-folder",
 						Icon:     lucide.Plus,
 						Label:    "New Folder",
@@ -247,20 +276,12 @@ func sidebarView(cx *core.Scope, m *AppModel) core.Node {
 						Disabled: func() bool { return m.SyncState.Get() == SyncOffline },
 						OnPress:  m.OpenNewFolderModal,
 					}),
-					core.Dynamic(func(cx *core.Scope) core.Node {
-						folders := m.Folders.Get()
-						rows := make([]core.Node, 0, len(folders)+1)
-						for _, f := range folders {
-							rows = append(rows, folderRow(cx, m, f))
-						}
-						rows = append(rows, sidebarRow(sidebarEntry{
-							testID: "sidebar-no-folder", label: "No Folder", glyph: lucide.Folder,
-							count:  func() int { return m.AllCounts.Get().NoFolder },
-							active: vaultActive(func(f state.SearchFilter) bool { return f.Category == state.FilterNoFolder }),
-							press:  func() { m.SetSidebarFilter(state.SearchFilter{Category: state.FilterNoFolder}) },
-						}))
-						return core.View{Class: "gap-px", Children: rows}
-					}),
+					core.Show{
+						When: func() bool { return !m.Prefs.Get().FoldersCollapsed },
+						Then: func(cx *core.Scope) core.Node {
+							return foldersList(cx, m, vaultActive)
+						},
+					},
 					sidebarHeader("Tools", nil),
 					sidebarRow(sidebarEntry{
 						testID: "sidebar-generator", label: "Generator", glyph: lucide.WandSparkles, tint: 0x14a3b8,
@@ -281,6 +302,64 @@ func sidebarView(cx *core.Scope, m *AppModel) core.Node {
 				},
 			},
 			syncFooter(m),
+		},
+	}
+}
+
+func foldersList(cx *core.Scope, m *AppModel, vaultActive func(func(state.SearchFilter) bool) func() bool) core.Node {
+	return core.Dynamic(func(cx *core.Scope) core.Node {
+		folders := m.Folders.Get()
+		rows := make([]core.Node, 0, len(folders)+1)
+		for _, f := range folders {
+			rows = append(rows, folderRow(cx, m, f))
+		}
+		rows = append(rows, sidebarRow(sidebarEntry{
+			testID: "sidebar-no-folder", label: "No Folder", glyph: lucide.Folder,
+			count:  func() int { return m.AllCounts.Get().NoFolder },
+			active: vaultActive(func(f state.SearchFilter) bool { return f.Category == state.FilterNoFolder }),
+			press:  func() { m.SetSidebarFilter(state.SearchFilter{Category: state.FilterNoFolder}) },
+		}))
+		return core.View{Class: "gap-px", Children: rows}
+	})
+}
+
+func foldersHeader(m *AppModel, trailing core.Node) core.Node {
+	collapsed := func() bool { return m.Prefs.Get().FoldersCollapsed }
+	return core.View{
+		Class: "flex-row items-center h-[22px] mt-3.5 mb-0.5 pr-1",
+		Children: []core.Node{
+			core.View{
+				TestID:   "sidebar-folders-toggle",
+				Role:     core.RoleButton,
+				Label:    "Folders",
+				Expanded: func() bool { return !collapsed() },
+				Class:    "flex-1 flex-row items-center gap-1 pl-2 h-full",
+				OnPress: func(core.PressEvent) {
+					m.UpdatePrefs(func(p UserPrefs) UserPrefs {
+						p.FoldersCollapsed = !p.FoldersCollapsed
+						return p
+					})
+				},
+				Children: []core.Node{
+					core.Text{Class: "text-[11px] font-semibold text-gv-fg3", Content: "Folders"},
+					iconFunc(func() *core.SVG {
+						if collapsed() {
+							return lucide.ChevronRight()
+						}
+						return lucide.ChevronDown()
+					}, 11, func() string { return "text-gv-fg3" }),
+					core.Show{
+						When: collapsed,
+						Then: func(cx *core.Scope) core.Node {
+							return core.Text{
+								Class:       "text-[11px] text-gv-fg3 tabular-nums",
+								ContentFunc: func() string { return fmt.Sprintf("%d", len(m.Folders.Get())) },
+							}
+						},
+					},
+				},
+			},
+			trailing,
 		},
 	}
 }
@@ -460,11 +539,35 @@ func syncFooter(m *AppModel) core.Node {
 	}
 }
 
-func vaultSplitPanes(cx *core.Scope, m *AppModel) core.Node {
+func paneHandle(testID string, width *core.Signal[float32], clamp func(float32) (float32, float32), persist func()) core.Node {
+	var start float32
+	return ui.ResizeHandle{
+		TestID:      testID,
+		Label:       "Resize pane",
+		OnDragStart: func() { start = width.Get() },
+		OnDragMove: func(offset core.Points) {
+			w, _ := clamp(start + float32(offset))
+			width.Set(w)
+		},
+		OnDragEnd: func(core.Points) { persist() },
+		OnDoublePress: func() {
+			_, def := clamp(0)
+			w, _ := clamp(def)
+			width.Set(w)
+			persist()
+		},
+	}
+}
+
+func vaultSplitPanes(cx *core.Scope, m *AppModel, shellW *core.Signal[float32]) core.Node {
 	return core.View{
 		Class: "flex-1 flex-row overflow-hidden",
 		Children: []core.Node{
 			itemListPane(cx, m),
+			paneHandle("list-resize", m.ListW, func(w float32) (float32, float32) {
+				_, lw := ClampPaneWidths(m.SidebarW.Get(), w, shellW.Get())
+				return lw, DefaultListWidth
+			}, m.PersistPaneWidths),
 			core.View{
 				Class: "flex-1 bg-gv-canvas overflow-hidden",
 				Children: []core.Node{
@@ -564,7 +667,10 @@ func rowMenu(cx *core.Scope, m *AppModel, id string, at core.Point) {
 func itemListPane(cx *core.Scope, m *AppModel) core.Node {
 	return core.View{
 		TestID: "vault-list-pane",
-		Class:  listWidth + " bg-gv-list border-r border-gv-line",
+		Class:  "bg-gv-list",
+		StyleFunc: func() core.Style {
+			return core.Style{Width: core.Pt(core.Points(m.ListW.Get())), FlexShrink: 0}
+		},
 		Children: []core.Node{
 			core.View{
 				Class: "px-3 pt-3 pb-2",
@@ -578,6 +684,7 @@ func itemListPane(cx *core.Scope, m *AppModel) core.Node {
 						Value:         m.SearchQuery.Get,
 						OnChange:      m.SetSearchQuery,
 					}, cx.KeyLabel("mod+f")),
+					searchScope(m),
 				},
 			},
 			core.List{
@@ -695,6 +802,58 @@ func itemListPane(cx *core.Scope, m *AppModel) core.Node {
 					}
 				},
 			},
+		},
+	}
+}
+
+func searchScope(m *AppModel) core.Node {
+	return core.Show{
+		When: func() bool {
+			f := m.SidebarFilter.Get()
+			return m.SearchQuery.Get() != "" && f.Category != state.FilterTrash && !IsAllItemsFilter(f)
+		},
+		Then: func(cx *core.Scope) core.Node {
+			chip := func(testID string, label func() string, inSection bool) core.Node {
+				active := func() bool { return m.SearchInSection.Get() == inSection }
+				return core.View{
+					TestID:   testID,
+					Role:     core.RoleButton,
+					Selected: active,
+					ClassFunc: func() string {
+						if active() {
+							return "flex-1 h-[22px] px-2 rounded-[6px] items-center justify-center bg-gv-card border border-gv-line"
+						}
+						return "flex-1 h-[22px] px-2 rounded-[6px] items-center justify-center border border-transparent"
+					},
+					OnPress: func(core.PressEvent) { m.SetSearchInSection(inSection) },
+					Children: []core.Node{
+						core.Text{
+							MaxLines: 1,
+							ClassFunc: func() string {
+								if active() {
+									return "text-[11.5px] font-semibold text-gv-fg"
+								}
+								return "text-[11.5px] text-gv-fg2"
+							},
+							ContentFunc: label,
+						},
+					},
+				}
+			}
+			return core.View{
+				TestID: "search-scope",
+				Class:  "flex-row items-center gap-2 pt-2",
+				Children: []core.Node{
+					core.Text{Class: "text-[11.5px] text-gv-fg3", Content: "Search in"},
+					core.View{
+						Class: "flex-1 flex-row p-[2px] gap-[2px] rounded-[8px] bg-gv-fill",
+						Children: []core.Node{
+							chip("search-scope-all", func() string { return "All Items" }, false),
+							chip("search-scope-section", m.sectionTitle, true),
+						},
+					},
+				},
+			}
 		},
 	}
 }

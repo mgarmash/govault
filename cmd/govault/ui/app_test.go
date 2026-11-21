@@ -347,52 +347,65 @@ func TestTOTPTickerVisibilityGating(t *testing.T) {
 	})
 }
 
-func TestQuickAccessHotKeyDefaultUnsetAndPersistence(t *testing.T) {
+func TestTrayIconOffKeepsDockReachable(t *testing.T) {
 	svc := newMockVaultService(state.StatusUnlocked)
 	var model *AppModel
-	var applied []string
+	var trayCalls, dockCalls []bool
 
 	app := nsgotest.Start(t, func(cx *core.Scope) core.Node {
 		model = NewAppModel(cx, svc, PlatformHooks{
-			ApplyHotKey: func(shortcut string) {
-				applied = append(applied, shortcut)
-			},
+			SetTrayVisible: func(on bool) { trayCalls = append(trayCalls, on) },
+			SetDockVisible: func(on bool) { dockCalls = append(dockCalls, on) },
 		})
 		model.MainWinVisible.Set(true)
 		return MainWindowView(cx, model)
 	}, nsgotest.Size(980, 640))
 
-	if got := model.Prefs.Get().QuickAccessHotKey; got != "" {
-		t.Fatalf("expected default QuickAccessHotKey to be empty, got %q", got)
+	if !model.Prefs.Get().ShowTrayIcon {
+		t.Fatal("expected the tray icon to be shown by default")
 	}
 
 	app.Post(func() {
-		model.SetQuickAccessHotKey("mod+shift+space")
+		model.UpdatePrefs(func(p UserPrefs) UserPrefs { p.HideDockIcon = true; return p })
+		model.SetShowTrayIcon(false)
 	})
 	app.Settle()
 
-	if got := model.Prefs.Get().QuickAccessHotKey; got != "mod+shift+space" {
-		t.Fatalf("expected persisted hotkey %q, got %q", "mod+shift+space", got)
+	p := model.Prefs.Get()
+	if p.ShowTrayIcon || p.HideDockIcon {
+		t.Fatalf("expected tray off and Dock shown, got ShowTrayIcon=%v HideDockIcon=%v", p.ShowTrayIcon, p.HideDockIcon)
 	}
-	if raw, ok := app.Storage().GetItem("govault.prefs"); !ok || !strings.Contains(raw, "mod+shift+space") {
-		t.Fatalf("expected hotkey persisted in storage, got ok=%v raw=%q", ok, raw)
+	if len(trayCalls) != 1 || trayCalls[0] || len(dockCalls) != 1 || !dockCalls[0] {
+		t.Fatalf("expected tray hidden and Dock shown, got tray=%v dock=%v", trayCalls, dockCalls)
 	}
-	if len(applied) != 1 || applied[0] != "mod+shift+space" {
-		t.Fatalf("expected ApplyHotKey called with mod+shift+space, got %v", applied)
+	if raw, ok := app.Storage().GetItem("govault.prefs"); !ok || !strings.Contains(raw, `"showTrayIcon":false`) {
+		t.Fatalf("expected showTrayIcon persisted, got ok=%v raw=%q", ok, raw)
 	}
+}
 
+func TestSearchCoversWholeVaultUnlessNarrowed(t *testing.T) {
+	svc := newMockVaultService(state.StatusUnlocked)
+	var model *AppModel
+
+	app := nsgotest.Start(t, func(cx *core.Scope) core.Node {
+		model = NewAppModel(cx, svc, PlatformHooks{})
+		model.MainWinVisible.Set(true)
+		return MainWindowView(cx, model)
+	}, nsgotest.Size(980, 640))
+
+	noteType := api.CipherTypeSecureNote
 	app.Post(func() {
-		model.SetQuickAccessHotKey("")
+		model.SetSidebarFilter(state.SearchFilter{Category: state.FilterAll, Type: &noteType})
+		model.SetSearchQuery("GitHub")
 	})
 	app.Settle()
+	if n := model.FilteredItems.Len(); n != 1 || model.FilteredItems.KeyAt(0) != "c-github" {
+		t.Fatalf("expected the global search to find GitHub outside Secure Notes, got %d items", n)
+	}
 
-	if got := model.Prefs.Get().QuickAccessHotKey; got != "" {
-		t.Fatalf("expected cleared hotkey to be empty, got %q", got)
-	}
-	if got := model.HotKeyStatus.Get(); got != "Disabled" {
-		t.Fatalf("expected HotKeyStatus Disabled after clear, got %q", got)
-	}
-	if len(applied) != 2 || applied[1] != "" {
-		t.Fatalf("expected ApplyHotKey called with empty string on clear, got %v", applied)
+	app.Post(func() { model.SetSearchInSection(true) })
+	app.Settle()
+	if n := model.FilteredItems.Len(); n != 0 {
+		t.Fatalf("expected no Secure Note named GitHub when narrowed, got %d", n)
 	}
 }

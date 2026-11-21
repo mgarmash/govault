@@ -13,8 +13,6 @@ import (
 
 const (
 	titleBarHeight core.Points = 52
-	sidebarWidth               = "w-[224px]"
-	listWidth                  = "w-[300px]"
 )
 
 var (

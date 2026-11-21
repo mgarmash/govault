@@ -11,10 +11,11 @@ import (
 )
 
 func SettingsView(cx *core.Scope, m *AppModel) core.Node {
-	var recorderRef core.Ref
+	m.RefreshBiometricAvailability()
+	showBio := runtime.GOOS == "darwin" || m.CanUseBiometric()
 	canBio := core.NewMemo(cx, m.CanUseBiometric)
 	bioOn := core.NewMemo(cx, func() bool { return m.Prefs.Get().BiometricEnabled })
-	hasHotKey := core.NewMemo(cx, func() bool { return m.Prefs.Get().QuickAccessHotKey != "" })
+	showTray := core.NewMemo(cx, func() bool { return m.Prefs.Get().ShowTrayIcon })
 
 	return core.Scroll{
 		TestID: "settings-view",
@@ -78,34 +79,8 @@ func SettingsView(cx *core.Scope, m *AppModel) core.Node {
 					)),
 					section("Security", core.Dynamic(func(cx *core.Scope) core.Node {
 						var rows []core.Node
-						if canBio.Get() {
-							rows = append(rows, settingsRow(
-								"Unlock with "+m.BiometricLabel(),
-								"Keeps a wrapped key in the system keychain for fast unlock.",
-								ui.Switch{
-									TestID:   "settings-biometric-toggle",
-									Label:    "Unlock with " + m.BiometricLabel(),
-									Checked:  func() bool { return m.Prefs.Get().BiometricEnabled },
-									OnChange: func(on bool) { m.ToggleBiometric(cx, on) },
-								},
-							))
-							if bioOn.Get() {
-								rows = append(rows, settingsRow(
-									"Prompt automatically",
-									"Ask for "+m.BiometricLabel()+" as soon as the locked window opens.",
-									ui.Switch{
-										TestID:  "settings-biometric-autoprompt",
-										Label:   "Prompt automatically",
-										Checked: func() bool { return m.Prefs.Get().AutoPromptBiometric },
-										OnChange: func(on bool) {
-											m.UpdatePrefs(func(p UserPrefs) UserPrefs {
-												p.AutoPromptBiometric = on
-												return p
-											})
-										},
-									},
-								))
-							}
+						if showBio {
+							rows = append(rows, biometricRows(cx, m, canBio.Get(), bioOn.Get())...)
 						}
 						rows = append(rows, settingsRow(
 							"Auto-lock",
@@ -173,118 +148,21 @@ func SettingsView(cx *core.Scope, m *AppModel) core.Node {
 							},
 						),
 					)),
-					section("Quick Access", core.Dynamic(func(cx *core.Scope) core.Node {
+					section(trayLabel(), core.Dynamic(func(cx *core.Scope) core.Node {
+						trayOn := showTray.Get()
 						rows := []core.Node{settingsRow(
-							"Global shortcut",
-							"Opens the quick search panel from any app.",
-							core.View{
-								Class: "flex-row items-center gap-1.5",
-								Children: []core.Node{
-									core.View{
-										TestID:    "settings-hotkey-recorder",
-										Ref:       &recorderRef,
-										Role:      core.RoleButton,
-										Label:     "Record shortcut",
-										Focusable: func() bool { return true },
-										ClassFunc: func() string {
-											if m.RecordingHotKey.Get() {
-												return "min-w-[120px] h-[28px] px-3 rounded-[7px] items-center justify-center border border-gv-accent bg-gv-accent-soft"
-											}
-											return "min-w-[120px] h-[28px] px-3 rounded-[7px] items-center justify-center border border-gv-line bg-gv-fill"
-										},
-										OnPress: func(core.PressEvent) {
-											m.RecordingHotKey.Set(true)
-											recorderRef.Focus()
-										},
-										OnBlur: func() {
-											m.RecordingHotKey.Set(false)
-										},
-										OnKeyDown: func(ev core.KeyEvent) bool {
-											if !m.RecordingHotKey.Get() {
-												return false
-											}
-											if ev.Key == "escape" {
-												m.RecordingHotKey.Set(false)
-												return true
-											}
-											if isModifierOnlyKey(ev.Key) {
-												return true
-											}
-											shortcut := ev.Shortcut()
-											if !strings.Contains(shortcut, "+") {
-												return true
-											}
-											m.RecordingHotKey.Set(false)
-											m.SetQuickAccessHotKey(shortcut)
-											return true
-										},
-										Children: []core.Node{
-											core.Text{
-												TestID: "settings-hotkey-value",
-												ClassFunc: func() string {
-													if m.RecordingHotKey.Get() {
-														return "text-[12px] font-medium text-gv-accent"
-													}
-													if m.Prefs.Get().QuickAccessHotKey == "" {
-														return "text-[12px] text-gv-fg3"
-													}
-													return "text-[12.5px] font-semibold text-gv-fg tracking-[1px]"
-												},
-												ContentFunc: func() string {
-													if m.RecordingHotKey.Get() {
-														return "Type shortcut…"
-													}
-													hk := m.Prefs.Get().QuickAccessHotKey
-													if hk == "" {
-														return "Click to record"
-													}
-													return cx.KeyLabel(hk)
-												},
-											},
-										},
-									},
-									ui.Button{
-										TestID:   "settings-hotkey-clear",
-										Icon:     lucide.X,
-										Label:    "Clear shortcut",
-										Variant:  ui.ButtonGhost,
-										Side:     24,
-										IconSize: 12,
-										Tint:     func() core.Color { return themeColor(cx, "gv-fg3") },
-										Disabled: func() bool {
-											return m.Prefs.Get().QuickAccessHotKey == "" && !m.RecordingHotKey.Get()
-										},
-										OnPress: func() {
-											m.RecordingHotKey.Set(false)
-											m.SetQuickAccessHotKey("")
-										},
-									},
-								},
+							"Show "+strings.ToLower(trayLabel())+" icon",
+							"Open GoVault, sync or lock from the "+strings.ToLower(trayLabel())+".",
+							ui.Switch{
+								TestID:   "settings-show-tray",
+								Label:    "Show " + strings.ToLower(trayLabel()) + " icon",
+								Checked:  func() bool { return m.Prefs.Get().ShowTrayIcon },
+								OnChange: m.SetShowTrayIcon,
 							},
 						)}
-						if hasHotKey.Get() {
-							rows = append(rows, core.View{
-								Class: "flex-row items-center gap-1.5 px-4 py-2",
-								Children: []core.Node{
-									core.View{ClassFunc: func() string {
-										if m.HotKeyStatus.Get() == "Active" {
-											return "w-[6px] h-[6px] rounded-full bg-gv-success"
-										}
-										return "w-[6px] h-[6px] rounded-full bg-gv-warn"
-									}},
-									core.Text{
-										TestID: "settings-hotkey-status",
-										Class:  "text-[11.5px] text-gv-fg2",
-										ContentFunc: func() string {
-											return "Shortcut status: " + m.HotKeyStatus.Get()
-										},
-									},
-								},
-							})
-						}
 						rows = append(rows, settingsRow(
 							"Launch at login",
-							"Start GoVault in the menu bar when you sign in.",
+							"Start GoVault automatically when you sign in.",
 							ui.Switch{
 								TestID:  "settings-launch-at-login",
 								Label:   "Launch at login",
@@ -301,13 +179,18 @@ func SettingsView(cx *core.Scope, m *AppModel) core.Node {
 							},
 						))
 						if runtime.GOOS == "darwin" {
+							desc := "Keep GoVault in the menu bar only."
+							if !trayOn {
+								desc = "Turn on the menu bar icon first, so GoVault stays reachable."
+							}
 							rows = append(rows, settingsRow(
 								"Hide Dock icon",
-								"Keep GoVault in the menu bar only.",
+								desc,
 								ui.Switch{
-									TestID:  "settings-hide-dock",
-									Label:   "Hide Dock icon",
-									Checked: func() bool { return m.Prefs.Get().HideDockIcon },
+									TestID:   "settings-hide-dock",
+									Label:    "Hide Dock icon",
+									Disabled: func() bool { return !m.Prefs.Get().ShowTrayIcon },
+									Checked:  func() bool { return m.Prefs.Get().ShowTrayIcon && m.Prefs.Get().HideDockIcon },
 									OnChange: func(on bool) {
 										m.UpdatePrefs(func(p UserPrefs) UserPrefs {
 											p.HideDockIcon = on
@@ -352,6 +235,58 @@ func appVersionLabel() string {
 	return info.Version
 }
 
+func trayLabel() string {
+	if runtime.GOOS == "darwin" {
+		return "Menu Bar"
+	}
+	return "Tray"
+}
+
+func biometricRows(cx *core.Scope, m *AppModel, available, enabled bool) []core.Node {
+	label := "Unlock with " + m.BiometricLabel()
+	if !available {
+		label = "Unlock with Touch ID"
+		return []core.Node{settingsRow(
+			label,
+			"Touch ID unavailable on this Mac — pair a Touch ID keyboard or enroll in System Settings.",
+			ui.Switch{
+				TestID:   "settings-biometric-toggle",
+				Label:    label,
+				Disabled: func() bool { return true },
+				Checked:  func() bool { return false },
+			},
+		)}
+	}
+	rows := []core.Node{settingsRow(
+		label,
+		"Keeps a wrapped key in the system keychain for fast unlock.",
+		ui.Switch{
+			TestID:   "settings-biometric-toggle",
+			Label:    label,
+			Checked:  func() bool { return m.Prefs.Get().BiometricEnabled },
+			OnChange: func(on bool) { m.ToggleBiometric(cx, on) },
+		},
+	)}
+	if enabled {
+		rows = append(rows, settingsRow(
+			"Prompt automatically",
+			"Ask for "+m.BiometricLabel()+" as soon as the locked window opens.",
+			ui.Switch{
+				TestID:  "settings-biometric-autoprompt",
+				Label:   "Prompt automatically",
+				Checked: func() bool { return m.Prefs.Get().AutoPromptBiometric },
+				OnChange: func(on bool) {
+					m.UpdatePrefs(func(p UserPrefs) UserPrefs {
+						p.AutoPromptBiometric = on
+						return p
+					})
+				},
+			},
+		))
+	}
+	return rows
+}
+
 func settingsRow(title, desc string, control core.Node) core.Node {
 	return optionRow(title, desc, control)
 }
@@ -363,14 +298,5 @@ func settingsMetaRow(label string, value func() string) core.Node {
 			core.Text{Class: "text-[13px] text-gv-fg", Content: label},
 			core.Text{MaxLines: 1, Class: "flex-shrink text-[12.5px] text-gv-fg2 text-right", ContentFunc: value},
 		},
-	}
-}
-
-func isModifierOnlyKey(key string) bool {
-	switch strings.ToLower(key) {
-	case "shift", "ctrl", "control", "alt", "option", "meta", "command", "super":
-		return true
-	default:
-		return false
 	}
 }

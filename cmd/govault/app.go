@@ -21,10 +21,8 @@ type DesktopShell struct {
 	service   *state.Service
 	model     *govaultui.AppModel
 
-	mainWin     *desktop.Window
-	quickPanel  *desktop.Window
-	hotKeyScope *core.Scope
-	hotKey      *desktop.HotKey
+	mainWin   *desktop.Window
+	trayScope *core.Scope
 
 	rtMu      sync.Mutex
 	rtRunning bool
@@ -109,7 +107,6 @@ func (s *DesktopShell) platformHooks(secrets store.SecretStore) govaultui.Platfo
 		CopySecret:           s.clipboard.CopySecret,
 		CopyPlain:            s.clipboard.CopyPlain,
 		IsClipboardConcealed: s.clipboard.IsConcealed,
-		ApplyHotKey:          s.ApplyHotKey,
 		SetLaunchAtLogin: func(on bool) {
 			desktop.SetLaunchAtLogin(app, on)
 		},
@@ -118,9 +115,8 @@ func (s *DesktopShell) platformHooks(secrets store.SecretStore) govaultui.Platfo
 				desktop.SetDockVisible(app, on)
 			}
 		},
-		OpenMainWindow:   s.OpenMainWindow,
-		HideQuickPanel:   s.HideQuickPanel,
-		ToggleQuickPanel: s.ToggleQuickPanel,
+		SetTrayVisible:     s.SetTrayVisible,
+		ReleaseSecureInput: ReleaseSecureInput,
 	}
 }
 
@@ -130,31 +126,27 @@ func (s *DesktopShell) finishSetup() {
 	clip := s.clipboard
 
 	p := shell.model.Prefs.Get()
-	if p.QuickAccessHotKey != "" {
-		shell.ApplyHotKey(p.QuickAccessHotKey)
-	}
-	if runtime.GOOS == "darwin" && p.HideDockIcon {
+	if runtime.GOOS == "darwin" && p.HideDockIcon && p.ShowTrayIcon {
 		desktop.SetDockVisible(app, false)
 	}
-
-	desktop.NewTray(app, desktop.TrayOptions{
-		Tooltip: "GoVault",
-		Width:   26,
-		View:    trayIconView,
-		OnClick: shell.ToggleQuickPanel,
-		Menu:    shell.trayMenu,
-	})
+	shell.SetTrayVisible(p.ShowTrayIcon)
 
 	desktop.OnReopen(app, shell.OpenMainWindow)
 
-	app.Cleanup(func() {
-		clip.Cancel()
-		if shell.hotKeyScope != nil {
-			shell.hotKeyScope.Dispose()
+	app.Effect(func() {
+		if app.Env().Lifecycle() != core.LifecycleActive {
+			ReleaseSecureInput(true)
 		}
 	})
 
-	if !desktop.LaunchedAtLogin(app) {
+	app.Cleanup(func() {
+		clip.Cancel()
+		if shell.trayScope != nil {
+			shell.trayScope.Dispose()
+		}
+	})
+
+	if !desktop.LaunchedAtLogin(app) || !p.ShowTrayIcon {
 		shell.OpenMainWindow()
 	}
 }
@@ -179,15 +171,8 @@ func (s *DesktopShell) startRealtimeAsync() {
 func (s *DesktopShell) trayMenu() []desktop.MenuItem {
 	unlocked := s.model.LockState.Get() == state.StatusUnlocked
 	offline := s.model.SyncState.Get() == govaultui.SyncOffline
-	hk := s.model.Prefs.Get().QuickAccessHotKey
-	quickLabel := "Quick Search"
-	if hk != "" {
-		quickLabel += " (" + s.scope.KeyLabel(hk) + ")"
-	}
-
 	items := []desktop.MenuItem{
 		{Label: "Open GoVault", OnSelect: s.OpenMainWindow},
-		{Label: quickLabel, OnSelect: s.ToggleQuickPanel},
 		{Label: "Check for Updates…", OnSelect: func() { updater.Check(s.scope) }},
 		{Separator: true},
 		{
@@ -230,6 +215,11 @@ func (s *DesktopShell) OpenMainWindow() {
 			vis := win.Visible() && !desktop.Minimized(cx)
 			s.model.MainWinVisible.Set(vis)
 		})
+		cx.Effect(func() {
+			if cx.Env().Lifecycle() != core.LifecycleActive {
+				ReleaseSecureInput(true)
+			}
+		})
 		win.OnClosing(cx, func(ev *desktop.WindowClosing) {
 			if s.model.EditMode.Get() && s.model.EditDirty.Get() {
 				ev.Cancel()
@@ -246,74 +236,27 @@ func (s *DesktopShell) OpenMainWindow() {
 	desktop.SetMainWindow(s.scope, s.mainWin)
 }
 
-func (s *DesktopShell) ensureQuickPanel() *desktop.Window {
-	if s.quickPanel != nil && !s.quickPanel.Closed() {
-		return s.quickPanel
+func (s *DesktopShell) SetTrayVisible(on bool) {
+	mode := desktop.ShutdownOnExplicit
+	if !on && runtime.GOOS != "darwin" {
+		mode = desktop.ShutdownOnLastWindowClose
 	}
-	s.quickPanel = desktop.OpenPanel(s.scope, desktop.PanelOptions{
-		Width:       656,
-		Height:      480,
-		FitContent:  true,
-		HideOnBlur:  true,
-		Transparent: true,
-	}, func(cx *core.Scope) core.Node {
-		panel := desktop.CurrentWindow(cx)
-		cx.Effect(func() {
-			vis := panel.Visible()
-			s.model.QuickPanelVisible.Set(vis)
-			if vis {
-				s.model.RefreshQuickItems()
-			}
-		})
-		cx.Cleanup(func() {
-			s.model.QuickPanelVisible.Set(false)
-		})
-		return govaultui.QuickPanelView(cx, s.model)
-	})
-	return s.quickPanel
-}
-
-func (s *DesktopShell) ToggleQuickPanel() {
-	panel := s.ensureQuickPanel()
-	if !panel.Visible() {
-		s.model.QuickQuery.Set("")
-		s.model.QuickSelectedIdx.Set(0)
-		s.model.RefreshQuickItems()
-	}
-	panel.Toggle()
-}
-
-func (s *DesktopShell) HideQuickPanel() {
-	if s.quickPanel != nil && !s.quickPanel.Closed() {
-		s.quickPanel.Hide()
-	}
-}
-
-func (s *DesktopShell) ApplyHotKey(shortcut string) {
-	if s.hotKeyScope != nil {
-		s.hotKeyScope.Dispose()
-		s.hotKeyScope = nil
-		s.hotKey = nil
-	}
-	if shortcut == "" {
-		s.model.HotKeyStatus.Set("Disabled")
+	desktop.SetShutdownMode(s.scope, mode)
+	if on == (s.trayScope != nil) {
 		return
 	}
-
-	hkScope := s.scope.Child()
-	s.hotKeyScope = hkScope
-	s.hotKey = desktop.RegisterHotKey(hkScope, shortcut, s.ToggleQuickPanel)
-	hkScope.Effect(func() {
-		switch s.hotKey.State() {
-		case desktop.HotKeyRegistered:
-			s.model.HotKeyStatus.Set("Active")
-		case desktop.HotKeyTaken:
-			s.model.HotKeyStatus.Set("Already in use by another app")
-		case desktop.HotKeyUnsupported:
-			s.model.HotKeyStatus.Set("Unsupported on this session")
-		default:
-			s.model.HotKeyStatus.Set("Registering...")
-		}
+	if !on {
+		s.trayScope.Dispose()
+		s.trayScope = nil
+		return
+	}
+	s.trayScope = s.scope.Child()
+	desktop.NewTray(s.trayScope, desktop.TrayOptions{
+		Tooltip: "GoVault",
+		Width:   26,
+		View:    trayIconView,
+		OnClick: s.OpenMainWindow,
+		Menu:    s.trayMenu,
 	})
 }
 

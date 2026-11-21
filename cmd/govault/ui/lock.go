@@ -11,7 +11,7 @@ func LockView(cx *core.Scope, m *AppModel) core.Node {
 	cx.Effect(func() {
 		if m.MainWinVisible.Get() && !m.LockAutoFired && m.CanUseBiometric() && m.Prefs.Get().BiometricEnabled && m.Prefs.Get().AutoPromptBiometric {
 			m.LockAutoFired = true
-			m.UnlockWithBiometric(cx, false)
+			m.UnlockWithBiometric(cx)
 		}
 	})
 	biometric := func() bool { return m.CanUseBiometric() && m.Prefs.Get().BiometricEnabled }
@@ -25,7 +25,7 @@ func LockView(cx *core.Scope, m *AppModel) core.Node {
 			NoAutoCorrect: true,
 			Value:         m.LockPassword.Get,
 			OnChange:      m.LockPassword.Set,
-			OnSubmit:      func(string) { m.UnlockWithPassword(false) },
+			OnSubmit:      func(string) { m.UnlockWithPassword() },
 			Disabled:      m.LockBusy.Get,
 		}, authFieldHeight, m.LockShowPW, "lock-toggle-pw", trailing...)
 	}
@@ -73,7 +73,7 @@ func LockView(cx *core.Scope, m *AppModel) core.Node {
 							Size:    ui.SizeLarge,
 							Busy:    m.LockBusy.Get,
 							Style:   core.Style{Width: core.Pct(100)},
-							OnPress: func() { m.UnlockWithBiometric(cx, false) },
+							OnPress: func() { m.UnlockWithBiometric(cx) },
 						},
 						core.View{
 							Class: "flex-row items-center gap-2.5",
@@ -92,7 +92,7 @@ func LockView(cx *core.Scope, m *AppModel) core.Node {
 							IconSize: 13,
 							Busy:     m.LockBusy.Get,
 							Style:    core.Style{CornerRadius: (authFieldHeight - 10) / 2},
-							OnPress:  func() { m.UnlockWithPassword(false) },
+							OnPress:  func() { m.UnlockWithPassword() },
 						}),
 					},
 				}
@@ -109,7 +109,7 @@ func LockView(cx *core.Scope, m *AppModel) core.Node {
 							Size:    ui.SizeLarge,
 							Busy:    m.LockBusy.Get,
 							Style:   core.Style{Width: core.Pct(100)},
-							OnPress: func() { m.UnlockWithPassword(false) },
+							OnPress: func() { m.UnlockWithPassword() },
 						},
 					},
 				}
