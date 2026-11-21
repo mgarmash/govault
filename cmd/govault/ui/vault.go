@@ -749,7 +749,7 @@ func itemListPane(cx *core.Scope, m *AppModel) core.Node {
 										if !ok {
 											return core.View{Style: core.Style{Width: core.Pt(32), Height: core.Pt(32)}}
 										}
-										return itemEmblem(it.Name, it.Type, it.Subtitle, 32)
+										return siteEmblem(m, it.URIs, it.Name, it.Type, it.Subtitle, 32)
 									}),
 									core.View{
 										Class: "flex-1 overflow-hidden gap-[2px]",
@@ -1388,7 +1388,9 @@ func detailHeader(cx *core.Scope, m *AppModel, c *state.Cipher, isTrash bool, of
 	return core.View{
 		Class: "flex-row items-center gap-4 pb-1",
 		Children: []core.Node{
-			itemEmblem(c.Name, c.Type, cipherBrand(c), 56),
+			core.Dynamic(func(cx *core.Scope) core.Node {
+				return siteEmblem(m, cipherURIs(c), c.Name, c.Type, cipherBrand(c), 56)
+			}),
 			core.View{
 				Class: "flex-1 gap-1.5 overflow-hidden",
 				Children: []core.Node{
@@ -1627,4 +1629,15 @@ func formatRelativeTime(t time.Time) string {
 		return fmt.Sprintf("%dd ago", int(d.Hours()/24))
 	}
 	return t.Local().Format("Jan 2")
+}
+
+func cipherURIs(c *state.Cipher) []string {
+	if c == nil || c.Login == nil {
+		return nil
+	}
+	out := make([]string, 0, len(c.Login.URIs))
+	for _, u := range c.Login.URIs {
+		out = append(out, u.URI)
+	}
+	return out
 }

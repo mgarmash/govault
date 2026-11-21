@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"path/filepath"
 	"runtime"
 	"sync"
 
@@ -18,6 +19,7 @@ type DesktopShell struct {
 	scope     *core.Scope
 	dataDir   string
 	clipboard *ClipboardAdapter
+	favicons  *govaultui.FaviconStore
 	service   *state.Service
 	model     *govaultui.AppModel
 
@@ -42,6 +44,9 @@ func NewDesktopShell(app *core.Scope, demoMode bool) *DesktopShell {
 		scope:     app,
 		dataDir:   dataDir,
 		clipboard: clip,
+	}
+	if cacheDir := app.CacheDir(); cacheDir != "" {
+		shell.favicons = govaultui.NewFaviconStore(govaultui.FaviconStoreConfig{CacheDir: filepath.Join(cacheDir, "icons")})
 	}
 
 	tempPrefs := core.NewPersisted(app, govaultui.DefaultPrefsKey, govaultui.DefaultUserPrefs(), core.PersistOptions{Version: 1})
@@ -118,6 +123,7 @@ func (s *DesktopShell) platformHooks(secrets store.SecretStore) govaultui.Platfo
 		SetTrayVisible:     s.SetTrayVisible,
 		ReleaseSecureInput: ReleaseSecureInput,
 		SleepLockSupported: sleepLockSupported,
+		Favicons:           s.favicons,
 	}
 }
 

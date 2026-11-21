@@ -50,6 +50,7 @@ type UserPrefs struct {
 	AutoPromptBiometric   bool                  `json:"autoPromptBiometric"`
 	AutoLockMinutes       int                   `json:"autoLockMinutes"`
 	LockOnSleep           bool                  `json:"lockOnSleep"`
+	ShowFavicons          *bool                 `json:"showFavicons,omitempty"`
 	ClipboardClearSeconds int                   `json:"clipboardClearSeconds"`
 	LaunchAtLogin         bool                  `json:"launchAtLogin"`
 	HideDockIcon          bool                  `json:"hideDockIcon"`
@@ -91,6 +92,8 @@ func DefaultUserPrefs() UserPrefs {
 	}
 }
 
+func (p UserPrefs) FaviconsEnabled() bool { return p.ShowFavicons == nil || *p.ShowFavicons }
+
 func (p *UserPrefs) UnmarshalJSON(data []byte) error {
 	type plain UserPrefs
 	v := plain(DefaultUserPrefs())
@@ -129,6 +132,7 @@ type PlatformHooks struct {
 	SetTrayVisible       func(on bool)
 	ReleaseSecureInput   func(force bool)
 	SleepLockSupported   bool
+	Favicons             *FaviconStore
 	DiscoverSnapshot     func(preferredAccountID string) *AccountSnapshotMeta
 	VerifyMasterPassword func(password []byte) error
 	PrefsKey             string
@@ -375,6 +379,11 @@ type AppModel struct {
 
 	Toaster *ui.Toaster
 
+	faviconsOn *core.Memo[bool]
+	iconServer *core.Memo[string]
+	iconEpoch  *core.Signal[int]
+	iconSigs   map[string]*core.Signal[int]
+
 	totpCtrl  TOTPController
 	idleTimer IdleTimer
 }
@@ -466,6 +475,7 @@ func NewAppModel(app *core.Scope, coreSvc state.VaultService, hooks PlatformHook
 		Toaster:           ui.NewToaster(app),
 	}
 	m.IsSelected = core.NewSelector(app, m.SelectedID.Get)
+	m.setupFavicons()
 
 	m.RegenerateSecret()
 
@@ -499,7 +509,8 @@ func NewAppModel(app *core.Scope, coreSvc state.VaultService, hooks PlatformHook
 
 func cipherSummaryEqual(a, b state.CipherSummary) bool {
 	if a.ID != b.ID || a.Type != b.Type || a.Favorite != b.Favorite || a.Deleted != b.Deleted ||
-		a.Name != b.Name || a.Subtitle != b.Subtitle || a.HasTOTP != b.HasTOTP || a.Reprompt != b.Reprompt {
+		a.Name != b.Name || a.Subtitle != b.Subtitle || a.HasTOTP != b.HasTOTP || a.Reprompt != b.Reprompt ||
+		!slices.Equal(a.URIs, b.URIs) {
 		return false
 	}
 	if a.FolderID == nil && b.FolderID == nil {
@@ -1075,6 +1086,7 @@ func (m *AppModel) Logout(cx *core.Scope) {
 			_ = m.Core.Logout(context.Background(), secrets)
 			m.Scope.Post(func() {
 				m.Lock()
+				m.resetFaviconMemory()
 				m.LockState.Set(state.StatusLoggedOut)
 				m.UpdatePrefs(func(p UserPrefs) UserPrefs {
 					p.AccountID = ""

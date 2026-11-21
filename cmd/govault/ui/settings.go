@@ -124,6 +124,28 @@ func SettingsView(cx *core.Scope, m *AppModel) core.Node {
 						}
 						return card(rows...)
 					})),
+					section("Privacy", card(
+						settingsRow(
+							"Show website icons",
+							"Fetch site icons from your Vaultwarden server.",
+							ui.Switch{
+								TestID:   "settings-show-favicons",
+								Label:    "Show website icons",
+								Checked:  func() bool { return m.Prefs.Get().FaviconsEnabled() },
+								OnChange: m.SetShowFavicons,
+							},
+						),
+						settingsRow(
+							"Icon cache",
+							"Remove downloaded site icons from this device.",
+							ui.Button{
+								TestID:  "settings-clear-icon-cache",
+								Text:    "Clear Icon Cache",
+								Variant: ui.ButtonSecondary,
+								OnPress: m.ClearIconCache,
+							},
+						),
+					)),
 					section("Clipboard", card(
 						settingsRow(
 							"Clear copied secrets",

@@ -53,6 +53,7 @@ type CipherSummary struct {
 	Subtitle string
 	HasTOTP  bool
 	Reprompt int
+	URIs     []string
 }
 
 type Cipher struct {

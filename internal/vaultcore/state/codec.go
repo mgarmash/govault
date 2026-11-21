@@ -475,11 +475,15 @@ func cloneCipher(c *Cipher) *Cipher {
 func summarizeCipher(c *Cipher) CipherSummary {
 	subtitle := ""
 	hasTOTP := false
+	var uris []string
 	switch c.Type {
 	case api.CipherTypeLogin:
 		if c.Login != nil {
 			subtitle = c.Login.Username
 			hasTOTP = strings.TrimSpace(c.Login.TOTP) != ""
+			for _, u := range c.Login.URIs {
+				uris = append(uris, u.URI)
+			}
 		}
 	case api.CipherTypeCard:
 		if c.Card != nil {
@@ -506,6 +510,7 @@ func summarizeCipher(c *Cipher) CipherSummary {
 		Subtitle: subtitle,
 		HasTOTP:  hasTOTP,
 		Reprompt: c.Reprompt,
+		URIs:     uris,
 	}
 }
 

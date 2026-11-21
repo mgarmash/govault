@@ -181,6 +181,7 @@ func (m *mockVaultService) Search(query string, filter state.SearchFilter) []sta
 			Subtitle: sub,
 			HasTOTP:  hasTOTP,
 			Reprompt: c.Reprompt,
+			URIs:     loginURIs(c),
 		})
 	}
 	return out
@@ -520,4 +521,15 @@ func TestLockOnSleepPreferenceAndSystemEvent(t *testing.T) {
 	if systemLock() {
 		t.Fatal("system event re-locked an already locked vault")
 	}
+}
+
+func loginURIs(c *state.Cipher) []string {
+	if c.Login == nil {
+		return nil
+	}
+	out := make([]string, 0, len(c.Login.URIs))
+	for _, u := range c.Login.URIs {
+		out = append(out, u.URI)
+	}
+	return out
 }

@@ -177,6 +177,7 @@ func (s *Service) Search(query string, filter state.SearchFilter) []state.Cipher
 			Subtitle: sub,
 			HasTOTP:  c.Login != nil && strings.TrimSpace(c.Login.TOTP) != "",
 			Reprompt: c.Reprompt,
+			URIs:     loginURIs(c),
 		})
 	}
 	sort.Slice(out, func(i, j int) bool {
@@ -434,4 +435,15 @@ func seedCiphers() []*state.Cipher {
 			CreationDate: ago(1500 * day), RevisionDate: ago(400 * day), DeletedDate: ago(5 * day),
 		},
 	}
+}
+
+func loginURIs(c *state.Cipher) []string {
+	if c.Login == nil {
+		return nil
+	}
+	out := make([]string, 0, len(c.Login.URIs))
+	for _, u := range c.Login.URIs {
+		out = append(out, u.URI)
+	}
+	return out
 }
