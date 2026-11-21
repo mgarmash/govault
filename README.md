@@ -2,7 +2,31 @@
 
 A fast, lightweight, zero-CGO native desktop client for self-hosted [Vaultwarden](https://github.com/dani-garcia/vaultwarden) (Bitwarden-compatible) servers, written in Go with [NSGo](https://nsgo.dev).
 
-> **Status**: Design and protocol specification complete; implementation has not started yet.
+> **Status**: Released for macOS (Apple silicon) and Linux (x86_64 and arm64). See [Releases](https://github.com/txchen/govault/releases).
+
+## Install
+
+**macOS** (Homebrew):
+
+```sh
+brew install --cask txchen/tap/govault
+```
+
+**Linux** (Arch, Manjaro, EndeavourOS, Debian, Ubuntu, Fedora, openSUSE and others):
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/txchen/govault/master/scripts/install-linux.sh | sh
+```
+
+The script picks the pacman package on Arch-based systems, the `.deb` on Debian-based systems and the AppImage elsewhere (with a launcher entry and icon), and verifies every download against the release `checksums.txt`. Options go after `sh -s --`:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/txchen/govault/master/scripts/install-linux.sh | sh -s -- --version v0.2.4
+curl -fsSL https://raw.githubusercontent.com/txchen/govault/master/scripts/install-linux.sh | sh -s -- --appimage   # any distribution
+curl -fsSL https://raw.githubusercontent.com/txchen/govault/master/scripts/install-linux.sh | sh -s -- --uninstall
+```
+
+GoVault on Linux needs GTK 4; the AppImage also needs FUSE 2.
 
 ## Why GoVault?
 

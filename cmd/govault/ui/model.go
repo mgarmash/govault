@@ -42,6 +42,7 @@ const (
 	RouteGenerator
 	RouteSettings
 	RouteHealth
+	RouteImport
 )
 
 type UserPrefs struct {
@@ -416,6 +417,18 @@ type AppModel struct {
 	FolderBusy   *core.Signal[bool]
 
 	AttachmentBusy *core.Signal[string]
+	TrashBusy      *core.Signal[bool]
+
+	BackupDialog        *core.Signal[BackupMode]
+	BackupPW            *core.Signal[string]
+	BackupPW2           *core.Signal[string]
+	BackupError         *core.Signal[string]
+	BackupBusy          *core.Signal[bool]
+	ImportSession       *core.Signal[*ImportSession]
+	ImportRev           *core.Signal[int]
+	ImportShowIdentical *core.Signal[bool]
+	ImportBusy          *core.Signal[bool]
+	importPending       *importPending
 
 	SSHAgentError *core.Signal[string]
 	vaultRev      *core.Signal[int]
@@ -503,72 +516,82 @@ func NewAppModel(app *core.Scope, coreSvc state.VaultService, hooks PlatformHook
 	}
 
 	m := &AppModel{
-		Scope:             app,
-		Core:              coreSvc,
-		Hooks:             hooks,
-		Prefs:             prefs,
-		LockState:         core.NewSignal(app, coreSvc.Status()),
-		SyncState:         core.NewSignal(app, SyncIdle),
-		LastSync:          core.NewSignal(app, time.Time{}),
-		Route:             core.NewSignal(app, RouteVault),
-		BiometricKind:     core.NewSignal(app, core.BiometricNone),
-		BiometricHardware: core.NewSignal(app, false),
-		LoginServer:       core.NewSignal(app, p.ServerURL),
-		LoginEmail:        core.NewSignal(app, p.Email),
-		LoginPassword:     core.NewSignal(app, ""),
-		LoginBusy:         core.NewSignal(app, false),
-		LoginError:        core.NewSignal(app, ""),
-		LoginShowPW:       core.NewSignal(app, false),
-		TwoFactor:         core.NewSignal[*TwoFactorPrompt](app, nil),
-		TwoFactorProvider: core.NewSignal(app, api.TwoFactorAuthenticator),
-		TwoFactorCode:     core.NewSignal(app, ""),
-		TwoFactorRemember: core.NewSignal(app, false),
-		TwoFactorSending:  core.NewSignal(app, false),
-		TwoFactorNotice:   core.NewSignal(app, ""),
-		LockPassword:      core.NewSignal(app, ""),
-		LockBusy:          core.NewSignal(app, false),
-		LockError:         core.NewSignal(app, ""),
-		LockShowPW:        core.NewSignal(app, false),
-		SidebarFilter:     core.NewSignal(app, state.SearchFilter{Category: state.FilterAll}),
-		SearchQuery:       core.NewSignal(app, ""),
-		Folders:           core.NewSignalFunc(app, []state.Folder(nil), nil),
-		Organizations:     core.NewSignalFunc(app, []state.Organization(nil), nil),
-		Collections:       core.NewSignalFunc(app, []state.Collection(nil), nil),
-		AllCounts:         core.NewSignalFunc(app, VaultCounts{ByFolder: map[string]int{}}, nil),
-		Health:            core.NewSignalFunc(app, health.Report{}, nil),
-		FilteredItems:     core.NewCollectionFunc(app, func(c state.CipherSummary) string { return c.ID }, cipherSummaryEqual, nil),
-		SelectedID:        core.NewSignal(app, ""),
-		ActiveCipher:      core.NewSignal[*state.Cipher](app, nil),
-		RevealPW:          core.NewSignal(app, false),
-		RevealCard:        core.NewSignal(app, false),
-		TOTPRevealedID:    core.NewSignal(app, ""),
-		EditMode:          core.NewSignal(app, false),
-		EditDraft:         core.NewSignal[*EditDraft](app, nil),
-		EditDirty:         core.NewSignal(app, false),
-		EditBusy:          core.NewSignal(app, false),
-		EditError:         core.NewSignal(app, ""),
-		TOTPCode:          core.NewSignal(app, ""),
-		TOTPRemaining:     core.NewSignal(app, 0),
-		TOTPPeriod:        core.NewSignal(app, 30),
-		MainWinVisible:    core.NewSignal(app, false),
-		SearchAll:         core.NewSignal(app, false),
-		HealthFilter:      core.NewSignal(app, HealthAll),
-		CanGoBack:         core.NewSignal(app, false),
-		CanGoForward:      core.NewSignal(app, false),
-		SidebarW:          core.NewSignal(app, clampWidth(p.SidebarWidth, MinSidebarWidth, MaxSidebarWidth, DefaultSidebarWidth)),
-		ListW:             core.NewSignal(app, clampWidth(p.ListWidth, MinListWidth, MaxListWidth, DefaultListWidth)),
-		GenResult:         core.NewSignal(app, ""),
-		Reprompt:          core.NewSignalFunc(app, RepromptModal{}, nil),
-		RepromptPW:        core.NewSignal(app, ""),
-		RepromptError:     core.NewSignal(app, ""),
-		RepromptBusy:      core.NewSignal(app, false),
-		FolderDialog:      core.NewSignal(app, FolderModal{}),
-		FolderError:       core.NewSignal(app, ""),
-		FolderBusy:        core.NewSignal(app, false),
-		AttachmentBusy:    core.NewSignal(app, ""),
-		SSHAgentError:     core.NewSignal(app, ""),
-		vaultRev:          core.NewSignal(app, 0),
-		Toaster:           ui.NewToaster(app),
+		Scope:               app,
+		Core:                coreSvc,
+		Hooks:               hooks,
+		Prefs:               prefs,
+		LockState:           core.NewSignal(app, coreSvc.Status()),
+		SyncState:           core.NewSignal(app, SyncIdle),
+		LastSync:            core.NewSignal(app, time.Time{}),
+		Route:               core.NewSignal(app, RouteVault),
+		BiometricKind:       core.NewSignal(app, core.BiometricNone),
+		BiometricHardware:   core.NewSignal(app, false),
+		LoginServer:         core.NewSignal(app, p.ServerURL),
+		LoginEmail:          core.NewSignal(app, p.Email),
+		LoginPassword:       core.NewSignal(app, ""),
+		LoginBusy:           core.NewSignal(app, false),
+		LoginError:          core.NewSignal(app, ""),
+		LoginShowPW:         core.NewSignal(app, false),
+		TwoFactor:           core.NewSignal[*TwoFactorPrompt](app, nil),
+		TwoFactorProvider:   core.NewSignal(app, api.TwoFactorAuthenticator),
+		TwoFactorCode:       core.NewSignal(app, ""),
+		TwoFactorRemember:   core.NewSignal(app, false),
+		TwoFactorSending:    core.NewSignal(app, false),
+		TwoFactorNotice:     core.NewSignal(app, ""),
+		LockPassword:        core.NewSignal(app, ""),
+		LockBusy:            core.NewSignal(app, false),
+		LockError:           core.NewSignal(app, ""),
+		LockShowPW:          core.NewSignal(app, false),
+		SidebarFilter:       core.NewSignal(app, state.SearchFilter{Category: state.FilterAll}),
+		SearchQuery:         core.NewSignal(app, ""),
+		Folders:             core.NewSignalFunc(app, []state.Folder(nil), nil),
+		Organizations:       core.NewSignalFunc(app, []state.Organization(nil), nil),
+		Collections:         core.NewSignalFunc(app, []state.Collection(nil), nil),
+		AllCounts:           core.NewSignalFunc(app, VaultCounts{ByFolder: map[string]int{}}, nil),
+		Health:              core.NewSignalFunc(app, health.Report{}, nil),
+		FilteredItems:       core.NewCollectionFunc(app, func(c state.CipherSummary) string { return c.ID }, cipherSummaryEqual, nil),
+		SelectedID:          core.NewSignal(app, ""),
+		ActiveCipher:        core.NewSignal[*state.Cipher](app, nil),
+		RevealPW:            core.NewSignal(app, false),
+		RevealCard:          core.NewSignal(app, false),
+		TOTPRevealedID:      core.NewSignal(app, ""),
+		EditMode:            core.NewSignal(app, false),
+		EditDraft:           core.NewSignal[*EditDraft](app, nil),
+		EditDirty:           core.NewSignal(app, false),
+		EditBusy:            core.NewSignal(app, false),
+		EditError:           core.NewSignal(app, ""),
+		TOTPCode:            core.NewSignal(app, ""),
+		TOTPRemaining:       core.NewSignal(app, 0),
+		TOTPPeriod:          core.NewSignal(app, 30),
+		MainWinVisible:      core.NewSignal(app, false),
+		SearchAll:           core.NewSignal(app, false),
+		HealthFilter:        core.NewSignal(app, HealthAll),
+		CanGoBack:           core.NewSignal(app, false),
+		CanGoForward:        core.NewSignal(app, false),
+		SidebarW:            core.NewSignal(app, clampWidth(p.SidebarWidth, MinSidebarWidth, MaxSidebarWidth, DefaultSidebarWidth)),
+		ListW:               core.NewSignal(app, clampWidth(p.ListWidth, MinListWidth, MaxListWidth, DefaultListWidth)),
+		GenResult:           core.NewSignal(app, ""),
+		Reprompt:            core.NewSignalFunc(app, RepromptModal{}, nil),
+		RepromptPW:          core.NewSignal(app, ""),
+		RepromptError:       core.NewSignal(app, ""),
+		RepromptBusy:        core.NewSignal(app, false),
+		FolderDialog:        core.NewSignal(app, FolderModal{}),
+		FolderError:         core.NewSignal(app, ""),
+		FolderBusy:          core.NewSignal(app, false),
+		AttachmentBusy:      core.NewSignal(app, ""),
+		TrashBusy:           core.NewSignal(app, false),
+		BackupDialog:        core.NewSignal(app, BackupNone),
+		BackupPW:            core.NewSignal(app, ""),
+		BackupPW2:           core.NewSignal(app, ""),
+		BackupError:         core.NewSignal(app, ""),
+		BackupBusy:          core.NewSignal(app, false),
+		ImportSession:       core.NewSignalFunc[*ImportSession](app, nil, nil),
+		ImportRev:           core.NewSignal(app, 0),
+		ImportShowIdentical: core.NewSignal(app, false),
+		ImportBusy:          core.NewSignal(app, false),
+		SSHAgentError:       core.NewSignal(app, ""),
+		vaultRev:            core.NewSignal(app, 0),
+		Toaster:             ui.NewToaster(app),
 	}
 	m.IsSelected = core.NewSelector(app, m.SelectedID.Get)
 	m.clearHistory()
@@ -1192,6 +1215,11 @@ func (m *AppModel) Lock() {
 	m.RepromptPW.Set("")
 	m.RepromptError.Set("")
 	m.AttachmentBusy.Set("")
+	m.TrashBusy.Set(false)
+	m.clearBackupState()
+	if m.Route.Get() == RouteImport {
+		m.Route.Set(RouteVault)
+	}
 	m.TOTPRevealedID.Set("")
 	m.stopTOTP()
 	m.idleTimer.Stop()

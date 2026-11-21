@@ -329,6 +329,24 @@ func (s *Service) HardDeleteCipher(_ context.Context, id string) error {
 	return nil
 }
 
+func (s *Service) EmptyTrash(context.Context) (state.TrashResult, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	var res state.TrashResult
+	for id, c := range s.ciphers {
+		if c.DeletedDate == nil {
+			continue
+		}
+		if c.ReadOnly {
+			res.ReadOnly++
+			continue
+		}
+		delete(s.ciphers, id)
+		res.Deleted++
+	}
+	return res, nil
+}
+
 func (s *Service) Folders() []state.Folder {
 	s.mu.RLock()
 	defer s.mu.RUnlock()

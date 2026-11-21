@@ -67,6 +67,8 @@ func UnlockedShellView(cx *core.Scope, m *AppModel) core.Node {
 							return SettingsView(cx, m)
 						case RouteHealth:
 							return HealthView(cx, m)
+						case RouteImport:
+							return ImportView(cx, m)
 						default:
 							return vaultSplitPanes(cx, m, shellW)
 						}
@@ -85,6 +87,8 @@ func (m *AppModel) filterTitle() string {
 		return "Settings"
 	case RouteHealth:
 		return "Vault Health"
+	case RouteImport:
+		return "Import"
 	}
 	if m.SearchIsGlobal() {
 		return "All Items"
@@ -814,6 +818,7 @@ func rowMenu(cx *core.Scope, m *AppModel, id string, at core.Point) {
 		readOnly := m.CipherReadOnly(c)
 		items = append(items,
 			desktop.MenuItem{Label: "Edit", Disabled: offline || readOnly || m.PasswordHidden(c), OnSelect: func() { m.StartEditCipher(cx) }},
+			desktop.MenuItem{Label: "Clone", Disabled: !m.CanClone(c), OnSelect: func() { m.CloneActive(cx) }},
 			desktop.MenuItem{Label: fav, Disabled: offline || readOnly, OnSelect: m.ToggleFavorite},
 			desktop.MenuItem{Separator: true},
 			desktop.MenuItem{Label: "Move to Trash", Disabled: offline || readOnly, OnSelect: m.SoftDeleteActive},
@@ -831,6 +836,7 @@ func itemListPane(cx *core.Scope, m *AppModel) core.Node {
 		},
 		Children: []core.Node{
 			searchScope(cx, m),
+			trashBar(cx, m),
 			core.List{
 				TestID:        "vault-item-list",
 				Class:         "flex-1 pt-2 pb-2",
@@ -946,6 +952,33 @@ func itemListPane(cx *core.Scope, m *AppModel) core.Node {
 					}
 				},
 			},
+		},
+	}
+}
+
+// trashBar offers Empty Trash while Trash holds items the user may delete.
+func trashBar(cx *core.Scope, m *AppModel) core.Node {
+	return core.Show{
+		When: func() bool {
+			m.AllCounts.Get()
+			return m.SidebarFilter.Get().Category == state.FilterTrash && m.TrashDeletable() > 0
+		},
+		Then: func(cx *core.Scope) core.Node {
+			return core.View{
+				Class: "flex-row items-center gap-2 mx-3 mt-2.5 pl-2.5 pr-1 h-[30px] rounded-[8px] bg-gv-fill",
+				Children: []core.Node{
+					core.Text{Class: "flex-1 text-[12px] text-gv-fg2", Content: "Items in Trash can be restored."},
+					ui.Button{
+						TestID:   "trash-empty",
+						Text:     "Empty Trash",
+						Variant:  ui.ButtonGhost,
+						Size:     ui.SizeSmall,
+						Busy:     m.TrashBusy.Get,
+						Disabled: func() bool { return m.SyncState.Get() == SyncOffline },
+						OnPress:  func() { m.EmptyTrash(cx) },
+					},
+				},
+			}
 		},
 	}
 }
@@ -1644,6 +1677,17 @@ func detailHeader(cx *core.Scope, m *AppModel, c *state.Cipher, isTrash bool, of
 				},
 				Disabled: func() bool { return offline() || readOnly },
 				OnPress:  m.ToggleFavorite,
+			},
+			ui.Button{
+				TestID:   "detail-clone",
+				Icon:     lucide.CopyPlus,
+				Label:    "Clone item",
+				Variant:  ui.ButtonGhost,
+				Side:     28,
+				IconSize: 15,
+				Tint:     func() core.Color { return themeColor(cx, "gv-fg2") },
+				Disabled: func() bool { return !m.CanClone(c) },
+				OnPress:  func() { m.CloneActive(cx) },
 			},
 			ui.Button{
 				TestID:   "detail-edit",

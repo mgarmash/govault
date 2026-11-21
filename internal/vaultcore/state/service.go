@@ -768,6 +768,59 @@ func (s *Service) HardDeleteCipher(ctx context.Context, id string) error {
 	return nil
 }
 
+// EmptyTrash permanently deletes every item in Trash the user may delete and
+// leaves read-only ones, then resyncs so memory and the snapshot match.
+func (s *Service) EmptyTrash(ctx context.Context) (TrashResult, error) {
+	var res TrashResult
+	o, err := s.beginOp(ctx)
+	if err != nil {
+		return res, err
+	}
+	defer o.end()
+
+	var ids []string
+	s.mu.RLock()
+	for id, c := range s.ciphers {
+		if c.DeletedDate == nil {
+			continue
+		}
+		if s.effectiveReadOnlyLocked(c) {
+			res.ReadOnly++
+			continue
+		}
+		ids = append(ids, id)
+	}
+	s.mu.RUnlock()
+	slices.Sort(ids)
+
+	var errs []error
+	for _, id := range ids {
+		_, err := withAuth(o, func(ctx context.Context, tok string) (struct{}, error) {
+			return struct{}{}, o.client.HardDeleteCipher(ctx, tok, id)
+		})
+		if err != nil {
+			errs = append(errs, err)
+			if errors.Is(err, ErrLocked) || o.ctx.Err() != nil {
+				break
+			}
+			continue
+		}
+		res.Deleted++
+		s.mu.Lock()
+		if o.currentLocked() {
+			delete(s.ciphers, id)
+		}
+		s.mu.Unlock()
+	}
+	if res.Deleted > 0 {
+		if err := s.sync(ctx, true); err != nil && !errors.Is(err, ErrLocked) {
+			errs = append(errs, err)
+		}
+		s.notifyUpdated()
+	}
+	return res, errors.Join(errs...)
+}
+
 func (s *Service) Folders() []Folder {
 	s.mu.RLock()
 	defer s.mu.RUnlock()

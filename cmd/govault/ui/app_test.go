@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"slices"
 	"strings"
 	"sync"
@@ -222,6 +223,9 @@ func (m *mockVaultService) SaveCipher(_ context.Context, c *state.Cipher) (*stat
 	cp := *c
 	if cp.ID == "" {
 		cp.ID = "c-new"
+		for i := 2; m.ciphers[cp.ID] != nil; i++ {
+			cp.ID = fmt.Sprintf("c-new-%d", i)
+		}
 		m.order = append(m.order, cp.ID)
 	}
 	m.ciphers[cp.ID] = &cp
@@ -256,6 +260,24 @@ func (m *mockVaultService) HardDeleteCipher(_ context.Context, id string) error 
 	defer m.mu.Unlock()
 	delete(m.ciphers, id)
 	return nil
+}
+
+func (m *mockVaultService) EmptyTrash(context.Context) (state.TrashResult, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	var res state.TrashResult
+	for id, c := range m.ciphers {
+		if c.DeletedDate == nil {
+			continue
+		}
+		if c.ReadOnly {
+			res.ReadOnly++
+			continue
+		}
+		delete(m.ciphers, id)
+		res.Deleted++
+	}
+	return res, nil
 }
 
 func (m *mockVaultService) Folders() []state.Folder {

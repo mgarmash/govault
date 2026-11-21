@@ -38,6 +38,7 @@ func MainWindowView(cx *core.Scope, m *AppModel) core.Node {
 				}
 			}),
 			repromptDialog(m),
+			backupDialog(cx, m),
 			folderDialog(m),
 			ui.Toasts{
 				Toaster:   m.Toaster,
@@ -193,6 +194,75 @@ func repromptDialog(m *AppModel) core.Node {
 				Busy:    m.RepromptBusy.Get,
 				OnPress: m.SubmitReprompt,
 			},
+		},
+	}
+}
+
+func backupDialog(cx *core.Scope, m *AppModel) core.Node {
+	input := func(testID, placeholder string, value *core.Signal[string], autoFocus bool) core.Node {
+		return ui.Input{
+			TestID:        testID,
+			OnBlur:        settleSecureInput,
+			Placeholder:   placeholder,
+			Masked:        true,
+			AutoFocus:     autoFocus,
+			NoAutoCorrect: true,
+			Value:         value.Get,
+			OnChange:      value.Set,
+			OnSubmit:      func(string) { m.ConfirmBackupDialog(cx) },
+		}
+	}
+	return ui.Dialog{
+		TestID: "backup-dialog",
+		Open:   func() bool { return m.BackupDialog.Get() != BackupNone },
+		OnOpenChange: func(open bool, _ base.Reason) {
+			if !open {
+				m.CloseBackupDialog()
+			}
+		},
+		OnConfirm: func() { m.ConfirmBackupDialog(cx) },
+		TitleFunc: func() string {
+			if m.BackupDialog.Get() == BackupImport {
+				return "Backup Password"
+			}
+			return "Protect Your Backup"
+		},
+		DescriptionFunc: func() string {
+			if m.BackupDialog.Get() == BackupImport {
+				return "Enter the password this backup was exported with."
+			}
+			return "Choose a password for the encrypted backup. It cannot be recovered if you forget it."
+		},
+		Children: []core.Node{
+			input("backup-password", "Backup password", m.BackupPW, true),
+			core.Show{
+				When: func() bool { return m.BackupDialog.Get() == BackupExport },
+				Then: func(cx *core.Scope) core.Node {
+					return input("backup-password-confirm", "Confirm password", m.BackupPW2, false)
+				},
+			},
+			core.Show{
+				When: func() bool { return m.BackupError.Get() != "" },
+				Then: func(cx *core.Scope) core.Node {
+					return core.Text{TestID: "backup-error", Class: "text-[12px] text-gv-danger", ContentFunc: m.BackupError.Get}
+				},
+			},
+		},
+		Footer: []core.Node{
+			ui.Button{Text: "Cancel", Variant: ui.ButtonSecondary, OnPress: m.CloseBackupDialog},
+			core.Dynamic(func(cx *core.Scope) core.Node {
+				text := "Export"
+				if m.BackupDialog.Get() == BackupImport {
+					text = "Decrypt"
+				}
+				return ui.Button{
+					TestID:  "backup-confirm",
+					Text:    text,
+					Variant: ui.ButtonPrimary,
+					Busy:    m.BackupBusy.Get,
+					OnPress: func() { m.ConfirmBackupDialog(cx) },
+				}
+			}),
 		},
 	}
 }

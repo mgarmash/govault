@@ -172,6 +172,13 @@ type PasswordHistoryEntry struct {
 	LastUsedDate time.Time
 }
 
+// TrashResult reports what EmptyTrash did: items deleted and read-only
+// items left in Trash.
+type TrashResult struct {
+	Deleted  int
+	ReadOnly int
+}
+
 type Folder struct {
 	ID           string
 	Name         string
@@ -224,6 +231,7 @@ type VaultService interface {
 	SoftDeleteCipher(ctx context.Context, id string) error
 	RestoreCipher(ctx context.Context, id string) error
 	HardDeleteCipher(ctx context.Context, id string) error
+	EmptyTrash(ctx context.Context) (TrashResult, error)
 	Folders() []Folder
 	SaveFolder(ctx context.Context, f *Folder) (*Folder, error)
 	DeleteFolder(ctx context.Context, id string) error

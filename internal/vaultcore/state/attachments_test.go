@@ -18,6 +18,14 @@ func (env *vaultTestEnv) handleAttachments(w http.ResponseWriter, r *http.Reques
 	defer env.mu.Unlock()
 	const prefix = "/api/ciphers/c-1"
 	c := env.ciphers["c-1"]
+	if id, ok := strings.CutPrefix(r.URL.Path, "/api/ciphers/"); ok && r.Method == http.MethodDelete && !strings.Contains(id, "/") {
+		if _, exists := env.ciphers[id]; !exists {
+			w.WriteHeader(http.StatusNotFound)
+			return true
+		}
+		delete(env.ciphers, id)
+		return true
+	}
 	switch {
 	case r.Method == http.MethodGet && r.URL.Path == prefix:
 		_ = json.NewEncoder(w).Encode(c)

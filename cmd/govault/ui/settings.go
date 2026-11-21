@@ -129,6 +129,31 @@ func SettingsView(cx *core.Scope, m *AppModel) core.Node {
 						When: func() bool { return m.Hooks.SSHAgent != nil },
 						Then: func(cx *core.Scope) core.Node { return sshAgentSection(m) },
 					},
+					section("Backup", card(
+						settingsRow(
+							"Export encrypted backup",
+							"A Bitwarden-compatible JSON file protected by a password you choose.",
+							ui.Button{
+								TestID:  "settings-export",
+								Text:    "Export…",
+								Icon:    lucide.FileOutput,
+								Variant: ui.ButtonSecondary,
+								OnPress: m.StartExport,
+							},
+						),
+						settingsRow(
+							"Import backup",
+							"Bitwarden JSON, encrypted or plain. Review every item before anything changes.",
+							ui.Button{
+								TestID:   "settings-import",
+								Text:     "Import…",
+								Icon:     lucide.FileInput,
+								Variant:  ui.ButtonSecondary,
+								Disabled: func() bool { return m.SyncState.Get() == SyncOffline },
+								OnPress:  func() { m.StartImport(cx) },
+							},
+						),
+					)),
 					section("Privacy", card(
 						settingsRow(
 							"Show website icons",

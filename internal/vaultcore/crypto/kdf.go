@@ -65,24 +65,30 @@ func ValidateKDF(cfg KDFConfig) error {
 }
 
 func DeriveMasterKey(password []byte, email string, cfg KDFConfig) ([32]byte, error) {
+	return DeriveKeyFromPassword(password, NormalizeEmail(email), cfg)
+}
+
+// DeriveKeyFromPassword is the Bitwarden password KDF with salt used as is,
+// as for the master key (salted with the normalized email) and for
+// password-protected exports (salted with a random string).
+func DeriveKeyFromPassword(password []byte, salt string, cfg KDFConfig) ([32]byte, error) {
 	var masterKey [32]byte
 	if err := ValidateKDF(cfg); err != nil {
 		return masterKey, err
 	}
 
-	normEmail := NormalizeEmail(email)
 	switch cfg.Type {
 	case KDFPBKDF2:
-		raw := pbkdf2.Key(password, []byte(normEmail), int(cfg.Iterations), 32, sha256.New)
+		raw := pbkdf2.Key(password, []byte(salt), int(cfg.Iterations), 32, sha256.New)
 		copy(masterKey[:], raw)
 		ZeroBytes(raw)
 		return masterKey, nil
 	case KDFArgon2id:
-		salt := sha256.Sum256([]byte(normEmail))
-		raw := argon2.IDKey(password, salt[:], cfg.Iterations, cfg.MemoryMB*1024, uint8(cfg.Parallelism), 32)
+		saltHash := sha256.Sum256([]byte(salt))
+		raw := argon2.IDKey(password, saltHash[:], cfg.Iterations, cfg.MemoryMB*1024, uint8(cfg.Parallelism), 32)
 		copy(masterKey[:], raw)
 		ZeroBytes(raw)
-		ZeroBytes(salt[:])
+		ZeroBytes(saltHash[:])
 		// Reclaim the transient 32-64 MiB Argon2id working set promptly.
 		debug.FreeOSMemory()
 		return masterKey, nil
