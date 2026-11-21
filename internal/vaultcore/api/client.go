@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"mime/multipart"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -370,4 +371,117 @@ func classifyError(status int, body []byte) error {
 		Message:    msg,
 		Body:       string(body),
 	}
+}
+
+const MaxAttachmentSize = 100 << 20
+
+var ErrAttachmentTooLarge = errors.New("api: attachment exceeds the 100 MiB limit")
+
+func (c *Client) GetCipher(ctx context.Context, accessToken, cipherID string) (*EncryptedCipher, error) {
+	raw, err := c.do(ctx, http.MethodGet, "/api/ciphers/"+url.PathEscape(cipherID), "", accessToken, nil, nil)
+	if err != nil {
+		return nil, err
+	}
+	var cipher EncryptedCipher
+	if err := json.Unmarshal(raw, &cipher); err != nil {
+		return nil, err
+	}
+	return &cipher, nil
+}
+
+func attachmentPath(cipherID, attachmentID string) string {
+	return "/api/ciphers/" + url.PathEscape(cipherID) + "/attachment/" + url.PathEscape(attachmentID)
+}
+
+func (c *Client) GetAttachment(ctx context.Context, accessToken, cipherID, attachmentID string) (*EncryptedAttachment, error) {
+	raw, err := c.do(ctx, http.MethodGet, attachmentPath(cipherID, attachmentID), "", accessToken, nil, nil)
+	if err != nil {
+		return nil, err
+	}
+	var att EncryptedAttachment
+	if err := json.Unmarshal(raw, &att); err != nil {
+		return nil, err
+	}
+	return &att, nil
+}
+
+// DownloadAttachmentBytes fetches encrypted attachment data. The access token
+// is only sent when the URL has the same origin as the server.
+func (c *Client) DownloadAttachmentBytes(ctx context.Context, accessToken, downloadURL string) ([]byte, error) {
+	base, err := url.Parse(c.baseURL)
+	if err != nil {
+		return nil, err
+	}
+	target, err := base.Parse(downloadURL)
+	if err != nil || (target.Scheme != "http" && target.Scheme != "https") || target.Host == "" {
+		return nil, fmt.Errorf("api: invalid attachment URL")
+	}
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, target.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("User-Agent", c.userAgent)
+	if accessToken != "" && target.Scheme == base.Scheme && strings.EqualFold(target.Host, base.Host) {
+		req.Header.Set("Authorization", "Bearer "+accessToken)
+	}
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		if ctx.Err() != nil {
+			return nil, ctx.Err()
+		}
+		return nil, fmt.Errorf("%w: %v", ErrNetworkOffline, err)
+	}
+	defer resp.Body.Close()
+	if resp.ContentLength > MaxAttachmentSize {
+		return nil, ErrAttachmentTooLarge
+	}
+	raw, err := io.ReadAll(io.LimitReader(resp.Body, MaxAttachmentSize+1))
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return nil, classifyError(resp.StatusCode, raw)
+	}
+	if len(raw) > MaxAttachmentSize {
+		return nil, ErrAttachmentTooLarge
+	}
+	return raw, nil
+}
+
+func (c *Client) CreateAttachmentV2(ctx context.Context, accessToken, cipherID string, req AttachmentUploadRequest) (*AttachmentUploadResponse, error) {
+	body, err := json.Marshal(req)
+	if err != nil {
+		return nil, err
+	}
+	raw, err := c.do(ctx, http.MethodPost, "/api/ciphers/"+url.PathEscape(cipherID)+"/attachment/v2", "application/json", accessToken, nil, body)
+	if err != nil {
+		return nil, err
+	}
+	var resp AttachmentUploadResponse
+	if err := json.Unmarshal(raw, &resp); err != nil {
+		return nil, err
+	}
+	return &resp, nil
+}
+
+func (c *Client) UploadAttachmentData(ctx context.Context, accessToken, cipherID, attachmentID, fileName string, encryptedData []byte) error {
+	var buf bytes.Buffer
+	w := multipart.NewWriter(&buf)
+	part, err := w.CreateFormFile("data", fileName)
+	if err != nil {
+		return err
+	}
+	if _, err := part.Write(encryptedData); err != nil {
+		return err
+	}
+	if err := w.Close(); err != nil {
+		return err
+	}
+	_, err = c.do(ctx, http.MethodPost, attachmentPath(cipherID, attachmentID), w.FormDataContentType(), accessToken, nil, buf.Bytes())
+	return err
+}
+
+func (c *Client) DeleteAttachment(ctx context.Context, accessToken, cipherID, attachmentID string) error {
+	_, err := c.do(ctx, http.MethodDelete, attachmentPath(cipherID, attachmentID), "", accessToken, nil, nil)
+	return err
 }

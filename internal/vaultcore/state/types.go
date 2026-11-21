@@ -28,6 +28,8 @@ var (
 	ErrInvalidSecretStore      = errors.New("state: secret store is required")
 	ErrReadOnlyCipher          = errors.New("state: item is read-only")
 	ErrOrganizationKeyMissing  = errors.New("state: organization key unavailable")
+	ErrAttachmentNotFound      = errors.New("state: attachment not found")
+	ErrUnsupportedUpload       = errors.New("state: server requested an unsupported attachment upload method")
 )
 
 type FilterCategory int
@@ -84,6 +86,7 @@ type Cipher struct {
 	SSHKey           *SSHKey
 	Fields           []CustomField
 	PasswordHistory  []PasswordHistoryEntry
+	Attachments      []Attachment
 	Data             json.RawMessage
 	EncryptedFor     *string
 	EncryptedByKeyID *string
@@ -153,6 +156,16 @@ type CustomField struct {
 	LinkedID *int
 }
 
+type Attachment struct {
+	ID       string
+	URL      string
+	FileName string
+	Key      *string
+	Size     int64
+	SizeName string
+	Extra    map[string]json.RawMessage
+}
+
 type PasswordHistoryEntry struct {
 	Password     string
 	LastUsedDate time.Time
@@ -212,6 +225,9 @@ type VaultService interface {
 	Folders() []Folder
 	SaveFolder(ctx context.Context, f *Folder) (*Folder, error)
 	DeleteFolder(ctx context.Context, id string) error
+	DownloadAttachment(ctx context.Context, cipherID, attachmentID string) ([]byte, string, error)
+	UploadAttachment(ctx context.Context, cipherID, fileName string, plain []byte) (*Cipher, error)
+	DeleteAttachment(ctx context.Context, cipherID, attachmentID string) (*Cipher, error)
 	Organizations() []Organization
 	Collections() []Collection
 }

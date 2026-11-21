@@ -592,3 +592,42 @@ func TestSidebarCollectionsFilterItems(t *testing.T) {
 	app.WaitFor("id:detail-view >> text:Acme", 2*time.Second)
 	app.Find("id:detail-view >> text:View only")
 }
+
+func (m *mockVaultService) DownloadAttachment(_ context.Context, cipherID, attachmentID string) ([]byte, string, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	c, ok := m.ciphers[cipherID]
+	if !ok {
+		return nil, "", state.ErrCipherNotFound
+	}
+	for _, a := range c.Attachments {
+		if a.ID == attachmentID {
+			return []byte("contents of " + a.FileName), a.FileName, nil
+		}
+	}
+	return nil, "", state.ErrAttachmentNotFound
+}
+
+func (m *mockVaultService) UploadAttachment(_ context.Context, cipherID, fileName string, plain []byte) (*state.Cipher, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	c, ok := m.ciphers[cipherID]
+	if !ok {
+		return nil, state.ErrCipherNotFound
+	}
+	c.Attachments = append(slices.Clone(c.Attachments), state.Attachment{ID: "att-" + fileName, FileName: fileName, Size: int64(len(plain))})
+	cp := *c
+	return &cp, nil
+}
+
+func (m *mockVaultService) DeleteAttachment(_ context.Context, cipherID, attachmentID string) (*state.Cipher, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	c, ok := m.ciphers[cipherID]
+	if !ok {
+		return nil, state.ErrCipherNotFound
+	}
+	c.Attachments = slices.DeleteFunc(slices.Clone(c.Attachments), func(a state.Attachment) bool { return a.ID == attachmentID })
+	cp := *c
+	return &cp, nil
+}

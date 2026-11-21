@@ -395,6 +395,8 @@ type AppModel struct {
 	FolderError  *core.Signal[string]
 	FolderBusy   *core.Signal[bool]
 
+	AttachmentBusy *core.Signal[string]
+
 	SSHAgentError *core.Signal[string]
 	vaultRev      *core.Signal[int]
 
@@ -498,6 +500,7 @@ func NewAppModel(app *core.Scope, coreSvc state.VaultService, hooks PlatformHook
 		FolderDialog:      core.NewSignal(app, FolderModal{}),
 		FolderError:       core.NewSignal(app, ""),
 		FolderBusy:        core.NewSignal(app, false),
+		AttachmentBusy:    core.NewSignal(app, ""),
 		SSHAgentError:     core.NewSignal(app, ""),
 		vaultRev:          core.NewSignal(app, 0),
 		Toaster:           ui.NewToaster(app),

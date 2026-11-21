@@ -80,6 +80,8 @@ type vaultTestEnv struct {
 	lastUpdateRev *time.Time
 	require2FA    bool
 	emailSends    int
+	blobs         map[string][]byte
+	blobAuth      []string
 }
 
 func newVaultTestEnv(t *testing.T) *vaultTestEnv {
@@ -348,7 +350,9 @@ func newVaultTestEnv(t *testing.T) *vaultTestEnv {
 			w.WriteHeader(http.StatusOK)
 
 		default:
-			w.WriteHeader(http.StatusNotFound)
+			if !env.handleAttachments(w, r) {
+				w.WriteHeader(http.StatusNotFound)
+			}
 		}
 	}))
 	t.Cleanup(env.server.Close)

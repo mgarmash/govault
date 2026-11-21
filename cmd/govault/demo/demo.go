@@ -31,6 +31,7 @@ type Service struct {
 	ciphers map[string]*state.Cipher
 	folders []state.Folder
 	nextID  int
+	blobs   map[string][]byte
 }
 
 const demoOrgID = "o-northwind"
@@ -48,7 +49,9 @@ var (
 )
 
 func NewService(status state.LockStatus) *Service {
-	s := &Service{status: status, ciphers: map[string]*state.Cipher{}}
+	s := &Service{status: status, ciphers: map[string]*state.Cipher{}, blobs: map[string][]byte{
+		"a-recovery": []byte("GitHub recovery codes\n\na7f2-9c1e\n44d0-b8e3\n91be-0c7a\n"),
+	}}
 	s.folders = []state.Folder{
 		{ID: "f-work", Name: "Work"},
 		{ID: "f-personal", Name: "Personal"},
@@ -378,7 +381,8 @@ func seedCiphers() []*state.Cipher {
 				{Name: "Organization", Value: "northwind", Type: 0},
 				{Name: "Recovery code", Value: "a7f2-9c1e-44d0-b8e3", Type: 1},
 			},
-			Notes: "Primary work account. SSO enforced for the northwind org; hardware key registered as backup.",
+			Notes:       "Primary work account. SSO enforced for the northwind org; hardware key registered as backup.",
+			Attachments: []state.Attachment{{ID: "a-recovery", FileName: "github-recovery-codes.txt", Size: 53}},
 			PasswordHistory: []state.PasswordHistoryEntry{
 				{Password: "Gh!2024-northwind", LastUsedDate: *ago(3 * day)},
 				{Password: "octo-cat-42", LastUsedDate: *ago(180 * day)},

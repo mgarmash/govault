@@ -112,6 +112,24 @@ func decryptCipher(enc *api.EncryptedCipher, userKey *crypto.SymmetricKey) (*Cip
 			}
 		}
 	}
+	if len(enc.Attachments) > 0 {
+		c.Attachments = make([]Attachment, len(enc.Attachments))
+		for i, a := range enc.Attachments {
+			name, err := decryptRequired(a.FileName, activeKey)
+			if err != nil {
+				return nil, err
+			}
+			c.Attachments[i] = Attachment{
+				ID:       a.ID,
+				URL:      a.URL,
+				FileName: name,
+				Key:      cloneStringPtr(a.Key),
+				Size:     int64(a.Size),
+				SizeName: a.SizeName,
+				Extra:    cloneExtra(a.Extra),
+			}
+		}
+	}
 	if len(enc.PasswordHistory) > 0 {
 		c.PasswordHistory = make([]PasswordHistoryEntry, len(enc.PasswordHistory))
 		for i, h := range enc.PasswordHistory {
@@ -517,6 +535,14 @@ func cloneCipher(c *Cipher) *Cipher {
 	}
 	if len(c.PasswordHistory) > 0 {
 		cp.PasswordHistory = append([]PasswordHistoryEntry(nil), c.PasswordHistory...)
+	}
+	if len(c.Attachments) > 0 {
+		cp.Attachments = make([]Attachment, len(c.Attachments))
+		for i, a := range c.Attachments {
+			a.Key = cloneStringPtr(a.Key)
+			a.Extra = cloneExtra(a.Extra)
+			cp.Attachments[i] = a
+		}
 	}
 	return &cp
 }

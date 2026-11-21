@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"maps"
 	"reflect"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -186,6 +187,7 @@ type EncryptedCipher struct {
 	SSHKey           *EncryptedSSHKey           `json:"sshKey,omitempty"`
 	Fields           []EncryptedField           `json:"fields,omitempty"`
 	PasswordHistory  []EncryptedPasswordHistory `json:"passwordHistory,omitempty"`
+	Attachments      []EncryptedAttachment      `json:"attachments,omitempty"`
 	Data             json.RawMessage            `json:"data,omitempty"`
 	EncryptedFor     *string                    `json:"encryptedFor,omitempty"`
 	EncryptedByKeyID *string                    `json:"encryptedByKeyId,omitempty"`
@@ -304,6 +306,68 @@ type EncryptedField struct {
 	Value    *string `json:"value"`
 	Type     int     `json:"type"`
 	LinkedID *int    `json:"linkedId,omitempty"`
+}
+
+type EncryptedAttachment struct {
+	ID       string                     `json:"id"`
+	URL      string                     `json:"url,omitempty"`
+	FileName string                     `json:"fileName"`
+	Key      *string                    `json:"key,omitempty"`
+	Size     FlexInt                    `json:"size"`
+	SizeName string                     `json:"sizeName,omitempty"`
+	Extra    map[string]json.RawMessage `json:"-"`
+}
+
+func (a *EncryptedAttachment) UnmarshalJSON(data []byte) error {
+	type alias EncryptedAttachment
+	var v alias
+	if err := unmarshalWithExtra(data, &v, &v.Extra); err != nil {
+		return err
+	}
+	*a = EncryptedAttachment(v)
+	return nil
+}
+
+func (a EncryptedAttachment) MarshalJSON() ([]byte, error) {
+	type alias EncryptedAttachment
+	return marshalWithExtra(alias(a), a.Extra)
+}
+
+// FlexInt decodes an integer sent either as a JSON number or a string, as
+// attachment sizes are, and encodes it as a string.
+type FlexInt int64
+
+func (n *FlexInt) UnmarshalJSON(data []byte) error {
+	s := strings.Trim(strings.TrimSpace(string(data)), `"`)
+	if s == "" || s == "null" {
+		*n = 0
+		return nil
+	}
+	v, err := strconv.ParseInt(s, 10, 64)
+	if err != nil {
+		return err
+	}
+	*n = FlexInt(v)
+	return nil
+}
+
+func (n FlexInt) MarshalJSON() ([]byte, error) {
+	return json.Marshal(strconv.FormatInt(int64(n), 10))
+}
+
+type AttachmentUploadRequest struct {
+	Key      string `json:"key"`
+	FileName string `json:"fileName"`
+	FileSize int64  `json:"fileSize"`
+}
+
+const FileUploadTypeDirect = 0
+
+type AttachmentUploadResponse struct {
+	AttachmentID   string           `json:"attachmentId"`
+	URL            string           `json:"url"`
+	FileUploadType int              `json:"fileUploadType"`
+	CipherResponse *EncryptedCipher `json:"cipherResponse,omitempty"`
 }
 
 type EncryptedPasswordHistory struct {

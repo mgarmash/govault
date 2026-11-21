@@ -1364,6 +1364,10 @@ func detailContent(cx *core.Scope, m *AppModel, c *state.Cipher) core.Node {
 		})))
 	}
 
+	if n := attachmentsSection(cx, m, c); n != nil {
+		blocks = append(blocks, n)
+	}
+
 	blocks = append(blocks, metadataFooter(cx, m, c, isTrash, offline))
 
 	return core.View{
