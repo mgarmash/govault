@@ -146,6 +146,12 @@ func TestService_OrganizationCollectionsAndOrgCiphers(t *testing.T) {
 		t.Fatalf("org filter = %+v", byOrg)
 	}
 
+	for _, ac := range svc.AllCiphers() {
+		if ac.ID == "c-org" && (!ac.HidePassword || ac.Login.Password != "") {
+			t.Fatalf("AllCiphers leaks a collection-hidden password: %+v", ac.Login)
+		}
+	}
+
 	c, err := svc.GetCipher("c-org")
 	if err != nil || c.Login.Password != "s3cret" {
 		t.Fatalf("GetCipher = %+v, %v", c, err)

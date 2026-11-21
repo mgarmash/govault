@@ -252,6 +252,20 @@ func subtitle(c *state.Cipher) string {
 	return ""
 }
 
+func (s *Service) AllCiphers() []*state.Cipher {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	if s.status != state.StatusUnlocked {
+		return nil
+	}
+	out := make([]*state.Cipher, 0, len(s.ciphers))
+	for _, c := range s.ciphers {
+		cp := *c
+		out = append(out, &cp)
+	}
+	return out
+}
+
 func (s *Service) GetCipher(id string) (*state.Cipher, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -371,6 +385,8 @@ func seedCiphers() []*state.Cipher {
 		return l
 	}
 	const day = 24 * time.Hour
+	soon := now.AddDate(0, 1, 0)
+	soonMonth, soonYear := fmt.Sprintf("%02d", int(soon.Month())), fmt.Sprintf("%d", soon.Year())
 
 	return []*state.Cipher{
 		{
@@ -438,8 +454,14 @@ func seedCiphers() []*state.Cipher {
 		{
 			ID: "c-netflix", Type: api.CipherTypeLogin, Name: "Netflix",
 			FolderID:     folder("f-personal"),
-			Login:        login("alex.morgan@icloud.com", "popcorn-Lantern-9", "", "https://www.netflix.com"),
+			Login:        login("alex.morgan@icloud.com", "Orchard-Velvet-Comet-42", "", "https://www.netflix.com"),
 			CreationDate: ago(700 * day), RevisionDate: ago(200 * day),
+		},
+		{
+			ID: "c-router", Type: api.CipherTypeLogin, Name: "Home Router",
+			FolderID:     folder("f-personal"),
+			Login:        login("admin", "admin123", "", "http://192.168.1.1"),
+			CreationDate: ago(900 * day), RevisionDate: ago(600 * day),
 		},
 		{
 			ID: "c-visa", Type: api.CipherTypeCard, Name: "Chase Sapphire Visa", Favorite: true,
@@ -455,7 +477,7 @@ func seedCiphers() []*state.Cipher {
 			FolderID: folder("f-finance"),
 			Card: &state.Card{
 				CardholderName: "Alex Morgan", Brand: "Amex", Number: "3782 822463 10005",
-				ExpMonth: "11", ExpYear: "2027", Code: "4410",
+				ExpMonth: soonMonth, ExpYear: soonYear, Code: "4410",
 			},
 			CreationDate: ago(250 * day), RevisionDate: ago(70 * day),
 		},

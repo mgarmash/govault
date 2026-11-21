@@ -631,3 +631,19 @@ func (m *mockVaultService) DeleteAttachment(_ context.Context, cipherID, attachm
 	cp := *c
 	return &cp, nil
 }
+
+func (m *mockVaultService) AllCiphers() []*state.Cipher {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	if m.status != state.StatusUnlocked {
+		return nil
+	}
+	out := make([]*state.Cipher, 0, len(m.order))
+	for _, id := range m.order {
+		if c := m.ciphers[id]; c != nil {
+			cp := *c
+			out = append(out, &cp)
+		}
+	}
+	return out
+}

@@ -218,6 +218,7 @@ type VaultService interface {
 	SyncNow(ctx context.Context) error
 	Search(query string, filter SearchFilter) []CipherSummary
 	GetCipher(id string) (*Cipher, error)
+	AllCiphers() []*Cipher
 	SaveCipher(ctx context.Context, c *Cipher) (*Cipher, error)
 	SoftDeleteCipher(ctx context.Context, id string) error
 	RestoreCipher(ctx context.Context, id string) error

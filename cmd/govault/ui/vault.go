@@ -65,6 +65,8 @@ func UnlockedShellView(cx *core.Scope, m *AppModel) core.Node {
 							return GeneratorView(cx, m)
 						case RouteSettings:
 							return SettingsView(cx, m)
+						case RouteHealth:
+							return HealthView(cx, m)
 						default:
 							return vaultSplitPanes(cx, m, shellW)
 						}
@@ -81,6 +83,8 @@ func (m *AppModel) filterTitle() string {
 		return "Generator"
 	case RouteSettings:
 		return "Settings"
+	case RouteHealth:
+		return "Vault Health"
 	}
 	if m.SearchIsGlobal() {
 		return "All Items"
@@ -214,6 +218,7 @@ type sidebarEntry struct {
 	glyph  func() *core.SVG
 	tint   uint32
 	count  func() int
+	badge  bool
 	active func() bool
 	press  func()
 }
@@ -316,6 +321,13 @@ func sidebarView(cx *core.Scope, m *AppModel) core.Node {
 						testID: "sidebar-generator", label: "Generator", glyph: lucide.WandSparkles, tint: 0x14a3b8,
 						active: func() bool { return m.Route.Get() == RouteGenerator },
 						press:  route(RouteGenerator),
+					}),
+					sidebarRow(sidebarEntry{
+						testID: "sidebar-health", label: "Vault Health", glyph: lucide.HeartPulse, tint: 0xe5484d,
+						count:  func() int { return m.Health.Get().TotalIssues() },
+						badge:  true,
+						active: func() bool { return m.Route.Get() == RouteHealth },
+						press:  route(RouteHealth),
 					}),
 					sidebarRow(sidebarEntry{
 						testID: "sidebar-trash", label: "Trash", glyph: lucide.Trash, tint: 0x8e8e93,
@@ -471,7 +483,21 @@ func sidebarRow(e sidebarEntry) core.Node {
 			Content: e.label,
 		},
 	}
-	if e.count != nil {
+	if e.count != nil && e.badge {
+		children = append(children, core.Show{
+			When: func() bool { return e.count() > 0 },
+			Then: func(cx *core.Scope) core.Node {
+				return core.View{
+					Class: "h-[17px] min-w-[17px] px-1.5 rounded-full items-center justify-center bg-gv-warn-soft",
+					Children: []core.Node{core.Text{
+						TestID:      e.testID + "-badge",
+						Class:       "text-[11px] font-semibold text-gv-warn tabular-nums",
+						ContentFunc: func() string { return fmt.Sprintf("%d", e.count()) },
+					}},
+				}
+			},
+		})
+	} else if e.count != nil {
 		children = append(children, core.Text{
 			Class:       "text-[12px] text-gv-fg3 tabular-nums",
 			ContentFunc: func() string { return fmt.Sprintf("%d", e.count()) },

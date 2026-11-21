@@ -510,6 +510,35 @@ func (s *Service) GetCipher(id string) (*Cipher, error) {
 	return cloneCipher(c), nil
 }
 
+// AllCiphers returns copies of every decrypted item for local analysis.
+// HidePassword also reflects collections that hide passwords, and hidden
+// passwords are removed from the copies.
+func (s *Service) AllCiphers() []*Cipher {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	if s.status != StatusUnlocked {
+		return nil
+	}
+	out := make([]*Cipher, 0, len(s.ciphers))
+	for _, c := range s.ciphers {
+		cp := cloneCipher(c)
+		if !cp.HidePassword && len(cp.CollectionIDs) > 0 {
+			cp.HidePassword = !slices.ContainsFunc(cp.CollectionIDs, func(id string) bool {
+				col, ok := s.collections[id]
+				return !ok || !col.HidePasswords
+			})
+		}
+		if cp.HidePassword {
+			if cp.Login != nil {
+				cp.Login.Password = ""
+			}
+			cp.PasswordHistory = nil
+		}
+		out = append(out, cp)
+	}
+	return out
+}
+
 func (s *Service) SaveCipher(ctx context.Context, c *Cipher) (*Cipher, error) {
 	if c == nil {
 		return nil, ErrCipherNotFound

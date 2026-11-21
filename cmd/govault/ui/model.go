@@ -18,6 +18,7 @@ import (
 	"github.com/txchen/govault/internal/vaultcore/api"
 	"github.com/txchen/govault/internal/vaultcore/crypto"
 	"github.com/txchen/govault/internal/vaultcore/gen"
+	"github.com/txchen/govault/internal/vaultcore/health"
 	"github.com/txchen/govault/internal/vaultcore/sshagent"
 	"github.com/txchen/govault/internal/vaultcore/state"
 	"github.com/txchen/govault/internal/vaultcore/store"
@@ -39,6 +40,7 @@ const (
 	RouteVault MainRoute = iota
 	RouteGenerator
 	RouteSettings
+	RouteHealth
 )
 
 type UserPrefs struct {
@@ -361,6 +363,7 @@ type AppModel struct {
 	Organizations *core.Signal[[]state.Organization]
 	Collections   *core.Signal[[]state.Collection]
 	AllCounts     *core.Signal[VaultCounts]
+	Health        *core.Signal[health.Report]
 	FilteredItems *core.Collection[string, state.CipherSummary]
 	SelectedID    *core.Signal[string]
 	IsSelected    func(id string) bool
@@ -475,6 +478,7 @@ func NewAppModel(app *core.Scope, coreSvc state.VaultService, hooks PlatformHook
 		Organizations:     core.NewSignalFunc(app, []state.Organization(nil), nil),
 		Collections:       core.NewSignalFunc(app, []state.Collection(nil), nil),
 		AllCounts:         core.NewSignalFunc(app, VaultCounts{ByFolder: map[string]int{}}, nil),
+		Health:            core.NewSignalFunc(app, health.Report{}, nil),
 		FilteredItems:     core.NewCollectionFunc(app, func(c state.CipherSummary) string { return c.ID }, cipherSummaryEqual, nil),
 		SelectedID:        core.NewSignal(app, ""),
 		ActiveCipher:      core.NewSignal[*state.Cipher](app, nil),
@@ -1104,6 +1108,7 @@ func (m *AppModel) Lock() {
 	m.Collections.Set(nil)
 	m.FilteredItems.Replace(nil)
 	m.AllCounts.Set(VaultCounts{ByFolder: map[string]int{}})
+	m.Health.Set(health.Report{})
 	m.ReleaseSecureInput()
 }
 
@@ -1197,6 +1202,7 @@ func (m *AppModel) RefreshVaultData() {
 	m.Organizations.Set(m.Core.Organizations())
 	m.Collections.Set(m.Core.Collections())
 	m.recomputeCounts()
+	m.recomputeHealth()
 	m.RefreshFilteredList()
 	m.vaultRev.Set(m.vaultRev.GetUntracked() + 1)
 
@@ -1247,6 +1253,23 @@ func (m *AppModel) recomputeCounts() {
 		}
 	}
 	m.AllCounts.Set(counts)
+}
+
+func (m *AppModel) recomputeHealth() {
+	ciphers := m.Core.AllCiphers()
+	for _, c := range ciphers {
+		c.HidePassword = c.HidePassword || m.PasswordHidden(c)
+	}
+	m.Health.Set(health.Analyze(ciphers, time.Now()))
+}
+
+// OpenHealthItem shows the flagged item in the vault so it can be reviewed.
+func (m *AppModel) OpenHealthItem(cx *core.Scope, id string) {
+	m.GuardDirty(cx, func() {
+		m.SearchQuery.Set("")
+		m.SetSidebarFilter(state.SearchFilter{Category: state.FilterAll})
+		m.SelectCipher(cx, id)
+	})
 }
 
 func (m *AppModel) RefreshFilteredList() {
