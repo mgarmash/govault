@@ -4,79 +4,33 @@ package main
 
 import (
 	"errors"
-	"sync"
+	"sync/atomic"
 	"unsafe"
 
-	"github.com/ebitengine/purego"
 	"github.com/ebitengine/purego/objc"
 )
 
 const nsModalResponseOK = 1
 
-var (
-	saveDialogOnce sync.Once
-	saveDialogErr  error
-
-	saveDispatchAsyncF func(queue, context, work uintptr)
-	saveDispatchMainQ  uintptr
-	saveDialogInvoke   uintptr
-
-	saveDialogMu      sync.Mutex
-	saveDialogPending *saveDialogRequest
-)
-
-type saveDialogRequest struct {
-	name string
-	done func(path string, ok bool, err error)
-}
-
-func initSaveDialog() error {
-	saveDialogOnce.Do(func() {
-		if saveDialogErr = initPasteboard(); saveDialogErr != nil {
-			return
-		}
-		lib, err := purego.Dlopen("/usr/lib/libSystem.B.dylib", purego.RTLD_NOW|purego.RTLD_GLOBAL)
-		if err != nil {
-			saveDialogErr = err
-			return
-		}
-		purego.RegisterLibFunc(&saveDispatchAsyncF, lib, "dispatch_async_f")
-		if saveDispatchMainQ, err = purego.Dlsym(lib, "_dispatch_main_q"); err != nil {
-			saveDialogErr = err
-			return
-		}
-		saveDialogInvoke = purego.NewCallback(func(uintptr) uintptr {
-			saveDialogMu.Lock()
-			req := saveDialogPending
-			saveDialogPending = nil
-			saveDialogMu.Unlock()
-			if req != nil {
-				path, ok := runSavePanel(req.name)
-				go req.done(path, ok, nil)
-			}
-			return 0
-		})
-	})
-	return saveDialogErr
-}
+var saveDialogOpen atomic.Bool
 
 // chooseSavePath asks where to save a file named name and reports the path
 // without creating, truncating or otherwise touching it. NSSavePanel already
 // confirms replacing an existing file. done runs on another goroutine.
 func chooseSavePath(name string, done func(path string, ok bool, err error)) {
-	if err := initSaveDialog(); err != nil {
-		done("", false, err)
-		return
-	}
-	saveDialogMu.Lock()
-	if saveDialogPending != nil {
-		saveDialogMu.Unlock()
+	if !saveDialogOpen.CompareAndSwap(false, true) {
 		done("", false, errors.New("savedialog: another save dialog is open"))
 		return
 	}
-	saveDialogPending = &saveDialogRequest{name: name, done: done}
-	saveDialogMu.Unlock()
-	saveDispatchAsyncF(saveDispatchMainQ, 0, saveDialogInvoke)
+	err := runOnMain(func() {
+		path, ok := runSavePanel(name)
+		saveDialogOpen.Store(false)
+		go done(path, ok, nil)
+	})
+	if err != nil {
+		saveDialogOpen.Store(false)
+		done("", false, err)
+	}
 }
 
 func runSavePanel(name string) (string, bool) {

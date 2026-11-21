@@ -250,7 +250,14 @@ func (s *FaviconStore) load(job faviconJob) ([]byte, error) {
 	path := s.diskPath(job.domain)
 	if path != "" {
 		if data, err := os.ReadFile(path); err == nil && isImageData(data) {
-			return data, nil
+			if !needsNormalizing(data) {
+				return data, nil
+			}
+			if fixed, err := normalizeIcon(data); err == nil {
+				_ = writeFileAtomic(path, fixed)
+				return fixed, nil
+			}
+			_ = os.Remove(path)
 		}
 	}
 	if !s.enabled.Load() {
@@ -258,6 +265,9 @@ func (s *FaviconStore) load(job faviconJob) ([]byte, error) {
 	}
 	data, err := s.fetch(job.serverURL, job.domain)
 	if err != nil {
+		return nil, err
+	}
+	if data, err = normalizeIcon(data); err != nil {
 		return nil, err
 	}
 	if path != "" {

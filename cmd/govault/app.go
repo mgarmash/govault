@@ -2,18 +2,24 @@ package main
 
 import (
 	"context"
+	_ "embed"
 	"path/filepath"
 	"runtime"
 	"sync"
 
 	"github.com/nsgo-dev/nsgo/core"
 	"github.com/nsgo-dev/nsgo/desktop"
-	"github.com/nsgo-dev/nsgo/icons/lucide"
 	"github.com/nsgo-dev/nsgo/updater"
 	govaultui "github.com/txchen/govault/cmd/govault/ui"
 	"github.com/txchen/govault/internal/vaultcore/state"
 	"github.com/txchen/govault/internal/vaultcore/store"
 )
+
+// trayTemplatePNG is the app icon shield and keyhole as a 32x36 template
+// image, drawn 18 points tall in the menu bar colors.
+//
+//go:embed assets/TrayTemplate.png
+var trayTemplatePNG []byte
 
 type DesktopShell struct {
 	scope     *core.Scope
@@ -166,6 +172,13 @@ func (s *DesktopShell) finishSetup() {
 		app.Cleanup(stop)
 	}
 
+	if stop, err := startMouseNavigation(
+		func() { app.Post(shell.model.GoBackFromSystem) },
+		func() { app.Post(shell.model.GoForwardFromSystem) },
+	); err == nil {
+		app.Cleanup(stop)
+	}
+
 	app.Cleanup(func() {
 		clip.ClearOnQuit()
 		if shell.trayScope != nil {
@@ -240,7 +253,7 @@ func (s *DesktopShell) OpenMainWindow() {
 		win := desktop.CurrentWindow(cx)
 		cx.Effect(func() {
 			vis := win.Visible() && !desktop.Minimized(cx)
-			s.model.MainWinVisible.Set(vis)
+			s.model.SetMainWindowVisible(vis)
 		})
 		cx.Effect(func() {
 			if cx.Env().Lifecycle() != core.LifecycleActive {
@@ -256,7 +269,7 @@ func (s *DesktopShell) OpenMainWindow() {
 			}
 		})
 		cx.Cleanup(func() {
-			s.model.MainWinVisible.Set(false)
+			s.model.SetMainWindowVisible(false)
 		})
 		return govaultui.MainWindowView(cx, s.model)
 	})
@@ -279,28 +292,10 @@ func (s *DesktopShell) SetTrayVisible(on bool) {
 	}
 	s.trayScope = s.scope.Child()
 	desktop.NewTray(s.trayScope, desktop.TrayOptions{
-		Tooltip: "GoVault",
-		Width:   26,
-		View:    trayIconView,
-		OnClick: s.OpenMainWindow,
-		Menu:    s.trayMenu,
+		Icon:     trayTemplatePNG,
+		Template: true,
+		Tooltip:  "GoVault",
+		OnClick:  s.OpenMainWindow,
+		Menu:     s.trayMenu,
 	})
-}
-
-func trayIconView(cx *core.Scope) core.Node {
-	return core.View{
-		Class: "flex-row items-center justify-center h-full",
-		Children: []core.Node{
-			core.Icon{
-				SVG: lucide.Lock(),
-				StyleFunc: func() core.Style {
-					c := core.RGB(0x000000)
-					if cx.Dark() {
-						c = core.RGB(0xffffff)
-					}
-					return core.Style{Width: core.Pt(15), Height: core.Pt(15), Color: c}
-				},
-			},
-		},
-	}
 }

@@ -71,7 +71,7 @@ type UserPrefs struct {
 
 func DefaultUserPrefs() UserPrefs {
 	return UserPrefs{
-		AutoPromptBiometric:   true,
+		AutoPromptBiometric:   false,
 		AutoLockMinutes:       15,
 		LockOnSleep:           true,
 		ClipboardClearSeconds: 30,
@@ -393,8 +393,13 @@ type AppModel struct {
 	TOTPRemaining *core.Signal[int]
 	TOTPPeriod    *core.Signal[int]
 
-	MainWinVisible  *core.Signal[bool]
-	SearchInSection *core.Signal[bool]
+	MainWinVisible *core.Signal[bool]
+	// SearchAll widens a search typed in a section to the whole vault.
+	SearchAll *core.Signal[bool]
+
+	HealthFilter *core.Signal[HealthCategory]
+	CanGoBack    *core.Signal[bool]
+	CanGoForward *core.Signal[bool]
 
 	SidebarW *core.Signal[float32]
 	ListW    *core.Signal[float32]
@@ -430,6 +435,9 @@ type AppModel struct {
 	// publishMu orders that advance with publishing a saved attachment.
 	lockGen   atomic.Uint64
 	publishMu sync.Mutex
+
+	nav         navHistory
+	windowScope *core.Scope
 }
 
 func (m *AppModel) LockGeneration() uint64 { return m.lockGen.Load() }
@@ -543,7 +551,10 @@ func NewAppModel(app *core.Scope, coreSvc state.VaultService, hooks PlatformHook
 		TOTPRemaining:     core.NewSignal(app, 0),
 		TOTPPeriod:        core.NewSignal(app, 30),
 		MainWinVisible:    core.NewSignal(app, false),
-		SearchInSection:   core.NewSignal(app, false),
+		SearchAll:         core.NewSignal(app, false),
+		HealthFilter:      core.NewSignal(app, HealthAll),
+		CanGoBack:         core.NewSignal(app, false),
+		CanGoForward:      core.NewSignal(app, false),
 		SidebarW:          core.NewSignal(app, clampWidth(p.SidebarWidth, MinSidebarWidth, MaxSidebarWidth, DefaultSidebarWidth)),
 		ListW:             core.NewSignal(app, clampWidth(p.ListWidth, MinListWidth, MaxListWidth, DefaultListWidth)),
 		GenResult:         core.NewSignal(app, ""),
@@ -560,6 +571,8 @@ func NewAppModel(app *core.Scope, coreSvc state.VaultService, hooks PlatformHook
 		Toaster:           ui.NewToaster(app),
 	}
 	m.IsSelected = core.NewSelector(app, m.SelectedID.Get)
+	m.clearHistory()
+	m.setupNavigation()
 	m.setupFavicons()
 
 	m.RegenerateSecret()
@@ -1182,7 +1195,9 @@ func (m *AppModel) Lock() {
 	m.TOTPRevealedID.Set("")
 	m.stopTOTP()
 	m.idleTimer.Stop()
-	m.LockAutoFired = false
+	// Locking stays quiet: Touch ID is offered again only once the window is
+	// reopened or the app starts.
+	m.LockAutoFired = true
 	m.LockState.Set(m.Core.Status())
 	m.ActiveCipher.Set(nil)
 	m.SelectedID.Set("")
@@ -1192,7 +1207,9 @@ func (m *AppModel) Lock() {
 	m.RevealPW.Set(false)
 	m.RevealCard.Set(false)
 	m.SearchQuery.Set("")
-	m.SearchInSection.Set(false)
+	m.SearchAll.Set(false)
+	m.HealthFilter.Set(HealthAll)
+	m.clearHistory()
 	m.Folders.Set(nil)
 	m.Organizations.Set(nil)
 	m.Collections.Set(nil)
@@ -1363,9 +1380,11 @@ func (m *AppModel) recomputeHealth() {
 // OpenHealthItem shows the flagged item in the vault so it can be reviewed.
 func (m *AppModel) OpenHealthItem(cx *core.Scope, id string) {
 	m.GuardDirty(cx, func() {
-		m.SearchQuery.Set("")
-		m.SetSidebarFilter(state.SearchFilter{Category: state.FilterAll})
-		m.SelectCipher(cx, id)
+		cx.Batch(func() {
+			m.SearchQuery.Set("")
+			m.SetSidebarFilter(state.SearchFilter{Category: state.FilterAll})
+			m.SelectCipher(cx, id)
+		})
 	})
 }
 
@@ -1379,8 +1398,14 @@ func (m *AppModel) RefreshFilteredList() {
 
 // SearchIsGlobal reports whether a non-empty query searches the whole vault rather than the selected sidebar section.
 func (m *AppModel) SearchIsGlobal() bool {
+	return m.SearchScoped() && m.SearchAll.Get()
+}
+
+// SearchScoped reports whether a query is typed while a section other than
+// All Items is selected, so it can search that section or the whole vault.
+func (m *AppModel) SearchScoped() bool {
 	f := m.SidebarFilter.Get()
-	return strings.TrimSpace(m.SearchQuery.Get()) != "" && f.Category != state.FilterTrash && !m.SearchInSection.Get() && !IsAllItemsFilter(f)
+	return strings.TrimSpace(m.SearchQuery.Get()) != "" && f.Category != state.FilterTrash && !IsAllItemsFilter(f)
 }
 
 func IsAllItemsFilter(f state.SearchFilter) bool {
@@ -1493,22 +1518,30 @@ func (m *AppModel) EffectiveSearchFilter() state.SearchFilter {
 	return m.SidebarFilter.Get()
 }
 
-func (m *AppModel) SetSearchInSection(on bool) {
-	m.SearchInSection.Set(on)
+func (m *AppModel) SetSearchAll(on bool) {
+	m.SearchAll.Set(on)
 	m.RefreshFilteredList()
 }
 
 func (m *AppModel) SetSearchQuery(q string) {
 	m.ResetIdleTimer()
-	m.SearchQuery.Set(q)
-	m.RefreshFilteredList()
+	m.Scope.Batch(func() {
+		if strings.TrimSpace(q) != "" && m.Route.Get() != RouteVault {
+			m.Route.Set(RouteVault)
+		}
+		if strings.TrimSpace(q) == "" {
+			m.SearchAll.Set(false)
+		}
+		m.SearchQuery.Set(q)
+		m.RefreshFilteredList()
+	})
 }
 
 func (m *AppModel) SetSidebarFilter(f state.SearchFilter) {
 	m.ResetIdleTimer()
 	m.Route.Set(RouteVault)
 	m.SidebarFilter.Set(f)
-	m.SearchInSection.Set(false)
+	m.SearchAll.Set(false)
 	m.RefreshFilteredList()
 }
 

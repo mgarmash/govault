@@ -15,6 +15,12 @@ func MainWindowView(cx *core.Scope, m *AppModel) core.Node {
 	if cx.Env().OS() == core.OSMacOS {
 		desktop.SetTitleBar(cx, desktop.TitleBarHidden, titleBarHeight)
 	}
+	m.windowScope = cx
+	cx.Cleanup(func() {
+		if m.windowScope == cx {
+			m.windowScope = nil
+		}
+	})
 	bindMainWindowShortcuts(cx, m)
 
 	return core.View{
@@ -50,6 +56,8 @@ func bindMainWindowShortcuts(cx *core.Scope, m *AppModel) {
 		m.Route.Set(RouteVault)
 		m.SearchRef.Focus()
 	})
+	cx.OnKeyWith("mod+[", core.KeyOptions{When: core.KeyAlways}, func() { m.GoBack(cx) })
+	cx.OnKeyWith("mod+]", core.KeyOptions{When: core.KeyAlways}, func() { m.GoForward(cx) })
 	cx.OnKeyWith("mod+n", core.KeyOptions{When: core.KeyAlways}, func() {
 		if m.LockState.Get() == state.StatusUnlocked && m.SyncState.Get() != SyncOffline {
 			m.StartCreateCipher(cx)

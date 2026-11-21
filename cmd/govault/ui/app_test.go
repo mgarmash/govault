@@ -472,32 +472,45 @@ func TestTrayIconOffKeepsDockReachable(t *testing.T) {
 	}
 }
 
-func TestSearchCoversWholeVaultUnlessNarrowed(t *testing.T) {
+func TestSearchStaysInSectionUntilWidened(t *testing.T) {
 	svc := newMockVaultService(state.StatusUnlocked)
+	svc.ciphers["c-github"].FolderID = ptr("f-work")
 	var model *AppModel
 
 	app := nsgotest.Start(t, func(cx *core.Scope) core.Node {
 		model = NewAppModel(cx, svc, PlatformHooks{})
 		model.MainWinVisible.Set(true)
+		model.RefreshVaultData()
 		return MainWindowView(cx, model)
-	}, nsgotest.Size(980, 640))
+	}, nsgotest.Size(1100, 640))
 
 	noteType := api.CipherTypeSecureNote
-	app.Post(func() {
-		model.SetSidebarFilter(state.SearchFilter{Category: state.FilterAll, Type: &noteType})
-		model.SetSearchQuery("GitHub")
-	})
+	app.Post(func() { model.SetSidebarFilter(state.SearchFilter{Category: state.FilterAll, Type: &noteType}) })
+	app.Type("id:vault-search", "GitHub")
 	app.Settle()
-	if n := model.FilteredItems.Len(); n != 1 || model.FilteredItems.KeyAt(0) != "c-github" {
-		t.Fatalf("expected the global search to find GitHub outside Secure Notes, got %d items", n)
+	if n := model.FilteredItems.Len(); n != 0 || model.SearchIsGlobal() {
+		t.Fatalf("search left Secure Notes by default: %d items, global=%v", n, model.SearchIsGlobal())
 	}
+	app.Find("id:search-scope >> text:In Secure Notes")
+	app.Find("id:search-empty-all")
 
-	app.Post(func() { model.SetSearchInSection(true) })
-	app.Settle()
-	if n := model.FilteredItems.Len(); n != 0 {
-		t.Fatalf("expected no Secure Note named GitHub when narrowed, got %d", n)
-	}
+	app.Press("id:search-scope-all")
+	app.WaitUntil(2*time.Second, func() bool {
+		return model.FilteredItems.Len() == 1 && model.FilteredItems.KeyAt(0) == "c-github"
+	})
+	app.Find("id:search-scope >> text:In All Items")
+
+	app.Press("id:search-scope-section")
+	app.WaitUntil(2*time.Second, func() bool { return model.FilteredItems.Len() == 0 })
+
+	app.Post(func() { model.SetSidebarFilter(state.SearchFilter{FolderID: "f-work"}) })
+	app.WaitUntil(2*time.Second, func() bool {
+		return model.FilteredItems.Len() == 1 && !model.SearchIsGlobal()
+	})
+	app.Find("id:search-scope >> text:In Work")
 }
+
+func ptr[T any](v T) *T { return &v }
 
 func TestLockOnSleepPreferenceAndSystemEvent(t *testing.T) {
 	var legacy UserPrefs

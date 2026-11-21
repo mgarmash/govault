@@ -149,13 +149,33 @@ func topToolbar(cx *core.Scope, m *AppModel) core.Node {
 			OnPress:  onPress,
 		}
 	}
+	navButton := func(testID, label string, glyph func() *core.SVG, enabled func() bool, onPress func()) core.Node {
+		return ui.Button{
+			TestID:   testID,
+			Icon:     glyph,
+			Label:    label,
+			Variant:  ui.ButtonGhost,
+			Side:     26,
+			IconSize: 15,
+			Disabled: func() bool { return !enabled() },
+			Tint:     func() core.Color { return themeColor(cx, "gv-fg2") },
+			OnPress:  onPress,
+		}
+	}
 	return core.View{
-		Class:   "flex-row items-center justify-between pl-5 pr-3 border-b border-gv-line bg-gv-list",
+		Class:   "flex-row items-center gap-3 pl-3 pr-3 border-b border-gv-line bg-gv-list",
 		Style:   core.Style{Height: core.Pt(titleBarHeight)},
 		Desktop: dragRegion(),
 		Children: []core.Node{
 			core.View{
-				Class: "flex-row items-baseline gap-2 flex-1",
+				Class: "flex-row items-center gap-0.5",
+				Children: []core.Node{
+					navButton("toolbar-back", "Back", lucide.ChevronLeft, m.CanGoBack.Get, func() { m.GoBack(cx) }),
+					navButton("toolbar-forward", "Forward", lucide.ChevronRight, m.CanGoForward.Get, func() { m.GoForward(cx) }),
+				},
+			},
+			core.View{
+				Class: "flex-row items-baseline gap-2 shrink",
 				Children: []core.Node{
 					core.Text{
 						TestID:      "toolbar-title",
@@ -176,6 +196,21 @@ func topToolbar(cx *core.Scope, m *AppModel) core.Node {
 							return fmt.Sprintf("%d items", n)
 						},
 					},
+				},
+			},
+			core.View{Class: "flex-1"},
+			core.View{
+				Style: core.Style{FlexGrow: 1, FlexShrink: 1, MinWidth: core.Pt(260), MaxWidth: core.Pt(400)},
+				Children: []core.Node{
+					searchField(cx, base.Input{
+						TestID:        "vault-search",
+						Ref:           &m.SearchRef,
+						Placeholder:   "Search vault",
+						NoAutoCorrect: true,
+						Role:          core.RoleSearchField,
+						Value:         m.SearchQuery.Get,
+						OnChange:      m.SetSearchQuery,
+					}, cx.KeyLabel("mod+f"), func() { m.SetSearchQuery("") }),
 				},
 			},
 			core.View{
@@ -681,7 +716,7 @@ func vaultSplitPanes(cx *core.Scope, m *AppModel, shellW *core.Signal[float32]) 
 	}
 }
 
-func searchField(cx *core.Scope, input base.Input, hint string) core.Node {
+func searchField(cx *core.Scope, input base.Input, hint string, onClear func()) core.Node {
 	focused := core.NewSignal(cx, false)
 	input.Class = "flex-1 h-full text-[13px] text-gv-fg"
 	input.StyleFunc = func() core.Style {
@@ -698,6 +733,23 @@ func searchField(cx *core.Scope, input base.Input, hint string) core.Node {
 		children = append(children, core.Show{
 			When: func() bool { return value == nil || value() == "" },
 			Then: func(cx *core.Scope) core.Node { return keycap(hint) },
+		})
+	}
+	if onClear != nil {
+		children = append(children, core.Show{
+			When: func() bool { return value != nil && value() != "" },
+			Then: func(cx *core.Scope) core.Node {
+				return ui.Button{
+					TestID:   input.TestID + "-clear",
+					Icon:     lucide.CircleX,
+					Label:    "Clear search",
+					Variant:  ui.ButtonGhost,
+					Side:     20,
+					IconSize: 13,
+					Tint:     func() core.Color { return themeColor(cx, "gv-fg3") },
+					OnPress:  onClear,
+				}
+			},
 		})
 	}
 	return core.View{
@@ -778,24 +830,10 @@ func itemListPane(cx *core.Scope, m *AppModel) core.Node {
 			return core.Style{Width: core.Pt(core.Points(m.ListW.Get())), FlexShrink: 0}
 		},
 		Children: []core.Node{
-			core.View{
-				Class: "px-3 pt-3 pb-2",
-				Children: []core.Node{
-					searchField(cx, base.Input{
-						TestID:        "vault-search",
-						Ref:           &m.SearchRef,
-						Placeholder:   "Search vault",
-						NoAutoCorrect: true,
-						Role:          core.RoleSearchField,
-						Value:         m.SearchQuery.Get,
-						OnChange:      m.SetSearchQuery,
-					}, cx.KeyLabel("mod+f")),
-					searchScope(m),
-				},
-			},
+			searchScope(cx, m),
 			core.List{
 				TestID:        "vault-item-list",
-				Class:         "flex-1 pb-2",
+				Class:         "flex-1 pt-2 pb-2",
 				EstimatedSize: 52,
 				Gap:           2,
 				Count:         m.FilteredItems.Len,
@@ -912,52 +950,49 @@ func itemListPane(cx *core.Scope, m *AppModel) core.Node {
 	}
 }
 
-func searchScope(m *AppModel) core.Node {
+// searchScope shows where a query typed in a section searches, with one
+// click to widen it to every item or narrow it back.
+func searchScope(cx *core.Scope, m *AppModel) core.Node {
 	return core.Show{
-		When: func() bool {
-			f := m.SidebarFilter.Get()
-			return m.SearchQuery.Get() != "" && f.Category != state.FilterTrash && !IsAllItemsFilter(f)
-		},
+		When: m.SearchScoped,
 		Then: func(cx *core.Scope) core.Node {
-			chip := func(testID string, label func() string, inSection bool) core.Node {
-				active := func() bool { return m.SearchInSection.Get() == inSection }
-				return core.View{
-					TestID:   testID,
-					Role:     core.RoleButton,
-					Selected: active,
-					ClassFunc: func() string {
-						if active() {
-							return "flex-1 h-[22px] px-2 rounded-[6px] items-center justify-center bg-gv-card border border-gv-line"
-						}
-						return "flex-1 h-[22px] px-2 rounded-[6px] items-center justify-center border border-transparent"
-					},
-					OnPress: func(core.PressEvent) { m.SetSearchInSection(inSection) },
-					Children: []core.Node{
-						core.Text{
-							MaxLines: 1,
-							ClassFunc: func() string {
-								if active() {
-									return "text-[11.5px] font-semibold text-gv-fg"
-								}
-								return "text-[11.5px] text-gv-fg2"
-							},
-							ContentFunc: label,
-						},
-					},
-				}
-			}
 			return core.View{
 				TestID: "search-scope",
-				Class:  "flex-row items-center gap-2 pt-2",
+				Class:  "flex-row items-center gap-2 mx-3 mt-2.5 pl-2.5 pr-1 h-[30px] rounded-[8px] bg-gv-fill",
 				Children: []core.Node{
-					core.Text{Class: "text-[11.5px] text-gv-fg3", Content: "Search in"},
-					core.View{
-						Class: "flex-1 flex-row p-[2px] gap-[2px] rounded-[8px] bg-gv-fill",
-						Children: []core.Node{
-							chip("search-scope-all", func() string { return "All Items" }, false),
-							chip("search-scope-section", m.sectionTitle, true),
+					icon(lucide.Search(), 12, "text-gv-fg3"),
+					core.Text{
+						MaxLines: 1,
+						Class:    "flex-1 text-[12px] text-gv-fg2",
+						ContentFunc: func() string {
+							if m.SearchIsGlobal() {
+								return "In All Items"
+							}
+							return "In " + m.sectionTitle()
 						},
 					},
+					core.Dynamic(func(cx *core.Scope) core.Node {
+						if m.SearchIsGlobal() {
+							return ui.Button{
+								TestID:  "search-scope-section",
+								Text:    "Only " + m.sectionTitle(),
+								Variant: ui.ButtonGhost,
+								Size:    ui.SizeSmall,
+								OnPress: func() { m.SetSearchAll(false) },
+							}
+						}
+						variant := ui.ButtonGhost
+						if m.FilteredItems.Len() == 0 {
+							variant = ui.ButtonPrimary
+						}
+						return ui.Button{
+							TestID:  "search-scope-all",
+							Text:    "Search All Items",
+							Variant: variant,
+							Size:    ui.SizeSmall,
+							OnPress: func() { m.SetSearchAll(true) },
+						}
+					}),
 				},
 			}
 		},
@@ -997,6 +1032,9 @@ func listEmptyState(m *AppModel) core.Node {
 			core.Text{
 				Class: "text-[12px] text-gv-fg2 text-center",
 				ContentFunc: func() string {
+					if q := m.SearchQuery.Get(); q != "" && m.SearchScoped() && !m.SearchIsGlobal() {
+						return fmt.Sprintf("Nothing in %s matches “%s”.", m.sectionTitle(), q)
+					}
 					if q := m.SearchQuery.Get(); q != "" {
 						return fmt.Sprintf("Nothing matches “%s”.", q)
 					}
@@ -1004,6 +1042,21 @@ func listEmptyState(m *AppModel) core.Node {
 						return "Items you delete appear here."
 					}
 					return "Choose New Item to add your first entry."
+				},
+			},
+			core.Show{
+				When: func() bool { return m.SearchScoped() && !m.SearchIsGlobal() },
+				Then: func(cx *core.Scope) core.Node {
+					return core.View{
+						Class: "pt-2",
+						Children: []core.Node{ui.Button{
+							TestID:  "search-empty-all",
+							Text:    "Search All Items",
+							Icon:    lucide.Search,
+							Variant: ui.ButtonPrimary,
+							OnPress: func() { m.SetSearchAll(true) },
+						}},
+					}
 				},
 			},
 		},
