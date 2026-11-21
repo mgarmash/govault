@@ -22,3 +22,5 @@ func (c *ConcealedClipboard) ClearIfUnchanged(int) bool {
 }
 
 func (c *ConcealedClipboard) Cancel() {}
+
+func (c *ConcealedClipboard) ClearPending() {}

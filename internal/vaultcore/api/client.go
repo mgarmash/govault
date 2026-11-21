@@ -373,7 +373,13 @@ func classifyError(status int, body []byte) error {
 	}
 }
 
-const MaxAttachmentSize = 100 << 20
+const (
+	// MaxAttachmentSize limits attachment plaintext.
+	MaxAttachmentSize = 100 << 20
+	// MaxAttachmentWireSize limits encrypted attachment data: the plaintext
+	// limit plus the EncArrayBuffer header and one block of padding.
+	MaxAttachmentWireSize = MaxAttachmentSize + 1 + 16 + 32 + 16
+)
 
 var ErrAttachmentTooLarge = errors.New("api: attachment exceeds the 100 MiB limit")
 
@@ -406,7 +412,8 @@ func (c *Client) GetAttachment(ctx context.Context, accessToken, cipherID, attac
 }
 
 // DownloadAttachmentBytes fetches encrypted attachment data. The access token
-// is only sent when the URL has the same origin as the server.
+// is only sent to the origin of the server, and it is stripped from every
+// redirect hop that leaves that origin.
 func (c *Client) DownloadAttachmentBytes(ctx context.Context, accessToken, downloadURL string) ([]byte, error) {
 	base, err := url.Parse(c.baseURL)
 	if err != nil {
@@ -421,10 +428,29 @@ func (c *Client) DownloadAttachmentBytes(ctx context.Context, accessToken, downl
 		return nil, err
 	}
 	req.Header.Set("User-Agent", c.userAgent)
-	if accessToken != "" && target.Scheme == base.Scheme && strings.EqualFold(target.Host, base.Host) {
+	if accessToken != "" && sameOrigin(target, base) {
 		req.Header.Set("Authorization", "Bearer "+accessToken)
 	}
-	resp, err := c.httpClient.Do(req)
+
+	hc := *c.httpClient
+	inner := c.httpClient.CheckRedirect
+	hc.CheckRedirect = func(next *http.Request, via []*http.Request) error {
+		if len(via) >= 10 {
+			return errors.New("api: too many redirects")
+		}
+		if next.URL.Scheme != "http" && next.URL.Scheme != "https" {
+			return errors.New("api: invalid attachment redirect")
+		}
+		if !sameOrigin(next.URL, base) {
+			next.Header.Del("Authorization")
+		}
+		if inner != nil {
+			return inner(next, via)
+		}
+		return nil
+	}
+
+	resp, err := hc.Do(req)
 	if err != nil {
 		if ctx.Err() != nil {
 			return nil, ctx.Err()
@@ -432,20 +458,35 @@ func (c *Client) DownloadAttachmentBytes(ctx context.Context, accessToken, downl
 		return nil, fmt.Errorf("%w: %v", ErrNetworkOffline, err)
 	}
 	defer resp.Body.Close()
-	if resp.ContentLength > MaxAttachmentSize {
+	if resp.ContentLength > MaxAttachmentWireSize {
 		return nil, ErrAttachmentTooLarge
 	}
-	raw, err := io.ReadAll(io.LimitReader(resp.Body, MaxAttachmentSize+1))
+	raw, err := io.ReadAll(io.LimitReader(resp.Body, MaxAttachmentWireSize+1))
 	if err != nil {
 		return nil, err
 	}
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		return nil, classifyError(resp.StatusCode, raw)
 	}
-	if len(raw) > MaxAttachmentSize {
+	if len(raw) > MaxAttachmentWireSize {
 		return nil, ErrAttachmentTooLarge
 	}
 	return raw, nil
+}
+
+// sameOrigin compares scheme, host and port, with default ports made explicit.
+func sameOrigin(a, b *url.URL) bool {
+	return strings.EqualFold(a.Scheme, b.Scheme) && strings.EqualFold(a.Hostname(), b.Hostname()) && originPort(a) == originPort(b)
+}
+
+func originPort(u *url.URL) string {
+	if p := u.Port(); p != "" {
+		return p
+	}
+	if strings.EqualFold(u.Scheme, "https") {
+		return "443"
+	}
+	return "80"
 }
 
 func (c *Client) CreateAttachmentV2(ctx context.Context, accessToken, cipherID string, req AttachmentUploadRequest) (*AttachmentUploadResponse, error) {

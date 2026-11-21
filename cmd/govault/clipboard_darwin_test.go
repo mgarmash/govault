@@ -145,3 +145,14 @@ func TestConcealedClipboardSkipsClearWhenChangeCountChanged(t *testing.T) {
 		t.Fatalf("external clipboard content was clobbered: got %q, want %q", got, userText)
 	}
 }
+
+func TestConcealedClipboardClearPendingOnQuit(t *testing.T) {
+	cb := NewConcealedClipboard()
+	if _, err := cb.Copy("govault-quit-secret", time.Hour); err != nil {
+		t.Fatalf("Copy failed: %v", err)
+	}
+	cb.ClearPending()
+	if got := pasteboardReadString(); got != "" {
+		t.Fatalf("pending secret survived quit: %q", got)
+	}
+}

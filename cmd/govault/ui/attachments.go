@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 
 	"github.com/nsgo-dev/nsgo/core"
 	"github.com/nsgo-dev/nsgo/icons/lucide"
@@ -27,17 +28,31 @@ func (m *AppModel) applyCipherUpdate(c *state.Cipher) {
 	}
 }
 
+func (m *AppModel) CanDownloadAttachments(c *state.Cipher) bool {
+	return c != nil && !m.PasswordHidden(c)
+}
+
+// DownloadAttachment decrypts the attachment and writes it where the user
+// chooses. The NSGo save dialog only writes what it is given and publishes
+// it as 0644, so it saves an empty placeholder and the plaintext replaces it
+// through a private 0600 temporary file. A lock or logout in the meantime
+// drops the plaintext unsaved.
 func (m *AppModel) DownloadAttachment(cx *core.Scope, c *state.Cipher, att state.Attachment) {
-	if c == nil || m.AttachmentBusy.Get() != "" {
+	if !m.CanDownloadAttachments(c) || m.AttachmentBusy.Get() != "" {
 		return
 	}
 	m.GateReprompt(cx, c, "download attachment", func() {
 		m.ResetIdleTimer()
 		m.AttachmentBusy.Set(att.ID)
+		gen := m.LockGeneration()
 		cipherID := c.ID
 		go func() {
 			data, name, err := m.Core.DownloadAttachment(context.Background(), cipherID, att.ID)
 			m.Scope.Post(func() {
+				if !m.StillUnlocked(gen) {
+					crypto.ZeroBytes(data)
+					return
+				}
 				m.AttachmentBusy.Set("")
 				if err != nil {
 					m.ShowToast(ui.ToastError, "Download failed", friendlyError(err))
@@ -46,29 +61,62 @@ func (m *AppModel) DownloadAttachment(cx *core.Scope, c *state.Cipher, att state
 				if name == "" {
 					name = att.FileName
 				}
-				cx.SaveFile(core.SaveOptions{Name: name, Data: data}, func(saved bool, path string, err error) {
-					crypto.ZeroBytes(data)
-					switch {
-					case err != nil:
-						m.ShowToast(ui.ToastError, "Save failed", err.Error())
-					case saved && path != "":
-						go func() {
-							err := os.Chmod(path, 0o600)
-							m.Scope.Post(func() {
-								if err != nil {
-									m.ShowToast(ui.ToastWarning, "Attachment saved", "Could not restrict file permissions: "+err.Error())
-									return
-								}
-								m.ShowToast(ui.ToastSuccess, "Attachment saved", name)
-							})
-						}()
-					case saved:
-						m.ShowToast(ui.ToastSuccess, "Attachment saved", name)
+				cx.SaveFile(core.SaveOptions{Name: name, Data: []byte{}}, func(saved bool, path string, err error) {
+					if err != nil || !saved || path == "" || !m.StillUnlocked(gen) {
+						crypto.ZeroBytes(data)
+						if path != "" {
+							_ = os.Remove(path)
+						}
+						if err != nil {
+							m.ShowToast(ui.ToastError, "Save failed", err.Error())
+						}
+						return
 					}
+					go func() {
+						err := writePrivateFile(path, data)
+						crypto.ZeroBytes(data)
+						if err != nil {
+							_ = os.Remove(path)
+						}
+						m.Scope.Post(func() {
+							if err != nil {
+								m.ShowToast(ui.ToastError, "Save failed", err.Error())
+								return
+							}
+							m.ShowToast(ui.ToastSuccess, "Attachment saved", name)
+						})
+					}()
 				})
 			})
 		}()
 	})
+}
+
+// writePrivateFile atomically replaces path with data through a 0600
+// temporary file in the same directory.
+func writePrivateFile(path string, data []byte) error {
+	tmp, err := os.CreateTemp(filepath.Dir(path), "."+filepath.Base(path)+".*")
+	if err != nil {
+		return err
+	}
+	name := tmp.Name()
+	err = tmp.Chmod(0o600)
+	if err == nil {
+		_, err = tmp.Write(data)
+	}
+	if err == nil {
+		err = tmp.Sync()
+	}
+	if cerr := tmp.Close(); err == nil {
+		err = cerr
+	}
+	if err == nil {
+		err = os.Rename(name, path)
+	}
+	if err != nil {
+		_ = os.Remove(name)
+	}
+	return err
 }
 
 func (m *AppModel) AttachFile(cx *core.Scope, c *state.Cipher) {
@@ -91,9 +139,13 @@ func (m *AppModel) AttachFile(cx *core.Scope, c *state.Cipher) {
 			return
 		}
 		m.AttachmentBusy.Set(attachmentUploadBusy)
+		gen := m.LockGeneration()
 		go func() {
 			updated, err := uploadPickedFile(m.Core, cipherID, f)
 			m.Scope.Post(func() {
+				if !m.StillUnlocked(gen) {
+					return
+				}
 				m.AttachmentBusy.Set("")
 				if err != nil {
 					m.ShowToast(ui.ToastError, "Upload failed", friendlyError(err))
@@ -144,9 +196,13 @@ func (m *AppModel) DeleteAttachment(cx *core.Scope, c *state.Cipher, att state.A
 			return
 		}
 		m.AttachmentBusy.Set(att.ID)
+		gen := m.LockGeneration()
 		go func() {
 			updated, err := m.Core.DeleteAttachment(context.Background(), cipherID, att.ID)
 			m.Scope.Post(func() {
+				if !m.StillUnlocked(gen) {
+					return
+				}
 				m.AttachmentBusy.Set("")
 				if err != nil {
 					m.ShowToast(ui.ToastError, "Delete failed", friendlyError(err))
@@ -188,8 +244,9 @@ func attachmentsSection(cx *core.Scope, m *AppModel, c *state.Cipher) core.Node 
 	rows := make([]core.Node, 0, len(c.Attachments)+1)
 	for i, a := range c.Attachments {
 		att := a
-		actions := []core.Node{
-			ui.Button{
+		var actions []core.Node
+		if m.CanDownloadAttachments(c) {
+			actions = append(actions, ui.Button{
 				TestID:   fmt.Sprintf("detail-attachment-download-%d", i),
 				Icon:     lucide.Download,
 				Label:    "Download " + att.FileName,
@@ -199,7 +256,7 @@ func attachmentsSection(cx *core.Scope, m *AppModel, c *state.Cipher) core.Node 
 				Busy:     busy(att.ID),
 				Tint:     func() core.Color { return themeColor(cx, "gv-fg2") },
 				OnPress:  func() { m.DownloadAttachment(cx, c, att) },
-			},
+			})
 		}
 		if canModify {
 			actions = append(actions, ui.Button{

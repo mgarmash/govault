@@ -9,8 +9,9 @@ import (
 )
 
 type memSecrets struct {
-	mu sync.Mutex
-	m  map[string]string
+	mu        sync.Mutex
+	m         map[string]string
+	deleteErr error
 }
 
 func (s *memSecrets) Get(k string) (string, bool, error) {
@@ -30,6 +31,9 @@ func (s *memSecrets) Set(k, v string) error {
 func (s *memSecrets) Delete(k string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	if s.deleteErr != nil {
+		return s.deleteErr
+	}
 	delete(s.m, k)
 	return nil
 }
@@ -146,5 +150,11 @@ func TestBiometricSecretStoreUsesHardwareKeychain(t *testing.T) {
 	}
 	if err := s.Delete("userkey:acct"); err != nil {
 		t.Fatalf("Delete of a missing item: %v", err)
+	}
+
+	fallback.m["userkey:acct"] = "legacy"
+	fallback.deleteErr = errors.New("keychain locked")
+	if err := s.Set("userkey:acct", "wrapped"); err == nil {
+		t.Fatal("Set reported success while the login keychain copy remains")
 	}
 }

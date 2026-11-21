@@ -376,6 +376,7 @@ type AppModel struct {
 	ActiveCipher  *core.Signal[*state.Cipher]
 	RevealPW      *core.Signal[bool]
 	RevealCard    *core.Signal[bool]
+	RevealTOTP    *core.Signal[bool]
 
 	EditMode  *core.Signal[bool]
 	EditDraft *core.Signal[*EditDraft]
@@ -418,6 +419,17 @@ type AppModel struct {
 
 	totpCtrl  TOTPController
 	idleTimer IdleTimer
+
+	// lockGen changes on every lock and logout. Pending secret actions that
+	// started under an older generation are dropped.
+	lockGen uint64
+}
+
+func (m *AppModel) LockGeneration() uint64 { return m.lockGen }
+
+// StillUnlocked reports whether the vault stayed unlocked since gen.
+func (m *AppModel) StillUnlocked(gen uint64) bool {
+	return m.lockGen == gen && m.LockState.Get() == state.StatusUnlocked
 }
 
 type VaultCounts struct {
@@ -491,6 +503,7 @@ func NewAppModel(app *core.Scope, coreSvc state.VaultService, hooks PlatformHook
 		ActiveCipher:      core.NewSignal[*state.Cipher](app, nil),
 		RevealPW:          core.NewSignal(app, false),
 		RevealCard:        core.NewSignal(app, false),
+		RevealTOTP:        core.NewSignal(app, false),
 		EditMode:          core.NewSignal(app, false),
 		EditDraft:         core.NewSignal[*EditDraft](app, nil),
 		EditDirty:         core.NewSignal(app, false),
@@ -1120,10 +1133,16 @@ func (m *AppModel) ToggleBiometric(cx *core.Scope, enable bool) {
 }
 
 func (m *AppModel) Lock() {
+	m.lockGen++
 	m.Core.Lock()
 	if m.Hooks.SSHAgent != nil {
 		m.Hooks.SSHAgent.Clear()
 	}
+	m.Reprompt.Set(RepromptModal{})
+	m.RepromptPW.Set("")
+	m.RepromptError.Set("")
+	m.AttachmentBusy.Set("")
+	m.RevealTOTP.Set(false)
 	m.stopTOTP()
 	m.idleTimer.Stop()
 	m.LockAutoFired = false
@@ -1167,10 +1186,17 @@ func (m *AppModel) Logout(cx *core.Scope) {
 		if idx != 1 {
 			return
 		}
+		m.lockGen++
+		if m.Hooks.SSHAgent != nil {
+			m.Hooks.SSHAgent.Clear()
+		}
 		secrets := m.Hooks.Secrets
 		go func() {
-			_ = m.Core.Logout(context.Background(), secrets)
+			err := m.Core.Logout(context.Background(), secrets)
 			m.Scope.Post(func() {
+				if err != nil {
+					m.ShowToast(ui.ToastWarning, "Logged out", "Some saved secrets could not be removed: "+err.Error())
+				}
 				m.Lock()
 				m.resetFaviconMemory()
 				m.LockState.Set(state.StatusLoggedOut)
@@ -1482,6 +1508,7 @@ func (m *AppModel) SelectCipher(cx *core.Scope, id string) {
 		m.SelectedID.Set(id)
 		m.RevealPW.Set(false)
 		m.RevealCard.Set(false)
+		m.RevealTOTP.Set(false)
 		if id == "" {
 			m.ActiveCipher.Set(nil)
 			return
@@ -1552,14 +1579,19 @@ func (m *AppModel) StartCreateCipher(cx *core.Scope) {
 
 func (m *AppModel) StartEditCipher(cx *core.Scope) {
 	c := m.ActiveCipher.Get()
-	if c == nil || c.DeletedDate != nil || m.CipherReadOnly(c) || m.PasswordHidden(c) {
+	if c == nil || c.DeletedDate != nil || m.CipherReadOnly(c) || m.PasswordHidden(c) || m.EditMode.Get() {
 		return
 	}
 	m.ResetIdleTimer()
-	m.EditDraft.Set(draftFromCipher(c))
-	m.EditDirty.Set(false)
-	m.EditError.Set("")
-	m.EditMode.Set(true)
+	m.GateReprompt(cx, c, "edit item", func() {
+		if cur := m.ActiveCipher.Get(); cur == nil || cur.ID != c.ID {
+			return
+		}
+		m.EditDraft.Set(draftFromCipher(c))
+		m.EditDirty.Set(false)
+		m.EditError.Set("")
+		m.EditMode.Set(true)
+	})
 }
 
 func (m *AppModel) CancelEdit(cx *core.Scope) {
@@ -1647,7 +1679,7 @@ func (m *AppModel) SaveDraft(cx *core.Scope) {
 
 func (m *AppModel) ToggleFavorite() {
 	c := m.ActiveCipher.Get()
-	if c == nil || c.DeletedDate != nil || m.SyncState.Get() == SyncOffline {
+	if c == nil || m.CipherReadOnly(c) || c.DeletedDate != nil || m.SyncState.Get() == SyncOffline {
 		return
 	}
 	cp := *c
@@ -1690,7 +1722,7 @@ func (m *AppModel) SoftDeleteActive() {
 
 func (m *AppModel) RestoreActive() {
 	c := m.ActiveCipher.Get()
-	if c == nil || m.SyncState.Get() == SyncOffline {
+	if c == nil || m.CipherReadOnly(c) || m.SyncState.Get() == SyncOffline {
 		return
 	}
 	id := c.ID
@@ -1711,7 +1743,7 @@ func (m *AppModel) RestoreActive() {
 
 func (m *AppModel) HardDeleteActive(cx *core.Scope) {
 	c := m.ActiveCipher.Get()
-	if c == nil || m.SyncState.Get() == SyncOffline {
+	if c == nil || m.CipherReadOnly(c) || m.SyncState.Get() == SyncOffline {
 		return
 	}
 	id := c.ID
@@ -1813,10 +1845,16 @@ func (m *AppModel) DeleteFolder(cx *core.Scope, f state.Folder) {
 	})
 }
 
-func (m *AppModel) GateReprompt(cx *core.Scope, cipher *state.Cipher, actionLabel string, onAllow func()) {
+func (m *AppModel) GateReprompt(cx *core.Scope, cipher *state.Cipher, actionLabel string, allow func()) {
 	if cipher == nil || cipher.Reprompt != 1 {
-		onAllow()
+		allow()
 		return
+	}
+	gen := m.lockGen
+	onAllow := func() {
+		if m.StillUnlocked(gen) {
+			allow()
+		}
 	}
 	if m.CanUseBiometric() && m.Prefs.Get().BiometricEnabled {
 		cx.AuthenticateBiometric("Verify to "+actionLabel, func(res core.BiometricResult) {

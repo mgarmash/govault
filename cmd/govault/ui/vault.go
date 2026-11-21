@@ -751,8 +751,8 @@ func rowMenu(cx *core.Scope, m *AppModel, id string, at core.Point) {
 	}
 	if c.DeletedDate != nil {
 		items = append(items,
-			desktop.MenuItem{Label: "Restore", Disabled: offline, OnSelect: m.RestoreActive},
-			desktop.MenuItem{Label: "Delete Permanently…", Disabled: offline, OnSelect: func() { m.HardDeleteActive(cx) }},
+			desktop.MenuItem{Label: "Restore", Disabled: offline || m.CipherReadOnly(c), OnSelect: m.RestoreActive},
+			desktop.MenuItem{Label: "Delete Permanently…", Disabled: offline || m.CipherReadOnly(c), OnSelect: func() { m.HardDeleteActive(cx) }},
 		)
 	} else {
 		fav := "Add to Favorites"
@@ -762,7 +762,7 @@ func rowMenu(cx *core.Scope, m *AppModel, id string, at core.Point) {
 		readOnly := m.CipherReadOnly(c)
 		items = append(items,
 			desktop.MenuItem{Label: "Edit", Disabled: offline || readOnly || m.PasswordHidden(c), OnSelect: func() { m.StartEditCipher(cx) }},
-			desktop.MenuItem{Label: fav, Disabled: offline, OnSelect: m.ToggleFavorite},
+			desktop.MenuItem{Label: fav, Disabled: offline || readOnly, OnSelect: m.ToggleFavorite},
 			desktop.MenuItem{Separator: true},
 			desktop.MenuItem{Label: "Move to Trash", Disabled: offline || readOnly, OnSelect: m.SoftDeleteActive},
 		)
@@ -1357,10 +1357,15 @@ func detailContent(cx *core.Scope, m *AppModel, c *state.Cipher) core.Node {
 
 	if len(c.Fields) > 0 {
 		var rows []core.Node
-		for _, f := range c.Fields {
+		for i, f := range c.Fields {
 			field := f
+			testID := fmt.Sprintf("detail-field-%d", i)
+			if field.Type == 1 && m.PasswordHidden(c) {
+				rows = append(rows, fieldRow(field.Name, fieldOpts{testID: testID, value: staticValue("Hidden by your organization")}))
+				continue
+			}
 			if field.Type == 1 {
-				rows = append(rows, secretRow(cx, m, c, field.Name, field.Value, "", "custom field", true, nil, func() {
+				rows = append(rows, secretRow(cx, m, c, field.Name, field.Value, testID, "custom field", true, nil, func() {
 					m.GateReprompt(cx, c, "copy custom field", func() { m.CopySecretValue(field.Name, field.Value) })
 				}))
 				continue
@@ -1544,7 +1549,9 @@ func detailHeader(cx *core.Scope, m *AppModel, c *state.Cipher, isTrash bool, of
 	}
 
 	var actions []core.Node
-	if isTrash {
+	if isTrash && readOnly {
+		actions = nil
+	} else if isTrash {
 		actions = []core.Node{
 			ui.Button{
 				TestID:   "detail-hard-delete",
@@ -1582,7 +1589,7 @@ func detailHeader(cx *core.Scope, m *AppModel, c *state.Cipher, isTrash bool, of
 					}
 					return themeColor(cx, "gv-fg2")
 				},
-				Disabled: offline,
+				Disabled: func() bool { return offline() || readOnly },
 				OnPress:  m.ToggleFavorite,
 			},
 			ui.Button{
@@ -1655,6 +1662,9 @@ func totpRow(cx *core.Scope, m *AppModel, c *state.Cipher) core.Node {
 									if code == "" {
 										return "––– –––"
 									}
+									if c.Reprompt == 1 && !m.RevealTOTP.Get() {
+										return strings.Repeat("•", len(code)/2) + " " + strings.Repeat("•", len(code)-len(code)/2)
+									}
 									return FormatTOTPCode(code)
 								},
 							},
@@ -1692,6 +1702,27 @@ func totpRow(cx *core.Scope, m *AppModel, c *state.Cipher) core.Node {
 							},
 						},
 					},
+				},
+			},
+			core.Show{
+				When: func() bool { return c.Reprompt == 1 },
+				Then: func(cx *core.Scope) core.Node {
+					return ui.Button{
+						TestID:   "detail-reveal-totp",
+						Icon:     func() *core.SVG { return eyeIcon(m.RevealTOTP.Get()) },
+						Label:    "Reveal verification code",
+						Variant:  ui.ButtonGhost,
+						Side:     28,
+						IconSize: 14,
+						Tint:     func() core.Color { return themeColor(cx, "gv-fg2") },
+						OnPress: func() {
+							if m.RevealTOTP.Get() {
+								m.RevealTOTP.Set(false)
+								return
+							}
+							m.GateReprompt(cx, c, "reveal verification code", func() { m.RevealTOTP.Set(true) })
+						},
+					}
 				},
 			},
 			actionIcon(cx, "detail-copy-totp", "Copy verification code", lucide.Copy, func() {

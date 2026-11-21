@@ -6,6 +6,7 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"sync"
@@ -181,6 +182,31 @@ func TestService_OrganizationCollectionsAndOrgCiphers(t *testing.T) {
 
 	if err := svc.HandleRealtimeEvent(ctx, realtime.Event{Type: realtime.SyncOrgKeys}); err != nil {
 		t.Fatalf("SyncOrgKeys: %v", err)
+	}
+
+	svc.mu.Lock()
+	svc.ciphers["c-org"].Attachments = []Attachment{{ID: "att-1", FileName: "keys.txt"}}
+	svc.mu.Unlock()
+	if _, _, err := svc.DownloadAttachment(ctx, "c-org", "att-1"); !errors.Is(err, ErrHiddenByOrganization) {
+		t.Fatalf("download with hidden passwords = %v, want ErrHiddenByOrganization", err)
+	}
+	svc.mu.Lock()
+	col := svc.collections["col-eng"]
+	col.ReadOnly = true
+	svc.collections["col-eng"] = col
+	svc.mu.Unlock()
+	ro, _ := svc.GetCipher("c-org")
+	for name, call := range map[string]func() error{
+		"SaveCipher":       func() error { _, err := svc.SaveCipher(ctx, ro); return err },
+		"SoftDeleteCipher": func() error { return svc.SoftDeleteCipher(ctx, "c-org") },
+		"RestoreCipher":    func() error { return svc.RestoreCipher(ctx, "c-org") },
+		"HardDeleteCipher": func() error { return svc.HardDeleteCipher(ctx, "c-org") },
+		"UploadAttachment": func() error { _, err := svc.UploadAttachment(ctx, "c-org", "x.txt", []byte("x")); return err },
+		"DeleteAttachment": func() error { _, err := svc.DeleteAttachment(ctx, "c-org", "att-1"); return err },
+	} {
+		if err := call(); !errors.Is(err, ErrReadOnlyCipher) {
+			t.Fatalf("%s on a read-only collection item = %v, want ErrReadOnlyCipher", name, err)
+		}
 	}
 
 	svc.mu.RLock()

@@ -82,6 +82,12 @@ type vaultTestEnv struct {
 	emailSends    int
 	blobs         map[string][]byte
 	blobAuth      []string
+
+	profileID   string
+	accessTok   string
+	authSeen    []string
+	syncStarted chan struct{}
+	syncGate    chan struct{}
 }
 
 func newVaultTestEnv(t *testing.T) *vaultTestEnv {
@@ -140,6 +146,8 @@ func newVaultTestEnv(t *testing.T) *vaultTestEnv {
 		password:  password,
 		email:     email,
 		revDate:   rev1,
+		profileID: "acct-1",
+		accessTok: "tok-1",
 		folders: map[string]api.EncryptedFolder{
 			folderID: {ID: folderID, Name: encFolderName, RevisionDate: &rev1},
 		},
@@ -171,6 +179,11 @@ func newVaultTestEnv(t *testing.T) *vaultTestEnv {
 	}
 
 	env.server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		env.mu.Lock()
+		if auth := r.Header.Get("Authorization"); auth != "" {
+			env.authSeen = append(env.authSeen, auth)
+		}
+		env.mu.Unlock()
 		switch {
 		case r.Method == http.MethodPost && r.URL.Path == "/identity/accounts/prelogin":
 			_ = json.NewEncoder(w).Encode(kdf)
@@ -184,7 +197,7 @@ func newVaultTestEnv(t *testing.T) *vaultTestEnv {
 					return
 				}
 				resp := api.TokenResponse{
-					AccessToken:  "tok-1",
+					AccessToken:  env.accessTok,
 					RefreshToken: "ref-1",
 					ExpiresIn:    3600,
 					TokenType:    "Bearer",
@@ -238,6 +251,17 @@ func newVaultTestEnv(t *testing.T) *vaultTestEnv {
 
 		case r.Method == http.MethodGet && r.URL.Path == "/api/sync":
 			env.mu.Lock()
+			started, gate := env.syncStarted, env.syncGate
+			env.mu.Unlock()
+			if gate != nil {
+				close(started)
+				select {
+				case <-gate:
+				case <-r.Context().Done():
+					return
+				}
+			}
+			env.mu.Lock()
 			var folders []api.EncryptedFolder
 			for _, f := range env.folders {
 				folders = append(folders, f)
@@ -248,7 +272,7 @@ func newVaultTestEnv(t *testing.T) *vaultTestEnv {
 			}
 			env.mu.Unlock()
 			_ = json.NewEncoder(w).Encode(api.SyncResponse{
-				Profile: api.Profile{ID: "acct-1", Email: email, Key: protectedUserKey.String()},
+				Profile: api.Profile{ID: env.profileID, Email: email, Key: protectedUserKey.String()},
 				Folders: folders,
 				Ciphers: ciphers,
 			})

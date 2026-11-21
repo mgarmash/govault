@@ -163,7 +163,7 @@ func (s *DesktopShell) finishSetup() {
 	}
 
 	app.Cleanup(func() {
-		clip.Cancel()
+		clip.ClearOnQuit()
 		if shell.trayScope != nil {
 			shell.trayScope.Dispose()
 		}

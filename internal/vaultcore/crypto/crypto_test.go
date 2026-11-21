@@ -24,6 +24,10 @@ func TestVector1_ValidateKDF(t *testing.T) {
 		{Type: KDFArgon2id, Iterations: 1, MemoryMB: 15, Parallelism: 1},
 		{Type: KDFArgon2id, Iterations: 2, MemoryMB: 16, Parallelism: 0},
 		{Type: KDFType(99), Iterations: 10000},
+		{Type: KDFPBKDF2, Iterations: 2_000_001},
+		{Type: KDFArgon2id, Iterations: 21, MemoryMB: 64, Parallelism: 4},
+		{Type: KDFArgon2id, Iterations: 3, MemoryMB: 1025, Parallelism: 4},
+		{Type: KDFArgon2id, Iterations: 3, MemoryMB: 64, Parallelism: 17},
 	}
 	for _, cfg := range invalid {
 		if err := ValidateKDF(cfg); !errors.Is(err, ErrInvalidKDF) {
@@ -34,6 +38,8 @@ func TestVector1_ValidateKDF(t *testing.T) {
 	valid := []KDFConfig{
 		{Type: KDFPBKDF2, Iterations: 5000},
 		{Type: KDFArgon2id, Iterations: 2, MemoryMB: 16, Parallelism: 1},
+		{Type: KDFPBKDF2, Iterations: 2_000_000},
+		{Type: KDFArgon2id, Iterations: 20, MemoryMB: 1024, Parallelism: 16},
 	}
 	for _, cfg := range valid {
 		if err := ValidateKDF(cfg); err != nil {

@@ -5,7 +5,6 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"fmt"
-	"math"
 	"runtime/debug"
 	"strings"
 
@@ -29,11 +28,13 @@ type KDFConfig struct {
 
 const (
 	minPBKDF2Iterations  uint32 = 5000
+	maxPBKDF2Iterations  uint32 = 2_000_000
 	minArgon2Iterations  uint32 = 2
+	maxArgon2Iterations  uint32 = 20
 	minArgon2MemoryMB    uint32 = 16
+	maxArgon2MemoryMB    uint32 = 1024
 	minArgon2Parallelism uint32 = 1
-	maxArgon2Parallelism uint32 = math.MaxUint8
-	maxArgon2MemoryMB    uint32 = math.MaxUint32 / 1024
+	maxArgon2Parallelism uint32 = 16
 )
 
 func NormalizeEmail(email string) string {
@@ -43,13 +44,13 @@ func NormalizeEmail(email string) string {
 func ValidateKDF(cfg KDFConfig) error {
 	switch cfg.Type {
 	case KDFPBKDF2:
-		if cfg.Iterations < minPBKDF2Iterations {
-			return fmt.Errorf("%w: PBKDF2 iterations %d < %d", ErrInvalidKDF, cfg.Iterations, minPBKDF2Iterations)
+		if cfg.Iterations < minPBKDF2Iterations || cfg.Iterations > maxPBKDF2Iterations {
+			return fmt.Errorf("%w: PBKDF2 iterations %d out of range", ErrInvalidKDF, cfg.Iterations)
 		}
 		return nil
 	case KDFArgon2id:
-		if cfg.Iterations < minArgon2Iterations {
-			return fmt.Errorf("%w: Argon2id iterations %d < %d", ErrInvalidKDF, cfg.Iterations, minArgon2Iterations)
+		if cfg.Iterations < minArgon2Iterations || cfg.Iterations > maxArgon2Iterations {
+			return fmt.Errorf("%w: Argon2id iterations %d out of range", ErrInvalidKDF, cfg.Iterations)
 		}
 		if cfg.MemoryMB < minArgon2MemoryMB || cfg.MemoryMB > maxArgon2MemoryMB {
 			return fmt.Errorf("%w: Argon2id memory %d MiB out of range", ErrInvalidKDF, cfg.MemoryMB)

@@ -31,6 +31,8 @@ type mockVaultService struct {
 
 	organizations []state.Organization
 	collections   []state.Collection
+
+	downloadGate chan struct{}
 }
 
 func newMockVaultService(initial state.LockStatus) *mockVaultService {
@@ -594,6 +596,9 @@ func TestSidebarCollectionsFilterItems(t *testing.T) {
 }
 
 func (m *mockVaultService) DownloadAttachment(_ context.Context, cipherID, attachmentID string) ([]byte, string, error) {
+	if m.downloadGate != nil {
+		<-m.downloadGate
+	}
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 	c, ok := m.ciphers[cipherID]

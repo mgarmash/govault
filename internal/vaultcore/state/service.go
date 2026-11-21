@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"slices"
 	"strings"
@@ -53,6 +54,11 @@ type Service struct {
 	collections    map[string]Collection
 	orgKeys        map[string]*crypto.SymmetricKey
 	realtimeCancel context.CancelFunc
+
+	sessionGen    uint64
+	sessionCtx    context.Context
+	sessionCancel context.CancelFunc
+	persistMu     sync.Mutex
 }
 
 var _ VaultService = (*Service)(nil)
@@ -164,6 +170,7 @@ func (s *Service) Login(ctx context.Context, req LoginRequest) error {
 
 	s.mu.Lock()
 	s.stopRealtimeLocked()
+	s.startSessionLocked()
 	if s.userKey != nil {
 		s.userKey.Zero()
 	}
@@ -271,6 +278,7 @@ func (s *Service) UnlockWithUserKey(ctx context.Context, userKey *crypto.Symmetr
 
 	s.mu.Lock()
 	s.stopRealtimeLocked()
+	s.startSessionLocked()
 	if s.userKey != nil {
 		s.userKey.Zero()
 	}
@@ -319,13 +327,13 @@ func (s *Service) DisableBiometricUnlock(secrets store.SecretStore) error {
 
 func (s *Service) Lock() {
 	s.mu.Lock()
+	s.endSessionLocked()
 	s.stopRealtimeLocked()
 	if s.userKey != nil {
 		s.userKey.Zero()
 		s.userKey = nil
 	}
 	s.clearDataLocked()
-	s.accessToken = ""
 	nextStatus := s.status
 	if s.status == StatusUnlocked {
 		if s.snapshot != nil || s.accountID != "" {
@@ -340,8 +348,11 @@ func (s *Service) Lock() {
 	s.notifyStatus(nextStatus)
 }
 
+// Logout ends the session and clears memory first, so observers can revoke
+// derived secrets before the slower snapshot and keychain deletion.
 func (s *Service) Logout(ctx context.Context, secrets store.SecretStore) error {
 	s.mu.Lock()
+	s.endSessionLocked()
 	s.stopRealtimeLocked()
 	accountID := s.accountID
 	if s.userKey != nil {
@@ -349,42 +360,59 @@ func (s *Service) Logout(ctx context.Context, secrets store.SecretStore) error {
 		s.userKey = nil
 	}
 	s.clearDataLocked()
-	s.accessToken = ""
 	s.snapshot = nil
 	s.apiClient = nil
 	s.accountID = ""
 	s.status = StatusLoggedOut
 	s.mu.Unlock()
 
-	var firstErr error
-	if accountID != "" {
-		if err := s.cfg.Store.DeleteSnapshot(accountID); err != nil {
-			firstErr = err
-		}
-		for _, sec := range []store.SecretStore{secrets, s.cfg.Secrets} {
-			if sec == nil {
-				continue
-			}
-			_ = sec.Delete(refreshTokenKeyPrefix + accountID)
-			_ = sec.Delete(userKeyPrefix + accountID)
-		}
+	s.notifyStatus(StatusLoggedOut)
+	if accountID == "" {
+		return nil
 	}
 
-	s.notifyStatus(StatusLoggedOut)
-	return firstErr
+	var errs []error
+	s.persistMu.Lock()
+	if err := s.cfg.Store.DeleteSnapshot(accountID); err != nil && !errors.Is(err, store.ErrSnapshotNotFound) {
+		errs = append(errs, err)
+	}
+	s.persistMu.Unlock()
+	stores := []store.SecretStore{secrets}
+	if s.cfg.Secrets != nil && s.cfg.Secrets != secrets {
+		stores = append(stores, s.cfg.Secrets)
+	}
+	for _, sec := range stores {
+		if sec == nil {
+			continue
+		}
+		for _, key := range []string{refreshTokenKeyPrefix + accountID, userKeyPrefix + accountID} {
+			if err := sec.Delete(key); err != nil {
+				errs = append(errs, fmt.Errorf("state: delete %s: %w", strings.TrimSuffix(key, accountID), err))
+			}
+		}
+	}
+	return errors.Join(errs...)
 }
 
 func (s *Service) SyncNow(ctx context.Context) error {
-	client, snap, userKey, err := s.requireUnlockedNetwork()
+	return s.sync(ctx, false)
+}
+
+func (s *Service) forceSync(ctx context.Context) error {
+	return s.sync(ctx, true)
+}
+
+func (s *Service) sync(ctx context.Context, force bool) error {
+	o, err := s.beginOp(ctx)
 	if err != nil {
 		return err
 	}
-	defer userKey.Zero()
+	defer o.end()
 
-	revDate, err := withAuth(s, ctx, func(tok string) (time.Time, error) {
-		return client.RevisionDate(ctx, tok)
+	revDate, revErr := withAuth(o, func(ctx context.Context, tok string) (time.Time, error) {
+		return o.client.RevisionDate(ctx, tok)
 	})
-	if err == nil && !snap.RevisionDate.IsZero() && revDate.Equal(snap.RevisionDate) {
+	if !force && revErr == nil && !o.snap.RevisionDate.IsZero() && revDate.Equal(o.snap.RevisionDate) {
 		return nil
 	}
 
@@ -392,15 +420,15 @@ func (s *Service) SyncNow(ctx context.Context) error {
 		resp *api.SyncResponse
 		raw  []byte
 	}
-	res, err := withAuth(s, ctx, func(tok string) (syncResult, error) {
-		resp, raw, err := client.Sync(ctx, tok)
+	res, err := withAuth(o, func(ctx context.Context, tok string) (syncResult, error) {
+		resp, raw, err := o.client.Sync(ctx, tok)
 		return syncResult{resp: resp, raw: raw}, err
 	})
 	if err != nil {
 		return err
 	}
 
-	data, err := decryptSyncResponse(res.resp, userKey)
+	data, err := decryptSyncResponse(res.resp, o.userKey)
 	if err != nil {
 		return err
 	}
@@ -411,7 +439,7 @@ func (s *Service) SyncNow(ctx context.Context) error {
 		}
 	}()
 
-	updatedSnap := *snap
+	updatedSnap := *o.snap
 	if !revDate.IsZero() {
 		updatedSnap.RevisionDate = revDate
 	}
@@ -420,12 +448,12 @@ func (s *Service) SyncNow(ctx context.Context) error {
 	}
 	updatedSnap.LastSyncAt = time.Now().UTC()
 	updatedSnap.RawSyncJSON = res.raw
-	if err := s.cfg.Store.SaveSnapshot(&updatedSnap); err != nil {
+	if err := o.saveSnapshot(&updatedSnap); err != nil {
 		return err
 	}
 
 	s.mu.Lock()
-	if s.status != StatusUnlocked {
+	if !o.currentLocked() {
 		s.mu.Unlock()
 		return ErrLocked
 	}
@@ -439,19 +467,24 @@ func (s *Service) SyncNow(ctx context.Context) error {
 }
 
 func (s *Service) StartRealtime(ctx context.Context) error {
+	o, err := s.beginOp(ctx)
+	if err != nil {
+		return err
+	}
+	o.userKey.Zero()
+	serverURL := o.snap.ServerURL
+
 	s.mu.Lock()
-	if s.status != StatusUnlocked || s.snapshot == nil {
+	if !o.currentLocked() {
 		s.mu.Unlock()
+		o.release()
 		return ErrLocked
 	}
-	serverURL := s.snapshot.ServerURL
 	s.stopRealtimeLocked()
-	rtCtx, cancel := context.WithCancel(ctx)
-	s.realtimeCancel = cancel
+	s.realtimeCancel = o.release
 	s.mu.Unlock()
 
 	var rtClient realtime.Client
-	var err error
 	if s.cfg.NewRealtimeClient != nil {
 		rtClient, err = s.cfg.NewRealtimeClient(serverURL)
 	} else {
@@ -461,15 +494,13 @@ func (s *Service) StartRealtime(ctx context.Context) error {
 		})
 	}
 	if err != nil {
-		cancel()
+		o.release()
 		return err
 	}
 
 	go func() {
-		_ = rtClient.Run(rtCtx, func() (string, error) {
-			return s.ensureAccessToken(rtCtx)
-		}, func(ev realtime.Event) {
-			_ = s.HandleRealtimeEvent(rtCtx, ev)
+		_ = rtClient.Run(o.ctx, o.accessToken, func(ev realtime.Event) {
+			_ = s.HandleRealtimeEvent(o.ctx, ev)
 		})
 	}()
 	return nil
@@ -477,7 +508,7 @@ func (s *Service) StartRealtime(ctx context.Context) error {
 
 func (s *Service) HandleRealtimeEvent(ctx context.Context, ev realtime.Event) error {
 	if ev.Type == realtime.LogOut {
-		return s.Logout(ctx, s.cfg.Secrets)
+		return s.Logout(context.WithoutCancel(ctx), s.cfg.Secrets)
 	}
 	if ev.ContextID != "" && ev.ContextID == s.cfg.DeviceID {
 		return nil
@@ -522,12 +553,8 @@ func (s *Service) AllCiphers() []*Cipher {
 	out := make([]*Cipher, 0, len(s.ciphers))
 	for _, c := range s.ciphers {
 		cp := cloneCipher(c)
-		if !cp.HidePassword && len(cp.CollectionIDs) > 0 {
-			cp.HidePassword = !slices.ContainsFunc(cp.CollectionIDs, func(id string) bool {
-				col, ok := s.collections[id]
-				return !ok || !col.HidePasswords
-			})
-		}
+		cp.HidePassword = s.effectiveHidePasswordLocked(c)
+		cp.ReadOnly = s.effectiveReadOnlyLocked(c)
 		if cp.HidePassword {
 			if cp.Login != nil {
 				cp.Login.Password = ""
@@ -543,21 +570,19 @@ func (s *Service) SaveCipher(ctx context.Context, c *Cipher) (*Cipher, error) {
 	if c == nil {
 		return nil, ErrCipherNotFound
 	}
-	client, _, userKey, err := s.requireUnlockedNetwork()
+	o, err := s.beginOp(ctx)
 	if err != nil {
 		return nil, err
 	}
-	defer userKey.Zero()
+	defer o.end()
 
 	c = cloneCipher(c)
 	if c.ID != "" {
-		s.mu.RLock()
-		existing := cloneCipher(s.ciphers[c.ID])
-		s.mu.RUnlock()
+		existing, err := o.editableCipher(c.ID)
+		if err != nil && !errors.Is(err, ErrCipherNotFound) {
+			return nil, err
+		}
 		if existing != nil {
-			if existing.ReadOnly {
-				return nil, ErrReadOnlyCipher
-			}
 			recordPasswordChange(existing, c, time.Now().UTC())
 			if c.OrganizationID == nil {
 				c.OrganizationID = cloneStringPtr(existing.OrganizationID)
@@ -567,7 +592,7 @@ func (s *Service) SaveCipher(ctx context.Context, c *Cipher) (*Cipher, error) {
 			}
 		}
 	}
-	key, err := s.itemKey(c.OrganizationID, userKey)
+	key, err := o.itemKey(c.OrganizationID)
 	if err != nil {
 		return nil, err
 	}
@@ -578,23 +603,19 @@ func (s *Service) SaveCipher(ctx context.Context, c *Cipher) (*Cipher, error) {
 		return nil, err
 	}
 
-	var encResp *api.EncryptedCipher
-	if c.ID == "" {
-		encResp, err = withAuth(s, ctx, func(tok string) (*api.EncryptedCipher, error) {
-			return client.CreateCipher(ctx, tok, payload)
-		})
-	} else {
-		encResp, err = withAuth(s, ctx, func(tok string) (*api.EncryptedCipher, error) {
-			return client.UpdateCipher(ctx, tok, c.ID, payload)
-		})
-	}
+	encResp, err := withAuth(o, func(ctx context.Context, tok string) (*api.EncryptedCipher, error) {
+		if c.ID == "" {
+			return o.client.CreateCipher(ctx, tok, payload)
+		}
+		return o.client.UpdateCipher(ctx, tok, c.ID, payload)
+	})
 	if err != nil {
 		return nil, err
 	}
 
 	respKey := key
 	if !sameOrg(encResp.OrganizationID, c.OrganizationID) {
-		if respKey, err = s.itemKey(encResp.OrganizationID, userKey); err != nil {
+		if respKey, err = o.itemKey(encResp.OrganizationID); err != nil {
 			return nil, err
 		}
 		defer respKey.Zero()
@@ -608,7 +629,7 @@ func (s *Service) SaveCipher(ctx context.Context, c *Cipher) (*Cipher, error) {
 	}
 
 	s.mu.Lock()
-	if s.status != StatusUnlocked {
+	if !o.currentLocked() {
 		s.mu.Unlock()
 		return nil, ErrLocked
 	}
@@ -620,14 +641,17 @@ func (s *Service) SaveCipher(ctx context.Context, c *Cipher) (*Cipher, error) {
 }
 
 func (s *Service) SoftDeleteCipher(ctx context.Context, id string) error {
-	client, _, userKey, err := s.requireUnlockedNetwork()
+	o, err := s.beginOp(ctx)
 	if err != nil {
 		return err
 	}
-	defer userKey.Zero()
+	defer o.end()
+	if _, err := o.editableCipher(id); err != nil {
+		return err
+	}
 
-	_, err = withAuth(s, ctx, func(tok string) (struct{}, error) {
-		return struct{}{}, client.SoftDeleteCipher(ctx, tok, id)
+	_, err = withAuth(o, func(ctx context.Context, tok string) (struct{}, error) {
+		return struct{}{}, o.client.SoftDeleteCipher(ctx, tok, id)
 	})
 	if err != nil {
 		return err
@@ -635,7 +659,7 @@ func (s *Service) SoftDeleteCipher(ctx context.Context, id string) error {
 
 	now := time.Now().UTC()
 	s.mu.Lock()
-	if c, ok := s.ciphers[id]; ok {
+	if c, ok := s.ciphers[id]; ok && o.currentLocked() {
 		c.DeletedDate = &now
 	}
 	s.mu.Unlock()
@@ -645,20 +669,23 @@ func (s *Service) SoftDeleteCipher(ctx context.Context, id string) error {
 }
 
 func (s *Service) RestoreCipher(ctx context.Context, id string) error {
-	client, _, userKey, err := s.requireUnlockedNetwork()
+	o, err := s.beginOp(ctx)
 	if err != nil {
 		return err
 	}
-	defer userKey.Zero()
+	defer o.end()
+	if _, err := o.editableCipher(id); err != nil {
+		return err
+	}
 
-	encResp, err := withAuth(s, ctx, func(tok string) (*api.EncryptedCipher, error) {
-		return client.RestoreCipher(ctx, tok, id)
+	encResp, err := withAuth(o, func(ctx context.Context, tok string) (*api.EncryptedCipher, error) {
+		return o.client.RestoreCipher(ctx, tok, id)
 	})
 	if err != nil {
 		return err
 	}
 
-	key, err := s.itemKey(encResp.OrganizationID, userKey)
+	key, err := o.itemKey(encResp.OrganizationID)
 	if err != nil {
 		return err
 	}
@@ -669,7 +696,10 @@ func (s *Service) RestoreCipher(ctx context.Context, id string) error {
 	}
 
 	s.mu.Lock()
-	if s.status == StatusUnlocked {
+	if o.currentLocked() {
+		if prev := s.ciphers[decrypted.ID]; prev != nil && len(decrypted.CollectionIDs) == 0 {
+			decrypted.CollectionIDs = append([]string(nil), prev.CollectionIDs...)
+		}
 		s.ciphers[decrypted.ID] = decrypted
 	}
 	s.mu.Unlock()
@@ -679,21 +709,26 @@ func (s *Service) RestoreCipher(ctx context.Context, id string) error {
 }
 
 func (s *Service) HardDeleteCipher(ctx context.Context, id string) error {
-	client, _, userKey, err := s.requireUnlockedNetwork()
+	o, err := s.beginOp(ctx)
 	if err != nil {
 		return err
 	}
-	defer userKey.Zero()
+	defer o.end()
+	if _, err := o.editableCipher(id); err != nil {
+		return err
+	}
 
-	_, err = withAuth(s, ctx, func(tok string) (struct{}, error) {
-		return struct{}{}, client.HardDeleteCipher(ctx, tok, id)
+	_, err = withAuth(o, func(ctx context.Context, tok string) (struct{}, error) {
+		return struct{}{}, o.client.HardDeleteCipher(ctx, tok, id)
 	})
 	if err != nil {
 		return err
 	}
 
 	s.mu.Lock()
-	delete(s.ciphers, id)
+	if o.currentLocked() {
+		delete(s.ciphers, id)
+	}
 	s.mu.Unlock()
 
 	s.notifyUpdated()
@@ -725,38 +760,34 @@ func (s *Service) SaveFolder(ctx context.Context, f *Folder) (*Folder, error) {
 	if f == nil {
 		return nil, ErrFolderNotFound
 	}
-	client, _, userKey, err := s.requireUnlockedNetwork()
+	o, err := s.beginOp(ctx)
 	if err != nil {
 		return nil, err
 	}
-	defer userKey.Zero()
+	defer o.end()
 
-	encName, err := crypto.EncryptString(f.Name, userKey)
-	if err != nil {
-		return nil, err
-	}
-
-	var encResp *api.EncryptedFolder
-	if f.ID == "" {
-		encResp, err = withAuth(s, ctx, func(tok string) (*api.EncryptedFolder, error) {
-			return client.CreateFolder(ctx, tok, encName)
-		})
-	} else {
-		encResp, err = withAuth(s, ctx, func(tok string) (*api.EncryptedFolder, error) {
-			return client.UpdateFolder(ctx, tok, f.ID, encName)
-		})
-	}
+	encName, err := crypto.EncryptString(f.Name, o.userKey)
 	if err != nil {
 		return nil, err
 	}
 
-	decrypted, err := decryptFolder(encResp, userKey)
+	encResp, err := withAuth(o, func(ctx context.Context, tok string) (*api.EncryptedFolder, error) {
+		if f.ID == "" {
+			return o.client.CreateFolder(ctx, tok, encName)
+		}
+		return o.client.UpdateFolder(ctx, tok, f.ID, encName)
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	decrypted, err := decryptFolder(encResp, o.userKey)
 	if err != nil {
 		return nil, err
 	}
 
 	s.mu.Lock()
-	if s.status != StatusUnlocked {
+	if !o.currentLocked() {
 		s.mu.Unlock()
 		return nil, ErrLocked
 	}
@@ -769,84 +800,28 @@ func (s *Service) SaveFolder(ctx context.Context, f *Folder) (*Folder, error) {
 }
 
 func (s *Service) DeleteFolder(ctx context.Context, id string) error {
-	client, _, userKey, err := s.requireUnlockedNetwork()
+	o, err := s.beginOp(ctx)
 	if err != nil {
 		return err
 	}
-	defer userKey.Zero()
+	defer o.end()
 
-	_, err = withAuth(s, ctx, func(tok string) (struct{}, error) {
-		return struct{}{}, client.DeleteFolder(ctx, tok, id)
+	_, err = withAuth(o, func(ctx context.Context, tok string) (struct{}, error) {
+		return struct{}{}, o.client.DeleteFolder(ctx, tok, id)
 	})
 	if err != nil {
 		return err
 	}
 
 	s.mu.Lock()
-	delete(s.folders, id)
-	for _, c := range s.ciphers {
-		if c.FolderID != nil && *c.FolderID == id {
-			c.FolderID = nil
+	if o.currentLocked() {
+		delete(s.folders, id)
+		for _, c := range s.ciphers {
+			if c.FolderID != nil && *c.FolderID == id {
+				c.FolderID = nil
+			}
 		}
 	}
-	s.mu.Unlock()
-
-	s.notifyUpdated()
-	return nil
-}
-
-func (s *Service) forceSync(ctx context.Context) error {
-	client, snap, userKey, err := s.requireUnlockedNetwork()
-	if err != nil {
-		return err
-	}
-	defer userKey.Zero()
-
-	type syncResult struct {
-		resp *api.SyncResponse
-		raw  []byte
-	}
-	res, err := withAuth(s, ctx, func(tok string) (syncResult, error) {
-		resp, raw, err := client.Sync(ctx, tok)
-		return syncResult{resp: resp, raw: raw}, err
-	})
-	if err != nil {
-		return err
-	}
-
-	data, err := decryptSyncResponse(res.resp, userKey)
-	if err != nil {
-		return err
-	}
-	committed := false
-	defer func() {
-		if !committed {
-			data.zero()
-		}
-	}()
-
-	revDate, _ := withAuth(s, ctx, func(tok string) (time.Time, error) {
-		return client.RevisionDate(ctx, tok)
-	})
-
-	updatedSnap := *snap
-	if !revDate.IsZero() {
-		updatedSnap.RevisionDate = revDate
-	}
-	updatedSnap.LastSyncAt = time.Now().UTC()
-	updatedSnap.RawSyncJSON = res.raw
-	if err := s.cfg.Store.SaveSnapshot(&updatedSnap); err != nil {
-		return err
-	}
-
-	s.mu.Lock()
-	if s.status != StatusUnlocked {
-		s.mu.Unlock()
-		return ErrLocked
-	}
-	s.snapshot = &updatedSnap
-	s.applyDataLocked(data)
-	committed = true
 	s.mu.Unlock()
 
 	s.notifyUpdated()
@@ -867,80 +842,6 @@ func (s *Service) loadCurrentSnapshot() (*store.Snapshot, error) {
 		return nil, ErrLoggedOut
 	}
 	return s.cfg.Store.LoadSnapshot(accountID)
-}
-
-func (s *Service) requireUnlockedNetwork() (*api.Client, *store.Snapshot, *crypto.SymmetricKey, error) {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-	if s.status != StatusUnlocked || s.userKey == nil {
-		return nil, nil, nil, ErrLocked
-	}
-	if s.apiClient == nil || s.snapshot == nil {
-		return nil, nil, nil, ErrLoggedOut
-	}
-	raw := s.userKey.Bytes()
-	keyCopy, err := crypto.SymmetricKeyFromBytes(raw[:])
-	crypto.ZeroBytes(raw[:])
-	if err != nil {
-		return nil, nil, nil, err
-	}
-	snapCopy := *s.snapshot
-	return s.apiClient, &snapCopy, keyCopy, nil
-}
-
-func (s *Service) ensureAccessToken(ctx context.Context) (string, error) {
-	s.mu.RLock()
-	tok := s.accessToken
-	s.mu.RUnlock()
-	if tok != "" {
-		return tok, nil
-	}
-	return s.refreshAccessToken(ctx)
-}
-
-func (s *Service) refreshAccessToken(ctx context.Context) (string, error) {
-	s.mu.RLock()
-	client := s.apiClient
-	accountID := s.accountID
-	s.mu.RUnlock()
-
-	if client == nil || accountID == "" {
-		return "", ErrLoggedOut
-	}
-	if s.cfg.Secrets == nil {
-		return "", api.ErrUnauthorized
-	}
-	refreshTok, ok, err := s.cfg.Secrets.Get(refreshTokenKeyPrefix + accountID)
-	if err != nil {
-		return "", err
-	}
-	if !ok || refreshTok == "" {
-		return "", api.ErrUnauthorized
-	}
-
-	resp, err := client.RefreshToken(ctx, refreshTok)
-	if err != nil {
-		return "", err
-	}
-	if resp.RefreshToken != "" {
-		_ = s.cfg.Secrets.Set(refreshTokenKeyPrefix+accountID, resp.RefreshToken)
-	}
-
-	s.mu.Lock()
-	if s.accountID == accountID {
-		s.accessToken = resp.AccessToken
-	}
-	s.mu.Unlock()
-	return resp.AccessToken, nil
-}
-
-func withAuth[T any](s *Service, ctx context.Context, fn func(token string) (T, error)) (T, error) {
-	tok, err := s.ensureAccessToken(ctx)
-	if err != nil {
-		var zero T
-		return zero, err
-	}
-	return api.DoWithRefresh(ctx, tok, s.refreshAccessToken, fn)
 }
 
 func (s *Service) newAPIClient(serverURL string) (*api.Client, error) {
@@ -1036,27 +937,6 @@ func (s *Service) Collections() []Collection {
 	}
 	slices.SortFunc(out, func(a, b Collection) int { return strings.Compare(strings.ToLower(a.Name), strings.ToLower(b.Name)) })
 	return out
-}
-
-// itemKey returns a copy of the key that encrypts items owned by orgID, or
-// of userKey for personal items.
-func (s *Service) itemKey(orgID *string, userKey *crypto.SymmetricKey) (*crypto.SymmetricKey, error) {
-	var raw [64]byte
-	defer crypto.ZeroBytes(raw[:])
-	if orgID == nil || *orgID == "" {
-		raw = userKey.Bytes()
-	} else {
-		s.mu.RLock()
-		k := s.orgKeys[*orgID]
-		if k != nil {
-			raw = k.Bytes()
-		}
-		s.mu.RUnlock()
-		if k == nil {
-			return nil, ErrOrganizationKeyMissing
-		}
-	}
-	return crypto.SymmetricKeyFromBytes(raw[:])
 }
 
 func unwrapOrgKeys(p *api.Profile, userKey *crypto.SymmetricKey) map[string]*crypto.SymmetricKey {

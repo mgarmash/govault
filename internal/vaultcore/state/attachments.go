@@ -9,24 +9,24 @@ import (
 )
 
 func (s *Service) DownloadAttachment(ctx context.Context, cipherID, attachmentID string) ([]byte, string, error) {
-	client, _, userKey, err := s.requireUnlockedNetwork()
+	o, err := s.beginOp(ctx)
 	if err != nil {
 		return nil, "", err
 	}
-	defer userKey.Zero()
+	defer o.end()
 
-	c, att, err := s.lookupAttachment(cipherID, attachmentID)
+	c, att, err := o.lookupAttachment(cipherID, attachmentID, false)
 	if err != nil {
 		return nil, "", err
 	}
-	cipherKey, err := s.cipherKey(c, userKey)
+	cipherKey, err := o.cipherKey(c)
 	if err != nil {
 		return nil, "", err
 	}
 	defer cipherKey.Zero()
 
-	meta, err := withAuth(s, ctx, func(tok string) (*api.EncryptedAttachment, error) {
-		return client.GetAttachment(ctx, tok, cipherID, attachmentID)
+	meta, err := withAuth(o, func(ctx context.Context, tok string) (*api.EncryptedAttachment, error) {
+		return o.client.GetAttachment(ctx, tok, cipherID, attachmentID)
 	})
 	if err != nil {
 		return nil, "", err
@@ -34,8 +34,8 @@ func (s *Service) DownloadAttachment(ctx context.Context, cipherID, attachmentID
 	if meta.Key != nil && *meta.Key != "" {
 		att.Key = meta.Key
 	}
-	encData, err := withAuth(s, ctx, func(tok string) ([]byte, error) {
-		return client.DownloadAttachmentBytes(ctx, tok, meta.URL)
+	encData, err := withAuth(o, func(ctx context.Context, tok string) ([]byte, error) {
+		return o.client.DownloadAttachmentBytes(ctx, tok, meta.URL)
 	})
 	if err != nil {
 		return nil, "", err
@@ -50,6 +50,10 @@ func (s *Service) DownloadAttachment(ctx context.Context, cipherID, attachmentID
 	if err != nil {
 		return nil, "", err
 	}
+	if !o.current() {
+		crypto.ZeroBytes(plain)
+		return nil, "", ErrLocked
+	}
 	return plain, att.FileName, nil
 }
 
@@ -57,20 +61,17 @@ func (s *Service) UploadAttachment(ctx context.Context, cipherID, fileName strin
 	if len(plain) > api.MaxAttachmentSize {
 		return nil, api.ErrAttachmentTooLarge
 	}
-	client, _, userKey, err := s.requireUnlockedNetwork()
+	o, err := s.beginOp(ctx)
 	if err != nil {
 		return nil, err
 	}
-	defer userKey.Zero()
+	defer o.end()
 
-	c, err := s.GetCipher(cipherID)
+	c, err := o.editableCipher(cipherID)
 	if err != nil {
 		return nil, err
 	}
-	if c.ReadOnly {
-		return nil, ErrReadOnlyCipher
-	}
-	cipherKey, err := s.cipherKey(c, userKey)
+	cipherKey, err := o.cipherKey(c)
 	if err != nil {
 		return nil, err
 	}
@@ -96,8 +97,8 @@ func (s *Service) UploadAttachment(ctx context.Context, cipherID, fileName strin
 		return nil, err
 	}
 
-	created, err := withAuth(s, ctx, func(tok string) (*api.AttachmentUploadResponse, error) {
-		return client.CreateAttachmentV2(ctx, tok, cipherID, api.AttachmentUploadRequest{
+	created, err := withAuth(o, func(ctx context.Context, tok string) (*api.AttachmentUploadResponse, error) {
+		return o.client.CreateAttachmentV2(ctx, tok, cipherID, api.AttachmentUploadRequest{
 			Key: encAttKey.String(), FileName: encName, FileSize: int64(len(data)),
 		})
 	})
@@ -105,67 +106,78 @@ func (s *Service) UploadAttachment(ctx context.Context, cipherID, fileName strin
 		return nil, err
 	}
 	if created.FileUploadType != api.FileUploadTypeDirect {
-		s.discardAttachment(ctx, client, cipherID, created.AttachmentID)
+		o.discardAttachment(cipherID, created.AttachmentID)
 		return nil, ErrUnsupportedUpload
 	}
-	_, err = withAuth(s, ctx, func(tok string) (struct{}, error) {
-		return struct{}{}, client.UploadAttachmentData(ctx, tok, cipherID, created.AttachmentID, encName, data)
+	_, err = withAuth(o, func(ctx context.Context, tok string) (struct{}, error) {
+		return struct{}{}, o.client.UploadAttachmentData(ctx, tok, cipherID, created.AttachmentID, encName, data)
 	})
 	if err != nil {
-		s.discardAttachment(ctx, client, cipherID, created.AttachmentID)
+		o.discardAttachment(cipherID, created.AttachmentID)
 		return nil, err
 	}
-	return s.refreshCipher(ctx, client, userKey, c, created.CipherResponse)
+	return o.refreshCipher(c, created.CipherResponse)
 }
 
 func (s *Service) DeleteAttachment(ctx context.Context, cipherID, attachmentID string) (*Cipher, error) {
-	client, _, userKey, err := s.requireUnlockedNetwork()
+	o, err := s.beginOp(ctx)
 	if err != nil {
 		return nil, err
 	}
-	defer userKey.Zero()
+	defer o.end()
 
-	c, _, err := s.lookupAttachment(cipherID, attachmentID)
+	c, _, err := o.lookupAttachment(cipherID, attachmentID, true)
 	if err != nil {
 		return nil, err
 	}
-	if c.ReadOnly {
-		return nil, ErrReadOnlyCipher
-	}
-	_, err = withAuth(s, ctx, func(tok string) (struct{}, error) {
-		return struct{}{}, client.DeleteAttachment(ctx, tok, cipherID, attachmentID)
+	_, err = withAuth(o, func(ctx context.Context, tok string) (struct{}, error) {
+		return struct{}{}, o.client.DeleteAttachment(ctx, tok, cipherID, attachmentID)
 	})
 	if err != nil {
 		return nil, err
 	}
-	return s.refreshCipher(ctx, client, userKey, c, nil)
+	return o.refreshCipher(c, nil)
 }
 
-func (s *Service) discardAttachment(ctx context.Context, client *api.Client, cipherID, attachmentID string) {
+func (o *op) discardAttachment(cipherID, attachmentID string) {
 	if attachmentID == "" {
 		return
 	}
-	_, _ = withAuth(s, ctx, func(tok string) (struct{}, error) {
-		return struct{}{}, client.DeleteAttachment(ctx, tok, cipherID, attachmentID)
+	_, _ = withAuth(o, func(ctx context.Context, tok string) (struct{}, error) {
+		return struct{}{}, o.client.DeleteAttachment(ctx, tok, cipherID, attachmentID)
 	})
 }
 
-func (s *Service) lookupAttachment(cipherID, attachmentID string) (*Cipher, Attachment, error) {
-	c, err := s.GetCipher(cipherID)
-	if err != nil {
-		return nil, Attachment{}, err
+// lookupAttachment finds the attachment after checking the organization
+// permissions: hidden passwords forbid downloads, read-only forbids changes.
+func (o *op) lookupAttachment(cipherID, attachmentID string, modify bool) (*Cipher, Attachment, error) {
+	o.s.mu.RLock()
+	defer o.s.mu.RUnlock()
+	if !o.currentLocked() {
+		return nil, Attachment{}, ErrLocked
+	}
+	c, ok := o.s.ciphers[cipherID]
+	if !ok {
+		return nil, Attachment{}, ErrCipherNotFound
+	}
+	if modify && o.s.effectiveReadOnlyLocked(c) {
+		return nil, Attachment{}, ErrReadOnlyCipher
+	}
+	if !modify && o.s.effectiveHidePasswordLocked(c) {
+		return nil, Attachment{}, ErrHiddenByOrganization
 	}
 	for _, a := range c.Attachments {
 		if a.ID == attachmentID {
-			return c, a, nil
+			cp := cloneCipher(c)
+			return cp, a, nil
 		}
 	}
 	return nil, Attachment{}, ErrAttachmentNotFound
 }
 
 // cipherKey returns a copy of the key that encrypts the fields of c.
-func (s *Service) cipherKey(c *Cipher, userKey *crypto.SymmetricKey) (*crypto.SymmetricKey, error) {
-	key, err := s.itemKey(c.OrganizationID, userKey)
+func (o *op) cipherKey(c *Cipher) (*crypto.SymmetricKey, error) {
+	key, err := o.itemKey(c.OrganizationID)
 	if err != nil {
 		return nil, err
 	}
@@ -197,9 +209,9 @@ func attachmentKey(encKey *string, cipherKey *crypto.SymmetricKey) (*crypto.Symm
 
 // refreshCipher reloads the cipher from the server, falling back to fallback,
 // and stores it in memory and in the encrypted snapshot.
-func (s *Service) refreshCipher(ctx context.Context, client *api.Client, userKey *crypto.SymmetricKey, prev *Cipher, fallback *api.EncryptedCipher) (*Cipher, error) {
-	enc, err := withAuth(s, ctx, func(tok string) (*api.EncryptedCipher, error) {
-		return client.GetCipher(ctx, tok, prev.ID)
+func (o *op) refreshCipher(prev *Cipher, fallback *api.EncryptedCipher) (*Cipher, error) {
+	enc, err := withAuth(o, func(ctx context.Context, tok string) (*api.EncryptedCipher, error) {
+		return o.client.GetCipher(ctx, tok, prev.ID)
 	})
 	if err != nil {
 		if fallback == nil {
@@ -207,7 +219,7 @@ func (s *Service) refreshCipher(ctx context.Context, client *api.Client, userKey
 		}
 		enc = fallback
 	}
-	key, err := s.itemKey(enc.OrganizationID, userKey)
+	key, err := o.itemKey(enc.OrganizationID)
 	if err != nil {
 		return nil, err
 	}
@@ -220,24 +232,26 @@ func (s *Service) refreshCipher(ctx context.Context, client *api.Client, userKey
 		decrypted.CollectionIDs = append([]string(nil), prev.CollectionIDs...)
 	}
 
-	s.mu.Lock()
-	if s.status != StatusUnlocked {
-		s.mu.Unlock()
+	o.s.mu.Lock()
+	if !o.currentLocked() {
+		o.s.mu.Unlock()
 		return nil, ErrLocked
 	}
-	s.ciphers[decrypted.ID] = decrypted
-	s.mu.Unlock()
+	o.s.ciphers[decrypted.ID] = decrypted
+	o.s.mu.Unlock()
 
-	s.storeSnapshotCipher(enc)
-	s.notifyUpdated()
+	o.storeSnapshotCipher(enc)
+	o.s.notifyUpdated()
 	return cloneCipher(decrypted), nil
 }
 
-func (s *Service) storeSnapshotCipher(enc *api.EncryptedCipher) {
-	s.mu.RLock()
-	snap := s.snapshot
-	s.mu.RUnlock()
-	if snap == nil {
+func (o *op) storeSnapshotCipher(enc *api.EncryptedCipher) {
+	o.s.persistMu.Lock()
+	defer o.s.persistMu.Unlock()
+	o.s.mu.RLock()
+	snap, ok := o.s.snapshot, o.currentLocked()
+	o.s.mu.RUnlock()
+	if snap == nil || !ok {
 		return
 	}
 	var resp api.SyncResponse
@@ -263,12 +277,12 @@ func (s *Service) storeSnapshotCipher(enc *api.EncryptedCipher) {
 	}
 	updated := *snap
 	updated.RawSyncJSON = raw
-	if err := s.cfg.Store.SaveSnapshot(&updated); err != nil {
+	if !o.current() || o.s.cfg.Store.SaveSnapshot(&updated) != nil {
 		return
 	}
-	s.mu.Lock()
-	if s.snapshot == snap {
-		s.snapshot = &updated
+	o.s.mu.Lock()
+	if o.s.snapshot == snap && o.currentLocked() {
+		o.s.snapshot = &updated
 	}
-	s.mu.Unlock()
+	o.s.mu.Unlock()
 }

@@ -91,6 +91,13 @@ func (c *ClipboardAdapter) CopyPlain(text string) {
 	c.scope.SetClipboard(text)
 }
 
+// ClearOnQuit clears a pending concealed secret synchronously and stops the
+// fallback timer.
+func (c *ClipboardAdapter) ClearOnQuit() {
+	c.concealed.ClearPending()
+	c.Cancel()
+}
+
 func (c *ClipboardAdapter) Cancel() {
 	c.concealed.Cancel()
 	c.mu.Lock()

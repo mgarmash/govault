@@ -29,6 +29,7 @@ var (
 	ErrReadOnlyCipher          = errors.New("state: item is read-only")
 	ErrOrganizationKeyMissing  = errors.New("state: organization key unavailable")
 	ErrAttachmentNotFound      = errors.New("state: attachment not found")
+	ErrHiddenByOrganization    = errors.New("state: hidden by your organization")
 	ErrUnsupportedUpload       = errors.New("state: server requested an unsupported attachment upload method")
 )
 

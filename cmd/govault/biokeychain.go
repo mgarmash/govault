@@ -88,7 +88,9 @@ func (s *BiometricSecretStore) Set(account, value string) error {
 		_ = s.hw.Delete(account)
 		err := s.hw.Add(account, []byte(value))
 		if err == nil {
-			_ = s.fallback.Delete(account)
+			if err := s.fallback.Delete(account); err != nil {
+				return fmt.Errorf("keychain: saved with Touch ID protection, but could not remove the login keychain copy: %w", err)
+			}
 			return nil
 		}
 		if !hardwareUnavailable(err) {
