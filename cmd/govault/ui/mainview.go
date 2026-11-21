@@ -5,16 +5,21 @@ import (
 
 	"github.com/nsgo-dev/nsgo/base"
 	"github.com/nsgo-dev/nsgo/core"
+	"github.com/nsgo-dev/nsgo/desktop"
 	"github.com/nsgo-dev/nsgo/ui"
 	"github.com/txchen/govault/internal/vaultcore/state"
 )
 
 func MainWindowView(cx *core.Scope, m *AppModel) core.Node {
+	cx.SetTheme(GovaultTheme())
+	if cx.Env().OS() == core.OSMacOS {
+		desktop.SetTitleBar(cx, desktop.TitleBarHidden, titleBarHeight)
+	}
 	bindMainWindowShortcuts(cx, m)
 
 	return core.View{
 		TestID: "main-window-root",
-		Class:  "flex-1 bg-white dark:bg-neutral-950",
+		Class:  "flex-1 bg-gv-canvas",
 		Children: []core.Node{
 			core.Dynamic(func(cx *core.Scope) core.Node {
 				switch m.LockState.Get() {
@@ -148,9 +153,8 @@ func repromptDialog(m *AppModel) core.Node {
 			return "Enter your master password to " + act + "."
 		},
 		Children: []core.Node{
-			base.Input{
+			ui.Input{
 				TestID:        "reprompt-password",
-				Class:         inputClass,
 				Placeholder:   "Master Password",
 				Masked:        true,
 				AutoFocus:     true,
@@ -163,7 +167,7 @@ func repromptDialog(m *AppModel) core.Node {
 				When: func() bool { return m.RepromptError.Get() != "" },
 				Then: func(cx *core.Scope) core.Node {
 					return core.Text{
-						Class:       "text-xs text-red-600 dark:text-red-400",
+						Class:       "text-[12px] text-gv-danger",
 						ContentFunc: m.RepromptError.Get,
 					}
 				},
@@ -208,9 +212,8 @@ func folderDialog(m *AppModel) core.Node {
 			return "Rename Folder"
 		},
 		Children: []core.Node{
-			base.Input{
+			ui.Input{
 				TestID:      "folder-name-input",
-				Class:       inputClass,
 				Placeholder: "Folder name",
 				AutoFocus:   true,
 				Value:       func() string { return m.FolderDialog.Get().Name },
@@ -225,7 +228,7 @@ func folderDialog(m *AppModel) core.Node {
 				When: func() bool { return m.FolderError.Get() != "" },
 				Then: func(cx *core.Scope) core.Node {
 					return core.Text{
-						Class:       "text-xs text-red-600 dark:text-red-400",
+						Class:       "text-[12px] text-gv-danger",
 						ContentFunc: m.FolderError.Get,
 					}
 				},

@@ -29,8 +29,11 @@ type DesktopShell struct {
 	rtRunning bool
 }
 
-func NewDesktopShell(app *core.Scope) *DesktopShell {
+func NewDesktopShell(app *core.Scope, demoMode bool) *DesktopShell {
 	desktop.SetShutdownMode(app, desktop.ShutdownOnExplicit)
+	if demoMode {
+		return newDemoShell(app)
+	}
 
 	dataDir := ensureDataDir(app)
 	secrets := NewSecretStoreAdapter(app.Secrets())
@@ -42,7 +45,7 @@ func NewDesktopShell(app *core.Scope) *DesktopShell {
 		clipboard: clip,
 	}
 
-	tempPrefs := core.NewPersisted(app, "govault.prefs", govaultui.DefaultUserPrefs(), core.PersistOptions{Version: 1})
+	tempPrefs := core.NewPersisted(app, govaultui.DefaultPrefsKey, govaultui.DefaultUserPrefs(), core.PersistOptions{Version: 1})
 	initialPrefs := tempPrefs.Get()
 
 	meta := DiscoverAccountSnapshot(dataDir, initialPrefs.AccountID)
@@ -82,12 +85,30 @@ func NewDesktopShell(app *core.Scope) *DesktopShell {
 	}
 	shell.service = svc
 
-	hooks := govaultui.PlatformHooks{
+	hooks := shell.platformHooks(secrets)
+	hooks.DiscoverSnapshot = func(preferred string) *govaultui.AccountSnapshotMeta {
+		return DiscoverAccountSnapshot(dataDir, preferred)
+	}
+	hooks.VerifyMasterPassword = func(password []byte) error {
+		return VerifyMasterPasswordOffline(dataDir, shell.model.Prefs.Get().AccountID, password)
+	}
+
+	shell.model = govaultui.NewAppModel(app, svc, hooks)
+	if meta != nil {
+		shell.model.SyncAccountMetaFromSnapshot()
+	}
+	shell.finishSetup()
+	return shell
+}
+
+func (s *DesktopShell) platformHooks(secrets store.SecretStore) govaultui.PlatformHooks {
+	app := s.scope
+	return govaultui.PlatformHooks{
 		Secrets:              secrets,
-		CopySecret:           clip.CopySecret,
-		CopyPlain:            clip.CopyPlain,
-		IsClipboardConcealed: clip.IsConcealed,
-		ApplyHotKey:          shell.ApplyHotKey,
+		CopySecret:           s.clipboard.CopySecret,
+		CopyPlain:            s.clipboard.CopyPlain,
+		IsClipboardConcealed: s.clipboard.IsConcealed,
+		ApplyHotKey:          s.ApplyHotKey,
 		SetLaunchAtLogin: func(on bool) {
 			desktop.SetLaunchAtLogin(app, on)
 		},
@@ -96,21 +117,16 @@ func NewDesktopShell(app *core.Scope) *DesktopShell {
 				desktop.SetDockVisible(app, on)
 			}
 		},
-		OpenMainWindow:   shell.OpenMainWindow,
-		HideQuickPanel:   shell.HideQuickPanel,
-		ToggleQuickPanel: shell.ToggleQuickPanel,
-		DiscoverSnapshot: func(preferred string) *govaultui.AccountSnapshotMeta {
-			return DiscoverAccountSnapshot(dataDir, preferred)
-		},
-		VerifyMasterPassword: func(password []byte) error {
-			return VerifyMasterPasswordOffline(dataDir, shell.model.Prefs.Get().AccountID, password)
-		},
+		OpenMainWindow:   s.OpenMainWindow,
+		HideQuickPanel:   s.HideQuickPanel,
+		ToggleQuickPanel: s.ToggleQuickPanel,
 	}
+}
 
-	shell.model = govaultui.NewAppModel(app, svc, hooks)
-	if meta != nil {
-		shell.model.SyncAccountMetaFromSnapshot()
-	}
+func (s *DesktopShell) finishSetup() {
+	app := s.scope
+	shell := s
+	clip := s.clipboard
 
 	p := shell.model.Prefs.Get()
 	if p.QuickAccessHotKey != "" {
@@ -140,8 +156,6 @@ func NewDesktopShell(app *core.Scope) *DesktopShell {
 	if !desktop.LaunchedAtLogin(app) {
 		shell.OpenMainWindow()
 	}
-
-	return shell
 }
 
 func (s *DesktopShell) startRealtimeAsync() {
@@ -202,11 +216,11 @@ func (s *DesktopShell) OpenMainWindow() {
 	s.mainWin = desktop.OpenWindow(s.scope, desktop.WindowOptions{
 		Title:  "GoVault",
 		Key:    "main",
-		Width:  980,
-		Height: 640,
+		Width:  1100,
+		Height: 720,
 		Constraints: desktop.WindowConstraints{
-			MinWidth:  780,
-			MinHeight: 500,
+			MinWidth:  900,
+			MinHeight: 560,
 		},
 	}, func(cx *core.Scope) core.Node {
 		win := desktop.CurrentWindow(cx)
@@ -235,10 +249,11 @@ func (s *DesktopShell) ensureQuickPanel() *desktop.Window {
 		return s.quickPanel
 	}
 	s.quickPanel = desktop.OpenPanel(s.scope, desktop.PanelOptions{
-		Width:      560,
-		Height:     400,
-		FitContent: true,
-		HideOnBlur: true,
+		Width:       656,
+		Height:      480,
+		FitContent:  true,
+		HideOnBlur:  true,
+		Transparent: true,
 	}, func(cx *core.Scope) core.Node {
 		panel := desktop.CurrentWindow(cx)
 		cx.Effect(func() {

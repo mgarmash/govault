@@ -102,7 +102,10 @@ type PlatformHooks struct {
 	ToggleQuickPanel     func()
 	DiscoverSnapshot     func(preferredAccountID string) *AccountSnapshotMeta
 	VerifyMasterPassword func(password []byte) error
+	PrefsKey             string
 }
+
+const DefaultPrefsKey = "govault.prefs"
 
 type EditURIDraft struct {
 	URI string
@@ -361,7 +364,11 @@ type VaultCounts struct {
 }
 
 func NewAppModel(app *core.Scope, coreSvc state.VaultService, hooks PlatformHooks) *AppModel {
-	prefs := core.NewPersisted(app, "govault.prefs", DefaultUserPrefs(), core.PersistOptions{Version: 1})
+	prefsKey := hooks.PrefsKey
+	if prefsKey == "" {
+		prefsKey = DefaultPrefsKey
+	}
+	prefs := core.NewPersisted(app, prefsKey, DefaultUserPrefs(), core.PersistOptions{Version: 1})
 	p := prefs.Get()
 	if p.DeviceID == "" {
 		p.DeviceID = newDeviceUUID()
