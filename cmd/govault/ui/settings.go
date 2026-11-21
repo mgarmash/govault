@@ -7,6 +7,7 @@ import (
 	"github.com/nsgo-dev/nsgo/core"
 	"github.com/nsgo-dev/nsgo/icons/lucide"
 	"github.com/nsgo-dev/nsgo/ui"
+	"github.com/nsgo-dev/nsgo/updater"
 )
 
 func SettingsView(cx *core.Scope, m *AppModel) core.Node {
@@ -321,10 +322,34 @@ func SettingsView(cx *core.Scope, m *AppModel) core.Node {
 						}
 						return card(rows...)
 					})),
+					section("About", card(
+						settingsRow(
+							"GoVault "+appVersionLabel(),
+							"Updates are signed and installed automatically.",
+							ui.Button{
+								TestID:  "settings-check-updates",
+								Text:    "Check for Updates",
+								Icon:    lucide.RefreshCw,
+								Variant: ui.ButtonSecondary,
+								OnPress: func() { updater.Check(cx) },
+							},
+						),
+					)),
 				},
 			},
 		},
 	}
+}
+
+func appVersionLabel() string {
+	info := core.App()
+	if info.Version == "" {
+		return "(development)"
+	}
+	if info.Development {
+		return info.Version + " (development)"
+	}
+	return info.Version
 }
 
 func settingsRow(title, desc string, control core.Node) core.Node {

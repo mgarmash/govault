@@ -1,6 +1,6 @@
 name: GoVault
 id: dev.txchen.govault
-version: 0.1.1
+version: 0.1.2
 
 dev:
   target: native
@@ -9,3 +9,10 @@ build:
   output: ../../dist
   installers: false
   targets: [macos_arm64]
+
+release:
+  github: txchen/govault
+
+updates:
+  key: 6iugV37IcMOWY8WgrigDXu+OMdyasUYzUuTomJPWB2E=
+  automatic: true

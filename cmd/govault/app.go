@@ -8,6 +8,7 @@ import (
 	"github.com/nsgo-dev/nsgo/core"
 	"github.com/nsgo-dev/nsgo/desktop"
 	"github.com/nsgo-dev/nsgo/icons/lucide"
+	"github.com/nsgo-dev/nsgo/updater"
 	govaultui "github.com/txchen/govault/cmd/govault/ui"
 	"github.com/txchen/govault/internal/vaultcore/state"
 	"github.com/txchen/govault/internal/vaultcore/store"
@@ -187,6 +188,7 @@ func (s *DesktopShell) trayMenu() []desktop.MenuItem {
 	items := []desktop.MenuItem{
 		{Label: "Open GoVault", OnSelect: s.OpenMainWindow},
 		{Label: quickLabel, OnSelect: s.ToggleQuickPanel},
+		{Label: "Check for Updates…", OnSelect: func() { updater.Check(s.scope) }},
 		{Separator: true},
 		{
 			Label:    "Sync Now",
