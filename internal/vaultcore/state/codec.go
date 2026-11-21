@@ -1,0 +1,543 @@
+package state
+
+import (
+	"encoding/json"
+	"maps"
+	"strings"
+	"time"
+
+	"github.com/txchen/govault/internal/vaultcore/api"
+	"github.com/txchen/govault/internal/vaultcore/crypto"
+)
+
+func decryptCipher(enc *api.EncryptedCipher, userKey *crypto.SymmetricKey) (*Cipher, error) {
+	if len(enc.Data) > 0 && enc.Name == "" {
+		return nil, ErrUnsupportedCipherFormat
+	}
+
+	activeKey := userKey
+	if enc.Key != nil && *enc.Key != "" {
+		rawKey, err := decryptBytesFromString(*enc.Key, userKey)
+		if err != nil {
+			return nil, err
+		}
+		cipherKey, err := crypto.SymmetricKeyFromBytes(rawKey)
+		crypto.ZeroBytes(rawKey)
+		if err != nil {
+			return nil, err
+		}
+		defer cipherKey.Zero()
+		activeKey = cipherKey
+	}
+
+	name, err := decryptRequired(enc.Name, activeKey)
+	if err != nil {
+		return nil, err
+	}
+	notes, err := decryptOptional(enc.Notes, activeKey)
+	if err != nil {
+		return nil, err
+	}
+
+	c := &Cipher{
+		ID:               enc.ID,
+		Type:             enc.Type,
+		FolderID:         cloneStringPtr(enc.FolderID),
+		OrganizationID:   cloneStringPtr(enc.OrganizationID),
+		Favorite:         enc.Favorite,
+		Reprompt:         enc.Reprompt,
+		Key:              cloneStringPtr(enc.Key),
+		Name:             name,
+		Notes:            notes,
+		RevisionDate:     cloneTimePtr(enc.RevisionDate),
+		CreationDate:     cloneTimePtr(enc.CreationDate),
+		DeletedDate:      cloneTimePtr(enc.DeletedDate),
+		ArchivedDate:     cloneTimePtr(enc.ArchivedDate),
+		Data:             append(json.RawMessage(nil), enc.Data...),
+		EncryptedFor:     cloneStringPtr(enc.EncryptedFor),
+		EncryptedByKeyID: cloneStringPtr(enc.EncryptedByKeyID),
+		Extra:            cloneExtra(enc.Extra),
+	}
+
+	if enc.Login != nil {
+		login, err := decryptLogin(enc.Login, activeKey)
+		if err != nil {
+			return nil, err
+		}
+		c.Login = login
+	}
+	if enc.SecureNote != nil {
+		c.SecureNote = &SecureNote{Type: enc.SecureNote.Type}
+	}
+	if enc.Card != nil {
+		card, err := decryptCard(enc.Card, activeKey)
+		if err != nil {
+			return nil, err
+		}
+		c.Card = card
+	}
+	if enc.Identity != nil {
+		ident, err := decryptIdentity(enc.Identity, activeKey)
+		if err != nil {
+			return nil, err
+		}
+		c.Identity = ident
+	}
+	if len(enc.Fields) > 0 {
+		c.Fields = make([]CustomField, len(enc.Fields))
+		for i, f := range enc.Fields {
+			fn, err := decryptOptional(f.Name, activeKey)
+			if err != nil {
+				return nil, err
+			}
+			fv, err := decryptOptional(f.Value, activeKey)
+			if err != nil {
+				return nil, err
+			}
+			c.Fields[i] = CustomField{
+				Name:     fn,
+				Value:    fv,
+				Type:     f.Type,
+				LinkedID: cloneIntPtr(f.LinkedID),
+			}
+		}
+	}
+	if len(enc.PasswordHistory) > 0 {
+		c.PasswordHistory = make([]PasswordHistoryEntry, len(enc.PasswordHistory))
+		for i, h := range enc.PasswordHistory {
+			pw, err := decryptRequired(h.Password, activeKey)
+			if err != nil {
+				return nil, err
+			}
+			c.PasswordHistory[i] = PasswordHistoryEntry{
+				Password:     pw,
+				LastUsedDate: h.LastUsedDate,
+			}
+		}
+	}
+
+	return c, nil
+}
+
+func encryptCipherPayload(c *Cipher, userKey *crypto.SymmetricKey) (*api.CipherPayload, error) {
+	activeKey := userKey
+	if c.Key != nil && *c.Key != "" {
+		rawKey, err := decryptBytesFromString(*c.Key, userKey)
+		if err != nil {
+			return nil, err
+		}
+		cipherKey, err := crypto.SymmetricKeyFromBytes(rawKey)
+		crypto.ZeroBytes(rawKey)
+		if err != nil {
+			return nil, err
+		}
+		defer cipherKey.Zero()
+		activeKey = cipherKey
+	}
+
+	encName, err := crypto.EncryptString(c.Name, activeKey)
+	if err != nil {
+		return nil, err
+	}
+	encNotes, err := encryptOptional(c.Notes, activeKey)
+	if err != nil {
+		return nil, err
+	}
+
+	p := &api.CipherPayload{
+		Type:                  c.Type,
+		FolderID:              cloneStringPtr(c.FolderID),
+		OrganizationID:        cloneStringPtr(c.OrganizationID),
+		Favorite:              c.Favorite,
+		Reprompt:              c.Reprompt,
+		Key:                   cloneStringPtr(c.Key),
+		Name:                  encName,
+		Notes:                 encNotes,
+		LastKnownRevisionDate: cloneTimePtr(c.RevisionDate),
+		Extra:                 cloneExtra(c.Extra),
+	}
+
+	if c.Login != nil {
+		login, err := encryptLogin(c.Login, activeKey)
+		if err != nil {
+			return nil, err
+		}
+		p.Login = login
+	}
+	if c.SecureNote != nil {
+		p.SecureNote = &api.EncryptedSecureNote{Type: c.SecureNote.Type}
+	}
+	if c.Card != nil {
+		card, err := encryptCard(c.Card, activeKey)
+		if err != nil {
+			return nil, err
+		}
+		p.Card = card
+	}
+	if c.Identity != nil {
+		ident, err := encryptIdentity(c.Identity, activeKey)
+		if err != nil {
+			return nil, err
+		}
+		p.Identity = ident
+	}
+	if len(c.Fields) > 0 {
+		p.Fields = make([]api.EncryptedField, len(c.Fields))
+		for i, f := range c.Fields {
+			fn, err := encryptOptional(f.Name, activeKey)
+			if err != nil {
+				return nil, err
+			}
+			fv, err := encryptOptional(f.Value, activeKey)
+			if err != nil {
+				return nil, err
+			}
+			p.Fields[i] = api.EncryptedField{
+				Name:     fn,
+				Value:    fv,
+				Type:     f.Type,
+				LinkedID: cloneIntPtr(f.LinkedID),
+			}
+		}
+	}
+	if len(c.PasswordHistory) > 0 {
+		p.PasswordHistory = make([]api.EncryptedPasswordHistory, len(c.PasswordHistory))
+		for i, h := range c.PasswordHistory {
+			pw, err := crypto.EncryptString(h.Password, activeKey)
+			if err != nil {
+				return nil, err
+			}
+			p.PasswordHistory[i] = api.EncryptedPasswordHistory{
+				Password:     pw,
+				LastUsedDate: h.LastUsedDate,
+			}
+		}
+	}
+
+	return p, nil
+}
+
+func decryptFolder(enc *api.EncryptedFolder, userKey *crypto.SymmetricKey) (Folder, error) {
+	name, err := decryptRequired(enc.Name, userKey)
+	if err != nil {
+		return Folder{}, err
+	}
+	return Folder{
+		ID:           enc.ID,
+		Name:         name,
+		RevisionDate: cloneTimePtr(enc.RevisionDate),
+		Extra:        cloneExtra(enc.Extra),
+	}, nil
+}
+
+func decryptLogin(enc *api.EncryptedLogin, key *crypto.SymmetricKey) (*Login, error) {
+	username, err := decryptOptional(enc.Username, key)
+	if err != nil {
+		return nil, err
+	}
+	password, err := decryptOptional(enc.Password, key)
+	if err != nil {
+		return nil, err
+	}
+	totp, err := decryptOptional(enc.TOTP, key)
+	if err != nil {
+		return nil, err
+	}
+	uris := make([]LoginURI, len(enc.URIs))
+	for i, u := range enc.URIs {
+		uriStr, err := decryptOptional(u.URI, key)
+		if err != nil {
+			return nil, err
+		}
+		uris[i] = LoginURI{URI: uriStr, Match: cloneIntPtr(u.Match)}
+	}
+	return &Login{
+		Username:             username,
+		Password:             password,
+		TOTP:                 totp,
+		URIs:                 uris,
+		PasswordRevisionDate: cloneTimePtr(enc.PasswordRevisionDate),
+	}, nil
+}
+
+func encryptLogin(l *Login, key *crypto.SymmetricKey) (*api.EncryptedLogin, error) {
+	username, err := encryptOptional(l.Username, key)
+	if err != nil {
+		return nil, err
+	}
+	password, err := encryptOptional(l.Password, key)
+	if err != nil {
+		return nil, err
+	}
+	totp, err := encryptOptional(l.TOTP, key)
+	if err != nil {
+		return nil, err
+	}
+	var uris []api.EncryptedLoginURI
+	if len(l.URIs) > 0 {
+		uris = make([]api.EncryptedLoginURI, len(l.URIs))
+		for i, u := range l.URIs {
+			eu, err := encryptOptional(u.URI, key)
+			if err != nil {
+				return nil, err
+			}
+			uris[i] = api.EncryptedLoginURI{URI: eu, Match: cloneIntPtr(u.Match)}
+		}
+	}
+	return &api.EncryptedLogin{
+		Username:             username,
+		Password:             password,
+		TOTP:                 totp,
+		URIs:                 uris,
+		PasswordRevisionDate: cloneTimePtr(l.PasswordRevisionDate),
+	}, nil
+}
+
+func decryptCard(enc *api.EncryptedCard, key *crypto.SymmetricKey) (*Card, error) {
+	fields := []*string{enc.CardholderName, enc.Brand, enc.Number, enc.ExpMonth, enc.ExpYear, enc.Code}
+	out := make([]string, len(fields))
+	for i, f := range fields {
+		v, err := decryptOptional(f, key)
+		if err != nil {
+			return nil, err
+		}
+		out[i] = v
+	}
+	return &Card{
+		CardholderName: out[0],
+		Brand:          out[1],
+		Number:         out[2],
+		ExpMonth:       out[3],
+		ExpYear:        out[4],
+		Code:           out[5],
+	}, nil
+}
+
+func encryptCard(c *Card, key *crypto.SymmetricKey) (*api.EncryptedCard, error) {
+	vals := []string{c.CardholderName, c.Brand, c.Number, c.ExpMonth, c.ExpYear, c.Code}
+	out := make([]*string, len(vals))
+	for i, v := range vals {
+		ev, err := encryptOptional(v, key)
+		if err != nil {
+			return nil, err
+		}
+		out[i] = ev
+	}
+	return &api.EncryptedCard{
+		CardholderName: out[0],
+		Brand:          out[1],
+		Number:         out[2],
+		ExpMonth:       out[3],
+		ExpYear:        out[4],
+		Code:           out[5],
+	}, nil
+}
+
+func decryptIdentity(enc *api.EncryptedIdentity, key *crypto.SymmetricKey) (*Identity, error) {
+	fields := []*string{
+		enc.Title, enc.FirstName, enc.MiddleName, enc.LastName,
+		enc.Address1, enc.Address2, enc.Address3, enc.City,
+		enc.State, enc.PostalCode, enc.Country, enc.Company,
+		enc.Email, enc.Phone, enc.SSN, enc.Username,
+		enc.PassportNumber, enc.LicenseNumber,
+	}
+	out := make([]string, len(fields))
+	for i, f := range fields {
+		v, err := decryptOptional(f, key)
+		if err != nil {
+			return nil, err
+		}
+		out[i] = v
+	}
+	return &Identity{
+		Title: out[0], FirstName: out[1], MiddleName: out[2], LastName: out[3],
+		Address1: out[4], Address2: out[5], Address3: out[6], City: out[7],
+		State: out[8], PostalCode: out[9], Country: out[10], Company: out[11],
+		Email: out[12], Phone: out[13], SSN: out[14], Username: out[15],
+		PassportNumber: out[16], LicenseNumber: out[17],
+	}, nil
+}
+
+func encryptIdentity(id *Identity, key *crypto.SymmetricKey) (*api.EncryptedIdentity, error) {
+	vals := []string{
+		id.Title, id.FirstName, id.MiddleName, id.LastName,
+		id.Address1, id.Address2, id.Address3, id.City,
+		id.State, id.PostalCode, id.Country, id.Company,
+		id.Email, id.Phone, id.SSN, id.Username,
+		id.PassportNumber, id.LicenseNumber,
+	}
+	out := make([]*string, len(vals))
+	for i, v := range vals {
+		ev, err := encryptOptional(v, key)
+		if err != nil {
+			return nil, err
+		}
+		out[i] = ev
+	}
+	return &api.EncryptedIdentity{
+		Title: out[0], FirstName: out[1], MiddleName: out[2], LastName: out[3],
+		Address1: out[4], Address2: out[5], Address3: out[6], City: out[7],
+		State: out[8], PostalCode: out[9], Country: out[10], Company: out[11],
+		Email: out[12], Phone: out[13], SSN: out[14], Username: out[15],
+		PassportNumber: out[16], LicenseNumber: out[17],
+	}, nil
+}
+
+func decryptBytesFromString(encStr string, key *crypto.SymmetricKey) ([]byte, error) {
+	parsed, err := crypto.ParseEncString(encStr)
+	if err != nil {
+		return nil, err
+	}
+	return crypto.DecryptBytes(parsed, key)
+}
+
+func decryptRequired(encStr string, key *crypto.SymmetricKey) (string, error) {
+	if encStr == "" {
+		return "", nil
+	}
+	return crypto.DecryptString(encStr, key)
+}
+
+func decryptOptional(encStr *string, key *crypto.SymmetricKey) (string, error) {
+	if encStr == nil || *encStr == "" {
+		return "", nil
+	}
+	return crypto.DecryptString(*encStr, key)
+}
+
+func encryptOptional(plain string, key *crypto.SymmetricKey) (*string, error) {
+	if plain == "" {
+		return nil, nil
+	}
+	enc, err := crypto.EncryptString(plain, key)
+	if err != nil {
+		return nil, err
+	}
+	return &enc, nil
+}
+
+func cloneCipher(c *Cipher) *Cipher {
+	if c == nil {
+		return nil
+	}
+	cp := *c
+	cp.FolderID = cloneStringPtr(c.FolderID)
+	cp.OrganizationID = cloneStringPtr(c.OrganizationID)
+	cp.Key = cloneStringPtr(c.Key)
+	cp.RevisionDate = cloneTimePtr(c.RevisionDate)
+	cp.CreationDate = cloneTimePtr(c.CreationDate)
+	cp.DeletedDate = cloneTimePtr(c.DeletedDate)
+	cp.ArchivedDate = cloneTimePtr(c.ArchivedDate)
+	cp.EncryptedFor = cloneStringPtr(c.EncryptedFor)
+	cp.EncryptedByKeyID = cloneStringPtr(c.EncryptedByKeyID)
+	cp.Data = append(json.RawMessage(nil), c.Data...)
+	cp.Extra = cloneExtra(c.Extra)
+	if c.Login != nil {
+		l := *c.Login
+		l.PasswordRevisionDate = cloneTimePtr(c.Login.PasswordRevisionDate)
+		if len(c.Login.URIs) > 0 {
+			l.URIs = make([]LoginURI, len(c.Login.URIs))
+			for i, u := range c.Login.URIs {
+				l.URIs[i] = LoginURI{URI: u.URI, Match: cloneIntPtr(u.Match)}
+			}
+		}
+		cp.Login = &l
+	}
+	if c.SecureNote != nil {
+		sn := *c.SecureNote
+		cp.SecureNote = &sn
+	}
+	if c.Card != nil {
+		card := *c.Card
+		cp.Card = &card
+	}
+	if c.Identity != nil {
+		id := *c.Identity
+		cp.Identity = &id
+	}
+	if len(c.Fields) > 0 {
+		cp.Fields = make([]CustomField, len(c.Fields))
+		for i, f := range c.Fields {
+			cp.Fields[i] = CustomField{
+				Name:     f.Name,
+				Value:    f.Value,
+				Type:     f.Type,
+				LinkedID: cloneIntPtr(f.LinkedID),
+			}
+		}
+	}
+	if len(c.PasswordHistory) > 0 {
+		cp.PasswordHistory = append([]PasswordHistoryEntry(nil), c.PasswordHistory...)
+	}
+	return &cp
+}
+
+func summarizeCipher(c *Cipher) CipherSummary {
+	subtitle := ""
+	hasTOTP := false
+	switch c.Type {
+	case api.CipherTypeLogin:
+		if c.Login != nil {
+			subtitle = c.Login.Username
+			hasTOTP = strings.TrimSpace(c.Login.TOTP) != ""
+		}
+	case api.CipherTypeCard:
+		if c.Card != nil {
+			subtitle = c.Card.Brand
+			if subtitle == "" {
+				subtitle = c.Card.CardholderName
+			}
+		}
+	case api.CipherTypeIdentity:
+		if c.Identity != nil {
+			subtitle = strings.TrimSpace(c.Identity.FirstName + " " + c.Identity.LastName)
+			if subtitle == "" {
+				subtitle = c.Identity.Email
+			}
+		}
+	}
+	return CipherSummary{
+		ID:       c.ID,
+		Type:     c.Type,
+		FolderID: cloneStringPtr(c.FolderID),
+		Favorite: c.Favorite,
+		Deleted:  c.DeletedDate != nil,
+		Name:     c.Name,
+		Subtitle: subtitle,
+		HasTOTP:  hasTOTP,
+		Reprompt: c.Reprompt,
+	}
+}
+
+func cloneStringPtr(p *string) *string {
+	if p == nil {
+		return nil
+	}
+	v := *p
+	return &v
+}
+
+func cloneIntPtr(p *int) *int {
+	if p == nil {
+		return nil
+	}
+	v := *p
+	return &v
+}
+
+func cloneTimePtr(p *time.Time) *time.Time {
+	if p == nil {
+		return nil
+	}
+	v := *p
+	return &v
+}
+
+func cloneExtra(m map[string]json.RawMessage) map[string]json.RawMessage {
+	if len(m) == 0 {
+		return nil
+	}
+	out := make(map[string]json.RawMessage, len(m))
+	maps.Copy(out, m)
+	return out
+}
