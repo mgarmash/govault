@@ -83,10 +83,10 @@ Bitwarden's mobile apps are native, but its desktop app is an Electron and Angul
 | macOS app on disk | 21.5 MB | 1,033 MB (universal: x86_64 + arm64) |
 | Linux download (x86_64) | 7.0 MB `.deb`, 8.0 MB AppImage | 163.7 MB `.deb`, 215.8 MB AppImage |
 | Processes while idle | 1 | 4 (main, GPU, network, renderer) |
-| Memory while idle | 33 MB | 423 MB in total |
-| CPU while idle | 0.0% | about 1% in total |
+| Memory, idle with the vault unlocked | 64 MB | 464 MB in total |
+| CPU, idle with the vault unlocked | under 0.1% | about 3% in total |
 
-<sub>Measured on an Apple silicon Mac running macOS 27.2 with both apps idle on their sign-in or lock screen, 30 seconds after launch. Memory is the physical footprint from `footprint`, summed over all of the app's processes. CPU is from `top` samples and the CPU time used over the next 30 seconds: 0.00 s for GoVault and 0.31 s for Bitwarden. Download sizes are the release assets on GitHub. An unlocked vault uses more: GoVault showing a vault with a live verification code measured 53 MB and 0.2–0.3% CPU.</sub>
+<sub>Measured on an Apple silicon Mac running macOS 27.2. Memory is the physical footprint from `footprint`, summed over all of an app's processes. CPU is from seven `top` samples 5 seconds apart and from the CPU time each app used over the same 30 seconds. Both apps were signed in to the same account and vault (about 440 items), showing the main vault list with no item open, idle for at least 30 seconds (CPU time used: GoVault 0.02 s, Bitwarden 0.96 s). Download sizes are the release assets on GitHub.</sub>
 
 GoVault does not replace everything the official app does. It has no Windows or Intel Mac build, no Bitwarden Send, no passkey management and no browser-extension integration, and accounts are created on your server's web vault.
 
