@@ -56,6 +56,9 @@ func decryptCipher(enc *api.EncryptedCipher, userKey *crypto.SymmetricKey) (*Cip
 		Data:             append(json.RawMessage(nil), enc.Data...),
 		EncryptedFor:     cloneStringPtr(enc.EncryptedFor),
 		EncryptedByKeyID: cloneStringPtr(enc.EncryptedByKeyID),
+		CollectionIDs:    append([]string(nil), enc.CollectionIDs...),
+		ReadOnly:         enc.Edit != nil && !*enc.Edit,
+		HidePassword:     enc.ViewPassword != nil && !*enc.ViewPassword,
 		Extra:            cloneExtra(enc.Extra),
 	}
 
@@ -154,6 +157,7 @@ func encryptCipherPayload(c *Cipher, userKey *crypto.SymmetricKey) (*api.CipherP
 		Name:                  encName,
 		Notes:                 encNotes,
 		LastKnownRevisionDate: cloneTimePtr(c.RevisionDate),
+		CollectionIDs:         append([]string(nil), c.CollectionIDs...),
 		Extra:                 cloneExtra(c.Extra),
 	}
 
@@ -432,6 +436,7 @@ func cloneCipher(c *Cipher) *Cipher {
 	cp.EncryptedByKeyID = cloneStringPtr(c.EncryptedByKeyID)
 	cp.Data = append(json.RawMessage(nil), c.Data...)
 	cp.Extra = cloneExtra(c.Extra)
+	cp.CollectionIDs = append([]string(nil), c.CollectionIDs...)
 	if c.Login != nil {
 		l := *c.Login
 		l.PasswordRevisionDate = cloneTimePtr(c.Login.PasswordRevisionDate)
@@ -511,6 +516,9 @@ func summarizeCipher(c *Cipher) CipherSummary {
 		HasTOTP:  hasTOTP,
 		Reprompt: c.Reprompt,
 		URIs:     uris,
+
+		OrganizationID: cloneStringPtr(c.OrganizationID),
+		CollectionIDs:  append([]string(nil), c.CollectionIDs...),
 	}
 }
 

@@ -26,6 +26,8 @@ var (
 	ErrFolderNotFound          = errors.New("state: folder not found")
 	ErrUnsupportedCipherFormat = errors.New("state: unsupported v2 sealed blob cipher format")
 	ErrInvalidSecretStore      = errors.New("state: secret store is required")
+	ErrReadOnlyCipher          = errors.New("state: item is read-only")
+	ErrOrganizationKeyMissing  = errors.New("state: organization key unavailable")
 )
 
 type FilterCategory int
@@ -38,9 +40,11 @@ const (
 )
 
 type SearchFilter struct {
-	Category FilterCategory
-	FolderID string
-	Type     *api.CipherType
+	Category       FilterCategory
+	FolderID       string
+	OrganizationID string
+	CollectionID   string
+	Type           *api.CipherType
 }
 
 type CipherSummary struct {
@@ -54,6 +58,9 @@ type CipherSummary struct {
 	HasTOTP  bool
 	Reprompt int
 	URIs     []string
+
+	OrganizationID *string
+	CollectionIDs  []string
 }
 
 type Cipher struct {
@@ -79,6 +86,9 @@ type Cipher struct {
 	Data             json.RawMessage
 	EncryptedFor     *string
 	EncryptedByKeyID *string
+	CollectionIDs    []string
+	ReadOnly         bool
+	HidePassword     bool
 	Extra            map[string]json.RawMessage
 }
 
@@ -158,6 +168,22 @@ type LoginRequest struct {
 	RememberDevice    bool
 }
 
+type Organization struct {
+	ID      string
+	Name    string
+	Type    int
+	Enabled bool
+}
+
+type Collection struct {
+	ID             string
+	OrganizationID string
+	Name           string
+	ReadOnly       bool
+	HidePasswords  bool
+	Manage         bool
+}
+
 type VaultService interface {
 	Status() LockStatus
 	Login(ctx context.Context, req LoginRequest) error
@@ -179,4 +205,6 @@ type VaultService interface {
 	Folders() []Folder
 	SaveFolder(ctx context.Context, f *Folder) (*Folder, error)
 	DeleteFolder(ctx context.Context, id string) error
+	Organizations() []Organization
+	Collections() []Collection
 }

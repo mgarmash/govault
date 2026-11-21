@@ -37,12 +37,13 @@ type TokenResponse struct {
 }
 
 type SyncResponse struct {
-	Profile  Profile                    `json:"profile"`
-	Folders  []EncryptedFolder          `json:"folders"`
-	Ciphers  []EncryptedCipher          `json:"ciphers"`
-	Sends    json.RawMessage            `json:"sends,omitempty"`
-	Policies json.RawMessage            `json:"policies,omitempty"`
-	Extra    map[string]json.RawMessage `json:"-"`
+	Profile     Profile                    `json:"profile"`
+	Folders     []EncryptedFolder          `json:"folders"`
+	Ciphers     []EncryptedCipher          `json:"ciphers"`
+	Collections []EncryptedCollection      `json:"collections,omitempty"`
+	Sends       json.RawMessage            `json:"sends,omitempty"`
+	Policies    json.RawMessage            `json:"policies,omitempty"`
+	Extra       map[string]json.RawMessage `json:"-"`
 }
 
 func (s *SyncResponse) UnmarshalJSON(data []byte) error {
@@ -61,16 +62,17 @@ func (s SyncResponse) MarshalJSON() ([]byte, error) {
 }
 
 type Profile struct {
-	ID          string                     `json:"id"`
-	Email       string                     `json:"email"`
-	Name        *string                    `json:"name,omitempty"`
-	Key         string                     `json:"key"`
-	PrivateKey  *string                    `json:"privateKey,omitempty"`
-	KDF         int                        `json:"kdf"`
-	KDFIters    int                        `json:"kdfIterations"`
-	KDFMemory   *int                       `json:"kdfMemory,omitempty"`
-	KDFParallel *int                       `json:"kdfParallelism,omitempty"`
-	Extra       map[string]json.RawMessage `json:"-"`
+	ID            string                     `json:"id"`
+	Email         string                     `json:"email"`
+	Name          *string                    `json:"name,omitempty"`
+	Key           string                     `json:"key"`
+	PrivateKey    *string                    `json:"privateKey,omitempty"`
+	KDF           int                        `json:"kdf"`
+	KDFIters      int                        `json:"kdfIterations"`
+	KDFMemory     *int                       `json:"kdfMemory,omitempty"`
+	KDFParallel   *int                       `json:"kdfParallelism,omitempty"`
+	Organizations []ProfileOrganization      `json:"organizations,omitempty"`
+	Extra         map[string]json.RawMessage `json:"-"`
 }
 
 func (p *Profile) UnmarshalJSON(data []byte) error {
@@ -86,6 +88,59 @@ func (p *Profile) UnmarshalJSON(data []byte) error {
 func (p Profile) MarshalJSON() ([]byte, error) {
 	type alias Profile
 	return marshalWithExtra(alias(p), p.Extra)
+}
+
+const OrganizationStatusConfirmed = 2
+
+type ProfileOrganization struct {
+	ID      string                     `json:"id"`
+	Name    string                     `json:"name"`
+	Key     string                     `json:"key"`
+	Enabled bool                       `json:"enabled"`
+	Status  int                        `json:"status"`
+	Type    int                        `json:"type"`
+	Extra   map[string]json.RawMessage `json:"-"`
+}
+
+func (o *ProfileOrganization) UnmarshalJSON(data []byte) error {
+	type alias ProfileOrganization
+	var a alias
+	if err := unmarshalWithExtra(data, &a, &a.Extra); err != nil {
+		return err
+	}
+	*o = ProfileOrganization(a)
+	return nil
+}
+
+func (o ProfileOrganization) MarshalJSON() ([]byte, error) {
+	type alias ProfileOrganization
+	return marshalWithExtra(alias(o), o.Extra)
+}
+
+type EncryptedCollection struct {
+	ID             string                     `json:"id"`
+	OrganizationID string                     `json:"organizationId"`
+	Name           string                     `json:"name"`
+	ReadOnly       bool                       `json:"readOnly"`
+	HidePasswords  bool                       `json:"hidePasswords"`
+	Manage         bool                       `json:"manage"`
+	ExternalID     *string                    `json:"externalId,omitempty"`
+	Extra          map[string]json.RawMessage `json:"-"`
+}
+
+func (c *EncryptedCollection) UnmarshalJSON(data []byte) error {
+	type alias EncryptedCollection
+	var a alias
+	if err := unmarshalWithExtra(data, &a, &a.Extra); err != nil {
+		return err
+	}
+	*c = EncryptedCollection(a)
+	return nil
+}
+
+func (c EncryptedCollection) MarshalJSON() ([]byte, error) {
+	type alias EncryptedCollection
+	return marshalWithExtra(alias(c), c.Extra)
 }
 
 type EncryptedFolder struct {
@@ -133,6 +188,9 @@ type EncryptedCipher struct {
 	Data             json.RawMessage            `json:"data,omitempty"`
 	EncryptedFor     *string                    `json:"encryptedFor,omitempty"`
 	EncryptedByKeyID *string                    `json:"encryptedByKeyId,omitempty"`
+	CollectionIDs    []string                   `json:"collectionIds,omitempty"`
+	Edit             *bool                      `json:"edit,omitempty"`
+	ViewPassword     *bool                      `json:"viewPassword,omitempty"`
 	Extra            map[string]json.RawMessage `json:"-"`
 }
 
@@ -167,6 +225,7 @@ type CipherPayload struct {
 	Identity              *EncryptedIdentity         `json:"identity,omitempty"`
 	Fields                []EncryptedField           `json:"fields,omitempty"`
 	PasswordHistory       []EncryptedPasswordHistory `json:"passwordHistory,omitempty"`
+	CollectionIDs         []string                   `json:"collectionIds,omitempty"`
 	Extra                 map[string]json.RawMessage `json:"-"`
 }
 

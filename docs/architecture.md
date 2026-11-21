@@ -19,10 +19,10 @@ Deliver a fast, low-memory, zero-CGO native desktop client for self-hosted Vault
 - **Performance & efficiency**: Fast startup/search and minimal CPU and memory footprint.
 - **macOS Touch ID**: Fingerprint (Touch ID) unlock supported on macOS.
 - **Storage**: No SQLite database; atomic encrypted JSON snapshots on disk and in-memory search.
-- **MVP authentication**: Email + master password login in Phase 1 (2FA login flows planned for Phase 2); in-vault TOTP code generation is included in MVP.
-- **MVP vault scope**: Personal vault (Login, Secure Note, Card, Identity, Folders, Trash, TOTP code generation, Password/Passphrase generator). Organizations/shared collections, Attachments, and Sends are planned for Phase 2.
+- **Authentication**: Email + master password, plus two-step login with an authenticator app (provider `0`) or email codes (provider `1`) and an optional remembered device. Other providers (WebAuthn, YubiKey, Duo) show a clear unsupported message.
+- **Vault scope**: Personal vault (Login, Secure Note, Card, Identity, Folders, Trash, TOTP codes, Password/Passphrase generator) and organization items in shared collections. Attachments and Sends are still planned.
 - **macOS concealed clipboard**: Included in MVP (`org.nspasteboard.ConcealedType` and `org.nspasteboard.TransientType`) so clipboard managers do not record copied secrets.
-- **Quick Access floating panel**: Included in MVP with a **configurable** global hotkey (unset by default so it never hijacks keys unexpectedly).
+- **No Quick Access panel**: The floating panel and global hotkey were dropped; the main window search (`Cmd+F`) covers that workflow.
 - **UI framework**: NSGo (`nsgo.dev`) native-view engine, kept strictly isolated from `vaultcore` so the core remains reusable across any UI layer.
 
 ### Engineering Resource Targets
@@ -41,7 +41,7 @@ Strict separation ensures `vaultcore` has **zero imports** of `nsgo` or any GUI 
 ```text
 +-------------------------------------------------------------------+
 |  cmd/govault  (NSGo Desktop App Shell)                            |
-|  - Tray, Global Hotkey, Main Window, Quick Access Panel           |
+|  - Optional menu bar icon, Main Window, in-app updates            |
 |  - Signals & Views (Unlock, Vault SplitView, Editor, Generator)   |
 |  - Adapters: SecretsAdapter (cx.Secrets), BiometricAdapter,       |
 |              ClipboardAdapter (with concealed/auto-clear),        |
@@ -85,6 +85,7 @@ Follows the Bitwarden/Vaultwarden cryptographic specification (see [`vaultcore-s
 6. **CipherString (`EncString`) & Per-Cipher Key**:
    - Standard Type 2 (`AesCbc256_HmacSha256_B64`): verify HMAC-SHA256 (`MAC(iv || ct, macKey)`) in constant time before AES-256-CBC decryption.
    - If a cipher has a non-empty `cipher.key`, unwrap that 64-byte per-cipher symmetric key first and use it to decrypt the cipher's fields.
+   - **Organizations**: `profile.privateKey` (Type 2, PKCS#8) is decrypted with the User Key, then each enabled `organization.key` (RSA-OAEP Types 3–6, SHA-256 or SHA-1) is unwrapped into a 64-byte org key held only in memory. Org ciphers and collection names decrypt with that key (per-cipher keys are wrapped with it), and edits re-encrypt with it while keeping `organizationId` and `collectionIds`.
 7. **Memory Hygiene**:
    - Overwrite sensitive `[]byte` key material on lock, logout, sleep, and session timeout.
 
@@ -100,8 +101,8 @@ Follows the Bitwarden/Vaultwarden cryptographic specification (see [`vaultcore-s
 3. **Keychain Enforcement Note (Verified)**:
    - Verified in `nsgo-dev/nsgo` (`internal/platform/apple/secrets.go` @ `1099393de136`): with empty `AccessGroup`, `core.Secrets` uses the macOS login Keychain (requires no entitlements and works on ad-hoc dev builds; `Accessible` only applies when `AccessGroup` is set on the Data Protection Keychain, which requires a signed app with `keychain-access-groups`). It does **not** set `SecAccessControl` (`biometryCurrentSet`), relying on app-level `LAContext` Touch ID gating (`apple/biometric.go`). Acceptable for MVP; hardware-enforced `SecAccessControl` can be added in Phase 2 for signed release builds.
 4. **Lock Triggers**:
-   - Manual lock (`Cmd+L` / tray menu), configurable idle timeout (default 15 minutes), and system sleep / screen lock (Phase 2).
-   - On lock: zero in-memory User Key & decrypted cipher structs, stop all UI timers, and clear UI signals.
+   - Manual lock (`Cmd+L` / menu bar), configurable idle timeout (default 15 minutes), and, on macOS, system sleep or screen lock (`NSWorkspaceWillSleepNotification` and `com.apple.screenIsLocked`, observed via `purego/objc`; on by default, toggle in Settings).
+   - On lock: zero in-memory User Key, org keys and decrypted cipher structs, stop all UI timers, clear UI signals and release Secure Event Input.
 
 ### 4. Storage, Sync, and Real-Time Updates
 
@@ -109,7 +110,7 @@ Follows the Bitwarden/Vaultwarden cryptographic specification (see [`vaultcore-s
    - **Encrypted Vault Snapshot**: `cx.DataDir()/vault_<accountID>.enc.json` — stores the raw encrypted `/api/sync` response payload plus local metadata (`lastSyncAt`, `revisionDate`, `serverURL`, `email`, `kdfParams`). Written atomically via temp file + `fsync` + `os.Rename` with `0600` permissions.
    - **Secrets (`cx.Secrets()`)**: OAuth `refresh_token` and (if Touch ID enabled) `user_key`.
    - **Preferences (`cx.Storage()`)**: Non-sensitive UI settings via `core.NewPersisted`.
-   - **Favicon Cache (Phase 2)**: `cx.CacheDir()/icons/<domain>.png`, bounded disk cache + small in-memory LRU, optional privacy toggle.
+   - **Favicon Cache**: icons from `<server>/icons/<domain>/icon.png`, stored in `cx.CacheDir()/icons/<domain>.png` plus a 256-entry memory LRU and a negative cache; fetched by 4 bounded workers. The "Show website icons" toggle disables all requests, and "Clear Icon Cache" removes them.
 2. **Sync Flow**:
    - On unlock: immediately decrypt local `vault_<accountID>.enc.json` so the UI is usable offline in `< 50 ms`.
    - In background: call `GET /api/accounts/revision-date`; only fetch full `GET /api/sync` if the server revision date is newer (or on manual sync `Cmd+R`).
@@ -122,9 +123,9 @@ Follows the Bitwarden/Vaultwarden cryptographic specification (see [`vaultcore-s
 
 See [`ui-and-state-machine.md`](ui-and-state-machine.md) for complete wireframes, state machines, keyboard shortcuts, and NSGo signal wiring:
 
-- **Main Window (`desktop.OpenWindow`)**: 3-pane split layout with sidebar filters/folders, virtualized `core.List` search, and detail/editor pane.
-- **Quick Access Floating Panel (`desktop.OpenPanel` + `desktop.RegisterHotKey`)**: Keyboard-first Spotlight-style search overlay with user-configurable hotkey (unset by default).
-- **Tray-Resident Lifecycle (`desktop.NewTray` + `desktop.SetShutdownMode`)**: Closing the main window releases window views while keeping the lightweight tray agent alive; optional macOS menu-bar-only mode via `desktop.SetDockVisible(false)`.
+- **Main Window (`desktop.OpenWindow`)**: resizable 3-pane layout (sidebar, virtualized item list, detail/editor) with draggable dividers whose widths persist. The sidebar shows categories, folders and, when the vault has any, a collapsible Collections section.
+- **Optional menu bar icon (`desktop.NewTray`)**: on by default; closing the main window keeps the app alive in the menu bar. With the icon off, the Dock icon stays visible; menu-bar-only mode uses `desktop.SetDockVisible(false)`.
+- **In-app updates**: NSGo's Sparkle-style updater reads a signed (Ed25519) appcast from the GitHub release and installs updates automatically.
 - **macOS Concealed Clipboard**: Dedicated zero-CGO `clipboard_darwin.go` helper via `purego/objc` setting `org.nspasteboard.ConcealedType` and `org.nspasteboard.TransientType` and checking `NSPasteboard.changeCount` before auto-clearing.
 - **CPU & Memory Safeguards**: Visibility-gated 1s TOTP ticker (stopped when hidden/locked/non-TOTP), single `time.AfterFunc` idle lock timer, and `debug.FreeOSMemory()` post-Argon2id.
 
@@ -133,8 +134,8 @@ See [`ui-and-state-machine.md`](ui-and-state-machine.md) for complete wireframes
 | Phase | Scope |
 | --- | --- |
 | **Phase 0: Feasibility Spike** | macOS NSGo smoke test measuring cold-start time, idle/active RSS & CPU, Touch ID (`core.Biometric`), Keychain (`core.Secrets`), `desktop.OpenPanel`, and `clipboard_darwin.go`. |
-| **Phase 1: MVP** | `vaultcore` (Prelogin, PBKDF2 & Argon2id, OAuth2 email+password login, AES-256-CBC-HMAC, `/api/sync`, encrypted JSON cache, personal Login/Note/Card/Identity CRUD, Folders, Trash, TOTP code generation, Password/Passphrase Generator, SignalR WS sync) + NSGo Main Window + Quick Access Panel (configurable hotkey) + macOS Touch ID + Auto-clearing concealed clipboard + macOS & Linux builds. |
-| **Phase 2: Daily-Driver Polish** | 2FA login (TOTP/Email/WebAuthn), Organizations & shared collections (RSA-OAEP org key decryption), Attachments download/upload, Bitwarden Send, Multi-account switching, Favicon cache with privacy toggle, Lock on macOS sleep/screen-lock, Auto-update feed (`appcast`), Linux Secret Service + tray polish. |
+| **Phase 1: MVP** | `vaultcore` (Prelogin, PBKDF2 & Argon2id, OAuth2 email+password login, AES-256-CBC-HMAC, `/api/sync`, encrypted JSON cache, personal Login/Note/Card/Identity CRUD, Folders, Trash, TOTP code generation, Password/Passphrase Generator, SignalR WS sync) + NSGo Main Window + macOS Touch ID + Auto-clearing concealed clipboard + macOS & Linux builds. |
+| **Phase 2: Daily-Driver Polish** | Shipped in 0.2.x: 2FA login (authenticator and email), organizations and shared collections, favicon cache with privacy toggle, lock on macOS sleep/screen lock, signed auto-update feed. Remaining: WebAuthn 2FA, attachments, Bitwarden Send, multi-account switching, Linux Secret Service + tray polish. |
 | **Phase 3: Optional Power Features** | Local Vault Health / weak-password report, Optional SSH Agent (`ssh-agent` socket serving SSH Key ciphers), Windows packaging. |
 
 ### 7. Target Repository Layout
@@ -152,10 +153,12 @@ govault/
 │   └── govault/
 │       ├── nsgo.yaml           # NSGo build manifest (co-located with package main for `go tool nsgo build ./cmd/govault`)
 │       ├── main.go
-│       ├── app.go              # tray, hotkey, window/panel lifecycle
+│       ├── app.go              # menu bar icon, window lifecycle, updates
 │       ├── adapters.go         # NSGo Secrets/Biometric/Clipboard bridges
 │       ├── clipboard_darwin.go # concealed NSPasteboard helper (purego/objc)
-│       └── ui/                 # Unlock, MainSplit, QuickPanel, Editor, Generator, Settings
+│       ├── secureinput_darwin.go # Secure Event Input release (purego)
+│       ├── sleeplock_darwin.go # sleep/screen-lock observers (purego/objc)
+│       └── ui/                 # Login/2FA, Lock, Vault, Editor, Generator, Settings, favicons
 ├── internal/
 │   └── vaultcore/
 │       ├── crypto/             # KDF, HKDF, EncString, AES-CBC-HMAC, RSA, zeroize
@@ -175,13 +178,12 @@ govault/
 - [ ] Integration test against a local Vaultwarden instance succeeds for email+password login, `/api/sync`, cipher create/edit/soft-delete/restore, folder CRUD, and WebSocket push update.
 - [ ] On macOS, Touch ID unlocks the vault without re-entering the master password, and locking clears decrypted keys/ciphers from memory.
 - [ ] On macOS, copied secrets carry `org.nspasteboard.ConcealedType` and `org.nspasteboard.TransientType` pasteboard markers and auto-clear after the configured timeout.
-- [ ] Quick Access floating panel opens via its user-configured global hotkey, filters 1,000+ ciphers with no perceptible lag, copies password with auto-clear, and dismisses cleanly.
 - [ ] Resource targets verified on macOS: idle tray memory `< 30 MB` physical footprint (RSS on Linux), active window `< 70 MB` physical footprint (RSS on Linux), idle CPU `~0%`.
 - [ ] `go tool nsgo build ./cmd/govault` from macOS produces runnable macOS (`.app`/`.dmg`) and Linux (`.AppImage`/`.deb`) packages with `CGO_ENABLED=0`.
 
 ## Risks
 
-- **NSGo API churn & Linux desktop parity**: NSGo is pre-1.0; tray/hotkey behavior on Linux (especially Wayland) may have edge cases. *Mitigation*: Isolate all NSGo calls in `cmd/govault`, keep `vaultcore` 100% decoupled, and validate X11/Wayland behavior early.
+- **NSGo API churn & Linux desktop parity**: NSGo is pre-1.0; tray behavior on Linux (especially Wayland) may have edge cases. *Mitigation*: Isolate all NSGo calls in `cmd/govault`, keep `vaultcore` 100% decoupled, and validate X11/Wayland behavior early.
 - **Cryptography correctness bugs**: Subtle mistakes in MAC verification, padding, or key stretching can corrupt vault items on write. *Mitigation*: Test against official Bitwarden SDK test vectors and run write tests against a throwaway local Vaultwarden Docker instance first.
 - **Keychain vs hardware-enforced Touch ID**: Without `SecAccessControl`, another process running as the same user with Keychain access could read the login Keychain item. *Mitigation*: Document this trade-off clearly for MVP and optionally add a macOS `SecAccessControl` wrapper in Phase 2 for signed release builds.
 - **Argon2id memory retention**: Go's GC may retain 64 MiB after Argon2id unlock. *Mitigation*: Explicitly zero buffers and call `debug.FreeOSMemory()` post-derivation.

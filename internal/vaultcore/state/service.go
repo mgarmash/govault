@@ -49,6 +49,9 @@ type Service struct {
 	userKey        *crypto.SymmetricKey
 	ciphers        map[string]*Cipher
 	folders        map[string]Folder
+	orgs           map[string]Organization
+	collections    map[string]Collection
+	orgKeys        map[string]*crypto.SymmetricKey
 	realtimeCancel context.CancelFunc
 }
 
@@ -117,11 +120,17 @@ func (s *Service) Login(ctx context.Context, req LoginRequest) error {
 		return err
 	}
 
-	ciphers, folders, err := decryptSyncResponse(syncResp, userKey)
+	data, err := decryptSyncResponse(syncResp, userKey)
 	if err != nil {
 		userKey.Zero()
 		return err
 	}
+	committed := false
+	defer func() {
+		if !committed {
+			data.zero()
+		}
+	}()
 
 	accountID := syncResp.Profile.ID
 	if accountID == "" {
@@ -163,8 +172,8 @@ func (s *Service) Login(ctx context.Context, req LoginRequest) error {
 	s.apiClient = client
 	s.accessToken = tok.AccessToken
 	s.userKey = userKey
-	s.ciphers = ciphers
-	s.folders = folders
+	s.applyDataLocked(data)
+	committed = true
 	s.status = StatusUnlocked
 	s.mu.Unlock()
 
@@ -244,7 +253,7 @@ func (s *Service) UnlockWithUserKey(ctx context.Context, userKey *crypto.Symmetr
 		return err
 	}
 
-	ciphers, folders, err := decryptSyncResponse(&syncResp, ownedKey)
+	data, err := decryptSyncResponse(&syncResp, ownedKey)
 	if err != nil {
 		ownedKey.Zero()
 		return err
@@ -255,6 +264,7 @@ func (s *Service) UnlockWithUserKey(ctx context.Context, userKey *crypto.Symmetr
 		client, err = s.newAPIClient(snap.ServerURL)
 		if err != nil {
 			ownedKey.Zero()
+			data.zero()
 			return err
 		}
 	}
@@ -268,8 +278,7 @@ func (s *Service) UnlockWithUserKey(ctx context.Context, userKey *crypto.Symmetr
 	s.snapshot = snap
 	s.apiClient = client
 	s.userKey = ownedKey
-	s.ciphers = ciphers
-	s.folders = folders
+	s.applyDataLocked(data)
 	s.status = StatusUnlocked
 	s.mu.Unlock()
 
@@ -315,8 +324,7 @@ func (s *Service) Lock() {
 		s.userKey.Zero()
 		s.userKey = nil
 	}
-	s.ciphers = nil
-	s.folders = nil
+	s.clearDataLocked()
 	s.accessToken = ""
 	nextStatus := s.status
 	if s.status == StatusUnlocked {
@@ -340,8 +348,7 @@ func (s *Service) Logout(ctx context.Context, secrets store.SecretStore) error {
 		s.userKey.Zero()
 		s.userKey = nil
 	}
-	s.ciphers = nil
-	s.folders = nil
+	s.clearDataLocked()
 	s.accessToken = ""
 	s.snapshot = nil
 	s.apiClient = nil
@@ -393,10 +400,16 @@ func (s *Service) SyncNow(ctx context.Context) error {
 		return err
 	}
 
-	ciphers, folders, err := decryptSyncResponse(res.resp, userKey)
+	data, err := decryptSyncResponse(res.resp, userKey)
 	if err != nil {
 		return err
 	}
+	committed := false
+	defer func() {
+		if !committed {
+			data.zero()
+		}
+	}()
 
 	updatedSnap := *snap
 	if !revDate.IsZero() {
@@ -417,8 +430,8 @@ func (s *Service) SyncNow(ctx context.Context) error {
 		return ErrLocked
 	}
 	s.snapshot = &updatedSnap
-	s.ciphers = ciphers
-	s.folders = folders
+	s.applyDataLocked(data)
+	committed = true
 	s.mu.Unlock()
 
 	s.notifyUpdated()
@@ -507,7 +520,29 @@ func (s *Service) SaveCipher(ctx context.Context, c *Cipher) (*Cipher, error) {
 	}
 	defer userKey.Zero()
 
-	payload, err := encryptCipherPayload(c, userKey)
+	if c.ID != "" {
+		s.mu.RLock()
+		existing := s.ciphers[c.ID]
+		s.mu.RUnlock()
+		if existing != nil {
+			if existing.ReadOnly {
+				return nil, ErrReadOnlyCipher
+			}
+			if c.OrganizationID == nil {
+				c.OrganizationID = cloneStringPtr(existing.OrganizationID)
+			}
+			if len(c.CollectionIDs) == 0 {
+				c.CollectionIDs = append([]string(nil), existing.CollectionIDs...)
+			}
+		}
+	}
+	key, err := s.itemKey(c.OrganizationID, userKey)
+	if err != nil {
+		return nil, err
+	}
+	defer key.Zero()
+
+	payload, err := encryptCipherPayload(c, key)
 	if err != nil {
 		return nil, err
 	}
@@ -526,9 +561,19 @@ func (s *Service) SaveCipher(ctx context.Context, c *Cipher) (*Cipher, error) {
 		return nil, err
 	}
 
-	decrypted, err := decryptCipher(encResp, userKey)
+	respKey := key
+	if !sameOrg(encResp.OrganizationID, c.OrganizationID) {
+		if respKey, err = s.itemKey(encResp.OrganizationID, userKey); err != nil {
+			return nil, err
+		}
+		defer respKey.Zero()
+	}
+	decrypted, err := decryptCipher(encResp, respKey)
 	if err != nil {
 		return nil, err
+	}
+	if len(decrypted.CollectionIDs) == 0 {
+		decrypted.CollectionIDs = append([]string(nil), c.CollectionIDs...)
 	}
 
 	s.mu.Lock()
@@ -582,7 +627,12 @@ func (s *Service) RestoreCipher(ctx context.Context, id string) error {
 		return err
 	}
 
-	decrypted, err := decryptCipher(encResp, userKey)
+	key, err := s.itemKey(encResp.OrganizationID, userKey)
+	if err != nil {
+		return err
+	}
+	defer key.Zero()
+	decrypted, err := decryptCipher(encResp, key)
 	if err != nil {
 		return err
 	}
@@ -733,10 +783,16 @@ func (s *Service) forceSync(ctx context.Context) error {
 		return err
 	}
 
-	ciphers, folders, err := decryptSyncResponse(res.resp, userKey)
+	data, err := decryptSyncResponse(res.resp, userKey)
 	if err != nil {
 		return err
 	}
+	committed := false
+	defer func() {
+		if !committed {
+			data.zero()
+		}
+	}()
 
 	revDate, _ := withAuth(s, ctx, func(tok string) (time.Time, error) {
 		return client.RevisionDate(ctx, tok)
@@ -758,8 +814,8 @@ func (s *Service) forceSync(ctx context.Context) error {
 		return ErrLocked
 	}
 	s.snapshot = &updatedSnap
-	s.ciphers = ciphers
-	s.folders = folders
+	s.applyDataLocked(data)
+	committed = true
 	s.mu.Unlock()
 
 	s.notifyUpdated()
@@ -885,31 +941,181 @@ func (s *Service) notifyUpdated() {
 	}
 }
 
-func decryptSyncResponse(resp *api.SyncResponse, userKey *crypto.SymmetricKey) (map[string]*Cipher, map[string]Folder, error) {
-	ciphers := make(map[string]*Cipher, len(resp.Ciphers))
-	for i := range resp.Ciphers {
-		enc := &resp.Ciphers[i]
-		// Skip organization-owned ciphers in MVP (Phase 2 adds RSA-OAEP org key unwrap).
-		if enc.OrganizationID != nil && *enc.OrganizationID != "" {
+type vaultData struct {
+	ciphers     map[string]*Cipher
+	folders     map[string]Folder
+	orgs        map[string]Organization
+	collections map[string]Collection
+	orgKeys     map[string]*crypto.SymmetricKey
+}
+
+func (d *vaultData) zero() {
+	if d == nil {
+		return
+	}
+	for _, k := range d.orgKeys {
+		k.Zero()
+	}
+	clear(d.orgKeys)
+}
+
+func (s *Service) applyDataLocked(d *vaultData) {
+	s.clearDataLocked()
+	s.ciphers = d.ciphers
+	s.folders = d.folders
+	s.orgs = d.orgs
+	s.collections = d.collections
+	s.orgKeys = d.orgKeys
+}
+
+func (s *Service) clearDataLocked() {
+	for _, k := range s.orgKeys {
+		k.Zero()
+	}
+	s.orgKeys = nil
+	s.orgs = nil
+	s.collections = nil
+	s.ciphers = nil
+	s.folders = nil
+}
+
+func (s *Service) Organizations() []Organization {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	if s.status != StatusUnlocked {
+		return nil
+	}
+	out := make([]Organization, 0, len(s.orgs))
+	for _, o := range s.orgs {
+		out = append(out, o)
+	}
+	slices.SortFunc(out, func(a, b Organization) int { return strings.Compare(strings.ToLower(a.Name), strings.ToLower(b.Name)) })
+	return out
+}
+
+func (s *Service) Collections() []Collection {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	if s.status != StatusUnlocked {
+		return nil
+	}
+	out := make([]Collection, 0, len(s.collections))
+	for _, c := range s.collections {
+		out = append(out, c)
+	}
+	slices.SortFunc(out, func(a, b Collection) int { return strings.Compare(strings.ToLower(a.Name), strings.ToLower(b.Name)) })
+	return out
+}
+
+// itemKey returns a copy of the key that encrypts items owned by orgID, or
+// of userKey for personal items.
+func (s *Service) itemKey(orgID *string, userKey *crypto.SymmetricKey) (*crypto.SymmetricKey, error) {
+	var raw [64]byte
+	defer crypto.ZeroBytes(raw[:])
+	if orgID == nil || *orgID == "" {
+		raw = userKey.Bytes()
+	} else {
+		s.mu.RLock()
+		k := s.orgKeys[*orgID]
+		if k != nil {
+			raw = k.Bytes()
+		}
+		s.mu.RUnlock()
+		if k == nil {
+			return nil, ErrOrganizationKeyMissing
+		}
+	}
+	return crypto.SymmetricKeyFromBytes(raw[:])
+}
+
+func unwrapOrgKeys(p *api.Profile, userKey *crypto.SymmetricKey) map[string]*crypto.SymmetricKey {
+	keys := map[string]*crypto.SymmetricKey{}
+	if p.PrivateKey == nil || *p.PrivateKey == "" || len(p.Organizations) == 0 {
+		return keys
+	}
+	priv, err := crypto.DecryptPrivateKey(*p.PrivateKey, userKey)
+	if err != nil {
+		return keys
+	}
+	defer crypto.ZeroPrivateKey(priv)
+	for _, org := range p.Organizations {
+		if !org.Enabled || org.Key == "" {
 			continue
 		}
-		c, err := decryptCipher(enc, userKey)
-		if err != nil {
-			if errors.Is(err, ErrUnsupportedCipherFormat) {
-				continue
-			}
-			return nil, nil, err
+		if k, err := crypto.DecryptOrgKey(org.Key, priv); err == nil {
+			keys[org.ID] = k
 		}
-		ciphers[c.ID] = c
+	}
+	return keys
+}
+
+func decryptSyncResponse(resp *api.SyncResponse, userKey *crypto.SymmetricKey) (*vaultData, error) {
+	d := &vaultData{
+		ciphers:     make(map[string]*Cipher, len(resp.Ciphers)),
+		folders:     make(map[string]Folder, len(resp.Folders)),
+		orgs:        map[string]Organization{},
+		collections: map[string]Collection{},
+		orgKeys:     unwrapOrgKeys(&resp.Profile, userKey),
+	}
+	for _, org := range resp.Profile.Organizations {
+		if _, ok := d.orgKeys[org.ID]; ok {
+			d.orgs[org.ID] = Organization{ID: org.ID, Name: org.Name, Type: org.Type, Enabled: org.Enabled}
+		}
 	}
 
-	folders := make(map[string]Folder, len(resp.Folders))
+	for i := range resp.Ciphers {
+		enc := &resp.Ciphers[i]
+		key := userKey
+		isOrg := enc.OrganizationID != nil && *enc.OrganizationID != ""
+		if isOrg {
+			if key = d.orgKeys[*enc.OrganizationID]; key == nil {
+				continue
+			}
+		}
+		c, err := decryptCipher(enc, key)
+		if err != nil {
+			if isOrg || errors.Is(err, ErrUnsupportedCipherFormat) {
+				continue
+			}
+			d.zero()
+			return nil, err
+		}
+		d.ciphers[c.ID] = c
+	}
+
 	for i := range resp.Folders {
 		f, err := decryptFolder(&resp.Folders[i], userKey)
 		if err != nil {
-			return nil, nil, err
+			d.zero()
+			return nil, err
 		}
-		folders[f.ID] = f
+		d.folders[f.ID] = f
 	}
-	return ciphers, folders, nil
+
+	for _, col := range resp.Collections {
+		key := d.orgKeys[col.OrganizationID]
+		if key == nil {
+			continue
+		}
+		name, err := crypto.DecryptString(col.Name, key)
+		if err != nil {
+			continue
+		}
+		d.collections[col.ID] = Collection{
+			ID: col.ID, OrganizationID: col.OrganizationID, Name: name,
+			ReadOnly: col.ReadOnly, HidePasswords: col.HidePasswords, Manage: col.Manage,
+		}
+	}
+	return d, nil
+}
+
+func sameOrg(a, b *string) bool {
+	av, bv := "", ""
+	if a != nil {
+		av = *a
+	}
+	if b != nil {
+		bv = *b
+	}
+	return av == bv
 }

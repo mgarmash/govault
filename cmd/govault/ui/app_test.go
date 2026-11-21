@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"slices"
 	"strings"
 	"sync"
 	"testing"
@@ -27,6 +28,9 @@ type mockVaultService struct {
 
 	twoFactorCode string
 	emailSends    int
+
+	organizations []state.Organization
+	collections   []state.Collection
 }
 
 func newMockVaultService(initial state.LockStatus) *mockVaultService {
@@ -162,6 +166,9 @@ func (m *mockVaultService) Search(query string, filter state.SearchFilter) []sta
 		if filter.Type != nil && c.Type != *filter.Type {
 			continue
 		}
+		if filter.CollectionID != "" && !slices.Contains(c.CollectionIDs, filter.CollectionID) {
+			continue
+		}
 		if q != "" && !strings.Contains(strings.ToLower(c.Name), q) {
 			continue
 		}
@@ -182,6 +189,9 @@ func (m *mockVaultService) Search(query string, filter state.SearchFilter) []sta
 			HasTOTP:  hasTOTP,
 			Reprompt: c.Reprompt,
 			URIs:     loginURIs(c),
+
+			OrganizationID: c.OrganizationID,
+			CollectionIDs:  c.CollectionIDs,
 		})
 	}
 	return out
@@ -260,6 +270,18 @@ func (m *mockVaultService) SaveFolder(_ context.Context, f *state.Folder) (*stat
 		m.folders = append(m.folders, *f)
 	}
 	return f, nil
+}
+
+func (m *mockVaultService) Organizations() []state.Organization {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	return append([]state.Organization(nil), m.organizations...)
+}
+
+func (m *mockVaultService) Collections() []state.Collection {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	return append([]state.Collection(nil), m.collections...)
 }
 
 func (m *mockVaultService) DeleteFolder(_ context.Context, id string) error {
@@ -532,4 +554,41 @@ func loginURIs(c *state.Cipher) []string {
 		out = append(out, u.URI)
 	}
 	return out
+}
+
+func TestSidebarCollectionsFilterItems(t *testing.T) {
+	personal := newMockVaultService(state.StatusUnlocked)
+	app := nsgotest.Start(t, func(cx *core.Scope) core.Node {
+		model := NewAppModel(cx, personal, PlatformHooks{})
+		model.MainWinVisible.Set(true)
+		model.RefreshVaultData()
+		return MainWindowView(cx, model)
+	}, nsgotest.Size(980, 640))
+	app.WaitFor("id:vault-item-list >> text:GitHub", 2*time.Second)
+	if app.Exists("id:sidebar-collections-toggle") {
+		t.Fatal("personal-only vault shows a Collections section")
+	}
+
+	svc := newMockVaultService(state.StatusUnlocked)
+	org := "org-1"
+	svc.organizations = []state.Organization{{ID: org, Name: "Acme", Enabled: true}}
+	svc.collections = []state.Collection{{ID: "col-eng", OrganizationID: org, Name: "Engineering", ReadOnly: true}}
+	svc.ciphers["c-github"].OrganizationID = &org
+	svc.ciphers["c-github"].CollectionIDs = []string{"col-eng"}
+
+	app = nsgotest.Start(t, func(cx *core.Scope) core.Node {
+		model := NewAppModel(cx, svc, PlatformHooks{})
+		model.MainWinVisible.Set(true)
+		model.RefreshVaultData()
+		return MainWindowView(cx, model)
+	}, nsgotest.Size(980, 640))
+
+	app.WaitFor("id:sidebar-collections >> text:Engineering", 2*time.Second)
+	app.Press("id:sidebar-collection")
+	app.WaitForGone("id:vault-item-list >> text:SSH Recovery Note", 2*time.Second)
+	app.Find("id:vault-item-list >> text:GitHub")
+
+	app.Press("id:vault-row")
+	app.WaitFor("id:detail-view >> text:Acme", 2*time.Second)
+	app.Find("id:detail-view >> text:View only")
 }

@@ -16,6 +16,9 @@ const (
 	EncAesCbc256HmacSha256B64 EncType = 2
 	EncRsa2048OaepSha256B64   EncType = 3
 	EncRsa2048OaepSha1B64     EncType = 4
+
+	EncRsa2048OaepSha256HmacSha256B64 EncType = 5
+	EncRsa2048OaepSha1HmacSha256B64   EncType = 6
 )
 
 type EncString struct {
@@ -82,6 +85,23 @@ func ParseEncString(s string) (*EncString, error) {
 		}
 		return &EncString{Type: encType, CT: ct}, nil
 
+	case EncRsa2048OaepSha256HmacSha256B64, EncRsa2048OaepSha1HmacSha256B64:
+		parts := strings.Split(body, "|")
+		if len(parts) > 2 || parts[0] == "" {
+			return nil, ErrInvalidEncString
+		}
+		ct, err := base64.StdEncoding.DecodeString(parts[0])
+		if err != nil || len(ct) == 0 {
+			return nil, ErrInvalidEncString
+		}
+		out := &EncString{Type: encType, CT: ct}
+		if len(parts) == 2 {
+			if out.MAC, err = base64.StdEncoding.DecodeString(parts[1]); err != nil {
+				return nil, ErrInvalidEncString
+			}
+		}
+		return out, nil
+
 	default:
 		return nil, fmt.Errorf("%w: %d", ErrUnsupportedEncType, encType)
 	}
@@ -104,6 +124,12 @@ func (e *EncString) String() string {
 	case EncRsa2048OaepSha256B64, EncRsa2048OaepSha1B64:
 		return strconv.Itoa(int(e.Type)) + "." +
 			base64.StdEncoding.EncodeToString(e.CT)
+	case EncRsa2048OaepSha256HmacSha256B64, EncRsa2048OaepSha1HmacSha256B64:
+		out := strconv.Itoa(int(e.Type)) + "." + base64.StdEncoding.EncodeToString(e.CT)
+		if len(e.MAC) > 0 {
+			out += "|" + base64.StdEncoding.EncodeToString(e.MAC)
+		}
+		return out
 	default:
 		return ""
 	}

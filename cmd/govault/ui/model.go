@@ -58,6 +58,7 @@ type UserPrefs struct {
 	SidebarWidth          float32               `json:"sidebarWidth"`
 	ListWidth             float32               `json:"listWidth"`
 	FoldersCollapsed      bool                  `json:"foldersCollapsed"`
+	CollectionsCollapsed  bool                  `json:"collectionsCollapsed"`
 	GeneratorMode         string                `json:"generatorMode"`
 	PasswordOpts          gen.PasswordOptions   `json:"passwordOpts"`
 	PassphraseOpts        gen.PassphraseOptions `json:"passphraseOpts"`
@@ -342,6 +343,8 @@ type AppModel struct {
 	SearchQuery   *core.Signal[string]
 	SearchRef     core.Ref
 	Folders       *core.Signal[[]state.Folder]
+	Organizations *core.Signal[[]state.Organization]
+	Collections   *core.Signal[[]state.Collection]
 	AllCounts     *core.Signal[VaultCounts]
 	FilteredItems *core.Collection[string, state.CipherSummary]
 	SelectedID    *core.Signal[string]
@@ -398,6 +401,8 @@ type VaultCounts struct {
 	Identity   int
 	SecureNote int
 	ByFolder   map[string]int
+
+	ByCollection map[string]int
 }
 
 func NewAppModel(app *core.Scope, coreSvc state.VaultService, hooks PlatformHooks) *AppModel {
@@ -446,6 +451,8 @@ func NewAppModel(app *core.Scope, coreSvc state.VaultService, hooks PlatformHook
 		SidebarFilter:     core.NewSignal(app, state.SearchFilter{Category: state.FilterAll}),
 		SearchQuery:       core.NewSignal(app, ""),
 		Folders:           core.NewSignalFunc(app, []state.Folder(nil), nil),
+		Organizations:     core.NewSignalFunc(app, []state.Organization(nil), nil),
+		Collections:       core.NewSignalFunc(app, []state.Collection(nil), nil),
 		AllCounts:         core.NewSignalFunc(app, VaultCounts{ByFolder: map[string]int{}}, nil),
 		FilteredItems:     core.NewCollectionFunc(app, func(c state.CipherSummary) string { return c.ID }, cipherSummaryEqual, nil),
 		SelectedID:        core.NewSignal(app, ""),
@@ -1055,6 +1062,8 @@ func (m *AppModel) Lock() {
 	m.SearchQuery.Set("")
 	m.SearchInSection.Set(false)
 	m.Folders.Set(nil)
+	m.Organizations.Set(nil)
+	m.Collections.Set(nil)
 	m.FilteredItems.Replace(nil)
 	m.AllCounts.Set(VaultCounts{ByFolder: map[string]int{}})
 	m.ReleaseSecureInput()
@@ -1147,6 +1156,8 @@ func (m *AppModel) RefreshVaultData() {
 	}
 	folders := m.Core.Folders()
 	m.Folders.Set(folders)
+	m.Organizations.Set(m.Core.Organizations())
+	m.Collections.Set(m.Core.Collections())
 	m.recomputeCounts()
 	m.RefreshFilteredList()
 
@@ -1168,8 +1179,13 @@ func (m *AppModel) recomputeCounts() {
 		All:      len(all),
 		Trash:    len(trash),
 		ByFolder: make(map[string]int),
+
+		ByCollection: make(map[string]int),
 	}
 	for _, item := range all {
+		for _, id := range item.CollectionIDs {
+			counts.ByCollection[id]++
+		}
 		if item.Favorite {
 			counts.Favorites++
 		}
@@ -1207,7 +1223,50 @@ func (m *AppModel) SearchIsGlobal() bool {
 }
 
 func IsAllItemsFilter(f state.SearchFilter) bool {
-	return f.Category == state.FilterAll && f.FolderID == "" && f.Type == nil
+	return f.Category == state.FilterAll && f.FolderID == "" && f.Type == nil && f.CollectionID == "" && f.OrganizationID == ""
+}
+
+func (m *AppModel) cipherCollections(c *state.Cipher) []state.Collection {
+	if c == nil || len(c.CollectionIDs) == 0 {
+		return nil
+	}
+	var out []state.Collection
+	for _, col := range m.Collections.Get() {
+		if slices.Contains(c.CollectionIDs, col.ID) {
+			out = append(out, col)
+		}
+	}
+	return out
+}
+
+func (m *AppModel) OrganizationName(id *string) string {
+	if id == nil {
+		return ""
+	}
+	for _, o := range m.Organizations.Get() {
+		if o.ID == *id {
+			return o.Name
+		}
+	}
+	return ""
+}
+
+// CipherReadOnly reports whether the organization only lets the user view c.
+func (m *AppModel) CipherReadOnly(c *state.Cipher) bool {
+	if c == nil {
+		return false
+	}
+	cols := m.cipherCollections(c)
+	return c.ReadOnly || len(cols) > 0 && !slices.ContainsFunc(cols, func(col state.Collection) bool { return !col.ReadOnly })
+}
+
+// PasswordHidden reports whether the organization hides the password of c from the user.
+func (m *AppModel) PasswordHidden(c *state.Cipher) bool {
+	if c == nil {
+		return false
+	}
+	cols := m.cipherCollections(c)
+	return c.HidePassword || len(cols) > 0 && !slices.ContainsFunc(cols, func(col state.Collection) bool { return !col.HidePasswords })
 }
 
 func (m *AppModel) EffectiveSearchFilter() state.SearchFilter {
@@ -1339,7 +1398,7 @@ func (m *AppModel) StartCreateCipher(cx *core.Scope) {
 
 func (m *AppModel) StartEditCipher(cx *core.Scope) {
 	c := m.ActiveCipher.Get()
-	if c == nil || c.DeletedDate != nil {
+	if c == nil || c.DeletedDate != nil || m.CipherReadOnly(c) || m.PasswordHidden(c) {
 		return
 	}
 	m.ResetIdleTimer()
@@ -1456,7 +1515,7 @@ func (m *AppModel) ToggleFavorite() {
 
 func (m *AppModel) SoftDeleteActive() {
 	c := m.ActiveCipher.Get()
-	if c == nil || m.SyncState.Get() == SyncOffline {
+	if c == nil || m.SyncState.Get() == SyncOffline || m.CipherReadOnly(c) {
 		return
 	}
 	id := c.ID

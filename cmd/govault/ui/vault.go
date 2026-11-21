@@ -102,6 +102,14 @@ func (m *AppModel) sectionTitle() string {
 			return "Secure Notes"
 		}
 	}
+	if f.CollectionID != "" {
+		for _, col := range m.Collections.Get() {
+			if col.ID == f.CollectionID {
+				return col.Name
+			}
+		}
+		return "Collection"
+	}
 	if f.FolderID != "" {
 		for _, folder := range m.Folders.Get() {
 			if folder.ID == f.FolderID {
@@ -243,11 +251,9 @@ func sidebarView(cx *core.Scope, m *AppModel) core.Node {
 				Children: []core.Node{
 					sidebarRow(sidebarEntry{
 						testID: "sidebar-all", label: "All Items", glyph: lucide.LayoutGrid, tint: 0x2f6fe4,
-						count: func() int { return m.AllCounts.Get().All },
-						active: vaultActive(func(f state.SearchFilter) bool {
-							return f.Category == state.FilterAll && f.FolderID == "" && f.Type == nil
-						}),
-						press: func() { m.SetSidebarFilter(state.SearchFilter{Category: state.FilterAll}) },
+						count:  func() int { return m.AllCounts.Get().All },
+						active: vaultActive(IsAllItemsFilter),
+						press:  func() { m.SetSidebarFilter(state.SearchFilter{Category: state.FilterAll}) },
 					}),
 					sidebarRow(sidebarEntry{
 						testID: "sidebar-favorites", label: "Favorites", glyph: lucide.Star, tint: 0xf0a20b,
@@ -280,6 +286,26 @@ func sidebarView(cx *core.Scope, m *AppModel) core.Node {
 						When: func() bool { return !m.Prefs.Get().FoldersCollapsed },
 						Then: func(cx *core.Scope) core.Node {
 							return foldersList(cx, m, vaultActive)
+						},
+					},
+					core.Show{
+						When: func() bool { return len(m.Collections.Get()) > 0 },
+						Then: func(cx *core.Scope) core.Node {
+							return core.View{Children: []core.Node{
+								collapsibleHeader("sidebar-collections-toggle", "Collections",
+									func() bool { return m.Prefs.Get().CollectionsCollapsed },
+									func() {
+										m.UpdatePrefs(func(p UserPrefs) UserPrefs {
+											p.CollectionsCollapsed = !p.CollectionsCollapsed
+											return p
+										})
+									},
+									func() int { return len(m.Collections.Get()) }, nil),
+								core.Show{
+									When: func() bool { return !m.Prefs.Get().CollectionsCollapsed },
+									Then: func(cx *core.Scope) core.Node { return collectionsList(m, vaultActive) },
+								},
+							}}
 						},
 					},
 					sidebarHeader("Tools", nil),
@@ -324,44 +350,88 @@ func foldersList(cx *core.Scope, m *AppModel, vaultActive func(func(state.Search
 }
 
 func foldersHeader(m *AppModel, trailing core.Node) core.Node {
-	collapsed := func() bool { return m.Prefs.Get().FoldersCollapsed }
-	return core.View{
-		Class: "flex-row items-center h-[22px] mt-3.5 mb-0.5 pr-1",
-		Children: []core.Node{
-			core.View{
-				TestID:   "sidebar-folders-toggle",
-				Role:     core.RoleButton,
-				Label:    "Folders",
-				Expanded: func() bool { return !collapsed() },
-				Class:    "flex-1 flex-row items-center gap-1 pl-2 h-full",
-				OnPress: func(core.PressEvent) {
-					m.UpdatePrefs(func(p UserPrefs) UserPrefs {
-						p.FoldersCollapsed = !p.FoldersCollapsed
-						return p
-					})
-				},
-				Children: []core.Node{
-					core.Text{Class: "text-[11px] font-semibold text-gv-fg3", Content: "Folders"},
-					iconFunc(func() *core.SVG {
-						if collapsed() {
-							return lucide.ChevronRight()
+	return collapsibleHeader("sidebar-folders-toggle", "Folders",
+		func() bool { return m.Prefs.Get().FoldersCollapsed },
+		func() {
+			m.UpdatePrefs(func(p UserPrefs) UserPrefs {
+				p.FoldersCollapsed = !p.FoldersCollapsed
+				return p
+			})
+		},
+		func() int { return len(m.Folders.Get()) }, trailing)
+}
+
+func collapsibleHeader(testID, title string, collapsed func() bool, toggle func(), count func() int, trailing core.Node) core.Node {
+	children := []core.Node{
+		core.View{
+			TestID:   testID,
+			Role:     core.RoleButton,
+			Label:    title,
+			Expanded: func() bool { return !collapsed() },
+			Class:    "flex-1 flex-row items-center gap-1 pl-2 h-full",
+			OnPress:  func(core.PressEvent) { toggle() },
+			Children: []core.Node{
+				core.Text{Class: "text-[11px] font-semibold text-gv-fg3", Content: title},
+				iconFunc(func() *core.SVG {
+					if collapsed() {
+						return lucide.ChevronRight()
+					}
+					return lucide.ChevronDown()
+				}, 11, func() string { return "text-gv-fg3" }),
+				core.Show{
+					When: collapsed,
+					Then: func(cx *core.Scope) core.Node {
+						return core.Text{
+							Class:       "text-[11px] text-gv-fg3 tabular-nums",
+							ContentFunc: func() string { return fmt.Sprintf("%d", count()) },
 						}
-						return lucide.ChevronDown()
-					}, 11, func() string { return "text-gv-fg3" }),
-					core.Show{
-						When: collapsed,
-						Then: func(cx *core.Scope) core.Node {
-							return core.Text{
-								Class:       "text-[11px] text-gv-fg3 tabular-nums",
-								ContentFunc: func() string { return fmt.Sprintf("%d", len(m.Folders.Get())) },
-							}
-						},
 					},
 				},
 			},
-			trailing,
 		},
 	}
+	if trailing != nil {
+		children = append(children, trailing)
+	}
+	return core.View{
+		Class:    "flex-row items-center h-[22px] mt-3.5 mb-0.5 pr-1",
+		Children: children,
+	}
+}
+
+func collectionsList(m *AppModel, vaultActive func(func(state.SearchFilter) bool) func() bool) core.Node {
+	return core.Dynamic(func(cx *core.Scope) core.Node {
+		cols := m.Collections.Get()
+		orgs := m.Organizations.Get()
+		var rows []core.Node
+		appendCols := func(orgID string) {
+			for _, col := range cols {
+				if orgID != "" && col.OrganizationID != orgID {
+					continue
+				}
+				id := col.ID
+				rows = append(rows, sidebarRow(sidebarEntry{
+					testID: "sidebar-collection", label: col.Name, glyph: lucide.Library,
+					count:  func() int { return m.AllCounts.Get().ByCollection[id] },
+					active: vaultActive(func(f state.SearchFilter) bool { return f.CollectionID == id }),
+					press:  func() { m.SetSidebarFilter(state.SearchFilter{Category: state.FilterAll, CollectionID: id}) },
+				}))
+			}
+		}
+		if len(orgs) > 1 {
+			for _, org := range orgs {
+				rows = append(rows, core.Text{
+					MaxLines: 1,
+					Class:    "pl-2 pt-1.5 pb-0.5 text-[10.5px] font-medium text-gv-fg3",
+					Content:  org.Name,
+				})
+				appendCols(org.ID)
+			}
+		} else {
+			appendCols("")
+		}
+		return core.View{TestID: "sidebar-collections", Class: "gap-px", Children: rows}
+	})
 }
 
 func sidebarHeader(title string, trailing core.Node) core.Node {
@@ -629,7 +699,7 @@ func rowMenu(cx *core.Scope, m *AppModel, id string, at core.Point) {
 	if c.Login != nil {
 		items = append(items,
 			desktop.MenuItem{Label: "Copy Username", Disabled: c.Login.Username == "", OnSelect: func() { m.CopyPlainValue("Username", c.Login.Username) }},
-			desktop.MenuItem{Label: "Copy Password", Disabled: c.Login.Password == "", OnSelect: func() {
+			desktop.MenuItem{Label: "Copy Password", Disabled: c.Login.Password == "" || m.PasswordHidden(c), OnSelect: func() {
 				m.GateReprompt(cx, c, "copy password", func() { m.CopySecretValue("Password", c.Login.Password) })
 			}},
 		)
@@ -654,11 +724,12 @@ func rowMenu(cx *core.Scope, m *AppModel, id string, at core.Point) {
 		if c.Favorite {
 			fav = "Remove from Favorites"
 		}
+		readOnly := m.CipherReadOnly(c)
 		items = append(items,
-			desktop.MenuItem{Label: "Edit", Disabled: offline, OnSelect: func() { m.StartEditCipher(cx) }},
+			desktop.MenuItem{Label: "Edit", Disabled: offline || readOnly || m.PasswordHidden(c), OnSelect: func() { m.StartEditCipher(cx) }},
 			desktop.MenuItem{Label: fav, Disabled: offline, OnSelect: m.ToggleFavorite},
 			desktop.MenuItem{Separator: true},
-			desktop.MenuItem{Label: "Move to Trash", Disabled: offline, OnSelect: m.SoftDeleteActive},
+			desktop.MenuItem{Label: "Move to Trash", Disabled: offline || readOnly, OnSelect: m.SoftDeleteActive},
 		)
 	}
 	desktop.PopupMenu(cx, items, at, nil)
@@ -1058,7 +1129,12 @@ func detailContent(cx *core.Scope, m *AppModel, c *state.Cipher) core.Node {
 				actions: []core.Node{actionIcon(cx, "detail-copy-user", "Copy username", lucide.Copy, copyPlain("Username", c.Login.Username))},
 			}))
 		}
-		if c.Login.Password != "" {
+		if c.Login.Password != "" && m.PasswordHidden(c) {
+			rows = append(rows, fieldRow("Password", fieldOpts{
+				testID: "detail-password-value",
+				value:  staticValue("Hidden by your organization"),
+			}))
+		} else if c.Login.Password != "" {
 			rows = append(rows, fieldRow("Password", fieldOpts{
 				testID: "detail-password-value",
 				mono:   true,
@@ -1325,9 +1401,20 @@ func detailHeader(cx *core.Scope, m *AppModel, c *state.Cipher, isTrash bool, of
 			}
 		}
 	}
+	if org := m.OrganizationName(c.OrganizationID); org != "" {
+		pills = append(pills, pill(lucide.Building, org))
+	}
+	for _, col := range m.cipherCollections(c) {
+		pills = append(pills, pill(lucide.Library, col.Name))
+	}
+	readOnly := m.CipherReadOnly(c)
+	if readOnly {
+		pills = append(pills, pill(lucide.Eye, "View only"))
+	}
 	if c.Reprompt == 1 {
 		pills = append(pills, pill(lucide.ShieldCheck, "Password reprompt"))
 	}
+	editLocked := func() bool { return offline() || readOnly || m.PasswordHidden(c) }
 	if isTrash {
 		pills = append(pills, pill(lucide.Trash, "In Trash"))
 	}
@@ -1379,7 +1466,7 @@ func detailHeader(cx *core.Scope, m *AppModel, c *state.Cipher, isTrash bool, of
 				Text:     "Edit",
 				Icon:     lucide.Pencil,
 				Variant:  ui.ButtonSecondary,
-				Disabled: offline,
+				Disabled: editLocked,
 				OnPress:  func() { m.StartEditCipher(cx) },
 			},
 		}
@@ -1584,7 +1671,7 @@ func metadataFooter(cx *core.Scope, m *AppModel, c *state.Cipher, isTrash bool, 
 		lines = append(lines, core.Text{Class: "text-[11.5px] text-gv-fg3", Content: "Deleted " + formatRelativeTime(*c.DeletedDate)})
 	}
 	children := []core.Node{core.View{Class: "flex-1 gap-0.5", Children: lines}}
-	if !isTrash {
+	if !isTrash && !m.CipherReadOnly(c) {
 		children = append(children, core.View{
 			TestID:   "detail-trash",
 			Label:    "Move to Trash",

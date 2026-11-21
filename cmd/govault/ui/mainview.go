@@ -75,7 +75,7 @@ func bindMainWindowShortcuts(cx *core.Scope, m *AppModel) {
 			return
 		}
 		c := m.ActiveCipher.Get()
-		if c == nil || c.Login == nil || c.Login.Password == "" {
+		if c == nil || c.Login == nil || c.Login.Password == "" || m.PasswordHidden(c) {
 			return
 		}
 		m.GateReprompt(cx, c, "copy password", func() {

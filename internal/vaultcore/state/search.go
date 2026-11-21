@@ -54,6 +54,12 @@ func matchesFilter(c *Cipher, filter SearchFilter) bool {
 	if filter.Type != nil && c.Type != *filter.Type {
 		return false
 	}
+	if filter.OrganizationID != "" && (c.OrganizationID == nil || *c.OrganizationID != filter.OrganizationID) {
+		return false
+	}
+	if filter.CollectionID != "" && !slices.Contains(c.CollectionIDs, filter.CollectionID) {
+		return false
+	}
 	if filter.FolderID != "" {
 		return c.FolderID != nil && *c.FolderID == filter.FolderID
 	}

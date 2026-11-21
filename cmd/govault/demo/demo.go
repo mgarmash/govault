@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"slices"
 	"sort"
 	"strings"
 	"sync"
@@ -30,6 +31,20 @@ type Service struct {
 	nextID  int
 }
 
+const demoOrgID = "o-northwind"
+
+var (
+	demoOrganizations = []state.Organization{{ID: demoOrgID, Name: "Northwind Labs", Type: 2, Enabled: true}}
+	demoCollections   = []state.Collection{
+		{ID: "col-finance", OrganizationID: demoOrgID, Name: "Finance", ReadOnly: true},
+		{ID: "col-infra", OrganizationID: demoOrgID, Name: "Infrastructure"},
+	}
+	demoShared = map[string][]string{
+		"c-cloudflare": {"col-infra"},
+		"c-stripe":     {"col-finance"},
+	}
+)
+
 func NewService(status state.LockStatus) *Service {
 	s := &Service{status: status, ciphers: map[string]*state.Cipher{}}
 	s.folders = []state.Folder{
@@ -38,9 +53,28 @@ func NewService(status state.LockStatus) *Service {
 		{ID: "f-finance", Name: "Finance"},
 	}
 	for _, c := range seedCiphers() {
+		if cols, ok := demoShared[c.ID]; ok {
+			org := demoOrgID
+			c.OrganizationID = &org
+			c.CollectionIDs = cols
+		}
 		s.ciphers[c.ID] = c
 	}
 	return s
+}
+
+func (s *Service) Organizations() []state.Organization {
+	if s.Status() != state.StatusUnlocked {
+		return nil
+	}
+	return append([]state.Organization(nil), demoOrganizations...)
+}
+
+func (s *Service) Collections() []state.Collection {
+	if s.Status() != state.StatusUnlocked {
+		return nil
+	}
+	return append([]state.Collection(nil), demoCollections...)
 }
 
 type SecretStore struct {
@@ -163,6 +197,12 @@ func (s *Service) Search(query string, filter state.SearchFilter) []state.Cipher
 		if filter.Type != nil && c.Type != *filter.Type {
 			continue
 		}
+		if filter.CollectionID != "" && !slices.Contains(c.CollectionIDs, filter.CollectionID) {
+			continue
+		}
+		if filter.OrganizationID != "" && (c.OrganizationID == nil || *c.OrganizationID != filter.OrganizationID) {
+			continue
+		}
 		sub := subtitle(c)
 		if q != "" && !strings.Contains(strings.ToLower(c.Name+" "+sub), q) {
 			continue
@@ -178,6 +218,9 @@ func (s *Service) Search(query string, filter state.SearchFilter) []state.Cipher
 			HasTOTP:  c.Login != nil && strings.TrimSpace(c.Login.TOTP) != "",
 			Reprompt: c.Reprompt,
 			URIs:     loginURIs(c),
+
+			OrganizationID: c.OrganizationID,
+			CollectionIDs:  c.CollectionIDs,
 		})
 	}
 	sort.Slice(out, func(i, j int) bool {
