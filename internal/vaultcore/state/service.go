@@ -20,6 +20,8 @@ import (
 const (
 	refreshTokenKeyPrefix = "refresh_token:"
 	userKeyPrefix         = "userkey:"
+
+	twoFactorRememberPrefix = "twofactor_remember:"
 )
 
 type ServiceConfig struct {
@@ -76,25 +78,31 @@ func (s *Service) Status() LockStatus {
 	return s.status
 }
 
-func (s *Service) Login(ctx context.Context, serverURL, email string, masterPassword []byte) error {
-	client, err := s.newAPIClient(serverURL)
-	if err != nil {
-		return err
-	}
-
-	kdfCfg, err := client.Prelogin(ctx, email)
-	if err != nil {
-		return err
-	}
-	masterKey, err := crypto.DeriveMasterKey(masterPassword, email, kdfCfg)
+func (s *Service) Login(ctx context.Context, req LoginRequest) error {
+	serverURL, email := req.ServerURL, req.Email
+	client, kdfCfg, masterKey, pwHash, err := s.prepareLogin(ctx, req)
 	if err != nil {
 		return err
 	}
 	defer crypto.ZeroBytes(masterKey[:])
 
-	pwHash := crypto.HashMasterPasswordForServer(masterKey, masterPassword)
-	tok, err := client.LoginPassword(ctx, email, pwHash)
+	rememberKey := twoFactorRememberKey(serverURL, email)
+	var twoFactor *api.TwoFactorLogin
+	usedRemembered := false
+	if code := strings.TrimSpace(req.TwoFactorCode); code != "" {
+		twoFactor = &api.TwoFactorLogin{Provider: req.TwoFactorProvider, Token: code, Remember: req.RememberDevice}
+	} else if s.cfg.Secrets != nil {
+		if remembered, ok, _ := s.cfg.Secrets.Get(rememberKey); ok && remembered != "" {
+			twoFactor = &api.TwoFactorLogin{Provider: api.TwoFactorRemember, Token: remembered}
+			usedRemembered = true
+		}
+	}
+
+	tok, err := client.LoginPassword(ctx, email, pwHash, twoFactor)
 	if err != nil {
+		if usedRemembered && errors.Is(err, api.ErrTwoFactorRequired) {
+			_ = s.cfg.Secrets.Delete(rememberKey)
+		}
 		return err
 	}
 
@@ -141,6 +149,9 @@ func (s *Service) Login(ctx context.Context, serverURL, email string, masterPass
 			return err
 		}
 	}
+	if s.cfg.Secrets != nil && tok.TwoFactorToken != "" {
+		_ = s.cfg.Secrets.Set(rememberKey, tok.TwoFactorToken)
+	}
 
 	s.mu.Lock()
 	s.stopRealtimeLocked()
@@ -160,6 +171,35 @@ func (s *Service) Login(ctx context.Context, serverURL, email string, masterPass
 	s.notifyStatus(StatusUnlocked)
 	s.notifyUpdated()
 	return nil
+}
+
+func (s *Service) SendEmailTwoFactorCode(ctx context.Context, req LoginRequest) error {
+	client, _, masterKey, pwHash, err := s.prepareLogin(ctx, req)
+	if err != nil {
+		return err
+	}
+	crypto.ZeroBytes(masterKey[:])
+	return client.SendEmailTwoFactorLogin(ctx, req.Email, pwHash)
+}
+
+func (s *Service) prepareLogin(ctx context.Context, req LoginRequest) (*api.Client, crypto.KDFConfig, [32]byte, string, error) {
+	client, err := s.newAPIClient(req.ServerURL)
+	if err != nil {
+		return nil, crypto.KDFConfig{}, [32]byte{}, "", err
+	}
+	kdfCfg, err := client.Prelogin(ctx, req.Email)
+	if err != nil {
+		return nil, kdfCfg, [32]byte{}, "", err
+	}
+	masterKey, err := crypto.DeriveMasterKey(req.MasterPassword, req.Email, kdfCfg)
+	if err != nil {
+		return nil, kdfCfg, [32]byte{}, "", err
+	}
+	return client, kdfCfg, masterKey, crypto.HashMasterPasswordForServer(masterKey, req.MasterPassword), nil
+}
+
+func twoFactorRememberKey(serverURL, email string) string {
+	return twoFactorRememberPrefix + strings.TrimRight(strings.TrimSpace(serverURL), "/") + "|" + crypto.NormalizeEmail(email)
 }
 
 func (s *Service) UnlockWithPassword(ctx context.Context, masterPassword []byte) error {

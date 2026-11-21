@@ -7,6 +7,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
+	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -315,6 +317,13 @@ type AppModel struct {
 	LoginError    *core.Signal[string]
 	LoginShowPW   *core.Signal[bool]
 
+	TwoFactor         *core.Signal[*TwoFactorPrompt]
+	TwoFactorProvider *core.Signal[api.TwoFactorProvider]
+	TwoFactorCode     *core.Signal[string]
+	TwoFactorRemember *core.Signal[bool]
+	TwoFactorSending  *core.Signal[bool]
+	TwoFactorNotice   *core.Signal[string]
+
 	LockPassword    *core.Signal[string]
 	LockBusy        *core.Signal[bool]
 	LockError       *core.Signal[string]
@@ -397,55 +406,61 @@ func NewAppModel(app *core.Scope, coreSvc state.VaultService, hooks PlatformHook
 	}
 
 	m := &AppModel{
-		Scope:           app,
-		Core:            coreSvc,
-		Hooks:           hooks,
-		Prefs:           prefs,
-		LockState:       core.NewSignal(app, coreSvc.Status()),
-		SyncState:       core.NewSignal(app, SyncIdle),
-		LastSync:        core.NewSignal(app, time.Time{}),
-		Route:           core.NewSignal(app, RouteVault),
-		BiometricKind:   core.NewSignal(app, core.BiometricNone),
-		LoginServer:     core.NewSignal(app, p.ServerURL),
-		LoginEmail:      core.NewSignal(app, p.Email),
-		LoginPassword:   core.NewSignal(app, ""),
-		LoginBusy:       core.NewSignal(app, false),
-		LoginError:      core.NewSignal(app, ""),
-		LoginShowPW:     core.NewSignal(app, false),
-		LockPassword:    core.NewSignal(app, ""),
-		LockBusy:        core.NewSignal(app, false),
-		LockError:       core.NewSignal(app, ""),
-		LockShowPW:      core.NewSignal(app, false),
-		SidebarFilter:   core.NewSignal(app, state.SearchFilter{Category: state.FilterAll}),
-		SearchQuery:     core.NewSignal(app, ""),
-		Folders:         core.NewSignalFunc(app, []state.Folder(nil), nil),
-		AllCounts:       core.NewSignalFunc(app, VaultCounts{ByFolder: map[string]int{}}, nil),
-		FilteredItems:   core.NewCollectionFunc(app, func(c state.CipherSummary) string { return c.ID }, cipherSummaryEqual, nil),
-		SelectedID:      core.NewSignal(app, ""),
-		ActiveCipher:    core.NewSignal[*state.Cipher](app, nil),
-		RevealPW:        core.NewSignal(app, false),
-		RevealCard:      core.NewSignal(app, false),
-		EditMode:        core.NewSignal(app, false),
-		EditDraft:       core.NewSignal[*EditDraft](app, nil),
-		EditDirty:       core.NewSignal(app, false),
-		EditBusy:        core.NewSignal(app, false),
-		EditError:       core.NewSignal(app, ""),
-		TOTPCode:        core.NewSignal(app, ""),
-		TOTPRemaining:   core.NewSignal(app, 0),
-		TOTPPeriod:      core.NewSignal(app, 30),
-		MainWinVisible:  core.NewSignal(app, false),
-		SearchInSection: core.NewSignal(app, false),
-		SidebarW:        core.NewSignal(app, clampWidth(p.SidebarWidth, MinSidebarWidth, MaxSidebarWidth, DefaultSidebarWidth)),
-		ListW:           core.NewSignal(app, clampWidth(p.ListWidth, MinListWidth, MaxListWidth, DefaultListWidth)),
-		GenResult:       core.NewSignal(app, ""),
-		Reprompt:        core.NewSignalFunc(app, RepromptModal{}, nil),
-		RepromptPW:      core.NewSignal(app, ""),
-		RepromptError:   core.NewSignal(app, ""),
-		RepromptBusy:    core.NewSignal(app, false),
-		FolderDialog:    core.NewSignal(app, FolderModal{}),
-		FolderError:     core.NewSignal(app, ""),
-		FolderBusy:      core.NewSignal(app, false),
-		Toaster:         ui.NewToaster(app),
+		Scope:             app,
+		Core:              coreSvc,
+		Hooks:             hooks,
+		Prefs:             prefs,
+		LockState:         core.NewSignal(app, coreSvc.Status()),
+		SyncState:         core.NewSignal(app, SyncIdle),
+		LastSync:          core.NewSignal(app, time.Time{}),
+		Route:             core.NewSignal(app, RouteVault),
+		BiometricKind:     core.NewSignal(app, core.BiometricNone),
+		LoginServer:       core.NewSignal(app, p.ServerURL),
+		LoginEmail:        core.NewSignal(app, p.Email),
+		LoginPassword:     core.NewSignal(app, ""),
+		LoginBusy:         core.NewSignal(app, false),
+		LoginError:        core.NewSignal(app, ""),
+		LoginShowPW:       core.NewSignal(app, false),
+		TwoFactor:         core.NewSignal[*TwoFactorPrompt](app, nil),
+		TwoFactorProvider: core.NewSignal(app, api.TwoFactorAuthenticator),
+		TwoFactorCode:     core.NewSignal(app, ""),
+		TwoFactorRemember: core.NewSignal(app, false),
+		TwoFactorSending:  core.NewSignal(app, false),
+		TwoFactorNotice:   core.NewSignal(app, ""),
+		LockPassword:      core.NewSignal(app, ""),
+		LockBusy:          core.NewSignal(app, false),
+		LockError:         core.NewSignal(app, ""),
+		LockShowPW:        core.NewSignal(app, false),
+		SidebarFilter:     core.NewSignal(app, state.SearchFilter{Category: state.FilterAll}),
+		SearchQuery:       core.NewSignal(app, ""),
+		Folders:           core.NewSignalFunc(app, []state.Folder(nil), nil),
+		AllCounts:         core.NewSignalFunc(app, VaultCounts{ByFolder: map[string]int{}}, nil),
+		FilteredItems:     core.NewCollectionFunc(app, func(c state.CipherSummary) string { return c.ID }, cipherSummaryEqual, nil),
+		SelectedID:        core.NewSignal(app, ""),
+		ActiveCipher:      core.NewSignal[*state.Cipher](app, nil),
+		RevealPW:          core.NewSignal(app, false),
+		RevealCard:        core.NewSignal(app, false),
+		EditMode:          core.NewSignal(app, false),
+		EditDraft:         core.NewSignal[*EditDraft](app, nil),
+		EditDirty:         core.NewSignal(app, false),
+		EditBusy:          core.NewSignal(app, false),
+		EditError:         core.NewSignal(app, ""),
+		TOTPCode:          core.NewSignal(app, ""),
+		TOTPRemaining:     core.NewSignal(app, 0),
+		TOTPPeriod:        core.NewSignal(app, 30),
+		MainWinVisible:    core.NewSignal(app, false),
+		SearchInSection:   core.NewSignal(app, false),
+		SidebarW:          core.NewSignal(app, clampWidth(p.SidebarWidth, MinSidebarWidth, MaxSidebarWidth, DefaultSidebarWidth)),
+		ListW:             core.NewSignal(app, clampWidth(p.ListWidth, MinListWidth, MaxListWidth, DefaultListWidth)),
+		GenResult:         core.NewSignal(app, ""),
+		Reprompt:          core.NewSignalFunc(app, RepromptModal{}, nil),
+		RepromptPW:        core.NewSignal(app, ""),
+		RepromptError:     core.NewSignal(app, ""),
+		RepromptBusy:      core.NewSignal(app, false),
+		FolderDialog:      core.NewSignal(app, FolderModal{}),
+		FolderError:       core.NewSignal(app, ""),
+		FolderBusy:        core.NewSignal(app, false),
+		Toaster:           ui.NewToaster(app),
 	}
 	m.IsSelected = core.NewSelector(app, m.SelectedID.Get)
 
@@ -676,48 +691,192 @@ func (m *AppModel) SyncAccountMetaFromSnapshot() {
 	}
 }
 
+type TwoFactorPrompt struct {
+	Providers []api.TwoFactorProvider
+	EmailHint string
+}
+
+func (p *TwoFactorPrompt) Has(provider api.TwoFactorProvider) bool {
+	return p != nil && slices.Contains(p.Providers, provider)
+}
+
+func (m *AppModel) loginRequest() (state.LoginRequest, bool) {
+	req := state.LoginRequest{
+		ServerURL: strings.TrimSpace(m.LoginServer.Get()),
+		Email:     strings.TrimSpace(m.LoginEmail.Get()),
+	}
+	password := m.LoginPassword.Get()
+	if req.ServerURL == "" || req.Email == "" || password == "" {
+		return req, false
+	}
+	req.MasterPassword = []byte(password)
+	return req, true
+}
+
 func (m *AppModel) Login() {
 	if m.LoginBusy.Get() {
 		return
 	}
-	serverURL := strings.TrimSpace(m.LoginServer.Get())
-	email := strings.TrimSpace(m.LoginEmail.Get())
-	password := m.LoginPassword.Get()
-	if serverURL == "" || email == "" || password == "" {
+	req, ok := m.loginRequest()
+	if !ok {
 		m.LoginError.Set("Server URL, email, and master password are required.")
 		return
 	}
+	m.submitLogin(req)
+}
 
+func (m *AppModel) VerifyTwoFactor() {
+	if m.LoginBusy.Get() || m.TwoFactor.Get() == nil {
+		return
+	}
+	code := strings.Join(strings.Fields(m.TwoFactorCode.Get()), "")
+	if code == "" {
+		m.LoginError.Set("Enter the verification code.")
+		return
+	}
+	req, ok := m.loginRequest()
+	if !ok {
+		m.CancelTwoFactor()
+		return
+	}
+	req.TwoFactorProvider = m.TwoFactorProvider.Get()
+	req.TwoFactorCode = code
+	req.RememberDevice = m.TwoFactorRemember.Get()
+	m.submitLogin(req)
+}
+
+func (m *AppModel) submitLogin(req state.LoginRequest) {
 	m.ReleaseSecureInput()
 	m.LoginBusy.Set(true)
 	m.LoginError.Set("")
-	pwBytes := []byte(password)
+	verifying := req.TwoFactorCode != ""
 
 	go func() {
-		defer crypto.ZeroBytes(pwBytes)
-		err := m.Core.Login(context.Background(), serverURL, email, pwBytes)
+		defer crypto.ZeroBytes(req.MasterPassword)
+		err := m.Core.Login(context.Background(), req)
 		m.Scope.Post(func() {
 			m.LoginBusy.Set(false)
 			if err != nil {
-				m.LoginError.Set(friendlyError(err))
+				m.loginFailed(err, verifying)
 				return
 			}
-			m.LoginPassword.Set("")
-			m.UpdatePrefs(func(p UserPrefs) UserPrefs {
-				p.ServerURL = strings.TrimRight(serverURL, "/")
-				p.Email = email
-				return p
-			})
-			m.SyncAccountMetaFromSnapshot()
-			m.LastSync.Set(time.Now())
-			m.SyncState.Set(SyncIdle)
-			m.LockState.Set(state.StatusUnlocked)
-			m.Route.Set(RouteVault)
-			m.RefreshVaultData()
-			m.ResetIdleTimer()
-			m.ReleaseSecureInput()
+			m.finishLogin(req.ServerURL, req.Email)
 		})
 	}()
+}
+
+func (m *AppModel) loginFailed(err error, verifying bool) {
+	var tfErr *api.TwoFactorRequiredError
+	var apiErr *api.APIError
+	switch {
+	case verifying && (errors.As(err, &tfErr) || errors.As(err, &apiErr) && apiErr.StatusCode == http.StatusBadRequest):
+		m.TwoFactorCode.Set("")
+		m.LoginError.Set("Invalid verification code. Check the code and try again.")
+	case errors.As(err, &tfErr):
+		m.enterTwoFactor(tfErr.Challenge)
+	default:
+		m.LoginError.Set(friendlyError(err))
+	}
+}
+
+func (m *AppModel) enterTwoFactor(ch api.TwoFactorChallenge) {
+	prompt := &TwoFactorPrompt{EmailHint: ch.EmailHint()}
+	for _, p := range ch.Providers {
+		if p == api.TwoFactorAuthenticator || p == api.TwoFactorEmail {
+			prompt.Providers = append(prompt.Providers, p)
+		}
+	}
+	if len(prompt.Providers) == 0 {
+		names := make([]string, len(ch.Providers))
+		for i, p := range ch.Providers {
+			names[i] = p.String()
+		}
+		m.LoginError.Set("This account requires two-step login with " + strings.Join(names, ", ") +
+			", which GoVault does not support yet. Enable Authenticator App or Email two-step login in your vault web settings to sign in here.")
+		return
+	}
+	m.TwoFactorProvider.Set(prompt.Providers[0])
+	m.TwoFactorCode.Set("")
+	m.TwoFactorRemember.Set(false)
+	m.TwoFactorNotice.Set("")
+	if len(ch.Providers) == 1 && ch.Providers[0] == api.TwoFactorEmail {
+		m.TwoFactorNotice.Set(emailSentNotice(prompt.EmailHint))
+	}
+	m.LoginError.Set("")
+	m.TwoFactor.Set(prompt)
+}
+
+func (m *AppModel) SelectTwoFactorProvider(p api.TwoFactorProvider) {
+	if !m.TwoFactor.Get().Has(p) || m.TwoFactorProvider.Get() == p {
+		return
+	}
+	m.TwoFactorProvider.Set(p)
+	m.TwoFactorCode.Set("")
+	m.TwoFactorNotice.Set("")
+	m.LoginError.Set("")
+}
+
+func (m *AppModel) SendTwoFactorEmail() {
+	if m.TwoFactorSending.Get() || !m.TwoFactor.Get().Has(api.TwoFactorEmail) {
+		return
+	}
+	req, ok := m.loginRequest()
+	if !ok {
+		m.CancelTwoFactor()
+		return
+	}
+	hint := m.TwoFactor.Get().EmailHint
+	m.TwoFactorSending.Set(true)
+	m.LoginError.Set("")
+	m.TwoFactorNotice.Set("")
+
+	go func() {
+		defer crypto.ZeroBytes(req.MasterPassword)
+		err := m.Core.SendEmailTwoFactorCode(context.Background(), req)
+		m.Scope.Post(func() {
+			m.TwoFactorSending.Set(false)
+			if err != nil {
+				m.LoginError.Set("Could not send the verification email. " + friendlyError(err))
+				return
+			}
+			m.TwoFactorNotice.Set(emailSentNotice(hint))
+		})
+	}()
+}
+
+func (m *AppModel) CancelTwoFactor() {
+	m.TwoFactor.Set(nil)
+	m.TwoFactorCode.Set("")
+	m.TwoFactorNotice.Set("")
+	m.LoginError.Set("")
+	m.ReleaseSecureInput()
+}
+
+func emailSentNotice(hint string) string {
+	if hint == "" {
+		return "A verification code was sent to your email."
+	}
+	return "A verification code was sent to " + hint + "."
+}
+
+func (m *AppModel) finishLogin(serverURL, email string) {
+	m.LoginPassword.Set("")
+	m.TwoFactor.Set(nil)
+	m.TwoFactorCode.Set("")
+	m.TwoFactorNotice.Set("")
+	m.UpdatePrefs(func(p UserPrefs) UserPrefs {
+		p.ServerURL = strings.TrimRight(serverURL, "/")
+		p.Email = email
+		return p
+	})
+	m.SyncAccountMetaFromSnapshot()
+	m.LastSync.Set(time.Now())
+	m.SyncState.Set(SyncIdle)
+	m.LockState.Set(state.StatusUnlocked)
+	m.Route.Set(RouteVault)
+	m.RefreshVaultData()
+	m.ResetIdleTimer()
+	m.ReleaseSecureInput()
 }
 
 func (m *AppModel) UnlockWithPassword() {
@@ -1711,7 +1870,7 @@ func cipherFromDraft(d *EditDraft) *state.Cipher {
 func friendlyError(err error) string {
 	switch {
 	case errors.Is(err, api.ErrTwoFactorRequired):
-		return "Two-factor authentication is required (planned for Phase 2)."
+		return "Two-step login is required for this account."
 	case errors.Is(err, api.ErrUnauthorized):
 		return "Invalid email or master password."
 	case errors.Is(err, api.ErrNetworkOffline):

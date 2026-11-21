@@ -78,6 +78,8 @@ type vaultTestEnv struct {
 	conflictOnID  string
 	lastUpdateKey *string
 	lastUpdateRev *time.Time
+	require2FA    bool
+	emailSends    int
 }
 
 func newVaultTestEnv(t *testing.T) *vaultTestEnv {
@@ -179,13 +181,31 @@ func newVaultTestEnv(t *testing.T) *vaultTestEnv {
 					w.WriteHeader(http.StatusBadRequest)
 					return
 				}
-				_ = json.NewEncoder(w).Encode(api.TokenResponse{
+				resp := api.TokenResponse{
 					AccessToken:  "tok-1",
 					RefreshToken: "ref-1",
 					ExpiresIn:    3600,
 					TokenType:    "Bearer",
 					Key:          protectedUserKey.String(),
-				})
+				}
+				env.mu.Lock()
+				require2FA := env.require2FA
+				env.mu.Unlock()
+				if require2FA {
+					provider, code := r.FormValue("twoFactorProvider"), r.FormValue("twoFactorToken")
+					switch {
+					case provider == "5" && code == "remembered-device":
+					case provider == "0" && code == "123456":
+						if r.FormValue("twoFactorRemember") == "1" {
+							resp.TwoFactorToken = "remembered-device"
+						}
+					default:
+						w.WriteHeader(http.StatusBadRequest)
+						_, _ = w.Write([]byte(`{"error":"invalid_grant","TwoFactorProviders":["0","1"],"TwoFactorProviders2":{"0":null,"1":{"Email":"a***@example.com"}}}`))
+						return
+					}
+				}
+				_ = json.NewEncoder(w).Encode(resp)
 			case "refresh_token":
 				_ = json.NewEncoder(w).Encode(api.TokenResponse{
 					AccessToken:  "tok-2",
@@ -194,6 +214,19 @@ func newVaultTestEnv(t *testing.T) *vaultTestEnv {
 					TokenType:    "Bearer",
 				})
 			}
+
+		case r.Method == http.MethodPost && r.URL.Path == "/api/two-factor/send-email-login":
+			var body struct {
+				MasterPasswordHash string `json:"masterPasswordHash"`
+			}
+			_ = json.NewDecoder(r.Body).Decode(&body)
+			if body.MasterPasswordHash != expectedHash {
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
+			env.mu.Lock()
+			env.emailSends++
+			env.mu.Unlock()
 
 		case r.Method == http.MethodGet && r.URL.Path == "/api/accounts/revision-date":
 			env.mu.Lock()
@@ -341,7 +374,7 @@ func TestService_LifecycleOfflineUnlockAndLogout(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	if err := svc.Login(ctx, env.server.URL, env.email, env.password); err != nil {
+	if err := svc.Login(ctx, LoginRequest{ServerURL: env.server.URL, Email: env.email, MasterPassword: env.password}); err != nil {
 		t.Fatalf("Login: %v", err)
 	}
 	if svc.Status() != StatusUnlocked {
@@ -439,7 +472,7 @@ func TestService_CRUDPerCipherKeyAndConflict(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	if err := svc.Login(ctx, env.server.URL, env.email, env.password); err != nil {
+	if err := svc.Login(ctx, LoginRequest{ServerURL: env.server.URL, Email: env.email, MasterPassword: env.password}); err != nil {
 		t.Fatalf("Login: %v", err)
 	}
 
@@ -555,7 +588,7 @@ func TestService_RealtimeSyncAndLogout(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	if err := svc.Login(ctx, env.server.URL, env.email, env.password); err != nil {
+	if err := svc.Login(ctx, LoginRequest{ServerURL: env.server.URL, Email: env.email, MasterPassword: env.password}); err != nil {
 		t.Fatalf("Login: %v", err)
 	}
 	// Drain initial login notifications.
@@ -599,5 +632,56 @@ func TestService_RealtimeSyncAndLogout(t *testing.T) {
 		}
 	case <-timeout.C:
 		t.Fatalf("timed out waiting for LogOut push")
+	}
+}
+
+func TestService_TwoFactorLoginAndRememberDevice(t *testing.T) {
+	env := newVaultTestEnv(t)
+	env.require2FA = true
+	fileStore := store.NewFileStore(t.TempDir())
+	secrets := newMemSecretStore()
+	svc, err := NewService(ServiceConfig{Store: fileStore, Secrets: secrets, DeviceID: "dev-1", HTTPClient: env.server.Client()})
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx := context.Background()
+	req := LoginRequest{ServerURL: env.server.URL, Email: env.email, MasterPassword: env.password}
+
+	err = svc.Login(ctx, req)
+	var tfErr *api.TwoFactorRequiredError
+	if !errors.As(err, &tfErr) || !tfErr.Challenge.Has(api.TwoFactorAuthenticator) || !tfErr.Challenge.Has(api.TwoFactorEmail) {
+		t.Fatalf("Login without code = %v, want 2FA challenge", err)
+	}
+	if svc.Status() != StatusLoggedOut {
+		t.Fatalf("status after challenge = %v", svc.Status())
+	}
+	if _, err := fileStore.LoadSnapshot("acct-1"); err == nil {
+		t.Fatal("snapshot persisted before 2FA completed")
+	}
+
+	if err := svc.SendEmailTwoFactorCode(ctx, req); err != nil || env.emailSends != 1 {
+		t.Fatalf("SendEmailTwoFactorCode = %v, sends = %d", err, env.emailSends)
+	}
+
+	wrong := req
+	wrong.TwoFactorCode = "000000"
+	if err := svc.Login(ctx, wrong); !errors.Is(err, api.ErrTwoFactorRequired) {
+		t.Fatalf("wrong code = %v", err)
+	}
+
+	ok := req
+	ok.TwoFactorProvider, ok.TwoFactorCode, ok.RememberDevice = api.TwoFactorAuthenticator, "123456", true
+	if err := svc.Login(ctx, ok); err != nil {
+		t.Fatalf("Login with code: %v", err)
+	}
+	if svc.Status() != StatusUnlocked || len(svc.Search("", SearchFilter{})) != 1 {
+		t.Fatalf("status = %v after 2FA login", svc.Status())
+	}
+
+	if err := svc.Logout(ctx, secrets); err != nil {
+		t.Fatal(err)
+	}
+	if err := svc.Login(ctx, req); err != nil {
+		t.Fatalf("remembered device login: %v", err)
 	}
 }

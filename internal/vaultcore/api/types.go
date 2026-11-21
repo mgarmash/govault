@@ -32,6 +32,8 @@ type TokenResponse struct {
 	KDFIters     int    `json:"KdfIterations"`
 	KDFMemory    *int   `json:"KdfMemory"`
 	KDFParallel  *int   `json:"KdfParallelism"`
+
+	TwoFactorToken string `json:"TwoFactorToken"`
 }
 
 type SyncResponse struct {

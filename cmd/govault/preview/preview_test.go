@@ -12,6 +12,7 @@ import (
 	"github.com/nsgo-dev/nsgo/nsgotest"
 	"github.com/txchen/govault/cmd/govault/demo"
 	. "github.com/txchen/govault/cmd/govault/ui"
+	"github.com/txchen/govault/internal/vaultcore/api"
 	"github.com/txchen/govault/internal/vaultcore/state"
 )
 
@@ -128,5 +129,16 @@ func TestPreviewMainWindow(t *testing.T) {
 		m.SidebarW.Set(260)
 		m.ListW.Set(360)
 		m.SelectCipher(m.Scope, "c-stripe")
+	})
+	scene("13-twofactor-light", core.AppearanceLight, func() {
+		m.LockState.Set(state.StatusLoggedOut)
+		m.TwoFactor.Set(&TwoFactorPrompt{
+			Providers: []api.TwoFactorProvider{api.TwoFactorAuthenticator, api.TwoFactorEmail},
+			EmailHint: "a***@northwind.dev",
+		})
+	})
+	scene("14-twofactor-email-dark", core.AppearanceDark, func() {
+		m.SelectTwoFactorProvider(api.TwoFactorEmail)
+		m.TwoFactorNotice.Set("A verification code was sent to a***@northwind.dev.")
 	})
 }

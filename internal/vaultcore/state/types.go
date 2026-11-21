@@ -147,9 +147,20 @@ type Folder struct {
 	Extra        map[string]json.RawMessage
 }
 
+type LoginRequest struct {
+	ServerURL      string
+	Email          string
+	MasterPassword []byte
+
+	TwoFactorProvider api.TwoFactorProvider
+	TwoFactorCode     string
+	RememberDevice    bool
+}
+
 type VaultService interface {
 	Status() LockStatus
-	Login(ctx context.Context, serverURL, email string, masterPassword []byte) error
+	Login(ctx context.Context, req LoginRequest) error
+	SendEmailTwoFactorCode(ctx context.Context, req LoginRequest) error
 	UnlockWithPassword(ctx context.Context, masterPassword []byte) error
 	UnlockWithUserKey(ctx context.Context, userKey *crypto.SymmetricKey) error
 	EnableBiometricUnlock(secrets store.SecretStore) error

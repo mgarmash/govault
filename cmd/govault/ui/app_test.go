@@ -2,6 +2,7 @@ package ui
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"strings"
 	"sync"
@@ -23,6 +24,9 @@ type mockVaultService struct {
 	ciphers  map[string]*state.Cipher
 	order    []string
 	folders  []state.Folder
+
+	twoFactorCode string
+	emailSends    int
 }
 
 func newMockVaultService(initial state.LockStatus) *mockVaultService {
@@ -39,10 +43,10 @@ func newMockVaultService(initial state.LockStatus) *mockVaultService {
 		},
 	}
 	c2 := &state.Cipher{
-		ID:   "c-note",
-		Type: api.CipherTypeSecureNote,
-		Name: "SSH Recovery Note",
-		Notes: "Keep safe",
+		ID:         "c-note",
+		Type:       api.CipherTypeSecureNote,
+		Name:       "SSH Recovery Note",
+		Notes:      "Keep safe",
 		SecureNote: &state.SecureNote{Type: 0},
 	}
 	return &mockVaultService{
@@ -65,13 +69,32 @@ func (m *mockVaultService) Status() state.LockStatus {
 	return m.status
 }
 
-func (m *mockVaultService) Login(_ context.Context, _, _ string, pw []byte) error {
+func (m *mockVaultService) Login(_ context.Context, req state.LoginRequest) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	if string(pw) != m.password {
+	if string(req.MasterPassword) != m.password {
 		return api.ErrUnauthorized
 	}
+	if m.twoFactorCode != "" && (req.TwoFactorProvider != api.TwoFactorEmail || req.TwoFactorCode != m.twoFactorCode) {
+		if req.TwoFactorCode != "" {
+			return &api.APIError{StatusCode: 400, Message: "Invalid TOTP code"}
+		}
+		return &api.TwoFactorRequiredError{Challenge: api.TwoFactorChallenge{
+			Providers:    []api.TwoFactorProvider{api.TwoFactorAuthenticator, api.TwoFactorEmail},
+			ProviderData: map[api.TwoFactorProvider]json.RawMessage{api.TwoFactorEmail: json.RawMessage(`{"Email":"a***@example.com"}`)},
+		}}
+	}
 	m.status = state.StatusUnlocked
+	return nil
+}
+
+func (m *mockVaultService) SendEmailTwoFactorCode(_ context.Context, req state.LoginRequest) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if string(req.MasterPassword) != m.password {
+		return api.ErrUnauthorized
+	}
+	m.emailSends++
 	return nil
 }
 
@@ -288,6 +311,47 @@ func TestCoreStateTransitions(t *testing.T) {
 	app.Type("id:lock-password", "master-password")
 	app.Press("id:lock-submit")
 	app.WaitFor("id:vault-shell", 2*time.Second)
+}
+
+func TestLoginTwoFactorEmailVerify(t *testing.T) {
+	svc := newMockVaultService(state.StatusLoggedOut)
+	svc.twoFactorCode = "654321"
+	var releases []bool
+
+	app := nsgotest.Start(t, func(cx *core.Scope) core.Node {
+		model := NewAppModel(cx, svc, PlatformHooks{ReleaseSecureInput: func(force bool) { releases = append(releases, force) }})
+		model.MainWinVisible.Set(true)
+		return MainWindowView(cx, model)
+	}, nsgotest.Size(980, 720))
+
+	app.Type("id:login-server", "https://vault.example.com")
+	app.Type("id:login-email", "alice@example.com")
+	app.Type("id:login-password", "master-password")
+	app.Press("id:login-submit")
+	app.WaitFor("id:twofactor-screen", 2*time.Second)
+
+	app.Press("id:twofactor-provider-email")
+	app.Press("id:twofactor-send-email")
+	app.WaitFor("text:A verification code was sent to a***@example.com.", 2*time.Second)
+
+	app.Type("id:twofactor-code", "111111")
+	app.Press("id:twofactor-verify")
+	app.WaitFor("id:twofactor-error", 2*time.Second)
+
+	app.Type("id:twofactor-code", "654 321")
+	app.Press("id:twofactor-remember")
+	app.Press("id:twofactor-verify")
+	app.WaitFor("id:vault-shell", 2*time.Second)
+
+	svc.mu.RLock()
+	sends := svc.emailSends
+	svc.mu.RUnlock()
+	if sends != 1 {
+		t.Fatalf("email sends = %d, want 1", sends)
+	}
+	if len(releases) == 0 || !releases[len(releases)-1] {
+		t.Fatalf("secure input not force-released after login: %v", releases)
+	}
 }
 
 func TestTOTPTickerVisibilityGating(t *testing.T) {

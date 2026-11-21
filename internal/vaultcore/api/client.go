@@ -80,7 +80,7 @@ func (c *Client) Prelogin(ctx context.Context, email string) (crypto.KDFConfig, 
 	return cfg, nil
 }
 
-func (c *Client) LoginPassword(ctx context.Context, email, masterPasswordHash string) (*TokenResponse, error) {
+func (c *Client) LoginPassword(ctx context.Context, email, masterPasswordHash string, twoFactor *TwoFactorLogin) (*TokenResponse, error) {
 	normEmail := crypto.NormalizeEmail(email)
 	form := url.Values{
 		"grant_type":       {"password"},
@@ -91,6 +91,15 @@ func (c *Client) LoginPassword(ctx context.Context, email, masterPasswordHash st
 		"deviceIdentifier": {c.deviceID},
 		"deviceName":       {c.deviceName},
 		"deviceType":       {strconv.Itoa(c.deviceType)},
+	}
+	if twoFactor != nil {
+		form.Set("twoFactorProvider", strconv.Itoa(int(twoFactor.Provider)))
+		form.Set("twoFactorToken", strings.Join(strings.Fields(twoFactor.Token), ""))
+		if twoFactor.Remember {
+			form.Set("twoFactorRemember", "1")
+		} else {
+			form.Set("twoFactorRemember", "0")
+		}
 	}
 	headers := map[string]string{
 		"Auth-Email": base64.RawURLEncoding.EncodeToString([]byte(normEmail)),
@@ -325,21 +334,21 @@ func classifyError(status int, body []byte) error {
 		return ErrRevisionConflict
 	}
 
+	if status == http.StatusBadRequest {
+		if tfErr, ok := parseTwoFactorChallenge(body); ok {
+			return tfErr
+		}
+	}
+
 	var parsed struct {
-		Error              string          `json:"error"`
-		ErrorDescription   string          `json:"error_description"`
-		Message            string          `json:"message"`
-		TwoFactorProviders json.RawMessage `json:"TwoFactorProviders"`
-		TwoFactor2         json.RawMessage `json:"TwoFactorProviders2"`
-		ErrorModel         *struct {
+		Error            string `json:"error"`
+		ErrorDescription string `json:"error_description"`
+		Message          string `json:"message"`
+		ErrorModel       *struct {
 			Message string `json:"message"`
 		} `json:"errorModel"`
 	}
 	_ = json.Unmarshal(body, &parsed)
-
-	if status == http.StatusBadRequest && (len(parsed.TwoFactorProviders) > 0 || len(parsed.TwoFactor2) > 0) {
-		return ErrTwoFactorRequired
-	}
 
 	msg := parsed.Message
 	if msg == "" && parsed.ErrorModel != nil {

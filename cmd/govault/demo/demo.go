@@ -91,14 +91,16 @@ func (s *Service) setStatus(st state.LockStatus) {
 	s.mu.Unlock()
 }
 
-func (s *Service) Login(_ context.Context, _, _ string, pw []byte) error {
-	if len(pw) == 0 {
+func (s *Service) Login(_ context.Context, req state.LoginRequest) error {
+	if len(req.MasterPassword) == 0 {
 		return api.ErrUnauthorized
 	}
 	time.Sleep(350 * time.Millisecond)
 	s.setStatus(state.StatusUnlocked)
 	return nil
 }
+
+func (s *Service) SendEmailTwoFactorCode(context.Context, state.LoginRequest) error { return nil }
 
 func (s *Service) UnlockWithPassword(_ context.Context, pw []byte) error {
 	if len(pw) == 0 {

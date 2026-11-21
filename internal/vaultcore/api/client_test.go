@@ -83,7 +83,7 @@ func TestClient_AuthAndPrelogin(t *testing.T) {
 		t.Fatalf("unexpected KDF: %+v", kdf)
 	}
 
-	tok, err := c.LoginPassword(ctx, "Alice@Example.com", "pw-hash")
+	tok, err := c.LoginPassword(ctx, "Alice@Example.com", "pw-hash", nil)
 	if err != nil {
 		t.Fatalf("LoginPassword: %v", err)
 	}
@@ -91,7 +91,7 @@ func TestClient_AuthAndPrelogin(t *testing.T) {
 		t.Fatalf("unexpected token response: %+v", tok)
 	}
 
-	if _, err := c.LoginPassword(ctx, "alice@example.com", "needs-2fa"); !errors.Is(err, ErrTwoFactorRequired) {
+	if _, err := c.LoginPassword(ctx, "alice@example.com", "needs-2fa", nil); !errors.Is(err, ErrTwoFactorRequired) {
 		t.Fatalf("2FA login got %v, want ErrTwoFactorRequired", err)
 	}
 

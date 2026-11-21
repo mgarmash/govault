@@ -10,6 +10,15 @@ import (
 const authFieldHeight core.Points = 34
 
 func LoginView(cx *core.Scope, m *AppModel) core.Node {
+	return core.Dynamic(func(cx *core.Scope) core.Node {
+		if prompt := m.TwoFactor.Get(); prompt != nil {
+			return TwoFactorView(cx, m, prompt)
+		}
+		return signInView(cx, m)
+	})
+}
+
+func signInView(cx *core.Scope, m *AppModel) core.Node {
 	return authScreen("login-screen", []core.Node{
 		core.View{
 			Class: "items-center gap-2.5 pb-1",
