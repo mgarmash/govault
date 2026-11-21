@@ -13,7 +13,10 @@
   <a href="go.mod"><img src="https://img.shields.io/github/go-mod/go-version/txchen/govault" alt="Go version"></a>
   <img src="https://img.shields.io/badge/CGO-zero-2ea44f" alt="Zero CGO">
   <img src="https://img.shields.io/badge/platforms-macOS%20%7C%20Linux-0a84ff" alt="macOS and Linux">
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/txchen/govault" alt="MIT License"></a>
 </p>
+
+<p align="center">Built with <a href="https://nsgo.dev">NSGo</a>.</p>
 
 <p align="center">
   <picture>
@@ -139,3 +142,7 @@ More detail:
 - [`vaultcore` specification](docs/vaultcore-spec.md): interfaces, Vaultwarden HTTP and SignalR contracts, encryption and test vectors.
 - [UI and state machine](docs/ui-and-state-machine.md): screens, states, shortcuts and signal wiring.
 - [Official client and protocol research](docs/research/official-client-and-protocol.md): the source analysis behind the design.
+
+## License
+
+GoVault is released under the [MIT License](LICENSE). Built with [NSGo](https://nsgo.dev) (Apache License 2.0).
