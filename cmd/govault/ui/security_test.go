@@ -162,26 +162,56 @@ func TestRevokedAttachmentSaveLeavesDestinationUntouched(t *testing.T) {
 	time.Sleep(50 * time.Millisecond)
 	untouched("save confirmed after lock")
 
+	explicit := saveTarget{dir: dir, name: "codes.txt", replace: true}
 	gen := m.LockGeneration()
 	m.RevokePending()
-	if published, err := m.savePrivateFile(gen, dest, []byte("plaintext")); published || err != nil {
+	if _, published, err := m.savePrivateFile(gen, explicit, []byte("plaintext")); published || err != nil {
 		t.Fatalf("revoked publish = (%v, %v)", published, err)
 	}
 	untouched("revoked before rename")
 
-	if published, err := m.savePrivateFile(m.LockGeneration(), filepath.Join(dir, "missing", "x.txt"), []byte("plaintext")); published || err == nil {
+	if _, published, err := m.savePrivateFile(m.LockGeneration(), saveTarget{dir: filepath.Join(dir, "missing"), name: "x.txt", replace: true}, []byte("plaintext")); published || err == nil {
 		t.Fatalf("failed write = (%v, %v)", published, err)
 	}
 	untouched("failed write")
 
-	if published, err := m.savePrivateFile(m.LockGeneration(), dest, []byte("plaintext")); !published || err != nil {
-		t.Fatalf("publish = (%v, %v)", published, err)
+	blocker := filepath.Join(dir, "blocker")
+	if err := os.MkdirAll(filepath.Join(blocker, "child"), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if _, published, err := m.savePrivateFile(m.LockGeneration(), saveTarget{dir: dir, name: "blocker", replace: true}, []byte("plaintext")); published || err == nil {
+		t.Fatalf("failed rename = (%v, %v)", published, err)
+	}
+	if entries, _ := os.ReadDir(dir); len(entries) != 2 {
+		t.Fatalf("failed rename left a temporary file: %d entries", len(entries))
+	}
+	if err := os.RemoveAll(blocker); err != nil {
+		t.Fatal(err)
+	}
+
+	path, published, err := m.savePrivateFile(m.LockGeneration(), saveTarget{dir: dir, name: "codes.txt"}, []byte("plaintext"))
+	if !published || err != nil || path != filepath.Join(dir, "codes (2).txt") {
+		t.Fatalf("no-replace publish = (%q, %v, %v)", path, published, err)
+	}
+	if data, _ := os.ReadFile(path); string(data) != "plaintext" {
+		t.Fatalf("no-replace content = %q", data)
+	}
+	if err := os.Remove(path); err != nil {
+		t.Fatal(err)
+	}
+	untouched("folder fallback")
+
+	if path, published, err := m.savePrivateFile(m.LockGeneration(), explicit, []byte("plaintext")); !published || err != nil || path != dest {
+		t.Fatalf("publish = (%q, %v, %v)", path, published, err)
 	}
 	if data, _ := os.ReadFile(dest); string(data) != "plaintext" {
 		t.Fatalf("published content = %q", data)
 	}
 	if fi, _ := os.Stat(dest); fi.Mode().Perm() != 0o600 {
 		t.Fatalf("published mode = %v", fi.Mode().Perm())
+	}
+	if entries, _ := os.ReadDir(dir); len(entries) != 1 {
+		t.Fatalf("publish left a temporary file: %d entries", len(entries))
 	}
 }
 

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
@@ -62,8 +63,8 @@ func (m *AppModel) DownloadAttachment(cx *core.Scope, c *state.Cipher, att state
 				if name == "" {
 					name = att.FileName
 				}
-				m.chooseSavePath(cx, name, func(path string, err error) {
-					if err != nil || path == "" || !m.StillUnlocked(gen) {
+				m.chooseSavePath(cx, name, func(target saveTarget, err error) {
+					if err != nil || target.dir == "" || !m.StillUnlocked(gen) {
 						crypto.ZeroBytes(data)
 						if err != nil {
 							m.ShowToast(ui.ToastError, "Save failed", err.Error())
@@ -71,7 +72,7 @@ func (m *AppModel) DownloadAttachment(cx *core.Scope, c *state.Cipher, att state
 						return
 					}
 					go func() {
-						published, err := m.savePrivateFile(gen, path, data)
+						path, published, err := m.savePrivateFile(gen, target, data)
 						m.Scope.Post(func() {
 							switch {
 							case err != nil:
@@ -87,10 +88,18 @@ func (m *AppModel) DownloadAttachment(cx *core.Scope, c *state.Cipher, att state
 	})
 }
 
-// chooseSavePath reports a destination on the engine goroutine, or "" when
-// the user cancelled. Without a native path-only dialog it asks for a folder
-// and picks a file name there that does not exist yet.
-func (m *AppModel) chooseSavePath(cx *core.Scope, name string, done func(path string, err error)) {
+// saveTarget is where an attachment goes. replace means the user explicitly
+// approved that exact path, so an existing file there may be replaced;
+// otherwise the first free name in dir is taken without replacing anything.
+type saveTarget struct {
+	dir, name string
+	replace   bool
+}
+
+// chooseSavePath reports a destination on the engine goroutine, or an empty
+// target when the user cancelled. Without a native path-only dialog it asks
+// for a folder only.
+func (m *AppModel) chooseSavePath(cx *core.Scope, name string, done func(saveTarget, error)) {
 	name = filepath.Base(filepath.Clean("/" + name))
 	if name == "/" || name == "." {
 		name = "attachment"
@@ -98,44 +107,39 @@ func (m *AppModel) chooseSavePath(cx *core.Scope, name string, done func(path st
 	if choose := m.Hooks.ChooseSavePath; choose != nil {
 		choose(name, func(path string, ok bool, err error) {
 			m.Scope.Post(func() {
-				if !ok {
-					path = ""
+				if !ok || path == "" {
+					done(saveTarget{}, err)
+					return
 				}
-				done(path, err)
+				done(saveTarget{dir: filepath.Dir(path), name: filepath.Base(path), replace: true}, err)
 			})
 		})
 		return
 	}
 	cx.PickDirectories(core.PickDirectoriesOptions{Title: "Save Attachment", Button: "Save Here"}, func(dirs []core.Directory, err error) {
 		if err != nil || len(dirs) == 0 || dirs[0].Path == "" {
-			done("", err)
+			done(saveTarget{}, err)
 			return
 		}
-		done(unusedPath(dirs[0].Path, name), nil)
+		done(saveTarget{dir: dirs[0].Path, name: name}, nil)
 	})
 }
 
-func unusedPath(dir, name string) string {
-	ext := filepath.Ext(name)
-	stem := strings.TrimSuffix(name, ext)
-	path := filepath.Join(dir, name)
-	for i := 2; ; i++ {
-		if _, err := os.Lstat(path); errors.Is(err, os.ErrNotExist) {
-			return path
-		}
-		path = filepath.Join(dir, fmt.Sprintf("%s (%d)%s", stem, i, ext))
-	}
-}
+const maxSaveCandidates = 1000
 
-// savePrivateFile writes data to a 0600 temporary file beside path, syncs it,
-// and renames it over path only if gen is still current. data is zeroed.
-func (m *AppModel) savePrivateFile(gen uint64, path string, data []byte) (bool, error) {
+// savePrivateFile writes data to a synced 0600 temporary file in the target
+// folder and publishes it only while gen is current. An approved path is
+// replaced atomically by rename; otherwise the file is hard-linked to the
+// first name that does not exist yet, which never replaces anything. The
+// temporary file is always removed, and data is zeroed.
+func (m *AppModel) savePrivateFile(gen uint64, target saveTarget, data []byte) (string, bool, error) {
 	defer crypto.ZeroBytes(data)
-	tmp, err := os.CreateTemp(filepath.Dir(path), "."+filepath.Base(path)+".*")
+	tmp, err := os.CreateTemp(target.dir, "."+target.name+".*")
 	if err != nil {
-		return false, err
+		return "", false, err
 	}
-	name := tmp.Name()
+	tmpPath := tmp.Name()
+	defer os.Remove(tmpPath)
 	err = tmp.Chmod(0o600)
 	if err == nil {
 		_, err = tmp.Write(data)
@@ -146,14 +150,34 @@ func (m *AppModel) savePrivateFile(gen uint64, path string, data []byte) (bool, 
 	if cerr := tmp.Close(); err == nil {
 		err = cerr
 	}
-	published := false
-	if err == nil {
-		published, err = m.publishIfUnlocked(gen, func() error { return os.Rename(name, path) })
+	if err != nil {
+		return "", false, err
 	}
+
+	var path string
+	published, err := m.publishIfUnlocked(gen, func() error {
+		if target.replace {
+			path = filepath.Join(target.dir, target.name)
+			return os.Rename(tmpPath, path)
+		}
+		ext := filepath.Ext(target.name)
+		stem := strings.TrimSuffix(target.name, ext)
+		for i := 1; i <= maxSaveCandidates; i++ {
+			path = filepath.Join(target.dir, target.name)
+			if i > 1 {
+				path = filepath.Join(target.dir, fmt.Sprintf("%s (%d)%s", stem, i, ext))
+			}
+			err := os.Link(tmpPath, path)
+			if err == nil || !errors.Is(err, fs.ErrExist) {
+				return err
+			}
+		}
+		return fmt.Errorf("no free file name for %s", target.name)
+	})
 	if !published {
-		_ = os.Remove(name)
+		path = ""
 	}
-	return published, err
+	return path, published, err
 }
 
 func (m *AppModel) AttachFile(cx *core.Scope, c *state.Cipher) {

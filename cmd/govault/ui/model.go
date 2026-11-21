@@ -456,7 +456,10 @@ func (m *AppModel) publishIfUnlocked(gen uint64, publish func() error) (bool, er
 	if m.lockGen.Load() != gen {
 		return false, nil
 	}
-	return true, publish()
+	if err := publish(); err != nil {
+		return false, err
+	}
+	return true, nil
 }
 
 type VaultCounts struct {
