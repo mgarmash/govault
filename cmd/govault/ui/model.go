@@ -1085,6 +1085,29 @@ func (m *AppModel) SignInAgain() {
 	m.Lock()
 }
 
+// CanReturnToUnlock reports a sign-in form shown over a locked local vault,
+// not a first sign-in.
+func (m *AppModel) CanReturnToUnlock() bool {
+	return m.ReSignIn.Get() && m.LockState.Get() == state.StatusLocked
+}
+
+// BackToUnlock leaves the sign-in form for the lock screen, ending a
+// sign-in still running; the local vault is untouched.
+func (m *AppModel) BackToUnlock() {
+	if !m.CanReturnToUnlock() {
+		return
+	}
+	m.Core.RevokeAuthAttempts()
+	m.RevokePending()
+	m.LoginBusy.Set(false)
+	m.LoginPassword.Set("")
+	m.LoginError.Set("")
+	m.TwoFactor.Set(nil)
+	m.TwoFactorCode.Set("")
+	m.ReSignIn.Set(false)
+	m.ReleaseSecureInput()
+}
+
 func (m *AppModel) finishLogin(serverURL, email string) {
 	m.ReSignIn.Set(false)
 	m.LoginPassword.Set("")

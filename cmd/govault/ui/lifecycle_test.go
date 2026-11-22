@@ -197,3 +197,34 @@ func TestLockDuringSaveClearsBusy(t *testing.T) {
 	}
 	close(svc.saveGate)
 }
+
+func TestSignInAgainCanGoBackToUnlockLocalOnly(t *testing.T) {
+	svc := newMockVaultService(state.StatusUnlocked)
+	svc.localOnly = true
+	app, m, _ := startSecurityApp(t, svc, PlatformHooks{})
+	app.Post(m.RefreshVaultData)
+	app.Post(func() { m.SyncState.Set(SyncAuthExpired) })
+	app.WaitFor("id:signin-banner-action", 2*time.Second)
+	app.Press("id:signin-banner-action")
+	app.WaitFor("id:login-back-to-unlock", 2*time.Second)
+
+	app.Press("id:login-back-to-unlock")
+	app.WaitFor("id:lock-screen", 2*time.Second)
+	if m.ReSignIn.Get() || app.Exists("id:login-screen") {
+		t.Fatal("still on the sign-in form")
+	}
+	app.Post(func() { m.LockPassword.Set("master-password"); m.UnlockWithPassword() })
+	app.WaitUntil(2*time.Second, func() bool { return m.LockState.Get() == state.StatusUnlocked })
+	if c, err := svc.GetCipher("c-github"); err != nil || c.Name != "GitHub" {
+		t.Fatalf("local vault after going back: %+v, %v", c, err)
+	}
+}
+
+func TestFirstSignInHasNoWayBackToUnlock(t *testing.T) {
+	svc := newMockVaultService(state.StatusLoggedOut)
+	app, _, _ := startSecurityApp(t, svc, PlatformHooks{})
+	app.WaitFor("id:login-submit", 2*time.Second)
+	if app.Exists("id:login-back-to-unlock") {
+		t.Fatal("a first sign-in offers Back to Unlock")
+	}
+}

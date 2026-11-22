@@ -85,6 +85,19 @@ func signInView(cx *core.Scope, m *AppModel) core.Node {
 			Style:   core.Style{Width: core.Pct(100)},
 			OnPress: m.Login,
 		},
+		core.Show{
+			When: m.CanReturnToUnlock,
+			Then: func(cx *core.Scope) core.Node {
+				return ui.Button{
+					TestID:  "login-back-to-unlock",
+					Text:    "Back to Unlock",
+					Variant: ui.ButtonGhost,
+					Size:    ui.SizeLarge,
+					Style:   core.Style{Width: core.Pct(100)},
+					OnPress: m.BackToUnlock,
+				}
+			},
+		},
 	}, "End-to-end encrypted. Your master password never leaves this device.")
 }
 
