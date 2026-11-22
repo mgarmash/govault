@@ -3,8 +3,9 @@
 #
 #   scripts/build-release.sh [-target T,...] [other nsgo build flags]
 #
-# NSGo builds gv, nsgo.yaml's command, into every desktop package itself.
-# This script adds what NSGo has no per-target option for: Linux packages
+# NSGo builds gv, nsgo.yaml's command, into every desktop package itself;
+# this script gives it nsgo.yaml's version (-X main.version, which the app
+# does not have). It also adds what NSGo has no per-target option for: Linux packages
 # get the AppStream metadata and a copy of the desktop entry under
 # usr/share, from cmd/govault/linux, where AppStream tools and the
 # AppImage catalog look for them; NSGo writes only the entry at the AppDir
@@ -31,6 +32,8 @@ while [ $# -gt 0 ]; do
   esac
 done
 
+version="$(sed -n 's/^version:[[:space:]]*//p' "${app}/nsgo.yaml" | head -n 1)"
+[ -n "$version" ] || { echo "build-release: no version in nsgo.yaml" >&2; exit 1; }
 if [ -z "$targets" ]; then
   targets="$(sed -n 's/^[[:space:]]*targets:[[:space:]]*\[\(.*\)\]/\1/p' "${app}/nsgo.yaml" | tr -d ' ')"
 fi
@@ -58,5 +61,5 @@ for target in $(printf '%s' "$targets" | tr ',' ' '); do
       install -m 644 "${app}/linux/dev.txchen.govault.desktop" "${resources}/usr/share/applications/"
       ;;
   esac
-  (cd "$root" && go tool nsgo build -target "$target" "$@" ./cmd/govault)
+  (cd "$root" && go tool nsgo build -target "$target" -ldflags "-X main.version=${version}" "$@" ./cmd/govault)
 done
