@@ -29,13 +29,15 @@ var ErrSealedField = errors.New("state: this item holds encrypted data GoVault c
 // keepSealed returns the unknown fields to send back with a save.
 //
 // Under the key they were sealed with they are kept byte for byte. Under
-// another key (a clone, an import copy, a move to another key) an encrypted
-// value can no longer be decrypted by anyone, so each EncString is removed
-// where it sits and every plaintext value around it is kept. The save is
-// refused with ErrSealedField instead when an EncString sits in an array
-// (removing it would shift the rest) or when a value might be an EncString
-// of a type GoVault does not know (see crypto.ClassifyEncString).
-func keepSealed(m map[string]json.RawMessage, sameKey bool) (map[string]json.RawMessage, error) {
+// another key (a clone, an import copy, a move to another key) nothing is
+// guessed. A string is dropped only when it is proven old-key ciphertext:
+// a type-2 EncString that decrypted, MAC verified, under the old key when
+// the item was read (proven, see proveSealed). Every other string that
+// parses as an EncString of any type, or could be one of an unknown type,
+// makes the save fail with ErrSealedField; it is never deleted. A proven
+// string inside an array also fails, since removing it shifts the rest.
+// All other values are plaintext and are kept.
+func keepSealed(m map[string]json.RawMessage, sameKey bool, proven map[string]bool) (map[string]json.RawMessage, error) {
 	if len(m) == 0 {
 		return nil, nil
 	}
@@ -45,7 +47,7 @@ func keepSealed(m map[string]json.RawMessage, sameKey bool) (map[string]json.Raw
 			out[k] = append(json.RawMessage(nil), v...)
 			continue
 		}
-		kept, keep, err := stripSealed(v)
+		kept, keep, err := stripSealed(v, proven)
 		if err != nil {
 			return nil, fmt.Errorf("%w (field %q)", err, k)
 		}
@@ -59,34 +61,33 @@ func keepSealed(m map[string]json.RawMessage, sameKey bool) (map[string]json.Raw
 	return out, nil
 }
 
-// stripSealed removes the EncStrings from one JSON value. keep is false
-// when the value itself is an EncString.
-func stripSealed(raw json.RawMessage) (json.RawMessage, bool, error) {
+// stripSealed removes the proven old-key ciphertext from one JSON value.
+// keep is false when the value itself is proven ciphertext.
+func stripSealed(raw json.RawMessage, proven map[string]bool) (json.RawMessage, bool, error) {
 	var v any
 	dec := json.NewDecoder(bytes.NewReader(raw))
 	dec.UseNumber()
 	if err := dec.Decode(&v); err != nil {
 		return nil, false, ErrSealedField
 	}
-	switch sealedKind(v) {
-	case crypto.NotEncString:
-		return append(json.RawMessage(nil), raw...), true, nil
-	case crypto.MaybeEncString:
-		return nil, false, fmt.Errorf("%w: it may hold encrypted data of an unknown kind", ErrSealedField)
-	}
-	var strip func(v any) (any, bool, error)
-	strip = func(v any) (any, bool, error) {
+	changed := false
+	var strip func(v any, inArray bool) (any, bool, error)
+	strip = func(v any, inArray bool) (any, bool, error) {
 		switch t := v.(type) {
 		case string:
-			return t, crypto.ClassifyEncString(t) == crypto.NotEncString, nil
-		case []any:
-			for _, e := range t {
-				if s, ok := e.(string); ok && crypto.ClassifyEncString(s) != crypto.NotEncString {
-					return nil, false, fmt.Errorf("%w: a list holds encrypted data", ErrSealedField)
-				}
+			switch {
+			case proven[sealedHash(t)] && inArray:
+				return nil, false, fmt.Errorf("%w: a list holds encrypted data", ErrSealedField)
+			case proven[sealedHash(t)]:
+				changed = true
+				return nil, false, nil
+			case crypto.ClassifyEncString(t) != crypto.NotEncString:
+				return nil, false, fmt.Errorf("%w: it holds data that may be encrypted with another key", ErrSealedField)
 			}
+			return t, true, nil
+		case []any:
 			for i, e := range t {
-				ne, _, err := strip(e)
+				ne, _, err := strip(e, true)
 				if err != nil {
 					return nil, false, err
 				}
@@ -95,7 +96,7 @@ func stripSealed(raw json.RawMessage) (json.RawMessage, bool, error) {
 			return t, true, nil
 		case map[string]any:
 			for k, e := range t {
-				ne, keep, err := strip(e)
+				ne, keep, err := strip(e, false)
 				if err != nil {
 					return nil, false, err
 				}
@@ -109,28 +110,35 @@ func stripSealed(raw json.RawMessage) (json.RawMessage, bool, error) {
 		}
 		return v, true, nil
 	}
-	nv, keep, err := strip(v)
+	nv, keep, err := strip(v, false)
 	if err != nil || !keep {
 		return nil, false, err
+	}
+	if !changed {
+		return append(json.RawMessage(nil), raw...), true, nil
 	}
 	out, err := json.Marshal(nv)
 	return out, err == nil, err
 }
 
-// sealedKind is the strongest kind found anywhere in v: MaybeEncString
-// over IsEncString over NotEncString.
-func sealedKind(v any) crypto.EncStringKind {
-	kind := crypto.NotEncString
+// sealedHash names a ciphertext string without keeping it.
+func sealedHash(s string) string {
+	sum := sha256.Sum256([]byte(s))
+	return hex.EncodeToString(sum[:])
+}
+
+// proveSealed records in proven every string in the unknown fields that is
+// a type-2 EncString decrypting, MAC verified, under key: proof that it is
+// ciphertext of this item, which a save under another key may drop.
+func proveSealed(proven map[string]bool, key *crypto.SymmetricKey, extras ...map[string]json.RawMessage) {
 	var walk func(any)
 	walk = func(v any) {
 		switch t := v.(type) {
 		case string:
-			switch crypto.ClassifyEncString(t) {
-			case crypto.MaybeEncString:
-				kind = crypto.MaybeEncString
-			case crypto.IsEncString:
-				if kind == crypto.NotEncString {
-					kind = crypto.IsEncString
+			if enc, err := crypto.ParseEncString(t); err == nil && enc.Type == crypto.EncAesCbc256HmacSha256B64 {
+				if plain, err := crypto.DecryptBytes(enc, key); err == nil {
+					crypto.ZeroBytes(plain)
+					proven[sealedHash(t)] = true
 				}
 			}
 		case []any:
@@ -143,8 +151,14 @@ func sealedKind(v any) crypto.EncStringKind {
 			}
 		}
 	}
-	walk(v)
-	return kind
+	for _, m := range extras {
+		for _, raw := range m {
+			var v any
+			if json.Unmarshal(raw, &v) == nil {
+				walk(v)
+			}
+		}
+	}
 }
 
 // uriChecksum is the checksum Bitwarden stores with each login URI: the

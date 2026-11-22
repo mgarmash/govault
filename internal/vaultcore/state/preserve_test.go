@@ -340,40 +340,86 @@ func TestService_ImportedPasskeyIsSealedWithTheNewItemKey(t *testing.T) {
 
 func b64(n int) string { return base64.StdEncoding.EncodeToString(bytes.Repeat([]byte{7}, n)) }
 
-func TestService_KeyChangeFiltersEncStringsAtTheLeaf(t *testing.T) {
-	env := newVaultTestEnv(t)
+// seedLoginExtra puts extra on c-1 (sealed with its own cipher key).
+func seedLoginExtra(t *testing.T, env *vaultTestEnv, extra map[string]json.RawMessage) {
+	t.Helper()
 	seedSealedLogin(t, env)
-	sealed := mustEncString(t, "secret", env.cipherKey)
-	legacy := "1." + b64(16) + "|" + b64(16) + "|" + b64(32)
 	env.mu.Lock()
+	defer env.mu.Unlock()
 	c := env.ciphers["c-1"]
 	login := *c.Login
-	login.Extra = map[string]json.RawMessage{
-		"legacyField":  json.RawMessage(fmt.Sprintf("%q", legacy)),
-		"year":         json.RawMessage(`"1.2024"`),
-		"mixed":        json.RawMessage(fmt.Sprintf(`{"secret":%q,"flag":true,"note":"1.0","deep":{"s":%q,"n":2}}`, sealed, legacy)),
-		"plainVersion": json.RawMessage(`"1.0"`),
-	}
+	login.Extra = extra
 	c.Login = &login
 	env.ciphers["c-1"] = c
-	env.mu.Unlock()
-	svc := loggedInTestService(t, env)
+}
 
+// copyUnderNewKey saves c-1 as a new personal item, under the user key.
+func copyUnderNewKey(t *testing.T, svc *Service) error {
+	t.Helper()
 	cp, _ := svc.GetCipher("c-1")
 	cp.ID, cp.Key, cp.Name = "", nil, "GitHub (Copy)"
 	cp.Login.Fido2Credentials = nil
-	if _, err := svc.SaveCipher(context.Background(), cp); err != nil {
+	_, err := svc.SaveCipher(context.Background(), cp)
+	return err
+}
+
+func TestService_KeyChangeDropsOnlyProvenOldKeyCiphertext(t *testing.T) {
+	env := newVaultTestEnv(t)
+	sealed := mustEncString(t, "secret", env.cipherKey)
+	seedLoginExtra(t, env, map[string]json.RawMessage{
+		"year":         json.RawMessage(`"1.2024"`),
+		"oldKey":       json.RawMessage(fmt.Sprintf("%q", sealed)),
+		"mixed":        json.RawMessage(fmt.Sprintf(`{"secret":%q,"flag":true,"note":"1.0","deep":{"s":%q,"n":2}}`, sealed, sealed)),
+		"plainVersion": json.RawMessage(`"1.0"`),
+	})
+	svc := loggedInTestService(t, env)
+	if err := copyUnderNewKey(t, svc); err != nil {
 		t.Fatal(err)
 	}
 	got := obj(t, env.body(t)["login"])
-	for _, k := range []string{"legacyField"} {
-		if _, ok := got[k]; ok {
-			t.Fatalf("%s (an EncString of a type GoVault cannot decrypt) survived a key change", k)
-		}
+	if _, ok := got["oldKey"]; ok {
+		t.Fatal("proven old-key ciphertext was sent under the new key")
 	}
 	sameJSON(t, "mixed", got["mixed"], `{"deep":{"n":2},"flag":true,"note":"1.0"}`)
 	sameJSON(t, "plainVersion", got["plainVersion"], `"1.0"`)
 	sameJSON(t, "year", got["year"], `"1.2024"`)
+}
+
+func TestService_KeyChangeRefusesUnprovenEncStrings(t *testing.T) {
+	other, _ := crypto.GenerateSymmetricKey()
+	foreign, _ := crypto.EncryptString("x", other)
+	for name, value := range map[string]string{
+		"RSA-shaped 3.2024":          "3.2024",
+		"type 0":                     "0." + b64(16) + "|" + b64(32),
+		"type 1":                     "1." + b64(16) + "|" + b64(32) + "|" + b64(32),
+		"type 2 under another key":   foreign,
+		"unknown type":               "7." + b64(48),
+		"nested type 2, another key": "",
+	} {
+		t.Run(name, func(t *testing.T) {
+			env := newVaultTestEnv(t)
+			raw := json.RawMessage(fmt.Sprintf("%q", value))
+			if value == "" {
+				raw = json.RawMessage(fmt.Sprintf(`{"a":{"b":%q},"plain":true}`, foreign))
+			}
+			seedLoginExtra(t, env, map[string]json.RawMessage{"future": raw})
+			svc := loggedInTestService(t, env)
+			if err := copyUnderNewKey(t, svc); !errors.Is(err, ErrSealedField) {
+				t.Fatalf("copy = %v, want ErrSealedField", err)
+			}
+			env.mu.Lock()
+			sent := env.lastBody
+			env.mu.Unlock()
+			if sent != nil {
+				t.Fatal("a refused save reached the server")
+			}
+			cur, _ := svc.GetCipher("c-1")
+			if _, err := svc.SaveCipher(context.Background(), cur); err != nil {
+				t.Fatalf("same-key save: %v", err)
+			}
+			sameJSON(t, "same-key save", obj(t, env.body(t)["login"])["future"], string(raw))
+		})
+	}
 }
 
 func TestService_KeyChangeRefusesUnknownEncStringTypes(t *testing.T) {

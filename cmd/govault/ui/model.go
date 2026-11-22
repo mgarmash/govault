@@ -34,7 +34,13 @@ const (
 	SyncInProgress
 	SyncOffline
 	SyncAuthExpired
+	// SyncPending: a sync fetched nothing it could apply, because changes
+	// were committed meanwhile. One automatic retry follows.
+	SyncPending
 )
+
+// scheduleSyncRetry runs the one retry of a deferred sync, shortly after.
+var scheduleSyncRetry = func(retry func()) { time.AfterFunc(2*time.Second, retry) }
 
 type MainRoute int
 
@@ -1320,6 +1326,10 @@ func (m *AppModel) Logout(cx *core.Scope) {
 }
 
 func (m *AppModel) SyncNow(silent bool) {
+	m.syncNow(silent, true)
+}
+
+func (m *AppModel) syncNow(silent, retryDeferred bool) {
 	if m.LockState.Get() != state.StatusUnlocked || m.SyncState.Get() == SyncInProgress {
 		return
 	}
@@ -1333,6 +1343,19 @@ func (m *AppModel) SyncNow(silent bool) {
 			}
 			if err != nil {
 				switch {
+				case errors.Is(err, state.ErrSyncDeferred):
+					m.SyncState.Set(SyncPending)
+					m.RefreshVaultData()
+					if retryDeferred {
+						gen := m.LockGeneration()
+						scheduleSyncRetry(func() {
+							m.Scope.Post(func() {
+								if m.StillUnlocked(gen) && m.SyncState.Get() == SyncPending {
+									m.syncNow(true, false)
+								}
+							})
+						})
+					}
 				case errors.Is(err, api.ErrUnauthorized):
 					m.SyncState.Set(SyncAuthExpired)
 					if !silent {
@@ -2359,6 +2382,9 @@ func cipherFromDraft(d *EditDraft) *state.Cipher {
 		nf := state.CustomField{}
 		if f.orig != nil {
 			nf = *f.orig
+			if f.Type != f.orig.Type {
+				nf.Shape = nf.Shape.Without("type")
+			}
 		}
 		nf.Name, nf.Value, nf.Type = f.Name, f.Value, f.Type
 		base.Fields = append(base.Fields, nf)

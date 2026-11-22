@@ -271,14 +271,21 @@ func mergeContent(c *state.Cipher, it Item) error {
 		want[i] = state.CustomField{Name: val(f.Name), Value: val(f.Value), Type: f.Type, LinkedID: f.LinkedID}
 	}
 	old := c.Fields
-	picks, err := matchOld(len(want), len(old),
-		func(i, j int) bool {
-			return old[j].Name == want[i].Name && old[j].Type == want[i].Type && old[j].Value == want[i].Value && sameMatch(old[j].LinkedID, want[i].LinkedID)
-		},
-		func(i, j int) bool { return old[j].Name == want[i].Name && old[j].Type == want[i].Type },
-		func(a, b int) bool {
+	sameField := func(a, b state.CustomField) bool {
+		return a.Name == b.Name && a.Type == b.Type && a.Value == b.Value && sameMatch(a.LinkedID, b.LinkedID)
+	}
+	picks, err := matchOld(matcher{
+		n: len(want), m: len(old),
+		full:  func(i, j int) bool { return sameField(old[j], want[i]) },
+		loose: func(i, j int) bool { return old[j].Name == want[i].Name && old[j].Type == want[i].Type },
+		same: func(a, b int) bool {
 			return sameRaw(old[a].Extra, old[b].Extra) && sameShape(old[a].Shape, old[b].Shape) && sameMatch(old[a].LinkedID, old[b].LinkedID)
-		})
+		},
+		meta: func(j int) bool {
+			return len(old[j].Extra) > 0 || old[j].LinkedID != nil || shapeCarriesData(old[j].Shape)
+		},
+		wantSame: func(i, k int) bool { return sameField(want[i], want[k]) },
+	})
 	if err != nil {
 		return fmt.Errorf("%w (custom fields)", err)
 	}
@@ -286,7 +293,8 @@ func mergeContent(c *state.Cipher, it Item) error {
 		if j < 0 {
 			continue
 		}
-		want[i].Extra, want[i].Shape = old[j].Extra, old[j].Shape
+		// The backup sets the type explicitly.
+		want[i].Extra, want[i].Shape = old[j].Extra, old[j].Shape.Without("type")
 		if want[i].LinkedID == nil {
 			want[i].LinkedID = old[j].LinkedID
 		}
@@ -311,8 +319,15 @@ func mergeContent(c *state.Cipher, it Item) error {
 			}
 		}
 		full := func(i, j int) bool { return prev[j].URI == next[i].URI && sameMatch(prev[j].Match, next[i].Match) }
-		picks, err := matchOld(len(next), len(prev), full, full, func(a, b int) bool {
-			return sameRaw(prev[a].Extra, prev[b].Extra) && sameShape(prev[a].Shape, prev[b].Shape)
+		picks, err := matchOld(matcher{
+			n: len(next), m: len(prev), full: full, loose: full,
+			same: func(a, b int) bool {
+				return sameRaw(prev[a].Extra, prev[b].Extra) && sameShape(prev[a].Shape, prev[b].Shape)
+			},
+			meta: func(j int) bool { return len(prev[j].Extra) > 0 || shapeCarriesData(prev[j].Shape) },
+			wantSame: func(i, k int) bool {
+				return next[i].URI == next[k].URI && sameMatch(next[i].Match, next[k].Match)
+			},
 		})
 		if err != nil {
 			return fmt.Errorf("%w (websites)", err)
@@ -320,7 +335,7 @@ func mergeContent(c *state.Cipher, it Item) error {
 		for i, j := range picks {
 			if j >= 0 {
 				p := prev[j]
-				next[i].Checksum, next[i].ChecksumOf, next[i].Extra, next[i].Shape = p.Checksum, p.ChecksumOf, p.Extra, p.Shape
+				next[i].Checksum, next[i].ChecksumOf, next[i].Extra, next[i].Shape = p.Checksum, p.ChecksumOf, p.Extra, p.Shape.Without("match")
 			}
 		}
 		out.URIs = next
@@ -339,6 +354,7 @@ func mergeContent(c *state.Cipher, it Item) error {
 		}
 		if it.SecureNote != nil {
 			sn.Type = it.SecureNote.Type
+			sn.Shape = sn.Shape.Without("type")
 		}
 		c.SecureNote = sn
 	}
@@ -383,47 +399,84 @@ func mergeContent(c *state.Cipher, it Item) error {
 // offered; Skip and Create Copy are.
 var ErrAmbiguousUpdate = errors.New("export: cannot tell which existing entries the backup entries are")
 
-// matchOld pairs each of n backup entries with at most one of m existing
-// ones, returning the existing index per backup entry or -1.
+// matcher describes one list to match: n backup entries against m existing
+// ones.
+type matcher struct {
+	n, m int
+	// full reports the same content; loose the same name and type (for
+	// URIs, loose is full).
+	full, loose func(i, j int) bool
+	// same reports that existing entries a and b hold identical hidden data.
+	same func(a, b int) bool
+	// meta reports that existing entry j holds hidden data a wrong match
+	// would move to another entry.
+	meta func(j int) bool
+	// wantSame reports that backup entries i and k have identical content,
+	// so which of them takes an existing entry makes no difference.
+	wantSame func(i, k int) bool
+}
+
+// matchOld pairs each backup entry with at most one existing one, returning
+// the existing index per backup entry or -1.
 //
-// First every backup entry with exactly one unused full match (the same
-// content) takes it. Then each remaining entry takes its only unused
-// candidate: a full match, else a loose one (same name and type). Several
-// candidates are told apart by position only when they hold identical
-// hidden data (same reports that), since then picking either loses
-// nothing; otherwise matchOld fails with ErrAmbiguousUpdate.
-func matchOld(n, m int, full, loose func(i, j int) bool, same func(a, b int) bool) ([]int, error) {
-	picks := make([]int, n)
-	used := make([]bool, m)
+// First every backup entry with exactly one unused full match takes it.
+// Then each remaining entry takes its only unused candidate: a full match,
+// else a loose one. Several candidates are told apart by position only
+// when they hold identical hidden data. An existing entry with hidden data
+// must also be wanted by only one backup entry (or by several identical
+// ones), so the result never depends on the order of the backup. Anything
+// else fails with ErrAmbiguousUpdate.
+func matchOld(mt matcher) ([]int, error) {
+	picks := make([]int, mt.n)
+	used := make([]bool, mt.m)
 	unused := func(i int, ok func(i, j int) bool) []int {
 		var out []int
-		for j := range m {
+		for j := range mt.m {
 			if !used[j] && ok(i, j) {
 				out = append(out, j)
 			}
 		}
 		return out
 	}
-	for i := range n {
+	// contested reports that j has hidden data and backup entries other
+	// than i, differing from i, among those in pool, also want it.
+	contested := func(i, j int, ok func(i, j int) bool, pool func(k int) bool) bool {
+		if !mt.meta(j) {
+			return false
+		}
+		for k := range mt.n {
+			if k != i && pool(k) && ok(k, j) && !mt.wantSame(i, k) {
+				return true
+			}
+		}
+		return false
+	}
+	all := func(int) bool { return true }
+	for i := range mt.n {
 		picks[i] = -1
-		if c := unused(i, full); len(c) == 1 {
+		if c := unused(i, mt.full); len(c) == 1 {
+			if contested(i, c[0], mt.full, all) {
+				return nil, ErrAmbiguousUpdate
+			}
 			picks[i], used[c[0]] = c[0], true
 		}
 	}
-	for i := range n {
+	inPass1 := slices.Clone(picks)
+	open := func(k int) bool { return inPass1[k] < 0 }
+	for i := range mt.n {
 		if picks[i] >= 0 {
 			continue
 		}
-		cands := unused(i, full)
+		cands := unused(i, mt.full)
 		if len(cands) == 0 {
-			cands = unused(i, loose)
+			cands = unused(i, mt.loose)
 		}
 		switch {
 		case len(cands) == 0:
 			continue
 		case len(cands) > 1:
 			for _, j := range cands[1:] {
-				if !same(cands[0], j) {
+				if !mt.same(cands[0], j) {
 					return nil, ErrAmbiguousUpdate
 				}
 			}
@@ -431,9 +484,23 @@ func matchOld(n, m int, full, loose func(i, j int) bool, same func(a, b int) boo
 				cands[0] = i
 			}
 		}
+		if contested(i, cands[0], mt.loose, open) {
+			return nil, ErrAmbiguousUpdate
+		}
 		picks[i], used[cands[0]] = cands[0], true
 	}
 	return picks, nil
+}
+
+// shapeCarriesData reports a wire shape that is not the default an empty
+// field gets (absent or null).
+func shapeCarriesData(sh api.Shape) bool {
+	for _, p := range sh {
+		if !p.Absent && string(p.Raw) != "null" {
+			return true
+		}
+	}
+	return false
 }
 
 func sameRaw(a, b map[string]json.RawMessage) bool {

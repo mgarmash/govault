@@ -640,7 +640,7 @@ func syncFooter(m *AppModel) core.Node {
 							core.View{
 								ClassFunc: func() string {
 									switch m.SyncState.Get() {
-									case SyncInProgress:
+									case SyncInProgress, SyncPending:
 										return "w-[6px] h-[6px] rounded-full bg-gv-accent"
 									case SyncOffline, SyncAuthExpired:
 										return "w-[6px] h-[6px] rounded-full bg-gv-warn"
@@ -656,6 +656,8 @@ func syncFooter(m *AppModel) core.Node {
 									switch m.SyncState.Get() {
 									case SyncInProgress:
 										return "Syncing…"
+									case SyncPending:
+										return "Sync pending"
 									case SyncOffline:
 										return "Offline · cached vault"
 									case SyncAuthExpired:

@@ -31,6 +31,7 @@ var (
 	ErrAttachmentNotFound      = errors.New("state: attachment not found")
 	ErrHiddenByOrganization    = errors.New("state: hidden by your organization")
 	ErrUnsupportedUpload       = errors.New("state: server requested an unsupported attachment upload method")
+	ErrSyncDeferred            = errors.New("state: changes kept landing during sync; nothing was synced yet")
 	ErrSnapshotNotUpdated      = errors.New("state: the server has the change, but the local copy could not be updated; sync to refresh it")
 )
 
@@ -117,6 +118,10 @@ type Cipher struct {
 	// under another key they cannot be decrypted and are dropped (see
 	// keepSealed).
 	SealedKeyID string
+	// ProvenSealed holds the SHA-256 (hex) of each unknown-field string
+	// proven to be ciphertext under that key, which a save under another
+	// key may drop (see keepSealed). It holds no key material.
+	ProvenSealed map[string]bool
 }
 
 type Login struct {

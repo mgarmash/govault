@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"maps"
 	"reflect"
+	"slices"
 	"strings"
 	"time"
 )
@@ -28,6 +29,25 @@ type Presence struct {
 	Absent bool
 	Raw    json.RawMessage
 	Zero   json.RawMessage
+}
+
+// Without returns a copy of s without the entries for names: fields that
+// were set explicitly, whose value must be sent even when it is the zero
+// that stood for "unset" before.
+func (s Shape) Without(names ...string) Shape {
+	if len(s) == 0 {
+		return nil
+	}
+	out := make(Shape, len(s))
+	for k, v := range s {
+		if !slices.Contains(names, k) {
+			out[k] = v.Clone()
+		}
+	}
+	if len(out) == 0 {
+		return nil
+	}
+	return out
 }
 
 func (p Presence) Clone() Presence {

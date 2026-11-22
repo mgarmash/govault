@@ -420,3 +420,60 @@ func TestApplyCountsServerAcceptedChangesAsDone(t *testing.T) {
 		t.Fatalf("LocalCopyErr = %v, saves = %v", res.LocalCopyErr, w.saves)
 	}
 }
+
+func TestImportExplicitZeroIsSent(t *testing.T) {
+	var wire api.EncryptedSecureNote
+	if err := json.Unmarshal([]byte(`{"type":null}`), &wire); err != nil {
+		t.Fatal(err)
+	}
+	cur := &state.Cipher{ID: "c-note", Type: api.CipherTypeSecureNote, Name: "Note", SecureNote: &state.SecureNote{Shape: wire.Shape}}
+	if err := mergeContent(cur, Item{Type: api.CipherTypeSecureNote, Name: "Note", SecureNote: &SecureNote{Type: 0}}); err != nil {
+		t.Fatal(err)
+	}
+	out, _ := json.Marshal(api.EncryptedSecureNote{Type: cur.SecureNote.Type, Shape: cur.SecureNote.Shape})
+	if string(out) != `{"type":0}` {
+		t.Fatalf("imported type 0 over null sent as %s", out)
+	}
+
+	untouched, _ := json.Marshal(api.EncryptedSecureNote{Shape: wire.Shape})
+	if string(untouched) != `{"type":null}` {
+		t.Fatalf("untouched type sent as %s", untouched)
+	}
+}
+
+func TestImportFieldMetadataNeedsAOneToOneMatch(t *testing.T) {
+	extra := map[string]json.RawMessage{"x": json.RawMessage(`"meta"`)}
+	for _, order := range [][]string{{"1", "2"}, {"2", "1"}} {
+		c := login("c-gh", "GitHub", "alice", "pw")
+		c.Fields = []state.CustomField{{Name: "PIN", Value: "0", Type: 1, Extra: extra}}
+		backup := []Field{{Name: opt("PIN"), Value: opt(order[0]), Type: 1}, {Name: opt("PIN"), Value: opt(order[1]), Type: 1}}
+		if err := mergeContent(c, Item{Type: api.CipherTypeLogin, Login: &Login{}, Fields: backup}); !errors.Is(err, ErrAmbiguousUpdate) {
+			t.Fatalf("order %v: mergeContent = %v, want ErrAmbiguousUpdate", order, err)
+		}
+	}
+
+	u := "https://github.com"
+	for _, first := range []bool{true, false} {
+		c := login("c-gh", "GitHub", "alice", "pw")
+		c.Login.URIs = []state.LoginURI{{URI: u, Extra: extra}}
+		three := 3
+		uris := []URI{{URI: opt(u)}, {URI: opt(u), Match: &three}}
+		if !first {
+			uris[0], uris[1] = uris[1], uris[0]
+		}
+		// Only the URI without a match setting matches; the result is
+		// the same for both orders.
+		if err := mergeContent(c, Item{Type: api.CipherTypeLogin, Login: &Login{URIs: uris}}); err != nil {
+			t.Fatal(err)
+		}
+		for _, got := range c.Login.URIs {
+			if (got.Match == nil) != (len(got.Extra) > 0) {
+				t.Fatalf("first=%v: extras went to %+v", first, got)
+			}
+		}
+		c.Login.URIs = []state.LoginURI{{URI: u, Extra: extra}}
+		if err := mergeContent(c, Item{Type: api.CipherTypeLogin, Login: &Login{URIs: []URI{{URI: opt(u)}, {URI: opt(u)}}}}); err != nil {
+			t.Fatalf("identical backup URIs: %v", err)
+		}
+	}
+}

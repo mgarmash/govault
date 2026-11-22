@@ -150,7 +150,44 @@ func decryptCipher(enc *api.EncryptedCipher, userKey *crypto.SymmetricKey) (*Cip
 		}
 	}
 
+	c.ProvenSealed = collectProven(c, activeKey)
 	return c, nil
+}
+
+// collectProven proves the unknown fields of c that are ciphertext under key
+// (see proveSealed).
+func collectProven(c *Cipher, key *crypto.SymmetricKey) map[string]bool {
+	extras := []map[string]json.RawMessage{c.Extra}
+	if l := c.Login; l != nil {
+		extras = append(extras, l.Extra)
+		for _, u := range l.URIs {
+			extras = append(extras, u.Extra)
+		}
+	}
+	if c.SecureNote != nil {
+		extras = append(extras, c.SecureNote.Extra)
+	}
+	if c.Card != nil {
+		extras = append(extras, c.Card.Extra)
+	}
+	if c.Identity != nil {
+		extras = append(extras, c.Identity.Extra)
+	}
+	if c.SSHKey != nil {
+		extras = append(extras, c.SSHKey.Extra)
+	}
+	for _, f := range c.Fields {
+		extras = append(extras, f.Extra)
+	}
+	for _, h := range c.PasswordHistory {
+		extras = append(extras, h.Extra)
+	}
+	proven := map[string]bool{}
+	proveSealed(proven, key, extras...)
+	if len(proven) == 0 {
+		return nil
+	}
+	return proven
 }
 
 func encryptCipherPayload(c *Cipher, userKey *crypto.SymmetricKey) (*api.CipherPayload, error) {
@@ -171,7 +208,7 @@ func encryptCipherPayload(c *Cipher, userKey *crypto.SymmetricKey) (*api.CipherP
 
 	// Blobs the server sealed (passkeys, URI checksums, encrypted unknown
 	// fields) are only sent back under the key they were sealed with.
-	sl := &sealer{same: c.SealedKeyID != "" && c.SealedKeyID == sealedKeyID(activeKey)}
+	sl := &sealer{same: c.SealedKeyID != "" && c.SealedKeyID == sealedKeyID(activeKey), proven: c.ProvenSealed}
 
 	encName, err := crypto.EncryptString(c.Name, activeKey)
 	if err != nil {
@@ -273,12 +310,13 @@ func encryptCipherPayload(c *Cipher, userKey *crypto.SymmetricKey) (*api.CipherP
 // sealer applies keepSealed to every unknown field of one save and keeps
 // the first error.
 type sealer struct {
-	same bool
-	err  error
+	same   bool
+	proven map[string]bool
+	err    error
 }
 
 func (s *sealer) keep(m map[string]json.RawMessage) map[string]json.RawMessage {
-	out, err := keepSealed(m, s.same)
+	out, err := keepSealed(m, s.same, s.proven)
 	if err != nil && s.err == nil {
 		s.err = err
 	}
@@ -620,6 +658,7 @@ func cloneCipher(c *Cipher) *Cipher {
 	cp.EncryptedByKeyID = cloneStringPtr(c.EncryptedByKeyID)
 	cp.Data = append(json.RawMessage(nil), c.Data...)
 	cp.Extra = cloneExtra(c.Extra)
+	cp.ProvenSealed = maps.Clone(c.ProvenSealed)
 	cp.CollectionIDs = append([]string(nil), c.CollectionIDs...)
 	if c.Login != nil {
 		l := *c.Login

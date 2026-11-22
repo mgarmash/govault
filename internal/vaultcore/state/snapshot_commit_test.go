@@ -214,3 +214,37 @@ func TestService_SyncFetchedBeforeASaveDoesNotOverwriteIt(t *testing.T) {
 	relockOffline(t, svc, env)
 	check("disk")
 }
+
+func TestService_SyncThatOnlyFetchesStaleDataIsDeferred(t *testing.T) {
+	env := newVaultTestEnv(t)
+	svc := loggedInTestService(t, env)
+	ctx := context.Background()
+	saves := 0
+	env.mu.Lock()
+	env.onSync = func() {
+		saves++
+		c, _ := svc.GetCipher("c-1")
+		c.Name = "Saved during sync"
+		if _, err := svc.SaveCipher(ctx, c); err != nil {
+			t.Errorf("save during sync: %v", err)
+		}
+	}
+	env.mu.Unlock()
+
+	if err := svc.forceSync(ctx); !errors.Is(err, ErrSyncDeferred) {
+		t.Fatalf("sync = %v, want ErrSyncDeferred", err)
+	}
+	if saves != 3 {
+		t.Fatalf("fetches = %d, want 3", saves)
+	}
+	if got, _ := svc.GetCipher("c-1"); got.Name != "Saved during sync" {
+		t.Fatalf("a stale fetch was applied: %q", got.Name)
+	}
+
+	env.mu.Lock()
+	env.onSync = nil
+	env.mu.Unlock()
+	if err := svc.forceSync(ctx); err != nil {
+		t.Fatalf("sync without concurrent changes = %v", err)
+	}
+}

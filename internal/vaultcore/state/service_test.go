@@ -95,6 +95,8 @@ type vaultTestEnv struct {
 	// the request arrived, not when the gate opens.
 	syncStale bool
 	syncResp  func() []byte
+	// onSync runs during each sync request, after its answer is fixed.
+	onSync func()
 }
 
 func (env *vaultTestEnv) syncBody() []byte { return env.syncResp() }
@@ -273,6 +275,13 @@ func newVaultTestEnv(t *testing.T) *vaultTestEnv {
 			var frozen []byte
 			if gate != nil && stale {
 				frozen = env.syncBody()
+			}
+			env.mu.Lock()
+			hook := env.onSync
+			env.mu.Unlock()
+			if hook != nil {
+				frozen = env.syncBody()
+				hook()
 			}
 			if gate != nil {
 				close(started)

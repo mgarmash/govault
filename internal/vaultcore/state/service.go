@@ -436,9 +436,9 @@ func (s *Service) sync(ctx context.Context, force bool) error {
 		}
 		force = true
 	}
-	// Changes keep landing; what is committed is newer than any fetch, and
-	// the next sync catches up.
-	return nil
+	// Changes keep landing; every fetch was older than what is committed,
+	// so nothing was applied. A later sync catches up.
+	return ErrSyncDeferred
 }
 
 func (s *Service) syncOnce(ctx context.Context, force bool) error {

@@ -184,3 +184,17 @@ func TestCloneDoesNotCopyPasskeyButKeepsExtras(t *testing.T) {
 		t.Fatal("clone changed the original passkeys")
 	}
 }
+
+func TestEditorFieldTypeChangeClearsPresence(t *testing.T) {
+	c := &state.Cipher{ID: "c-f", Type: api.CipherTypeSecureNote, Name: "N", SecureNote: &state.SecureNote{},
+		Fields: []state.CustomField{{Name: "a", Value: "1", Type: 1, Shape: api.Shape{"type": {Raw: json.RawMessage(`null`), Zero: json.RawMessage(`0`)}, "linkedId": {Absent: true}}}}}
+	d := draftFromCipher(c)
+	d.Fields[0].Type = 0
+	out := cipherFromDraft(d)
+	if _, ok := out.Fields[0].Shape["type"]; ok {
+		t.Fatal("an edited type kept its old presence, so a zero would be sent as null")
+	}
+	if _, ok := out.Fields[0].Shape["linkedId"]; !ok {
+		t.Fatal("untouched presence was dropped")
+	}
+}

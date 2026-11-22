@@ -39,6 +39,9 @@ type mockVaultService struct {
 	// failed local copy, as state.Service does when the snapshot write fails.
 	localCopyFails bool
 	creates        int
+
+	syncErrs  []error
+	syncCalls int
 }
 
 func newMockVaultService(initial state.LockStatus) *mockVaultService {
@@ -145,7 +148,17 @@ func (m *mockVaultService) Logout(_ context.Context, _ store.SecretStore) error 
 	return nil
 }
 
-func (m *mockVaultService) SyncNow(_ context.Context) error { return nil }
+func (m *mockVaultService) SyncNow(_ context.Context) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.syncCalls++
+	if len(m.syncErrs) == 0 {
+		return nil
+	}
+	err := m.syncErrs[0]
+	m.syncErrs = m.syncErrs[1:]
+	return err
+}
 
 func (m *mockVaultService) Search(query string, filter state.SearchFilter) []state.CipherSummary {
 	m.mu.RLock()
