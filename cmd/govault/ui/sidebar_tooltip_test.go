@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -42,5 +43,38 @@ func TestSidebarRowsShowTheirLabelAsATooltip(t *testing.T) {
 		app.WaitUntil(time.Second, func() bool { return len(app.Query("text:"+c.label)) > before })
 		app.HoverOut()
 		app.Advance(300 * time.Millisecond)
+	}
+}
+
+// TestSidebarRowsNameThemselvesOnce has screen readers read each row as one
+// element named by its label, its count as the description, rather than the
+// tooltip repeating the label as a description.
+func TestSidebarRowsNameThemselvesOnce(t *testing.T) {
+	svc := newMockVaultService(state.StatusUnlocked)
+	var m *AppModel
+	app := nsgotest.Start(t, func(cx *core.Scope) core.Node {
+		m = NewAppModel(cx, svc, PlatformHooks{PrefsKey: "govault.sidebar-a11y-test"})
+		m.MainWinVisible.Set(true)
+		m.RefreshVaultData()
+		return MainWindowView(cx, m)
+	}, nsgotest.Size(1100, 720), nsgotest.Environment(core.Environment{OS: core.OSMacOS, Idiom: core.IdiomDesktop, Locale: "en-US"}))
+
+	for _, c := range []struct{ id, label, description string }{
+		{"id:sidebar-all", "All Items", fmt.Sprint(m.AllCounts.Get().All)},
+		{"id:sidebar-generator", "Generator", ""},
+		{"id:sidebar-settings", "Settings", ""},
+		{"id:sidebar-folder", svc.folders[0].Name, fmt.Sprint(m.AllCounts.Get().ByFolder[svc.folders[0].ID])},
+	} {
+		row := app.Find(c.id)
+		p := row.Props
+		if p.Label != c.label || p.Description != c.description || p.Accessible != core.AccessibleYes {
+			t.Errorf("%s: label %q, description %q, one element %v; want %q, %q, true", c.id, p.Label, p.Description, p.Accessible, c.label, c.description)
+		}
+	}
+
+	app.AccessibilityAction("id:sidebar-folder", "rename")
+	app.WaitFor("id:folder-name-input", 2*time.Second)
+	if d := m.FolderDialog.Get(); !d.Open || d.FolderID != svc.folders[0].ID {
+		t.Fatalf("the rename action opened %+v", d)
 	}
 }
