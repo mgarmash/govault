@@ -42,7 +42,7 @@ Or download `govault-<version>-macos-arm64.dmg` from [Releases](https://github.c
 ### Linux (x86_64 and arm64)
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/txchen/govault/master/scripts/install-linux.sh | sh
+curl -fsSL https://raw.githubusercontent.com/txchen/govault/v0.3.0/scripts/install-linux.sh | sh
 ```
 
 The script detects your distribution and installs:
@@ -51,16 +51,16 @@ The script detects your distribution and installs:
 - the `.deb` package with `apt` on Debian, Ubuntu and derivatives,
 - the `.AppImage` everywhere else (Fedora, openSUSE and others), with a launcher entry and icon.
 
-Every download is checked against the release's `checksums.txt` before anything is installed. Options go after `sh -s --`:
+Before anything is installed, the script verifies the signature on the release's `checksums.txt` with `ssh-keygen` against the GoVault release key it pins ([`scripts/release-signing-key.pub`](scripts/release-signing-key.pub)), then checks the download against it. It needs OpenSSH 8.1 or later, and installs v0.3.0 and later releases, which are signed. Options go after `sh -s --`:
 
 | Option | Effect |
 |---|---|
-| `--version v0.2.5` | Install a specific release instead of the latest |
+| `--version v0.3.0` | Install a specific release instead of the latest |
 | `--appimage` | Use the AppImage on any distribution |
 | `--system` | Install the AppImage for all users under `/usr/local` |
 | `--uninstall` | Remove GoVault (your vault cache and settings are kept) |
 
-For example: `curl -fsSL https://raw.githubusercontent.com/txchen/govault/master/scripts/install-linux.sh | sh -s -- --appimage`
+For example: `curl -fsSL https://raw.githubusercontent.com/txchen/govault/v0.3.0/scripts/install-linux.sh | sh -s -- --appimage`
 
 GoVault needs GTK 4 on Linux; the AppImage also needs FUSE 2.
 

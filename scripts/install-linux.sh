@@ -1,14 +1,17 @@
 #!/bin/sh
 # Installs GoVault on Linux from a GitHub release.
 #
-#   curl -fsSL https://raw.githubusercontent.com/txchen/govault/master/scripts/install-linux.sh | sh
+#   curl -fsSL https://raw.githubusercontent.com/txchen/govault/v0.3.0/scripts/install-linux.sh | sh
 #
 # Arch-based systems get the pacman package, Debian-based systems the .deb,
 # and everything else the AppImage with a desktop entry and icon. Every
-# download is checked against the release's checksums.txt.
+# download is checked against the release's checksums.txt, whose signature
+# is first verified with ssh-keygen against the GoVault release key pinned
+# below (scripts/release-signing-key.pub). Releases before v0.3.0 are not
+# signed and are refused.
 #
 # Options (after "sh -s --" when piping):
-#   --version <tag>  install a specific release, such as v0.2.4 (default: latest)
+#   --version <tag>  install a specific release, such as v0.3.0 (default: latest)
 #   --appimage       install the AppImage on any distribution
 #   --system         install the AppImage for all users under /usr/local
 #   --uninstall      remove GoVault installed by any of the methods above
@@ -17,6 +20,8 @@ set -eu
 repo="txchen/govault"
 slug="govault"
 app_id="dev.txchen.govault"
+release_key="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILRnNJkBBjIkZ5vb9gvNDW20LiRBLR4lLdgWAOEbbxdo"
+release_namespace="govault-release"
 
 version=""
 mode=""
@@ -32,7 +37,7 @@ fail() {
 usage() {
   say "Usage: install-linux.sh [--version <tag>] [--appimage] [--system] [--uninstall]"
   say ""
-  say "  --version <tag>  install a specific release, such as v0.2.4 (default: latest)"
+  say "  --version <tag>  install a specific release, such as v0.3.0 (default: latest)"
   say "  --appimage       install the AppImage on any distribution"
   say "  --system         install the AppImage for all users under /usr/local"
   say "  --uninstall      remove GoVault installed by any of these methods"
@@ -42,7 +47,7 @@ usage() {
 while [ $# -gt 0 ]; do
   case "$1" in
     --version)
-      [ $# -ge 2 ] || fail "--version needs a tag, such as v0.2.4"
+      [ $# -ge 2 ] || fail "--version needs a tag, such as v0.3.0"
       version="$2"
       shift 2
       ;;
@@ -133,6 +138,8 @@ if [ "$uninstall" = 1 ]; then
 fi
 
 command -v curl > /dev/null 2>&1 || fail "curl is required"
+command -v ssh-keygen > /dev/null 2>&1 ||
+  fail "ssh-keygen (OpenSSH 8.1 or later) is required to verify the release signature; install openssh-client or openssh"
 
 case "$(uname -m)" in
   x86_64 | amd64) arch="x64" ;;
@@ -188,6 +195,13 @@ trap 'exit 1' INT TERM
 say "Installing GoVault ${version} (${mode}, ${arch})"
 curl -fL --progress-bar "${base}/${asset}" -o "${work}/${asset}" || fail "could not download ${asset} from ${version}"
 curl -fsSL "${base}/checksums.txt" -o "${work}/checksums.txt" || fail "could not download checksums.txt from ${version}"
+curl -fsSL "${base}/checksums.txt.sig" -o "${work}/checksums.txt.sig" ||
+  fail "${version} has no signed checksums (checksums.txt.sig); nothing was installed"
+printf 'govault-release namespaces="%s" %s\n' "$release_namespace" "$release_key" > "${work}/allowed_signers"
+ssh-keygen -Y verify -f "${work}/allowed_signers" -I govault-release -n "$release_namespace" \
+  -s "${work}/checksums.txt.sig" < "${work}/checksums.txt" > /dev/null 2>&1 ||
+  fail "the signature on checksums.txt does not match the GoVault release key; nothing was installed"
+say "Release signature verified."
 
 expected="$(awk -v f="$asset" '$2 == f || $2 == "*" f { print $1; exit }' "${work}/checksums.txt")"
 [ -n "$expected" ] || fail "checksums.txt lists no ${asset}"
