@@ -22,16 +22,30 @@ import (
 const defaultUserAgent = "GoVault/0.1"
 
 type ClientConfig struct {
-	ServerURL  string
-	DeviceID   string
-	DeviceName string
-	DeviceType int
-	HTTPClient *http.Client
+	ServerURL string
+	// APIURL and IdentityURL override the API and identity services, which
+	// otherwise live at ServerURL/api and ServerURL/identity.
+	APIURL      string
+	IdentityURL string
+	DeviceID    string
+	DeviceName  string
+	DeviceType  int
+	// ClientID is the OAuth client the tokens are issued to; "desktop"
+	// when empty.
+	ClientID string
+	// ClientName and ClientVersion, when set, are sent as the
+	// Bitwarden-Client-Name and Bitwarden-Client-Version headers, by which
+	// servers decide which item types a client understands.
+	ClientName    string
+	ClientVersion string
+	HTTPClient    *http.Client
 }
 
 type Client struct {
-	baseURL    string
-	httpClient *http.Client
+	baseURL     string
+	apiURL      string
+	identityURL string
+	httpClient  *http.Client
 	// apiHTTP sends every request to the server's API: login, two-factor,
 	// token refresh and authenticated calls. It never follows a redirect
 	// to another scheme, host or port, so credentials stay on the origin
@@ -41,16 +55,31 @@ type Client struct {
 	deviceName string
 	deviceType int
 	userAgent  string
+	clientID   string
+	headers    map[string]string
 }
 
 func NewClient(cfg ClientConfig) (*Client, error) {
 	base := strings.TrimRight(strings.TrimSpace(cfg.ServerURL), "/")
-	if base == "" {
+	apiURL := strings.TrimRight(strings.TrimSpace(cfg.APIURL), "/")
+	identityURL := strings.TrimRight(strings.TrimSpace(cfg.IdentityURL), "/")
+	if base == "" && (apiURL == "" || identityURL == "") {
 		return nil, errors.New("api: ServerURL is required")
 	}
-	u, err := url.Parse(base)
-	if err != nil || (u.Scheme != "http" && u.Scheme != "https") || u.Host == "" {
-		return nil, fmt.Errorf("api: invalid ServerURL %q", cfg.ServerURL)
+	if apiURL == "" {
+		apiURL = base + "/api"
+	}
+	if identityURL == "" {
+		identityURL = base + "/identity"
+	}
+	if base == "" {
+		base = apiURL
+	}
+	for _, raw := range []string{base, apiURL, identityURL} {
+		u, err := url.Parse(raw)
+		if err != nil || (u.Scheme != "http" && u.Scheme != "https") || u.Host == "" {
+			return nil, fmt.Errorf("api: invalid server URL %q", raw)
+		}
 	}
 
 	httpClient := cfg.HTTPClient
@@ -64,7 +93,7 @@ func NewClient(cfg ClientConfig) (*Client, error) {
 		if len(via) >= 10 {
 			return errors.New("api: too many redirects")
 		}
-		if !sameOrigin(next.URL, u) {
+		if !sameOrigin(next.URL, via[0].URL) {
 			return fmt.Errorf("%w to %s://%s", ErrRedirectRefused, next.URL.Scheme, next.URL.Host)
 		}
 		if inner != nil {
@@ -73,16 +102,37 @@ func NewClient(cfg ClientConfig) (*Client, error) {
 		return nil
 	}
 
+	clientID := cfg.ClientID
+	if clientID == "" {
+		clientID = "desktop"
+	}
+	headers := map[string]string{}
+	if cfg.ClientName != "" {
+		headers["Bitwarden-Client-Name"] = cfg.ClientName
+	}
+	if cfg.ClientVersion != "" {
+		headers["Bitwarden-Client-Version"] = cfg.ClientVersion
+	}
+	if cfg.ClientName != "" || cfg.ClientVersion != "" {
+		headers["Device-Type"] = strconv.Itoa(cfg.DeviceType)
+	}
 	return &Client{
-		baseURL:    base,
-		httpClient: httpClient,
-		apiHTTP:    &apiHTTP,
-		deviceID:   cfg.DeviceID,
-		deviceName: cfg.DeviceName,
-		deviceType: cfg.DeviceType,
-		userAgent:  defaultUserAgent,
+		baseURL:     base,
+		apiURL:      apiURL,
+		identityURL: identityURL,
+		httpClient:  httpClient,
+		apiHTTP:     &apiHTTP,
+		deviceID:    cfg.DeviceID,
+		deviceName:  cfg.DeviceName,
+		deviceType:  cfg.DeviceType,
+		userAgent:   defaultUserAgent,
+		clientID:    clientID,
+		headers:     headers,
 	}, nil
 }
+
+// SetUserAgent replaces the User-Agent sent with every request.
+func (c *Client) SetUserAgent(ua string) { c.userAgent = ua }
 
 func (c *Client) Prelogin(ctx context.Context, email string) (crypto.KDFConfig, error) {
 	var cfg crypto.KDFConfig
@@ -110,7 +160,7 @@ func (c *Client) LoginPassword(ctx context.Context, email, masterPasswordHash st
 		"username":         {normEmail},
 		"password":         {masterPasswordHash},
 		"scope":            {"api offline_access"},
-		"client_id":        {"desktop"},
+		"client_id":        {c.clientID},
 		"deviceIdentifier": {c.deviceID},
 		"deviceName":       {c.deviceName},
 		"deviceType":       {strconv.Itoa(c.deviceType)},
@@ -139,11 +189,35 @@ func (c *Client) LoginPassword(ctx context.Context, email, masterPasswordHash st
 	return &resp, nil
 }
 
+// LoginAPIKey exchanges a personal API key for an access token with the
+// client credentials grant. The server issues no refresh token: the same
+// exchange renews the token.
+func (c *Client) LoginAPIKey(ctx context.Context, clientID, clientSecret string) (*TokenResponse, error) {
+	form := url.Values{
+		"grant_type":       {"client_credentials"},
+		"scope":            {"api"},
+		"client_id":        {clientID},
+		"client_secret":    {clientSecret},
+		"deviceIdentifier": {c.deviceID},
+		"deviceName":       {c.deviceName},
+		"deviceType":       {strconv.Itoa(c.deviceType)},
+	}
+	raw, err := c.do(ctx, http.MethodPost, "/identity/connect/token", "application/x-www-form-urlencoded", "", nil, []byte(form.Encode()))
+	if err != nil {
+		return nil, err
+	}
+	var resp TokenResponse
+	if err := json.Unmarshal(raw, &resp); err != nil {
+		return nil, err
+	}
+	return &resp, nil
+}
+
 func (c *Client) RefreshToken(ctx context.Context, refreshToken string) (*TokenResponse, error) {
 	form := url.Values{
 		"grant_type":    {"refresh_token"},
 		"refresh_token": {refreshToken},
-		"client_id":     {"desktop"},
+		"client_id":     {c.clientID},
 	}
 
 	raw, err := c.do(ctx, http.MethodPost, "/identity/connect/token", "application/x-www-form-urlencoded", "", nil, []byte(form.Encode()))
@@ -338,12 +412,15 @@ func (c *Client) do(
 		bodyReader = bytes.NewReader(body)
 	}
 
-	req, err := http.NewRequestWithContext(ctx, method, c.baseURL+path, bodyReader)
+	req, err := http.NewRequestWithContext(ctx, method, c.resolve(path), bodyReader)
 	if err != nil {
 		return nil, err
 	}
 	req.Header.Set("User-Agent", c.userAgent)
 	req.Header.Set("Accept", "application/json")
+	for k, v := range c.headers {
+		req.Header.Set(k, v)
+	}
 	if contentType != "" {
 		req.Header.Set("Content-Type", contentType)
 	}
@@ -374,6 +451,17 @@ func (c *Client) do(
 		return raw, nil
 	}
 	return nil, classifyError(resp.StatusCode, raw)
+}
+
+// resolve maps a path under /api or /identity to its service URL.
+func (c *Client) resolve(path string) string {
+	switch {
+	case strings.HasPrefix(path, "/api/"):
+		return c.apiURL + strings.TrimPrefix(path, "/api")
+	case strings.HasPrefix(path, "/identity/"):
+		return c.identityURL + strings.TrimPrefix(path, "/identity")
+	}
+	return c.baseURL + path
 }
 
 func classifyError(status int, body []byte) error {
@@ -429,6 +517,7 @@ func classifyError(status int, body []byte) error {
 	return &APIError{
 		StatusCode: status,
 		Message:    msg,
+		Code:       parsed.Error,
 		Body:       string(body),
 	}
 }
@@ -475,7 +564,7 @@ func (c *Client) GetAttachment(ctx context.Context, accessToken, cipherID, attac
 // is only sent to the origin of the server, and it is stripped from every
 // redirect hop that leaves that origin.
 func (c *Client) DownloadAttachmentBytes(ctx context.Context, accessToken, downloadURL string) ([]byte, error) {
-	base, err := url.Parse(c.baseURL)
+	base, err := url.Parse(c.apiURL)
 	if err != nil {
 		return nil, err
 	}

@@ -97,6 +97,39 @@ Use desktop HTTP origin checks, normal TLS verification and its non-loopback HTT
 - Install, upgrade and uninstall every packaged format on its target OS. Invoke `gv --version` and a supported command by name in a new shell; inspect signed macOS artifacts and the actual installed PATH entry. Exercise in-app updates as well as package-manager upgrades. Check unrelated PATH entries and existing commands survive removal.
 - Accept v1 when supported contract fixtures pass, a real server completes both sign-in flows, offline reads work with a valid session, old sessions fail after lock/rotation/logout, and each advertised installer passes the PATH test. Track untested servers, hardware providers and package formats explicitly.
 
+## Implementation
+
+| Part | Where |
+| --- | --- |
+| Binary | `cmd/gv`: version from `-ldflags -X main.version`, else the module version |
+| Commands, parsing, prompts, output DTOs | `internal/cli` |
+| Profile files, locks, sessions, credentials, login, unlock, sync | `internal/vaultcore/profile` |
+| Read projection of a sync snapshot, attachment decryption | `state.OpenVault` (`internal/vaultcore/state/view.go`) |
+| OS credential stores | `internal/vaultcore/keyring`: login Keychain (purego), Credential Manager, Secret Service (godbus) |
+| Split API/identity hosts, API-key grant, public keys, collections | `internal/vaultcore/api` |
+| Fake Bitwarden server for tests | `internal/fakeserver`, shaped after Vaultwarden 1.37.5 |
+
+The profile directory is `GoVault CLI` under the OS parent, or under `BITWARDENCLI_APPDATA_DIR`. It holds `profile.json` (profile and device IDs, server, session generation), `account.json`, the encrypted snapshot `vault_<id>.enc.json`, `session.json`, and `credentials.json` on keyring-free hosts, plus `state.lock` and `credentials.lock`. A session key is 64 random bytes in base64, like bw's; `session.json` holds the user key sealed with AES-256-GCM under a key HKDF-derived from it, with the profile, account, login, endpoints and generation as associated data. Every unlock, lock and logout advances the generation. Token renewal runs under `credentials.lock`, so concurrent processes renew a rotating refresh token once.
+
+gv sends `Bitwarden-Client-Name: cli` and `Bitwarden-Client-Version: 2026.11.0`, the bw release it follows; Vaultwarden withholds SSH keys from clients that send no version.
+
+### Contract fixtures
+
+`internal/cli/testdata/bw` holds the stdout, stderr and exit status of the official bw 2026.11.0 release (the closest release to the reference revision) for 169 invocations in 19 scenarios against the fake server. `TestContractMatchesBW` runs gv through the same steps and compares the bytes, after replacing the server address, session keys, temporary paths, sync times and TOTP codes. Two documented differences are normalized: session messages show `$ gv` examples, and bw's SDK writes internal `ERROR` lines to stderr before a wrong-password message. Regenerate the fixtures with `BW_BINARY=/path/to/bw go test ./internal/cli -run TestCaptureBWFixtures`; it runs bw with private profile directories only.
+
+`TestVaultwarden` runs sign-in, reads, lock, unlock, sync, renewal and logout against a real disposable account when `GV_VAULTWARDEN_URL`, `GV_VAULTWARDEN_EMAIL` and `GV_VAULTWARDEN_PASSWORD` are set (optionally `GV_VAULTWARDEN_TOTP_SEED`, `GV_VAULTWARDEN_CLIENT_ID`, `GV_VAULTWARDEN_CLIENT_SECRET`). The same suite runs against the fake server in every test run.
+
+### Differences from the design and from bw
+
+- **No equivalent domains.** bw's CLI requests `/sync?excludeDomains=true` (its platform reports no autofill), so `--url` applies match rules without equivalent domains. gv does the same, to return the same items.
+- **Prompts need a terminal.** bw's prompts also read piped stdin; gv prompts only when stdin is a terminal and otherwise reports the missing input, as with `--nointeraction`.
+- **Wrong master password** prints bw 2026.11's SDK message, `Cryptography error, The decryption operation failed`, without its internal log lines.
+- **API-key login** prints a session key that unlocks nothing, as bw does; `unlock` provides the usable one.
+- **Attachments of items whose passwords are hidden** are refused, as in the GoVault app; bw downloads them.
+- **Password generator policies** of organizations are not applied to `generate`.
+- **Regular-expression URI matching** uses Go's RE2 syntax, which lacks lookaround and backreferences.
+- **Not supported:** Bitwarden cloud's new-device verification, `get exposed`, `get template`, `get org-collection`, `list org-members`, `config server --api` and the other endpoint overrides, and view event logging. Each fails with an explicit message.
+
 ## Decisions
 
 1. **macOS PATH:** no installer package in the DMG. Settings installs, repairs and uninstalls the `/usr/local/bin/gv` link into the app bundle, as described under Packaging, and Homebrew's cask links it with the `binary` stanza. The README documents both installs and their removal.

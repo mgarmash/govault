@@ -1,0 +1,31 @@
+{
+  "name": "status-unlocked",
+  "steps": [
+    {
+      "args": [
+        "status"
+      ],
+      "stdout": "{\"serverUrl\":\"{{SERVER}}\",\"lastSync\":\"{{TIME}}\",\"userEmail\":\"alice@example.com\",\"userId\":\"5d2c7e1a-6b3f-4c8e-9a0d-1f2e3d4c5b6a\",\"status\":\"unlocked\"}",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "status"
+      ],
+      "stdout": "{\"serverUrl\":\"{{SERVER}}\",\"lastSync\":\"{{TIME}}\",\"userEmail\":\"alice@example.com\",\"userId\":\"5d2c7e1a-6b3f-4c8e-9a0d-1f2e3d4c5b6a\",\"status\":\"locked\"}",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "status",
+        "--response",
+        "--pretty"
+      ],
+      "stdout": "{\n  \"success\": true,\n  \"data\": {\n    \"object\": \"template\",\n    \"template\": {\n      \"serverUrl\": \"{{SERVER}}\",\n      \"lastSync\": \"{{TIME}}\",\n      \"userEmail\": \"alice@example.com\",\n      \"userId\": \"5d2c7e1a-6b3f-4c8e-9a0d-1f2e3d4c5b6a\",\n      \"status\": \"unlocked\"\n    }\n  }\n}",
+      "stderr": "",
+      "exit": 0
+    }
+  ]
+}

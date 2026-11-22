@@ -1,0 +1,61 @@
+{
+  "name": "parse-errors",
+  "steps": [
+    {
+      "args": [
+        "foo"
+      ],
+      "stdout": "",
+      "stderr": "Invalid command: foo\nSee --help for a list of available commands.",
+      "exit": 1
+    },
+    {
+      "args": [
+        "get",
+        "item"
+      ],
+      "stdout": "",
+      "stderr": "error: missing required argument 'id'\n",
+      "exit": 1
+    },
+    {
+      "args": [
+        "list",
+        "foo"
+      ],
+      "stdout": "",
+      "stderr": "Unknown object \"foo\". Allowed objects are: items, folders, collections, org-collections, org-members, organizations.",
+      "exit": 1
+    },
+    {
+      "args": [
+        "get",
+        "foo",
+        "x"
+      ],
+      "stdout": "",
+      "stderr": "Unknown object \"foo\". Allowed objects are: item, username, password, uri, totp, notes, exposed, attachment, folder, collection, org-collection, organization, template, fingerprint, send.",
+      "exit": 1
+    },
+    {
+      "args": [
+        "list",
+        "foo",
+        "--response"
+      ],
+      "stdout": "{\"success\":false,\"message\":\"Unknown object \\\"foo\\\". Allowed objects are: items, folders, collections, org-collections, org-members, organizations.\"}",
+      "stderr": "",
+      "exit": 1
+    },
+    {
+      "args": [
+        "list",
+        "foo",
+        "--cleanexit"
+      ],
+      "stdout": "",
+      "stderr": "Unknown object \"foo\". Allowed objects are: items, folders, collections, org-collections, org-members, organizations.",
+      "exit": 0
+    }
+  ]
+}

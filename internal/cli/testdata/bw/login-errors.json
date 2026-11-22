@@ -1,0 +1,84 @@
+{
+  "name": "login-errors",
+  "steps": [
+    {
+      "args": [
+        "login",
+        "--nointeraction"
+      ],
+      "stdout": "",
+      "stderr": "Email address is required.",
+      "exit": 1
+    },
+    {
+      "args": [
+        "login",
+        "bob",
+        "pw"
+      ],
+      "stdout": "",
+      "stderr": "Email address is invalid.",
+      "exit": 1
+    },
+    {
+      "args": [
+        "login",
+        "alice@example.com",
+        "--nointeraction"
+      ],
+      "stdout": "",
+      "stderr": "Master password is required.",
+      "exit": 1
+    },
+    {
+      "args": [
+        "login",
+        "alice@example.com",
+        "wrong"
+      ],
+      "stdout": "",
+      "stderr": "Username or password is incorrect. Try again",
+      "exit": 1
+    },
+    {
+      "args": [
+        "login",
+        "alice@example.com",
+        "pw",
+        "--method",
+        "9"
+      ],
+      "stdout": "",
+      "stderr": "Invalid two-step login method.",
+      "exit": 1
+    },
+    {
+      "args": [
+        "login",
+        "--apikey",
+        "--nointeraction"
+      ],
+      "stdout": "",
+      "stderr": "client_id is required.",
+      "exit": 1
+    },
+    {
+      "args": [
+        "login",
+        "--apikey"
+      ],
+      "stdout": "",
+      "stderr": "Invalid API Key; Organization API Key currently not supported",
+      "exit": 1
+    },
+    {
+      "args": [
+        "login",
+        "--apikey"
+      ],
+      "stdout": "",
+      "stderr": "client_id or client_secret is incorrect. Try again.",
+      "exit": 1
+    }
+  ]
+}

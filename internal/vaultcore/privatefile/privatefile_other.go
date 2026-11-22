@@ -1,12 +1,12 @@
 //go:build !windows
 
-package ui
+package privatefile
 
 import "os"
 
-// createPrivateTemp creates a new temporary file in dir that only the
+// CreateTemp creates a new temporary file in dir that only the
 // current user can read or write.
-func createPrivateTemp(dir, pattern string) (*os.File, error) {
+func CreateTemp(dir, pattern string) (*os.File, error) {
 	f, err := os.CreateTemp(dir, pattern)
 	if err != nil {
 		return nil, err
@@ -18,3 +18,5 @@ func createPrivateTemp(dir, pattern string) (*os.File, error) {
 	}
 	return f, nil
 }
+
+func restrictDir(dir string) error { return os.Chmod(dir, 0o700) }

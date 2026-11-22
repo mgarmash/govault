@@ -1,0 +1,142 @@
+{
+  "name": "list-other",
+  "steps": [
+    {
+      "args": [
+        "list",
+        "folders"
+      ],
+      "stdout": "[{\"name\":\"Home\",\"object\":\"folder\",\"id\":\"f1f1f1f1-aaaa-4bbb-8ccc-dddddddddddd\"},{\"name\":\"Work\",\"object\":\"folder\",\"id\":\"f0f0f0f0-aaaa-4bbb-8ccc-dddddddddddd\"},{\"name\":\"No Folder\",\"object\":\"folder\",\"id\":\"\"}]",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "list",
+        "folders",
+        "--search",
+        "wo"
+      ],
+      "stdout": "[{\"name\":\"Work\",\"object\":\"folder\",\"id\":\"f0f0f0f0-aaaa-4bbb-8ccc-dddddddddddd\"}]",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "list",
+        "folders",
+        "--search",
+        "zz"
+      ],
+      "stdout": "[]",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "list",
+        "collections"
+      ],
+      "stdout": "[{\"object\":\"collection\",\"id\":\"c0c0c0c0-1111-4222-8333-444455556666\",\"organizationId\":\"0f1e2d3c-4b5a-4968-8776-655443322110\",\"name\":\"Engineering\"},{\"object\":\"collection\",\"id\":\"c1c1c1c1-1111-4222-8333-444455556666\",\"organizationId\":\"0f1e2d3c-4b5a-4968-8776-655443322110\",\"name\":\"Secrets\"}]",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "list",
+        "collections",
+        "--organizationid",
+        "0f1e2d3c-4b5a-4968-8776-655443322110"
+      ],
+      "stdout": "[{\"object\":\"collection\",\"id\":\"c0c0c0c0-1111-4222-8333-444455556666\",\"organizationId\":\"0f1e2d3c-4b5a-4968-8776-655443322110\",\"name\":\"Engineering\"},{\"object\":\"collection\",\"id\":\"c1c1c1c1-1111-4222-8333-444455556666\",\"organizationId\":\"0f1e2d3c-4b5a-4968-8776-655443322110\",\"name\":\"Secrets\"}]",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "list",
+        "collections",
+        "--search",
+        "sec"
+      ],
+      "stdout": "[{\"object\":\"collection\",\"id\":\"c1c1c1c1-1111-4222-8333-444455556666\",\"organizationId\":\"0f1e2d3c-4b5a-4968-8776-655443322110\",\"name\":\"Secrets\"}]",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "list",
+        "organizations"
+      ],
+      "stdout": "[{\"object\":\"organization\",\"id\":\"0f1e2d3c-4b5a-4968-8776-655443322110\",\"name\":\"Acme\",\"status\":2,\"type\":2,\"enabled\":true}]",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "list",
+        "organizations",
+        "--search",
+        "ac"
+      ],
+      "stdout": "[{\"object\":\"organization\",\"id\":\"0f1e2d3c-4b5a-4968-8776-655443322110\",\"name\":\"Acme\",\"status\":2,\"type\":2,\"enabled\":true}]",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "list",
+        "org-collections",
+        "--organizationid",
+        "0f1e2d3c-4b5a-4968-8776-655443322110"
+      ],
+      "stdout": "[{\"object\":\"collection\",\"id\":\"c0c0c0c0-1111-4222-8333-444455556666\",\"organizationId\":\"0f1e2d3c-4b5a-4968-8776-655443322110\",\"name\":\"Engineering\",\"externalId\":null},{\"object\":\"collection\",\"id\":\"c1c1c1c1-1111-4222-8333-444455556666\",\"organizationId\":\"0f1e2d3c-4b5a-4968-8776-655443322110\",\"name\":\"Secrets\",\"externalId\":null}]",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "list",
+        "org-collections",
+        "--organizationid",
+        "0f1e2d3c-4b5a-4968-8776-655443322110",
+        "--search",
+        "eng"
+      ],
+      "stdout": "[{\"object\":\"collection\",\"id\":\"c0c0c0c0-1111-4222-8333-444455556666\",\"organizationId\":\"0f1e2d3c-4b5a-4968-8776-655443322110\",\"name\":\"Engineering\",\"externalId\":null}]",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "list",
+        "org-collections"
+      ],
+      "stdout": "",
+      "stderr": "`organizationid` option is required.",
+      "exit": 1
+    },
+    {
+      "args": [
+        "list",
+        "org-collections",
+        "--organizationid",
+        "nope"
+      ],
+      "stdout": "",
+      "stderr": "`nope` is not a GUID.",
+      "exit": 1
+    },
+    {
+      "args": [
+        "list",
+        "org-collections",
+        "--organizationid",
+        "00000000-0000-4000-8000-000000000000"
+      ],
+      "stdout": "",
+      "stderr": "Organization not found.",
+      "exit": 1
+    }
+  ]
+}

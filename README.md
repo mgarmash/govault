@@ -87,6 +87,23 @@ CGO_ENABLED=0 go build ./cmd/govault
 go tool nsgo build -target macos_arm64 ./cmd/govault   # app bundle and installers
 ```
 
+## Command line: `gv`
+
+GoVault includes `gv`, a read-only command-line client that speaks the [Bitwarden CLI](https://bitwarden.com/help/cli/)'s commands, options, environment variables and output, so scripts written for `bw` work by changing the command name. It needs no display or desktop session and runs on headless servers.
+
+```sh
+gv config server https://vault.example.com
+gv login you@example.com              # or: BW_CLIENTID=… BW_CLIENTSECRET=… gv login --apikey
+export BW_SESSION="$(gv unlock --raw)"  # unlock once per shell
+gv list items --search github
+gv get password github.com
+gv get totp github.com
+gv sync
+gv lock
+```
+
+It supports `login` (master password with authenticator, email or YubiKey two-step login, or a personal API key), `unlock`, `lock`, `logout`, `status`, `sync`, `config server`, `list`, `get` (items, fields, TOTP codes, attachments, folders, collections, organizations, fingerprints), `generate` and `encode`. It cannot change the vault. `gv` keeps its own sign-in, separate from the app's, under `GoVault CLI` in your configuration directory (or `$BITWARDENCLI_APPDATA_DIR`), and keeps its credentials in the system keychain when there is one. See [docs/cli-design.md](docs/cli-design.md) for details and the few differences from `bw`.
+
 ## Why GoVault?
 
 Bitwarden's mobile apps are native, but its desktop app is an Electron and Angular application: it ships a Chromium browser engine and Node.js, runs several processes, and is large to download and keep in memory. GoVault is a desktop client written in Go on native platform views (AppKit on macOS, GTK 4 on Linux, Win32 with Direct2D on Windows), with no CGO and a single process.

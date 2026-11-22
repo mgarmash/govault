@@ -1,0 +1,61 @@
+{
+  "name": "login-apikey",
+  "steps": [
+    {
+      "args": [
+        "login",
+        "--apikey",
+        "--nointeraction"
+      ],
+      "stdout": "You are logged in!\n\nTo unlock your vault, set your session key to the `BW_SESSION` environment variable. ex:\n$ export BW_SESSION=\"{{SESSION}}\"\n\u003e $env:BW_SESSION=\"{{SESSION}}\"\n\nYou can also pass the session key to any command with the `--session` option. ex:\n$ bw list items --session {{SESSION}}",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "status"
+      ],
+      "stdout": "{\"serverUrl\":\"{{SERVER}}\",\"lastSync\":\"{{TIME}}\",\"userEmail\":\"alice@example.com\",\"userId\":\"5d2c7e1a-6b3f-4c8e-9a0d-1f2e3d4c5b6a\",\"status\":\"locked\"}",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "login",
+        "--check"
+      ],
+      "stdout": "You are logged in!",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "sync"
+      ],
+      "stdout": "Syncing complete.",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "unlock",
+        "--passwordenv",
+        "PW",
+        "--raw"
+      ],
+      "stdout": "{{SESSION}}",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "get",
+        "password",
+        "a0000001-0000-4000-8000-000000000001"
+      ],
+      "stdout": "gh-secret",
+      "stderr": "",
+      "exit": 0
+    }
+  ]
+}

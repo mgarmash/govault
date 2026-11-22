@@ -1,0 +1,125 @@
+{
+  "name": "get-other",
+  "steps": [
+    {
+      "args": [
+        "get",
+        "folder",
+        "work"
+      ],
+      "stdout": "{\"name\":\"Work\",\"object\":\"folder\",\"id\":\"f0f0f0f0-aaaa-4bbb-8ccc-dddddddddddd\"}",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "get",
+        "folder",
+        "f1f1f1f1-aaaa-4bbb-8ccc-dddddddddddd"
+      ],
+      "stdout": "{\"name\":\"Home\",\"object\":\"folder\",\"id\":\"f1f1f1f1-aaaa-4bbb-8ccc-dddddddddddd\"}",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "get",
+        "folder",
+        "o"
+      ],
+      "stdout": "",
+      "stderr": "More than one result was found. Try getting a specific object by `id` instead. The following objects were found:\nf1f1f1f1-aaaa-4bbb-8ccc-dddddddddddd\nf0f0f0f0-aaaa-4bbb-8ccc-dddddddddddd\n",
+      "exit": 1
+    },
+    {
+      "args": [
+        "get",
+        "folder",
+        "zz"
+      ],
+      "stdout": "",
+      "stderr": "Not found.",
+      "exit": 1
+    },
+    {
+      "args": [
+        "get",
+        "collection",
+        "eng"
+      ],
+      "stdout": "{\"object\":\"collection\",\"id\":\"c0c0c0c0-1111-4222-8333-444455556666\",\"organizationId\":\"0f1e2d3c-4b5a-4968-8776-655443322110\",\"name\":\"Engineering\"}",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "get",
+        "collection",
+        "c1c1c1c1-1111-4222-8333-444455556666"
+      ],
+      "stdout": "{\"object\":\"collection\",\"id\":\"c1c1c1c1-1111-4222-8333-444455556666\",\"organizationId\":\"0f1e2d3c-4b5a-4968-8776-655443322110\",\"name\":\"Secrets\",\"externalId\":null}",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "get",
+        "organization",
+        "acme"
+      ],
+      "stdout": "{\"object\":\"organization\",\"id\":\"0f1e2d3c-4b5a-4968-8776-655443322110\",\"name\":\"Acme\",\"status\":2,\"type\":2,\"enabled\":true}",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "get",
+        "organization",
+        "0f1e2d3c-4b5a-4968-8776-655443322110"
+      ],
+      "stdout": "{\"object\":\"organization\",\"id\":\"0f1e2d3c-4b5a-4968-8776-655443322110\",\"name\":\"Acme\",\"status\":2,\"type\":2,\"enabled\":true}",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "get",
+        "fingerprint",
+        "me"
+      ],
+      "stdout": "glorified-uncanny-situation-varnish-plop",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "get",
+        "fingerprint",
+        "7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d"
+      ],
+      "stdout": "overeater-overrate-calzone-enjoying-negative",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "get",
+        "fingerprint",
+        "00000000-0000-4000-8000-000000000000"
+      ],
+      "stdout": "",
+      "stderr": "Not found.",
+      "exit": 1
+    },
+    {
+      "args": [
+        "get",
+        "fingerprint",
+        "bob"
+      ],
+      "stdout": "",
+      "stderr": "Not found.",
+      "exit": 1
+    }
+  ]
+}

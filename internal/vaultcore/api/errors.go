@@ -19,7 +19,10 @@ var (
 type APIError struct {
 	StatusCode int
 	Message    string
-	Body       string
+	// Code is the OAuth error code of an identity error, such as
+	// "invalid_client".
+	Code string
+	Body string
 }
 
 func (e *APIError) Error() string {

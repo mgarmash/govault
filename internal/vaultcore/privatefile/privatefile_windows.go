@@ -1,6 +1,6 @@
 //go:build windows
 
-package ui
+package privatefile
 
 import (
 	"crypto/rand"
@@ -14,18 +14,18 @@ import (
 	"golang.org/x/sys/windows"
 )
 
-// errNoPrivateFiles means the chosen folder cannot keep a file private to
+// ErrNotPrivate means the chosen folder cannot keep a file private to
 // the user, so nothing is written there.
-var errNoPrivateFiles = errors.New("this location cannot keep the file private: its drive has no file permissions (for example FAT32 or exFAT). Choose a folder on an NTFS drive")
+var ErrNotPrivate = errors.New("this location cannot keep the file private: its drive has no file permissions (for example FAT32 or exFAT). Choose a folder on an NTFS drive")
 
-// createPrivateTemp creates a new temporary file in dir that only the
+// CreateTemp creates a new temporary file in dir that only the
 // current user can access. Windows ignores Chmod's permission bits, so the
 // file is created with a protected DACL granting the user alone full
 // access: it inherits nothing from a shared folder. The drive must keep
 // that DACL (FAT32 and exFAT have none), and the opened file must carry it,
 // before any byte is written; otherwise the file is removed and nothing is
 // written. Renaming or hard-linking it keeps that DACL.
-func createPrivateTemp(dir, pattern string) (*os.File, error) {
+func CreateTemp(dir, pattern string) (*os.File, error) {
 	if err := requirePersistentACLs(dir); err != nil {
 		return nil, err
 	}
@@ -88,7 +88,7 @@ func requirePersistentACLs(dir string) error {
 		return err
 	}
 	if flags&windows.FILE_PERSISTENT_ACLS == 0 {
-		return errNoPrivateFiles
+		return ErrNotPrivate
 	}
 	return nil
 }
@@ -110,7 +110,7 @@ func checkUserOnlyDACL(sd *windows.SECURITY_DESCRIPTOR, user *windows.SID) error
 	}
 	dacl, _, err := sd.DACL()
 	if err != nil || dacl == nil || control&windows.SE_DACL_PROTECTED == 0 || dacl.AceCount != 1 {
-		return errNoPrivateFiles
+		return ErrNotPrivate
 	}
 	var ace *windows.ACCESS_ALLOWED_ACE
 	if err := windows.GetAce(dacl, 0, &ace); err != nil {
@@ -118,7 +118,29 @@ func checkUserOnlyDACL(sd *windows.SECURITY_DESCRIPTOR, user *windows.SID) error
 	}
 	sid := (*windows.SID)(unsafe.Pointer(&ace.SidStart))
 	if ace.Header.AceType != windows.ACCESS_ALLOWED_ACE_TYPE || !sid.Equals(user) {
-		return errNoPrivateFiles
+		return ErrNotPrivate
 	}
 	return nil
+}
+
+// restrictDir gives dir a protected DACL that grants only the current
+// user access, inherited by the files created in it.
+func restrictDir(dir string) error {
+	if err := requirePersistentACLs(dir); err != nil {
+		return err
+	}
+	user, err := windows.GetCurrentProcessToken().GetTokenUser()
+	if err != nil {
+		return err
+	}
+	sd, err := windows.SecurityDescriptorFromString("D:P(A;OICI;FA;;;" + user.User.Sid.String() + ")")
+	if err != nil {
+		return err
+	}
+	dacl, _, err := sd.DACL()
+	if err != nil {
+		return err
+	}
+	return windows.SetNamedSecurityInfo(dir, windows.SE_FILE_OBJECT,
+		windows.DACL_SECURITY_INFORMATION|windows.PROTECTED_DACL_SECURITY_INFORMATION, nil, nil, dacl, nil)
 }

@@ -1,0 +1,168 @@
+{
+  "name": "get-item",
+  "steps": [
+    {
+      "args": [
+        "get",
+        "item",
+        "a0000001-0000-4000-8000-000000000001"
+      ],
+      "stdout": "{\"type\":1,\"favorite\":true,\"reprompt\":0,\"id\":\"a0000001-0000-4000-8000-000000000001\",\"collectionIds\":[],\"object\":\"item\",\"folderId\":\"f0f0f0f0-aaaa-4bbb-8ccc-dddddddddddd\",\"name\":\"GitHub\",\"notes\":\"Personal account\",\"fields\":[{\"type\":0,\"name\":\"recovery email\",\"value\":\"alice@recovery.example\"},{\"type\":1,\"name\":\"pin\",\"value\":\"4321\"},{\"type\":2,\"name\":\"2fa\",\"value\":\"true\"},{\"type\":3,\"name\":\"user\",\"linkedId\":100}],\"login\":{\"uris\":[{\"uri\":\"https://github.com/login\"},{\"uri\":\"https://gist.github.com\",\"match\":1}],\"fido2Credentials\":[],\"username\":\"alice\",\"password\":\"gh-secret\",\"totp\":\"JBSWY3DPEHPK3PXP\",\"passwordRevisionDate\":\"2025-12-01T00:00:00.000Z\"},\"passwordHistory\":[{\"lastUsedDate\":\"2025-12-01T00:00:00.000Z\",\"password\":\"old-gh-secret\"}],\"creationDate\":\"2026-01-02T03:04:05.678Z\",\"revisionDate\":\"2026-02-03T04:05:06.789Z\",\"attachments\":[{\"id\":\"att0readme0001\",\"fileName\":\"readme.txt\",\"size\":\"97\",\"sizeName\":\"97 Bytes\",\"url\":\"{{SERVER}}/attachments/a0000001-0000-4000-8000-000000000001/att0readme0001\"}]}",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "get",
+        "item",
+        "a0000001-0000-4000-8000-000000000001",
+        "--pretty"
+      ],
+      "stdout": "{\n  \"type\": 1,\n  \"favorite\": true,\n  \"reprompt\": 0,\n  \"id\": \"a0000001-0000-4000-8000-000000000001\",\n  \"collectionIds\": [],\n  \"object\": \"item\",\n  \"folderId\": \"f0f0f0f0-aaaa-4bbb-8ccc-dddddddddddd\",\n  \"name\": \"GitHub\",\n  \"notes\": \"Personal account\",\n  \"fields\": [\n    {\n      \"type\": 0,\n      \"name\": \"recovery email\",\n      \"value\": \"alice@recovery.example\"\n    },\n    {\n      \"type\": 1,\n      \"name\": \"pin\",\n      \"value\": \"4321\"\n    },\n    {\n      \"type\": 2,\n      \"name\": \"2fa\",\n      \"value\": \"true\"\n    },\n    {\n      \"type\": 3,\n      \"name\": \"user\",\n      \"linkedId\": 100\n    }\n  ],\n  \"login\": {\n    \"uris\": [\n      {\n        \"uri\": \"https://github.com/login\"\n      },\n      {\n        \"uri\": \"https://gist.github.com\",\n        \"match\": 1\n      }\n    ],\n    \"fido2Credentials\": [],\n    \"username\": \"alice\",\n    \"password\": \"gh-secret\",\n    \"totp\": \"JBSWY3DPEHPK3PXP\",\n    \"passwordRevisionDate\": \"2025-12-01T00:00:00.000Z\"\n  },\n  \"passwordHistory\": [\n    {\n      \"lastUsedDate\": \"2025-12-01T00:00:00.000Z\",\n      \"password\": \"old-gh-secret\"\n    }\n  ],\n  \"creationDate\": \"2026-01-02T03:04:05.678Z\",\n  \"revisionDate\": \"2026-02-03T04:05:06.789Z\",\n  \"attachments\": [\n    {\n      \"id\": \"att0readme0001\",\n      \"fileName\": \"readme.txt\",\n      \"size\": \"97\",\n      \"sizeName\": \"97 Bytes\",\n      \"url\": \"{{SERVER}}/attachments/a0000001-0000-4000-8000-000000000001/att0readme0001\"\n    }\n  ]\n}",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "get",
+        "item",
+        "github"
+      ],
+      "stdout": "",
+      "stderr": "More than one result was found. Try getting a specific object by `id` instead. The following objects were found:\na0000001-0000-4000-8000-000000000001\na0000002-0000-4000-8000-000000000002",
+      "exit": 1
+    },
+    {
+      "args": [
+        "get",
+        "item",
+        "github",
+        "--response"
+      ],
+      "stdout": "{\"success\":false,\"message\":\"More than one result was found. Try getting a specific object by `id` instead. The following objects were found:\\na0000001-0000-4000-8000-000000000001\\na0000002-0000-4000-8000-000000000002\",\"data\":[\"a0000001-0000-4000-8000-000000000001\",\"a0000002-0000-4000-8000-000000000002\"]}",
+      "stderr": "",
+      "exit": 1
+    },
+    {
+      "args": [
+        "get",
+        "item",
+        "github enterprise"
+      ],
+      "stdout": "{\"type\":1,\"favorite\":false,\"reprompt\":0,\"id\":\"a0000002-0000-4000-8000-000000000002\",\"collectionIds\":[],\"object\":\"item\",\"name\":\"GitHub Enterprise\",\"fields\":[],\"login\":{\"uris\":[{\"uri\":\"https://github.example.com\"}],\"fido2Credentials\":[],\"username\":\"alice-corp\",\"password\":\"ghe-secret\",\"passwordRevisionDate\":null},\"passwordHistory\":[],\"creationDate\":\"2026-01-02T03:04:05.678Z\",\"revisionDate\":\"2026-02-03T04:05:06.789Z\",\"attachments\":[]}",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "get",
+        "item",
+        "a0000008-0000-4000-8000-000000000008"
+      ],
+      "stdout": "{\"type\":1,\"favorite\":false,\"reprompt\":0,\"id\":\"a0000008-0000-4000-8000-000000000008\",\"collectionIds\":[\"c1c1c1c1-1111-4222-8333-444455556666\"],\"object\":\"item\",\"organizationId\":\"0f1e2d3c-4b5a-4968-8776-655443322110\",\"name\":\"Hidden Prod\",\"fields\":[{\"type\":1,\"name\":\"api token\",\"value\":null},{\"type\":0,\"name\":\"region\",\"value\":\"eu-west\"}],\"login\":{\"uris\":[{\"uri\":\"https://prod.example.com\"}],\"fido2Credentials\":[],\"username\":\"root\",\"password\":null,\"totp\":null,\"passwordRevisionDate\":null},\"creationDate\":\"2026-01-02T03:04:05.678Z\",\"revisionDate\":\"2026-02-03T04:05:06.789Z\",\"attachments\":[]}",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "get",
+        "item",
+        "a0000004-0000-4000-8000-000000000004"
+      ],
+      "stdout": "{\"type\":3,\"favorite\":false,\"reprompt\":0,\"id\":\"a0000004-0000-4000-8000-000000000004\",\"collectionIds\":[],\"object\":\"item\",\"name\":\"Visa\",\"fields\":[],\"card\":{\"cardholderName\":\"Alice Example\",\"brand\":\"Visa\",\"number\":\"4111111111111111\",\"expMonth\":\"12\",\"expYear\":\"2030\",\"code\":\"123\"},\"passwordHistory\":[],\"creationDate\":\"2026-01-02T03:04:05.678Z\",\"revisionDate\":\"2026-02-03T04:05:06.789Z\",\"attachments\":[]}",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "get",
+        "item",
+        "a0000005-0000-4000-8000-000000000005"
+      ],
+      "stdout": "{\"type\":4,\"favorite\":false,\"reprompt\":0,\"id\":\"a0000005-0000-4000-8000-000000000005\",\"collectionIds\":[],\"object\":\"item\",\"name\":\"Passport identity\",\"fields\":[],\"identity\":{\"title\":\"Ms\",\"firstName\":\"Alice\",\"lastName\":\"Example\",\"address1\":\"1 Main St\",\"city\":\"Springfield\",\"postalCode\":\"12345\",\"country\":\"US\",\"email\":\"alice@example.com\",\"username\":\"alice\"},\"passwordHistory\":[],\"creationDate\":\"2026-01-02T03:04:05.678Z\",\"revisionDate\":\"2026-02-03T04:05:06.789Z\",\"attachments\":[]}",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "get",
+        "item",
+        "a0000006-0000-4000-8000-000000000006"
+      ],
+      "stdout": "{\"type\":5,\"favorite\":false,\"reprompt\":0,\"id\":\"a0000006-0000-4000-8000-000000000006\",\"collectionIds\":[],\"object\":\"item\",\"name\":\"Deploy key\",\"fields\":[],\"sshKey\":{\"privateKey\":\"-----BEGIN OPENSSH PRIVATE KEY-----\\nAAAA\\n-----END OPENSSH PRIVATE KEY-----\\n\",\"publicKey\":\"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIExample deploy\",\"keyFingerprint\":\"SHA256:examplefingerprint\"},\"passwordHistory\":[],\"creationDate\":\"2026-01-02T03:04:05.678Z\",\"revisionDate\":\"2026-02-03T04:05:06.789Z\",\"attachments\":[]}",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "get",
+        "item",
+        "a0000003-0000-4000-8000-000000000003"
+      ],
+      "stdout": "{\"type\":2,\"favorite\":false,\"reprompt\":0,\"id\":\"a0000003-0000-4000-8000-000000000003\",\"collectionIds\":[],\"object\":\"item\",\"folderId\":\"f1f1f1f1-aaaa-4bbb-8ccc-dddddddddddd\",\"name\":\"Recovery codes\",\"notes\":\"code-1\\ncode-2\",\"fields\":[],\"secureNote\":{\"type\":0},\"passwordHistory\":[],\"creationDate\":\"2026-01-02T03:04:05.678Z\",\"revisionDate\":\"2026-02-03T04:05:06.789Z\",\"attachments\":[]}",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "get",
+        "item",
+        "a0000009-0000-4000-8000-000000000009"
+      ],
+      "stdout": "{\"type\":1,\"favorite\":false,\"reprompt\":0,\"id\":\"a0000009-0000-4000-8000-000000000009\",\"collectionIds\":[],\"object\":\"item\",\"name\":\"Old GitHub\",\"fields\":[],\"login\":{\"uris\":[{\"uri\":\"https://github.com\"}],\"fido2Credentials\":[],\"username\":\"old\",\"password\":\"old-secret\",\"passwordRevisionDate\":null},\"passwordHistory\":[],\"creationDate\":\"2026-01-02T03:04:05.678Z\",\"revisionDate\":\"2026-02-03T04:05:06.789Z\",\"deletedDate\":\"2026-03-04T05:06:07.000Z\",\"attachments\":[]}",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "get",
+        "item",
+        "old github"
+      ],
+      "stdout": "",
+      "stderr": "Not found.",
+      "exit": 1
+    },
+    {
+      "args": [
+        "get",
+        "item",
+        "nothing"
+      ],
+      "stdout": "",
+      "stderr": "Not found.",
+      "exit": 1
+    },
+    {
+      "args": [
+        "get",
+        "item",
+        "nothing",
+        "--response"
+      ],
+      "stdout": "{\"success\":false,\"message\":\"Not found.\"}",
+      "stderr": "",
+      "exit": 1
+    },
+    {
+      "args": [
+        "get",
+        "item",
+        "00000000-0000-4000-8000-000000000000"
+      ],
+      "stdout": "",
+      "stderr": "Not found.",
+      "exit": 1
+    },
+    {
+      "args": [
+        "get",
+        "item",
+        "A0000004-0000-4000-8000-000000000004"
+      ],
+      "stdout": "{\"type\":3,\"favorite\":false,\"reprompt\":0,\"id\":\"a0000004-0000-4000-8000-000000000004\",\"collectionIds\":[],\"object\":\"item\",\"name\":\"Visa\",\"fields\":[],\"card\":{\"cardholderName\":\"Alice Example\",\"brand\":\"Visa\",\"number\":\"4111111111111111\",\"expMonth\":\"12\",\"expYear\":\"2030\",\"code\":\"123\"},\"passwordHistory\":[],\"creationDate\":\"2026-01-02T03:04:05.678Z\",\"revisionDate\":\"2026-02-03T04:05:06.789Z\",\"attachments\":[]}",
+      "stderr": "",
+      "exit": 0
+    }
+  ]
+}

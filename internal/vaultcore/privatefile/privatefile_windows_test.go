@@ -1,6 +1,6 @@
 //go:build windows
 
-package ui
+package privatefile
 
 import (
 	"os"
@@ -11,7 +11,7 @@ import (
 )
 
 func TestPrivateTempFileHasAUserOnlyProtectedDACL(t *testing.T) {
-	f, err := createPrivateTemp(t.TempDir(), ".secret.*")
+	f, err := CreateTemp(t.TempDir(), ".secret.*")
 	if err != nil {
 		t.Fatal(err)
 	}

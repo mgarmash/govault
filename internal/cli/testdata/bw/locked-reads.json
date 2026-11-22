@@ -1,0 +1,65 @@
+{
+  "name": "locked-reads",
+  "steps": [
+    {
+      "args": [
+        "list",
+        "items",
+        "--nointeraction"
+      ],
+      "stdout": "",
+      "stderr": "Vault is locked.",
+      "exit": 1
+    },
+    {
+      "args": [
+        "get",
+        "item",
+        "github",
+        "--nointeraction",
+        "--response"
+      ],
+      "stdout": "{\"success\":false,\"message\":\"Vault is locked.\"}",
+      "stderr": "",
+      "exit": 1
+    },
+    {
+      "args": [
+        "unlock",
+        "--check"
+      ],
+      "stdout": "",
+      "stderr": "Vault is locked.",
+      "exit": 1
+    },
+    {
+      "args": [
+        "unlock",
+        "--check"
+      ],
+      "stdout": "Vault is unlocked!",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "list",
+        "items",
+        "--session",
+        "AAAA"
+      ],
+      "stdout": "",
+      "stderr": "Vault is locked.",
+      "exit": 1
+    },
+    {
+      "args": [
+        "sync",
+        "--last"
+      ],
+      "stdout": "{{TIME}}",
+      "stderr": "",
+      "exit": 0
+    }
+  ]
+}

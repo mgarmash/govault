@@ -16,6 +16,7 @@ import (
 	"github.com/txchen/govault/cmd/govault/locales"
 	"github.com/txchen/govault/internal/vaultcore/api"
 	"github.com/txchen/govault/internal/vaultcore/crypto"
+	"github.com/txchen/govault/internal/vaultcore/privatefile"
 	"github.com/txchen/govault/internal/vaultcore/state"
 )
 
@@ -135,7 +136,7 @@ const maxSaveCandidates = 1000
 // temporary file is always removed, and data is zeroed.
 func (m *AppModel) savePrivateFile(gen uint64, target saveTarget, data []byte) (string, bool, error) {
 	defer crypto.ZeroBytes(data)
-	tmp, err := createPrivateTemp(target.dir, "."+target.name+".*")
+	tmp, err := privatefile.CreateTemp(target.dir, "."+target.name+".*")
 	if err != nil {
 		return "", false, err
 	}

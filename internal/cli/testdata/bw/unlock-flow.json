@@ -1,0 +1,90 @@
+{
+  "name": "unlock-flow",
+  "steps": [
+    {
+      "args": [
+        "unlock",
+        "--passwordenv",
+        "PW",
+        "--raw"
+      ],
+      "stdout": "{{SESSION}}",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "unlock",
+        "--passwordenv",
+        "PW"
+      ],
+      "stdout": "",
+      "stderr": "ERROR bitwarden_crypto::keys::master_key: error=The decryption operation failed\n\nERROR bitwarden_core::client::internal: error=Cryptography error, The decryption operation failed\n\nERROR bitwarden_core::key_management::crypto: error=Cryptography error, The decryption operation failed\n\nCryptography error, The decryption operation failed",
+      "exit": 1
+    },
+    {
+      "args": [
+        "unlock",
+        "--passwordenv",
+        "PW",
+        "--nointeraction"
+      ],
+      "stdout": "",
+      "stderr": "Warning: Provided passwordenv PW is not set\nMaster password is required. Try again in interactive mode or provide a password file or environment variable.",
+      "exit": 1
+    },
+    {
+      "args": [
+        "unlock",
+        "correct horse battery staple"
+      ],
+      "stdout": "Your vault is now unlocked!\n\nTo unlock your vault, set your session key to the `BW_SESSION` environment variable. ex:\n$ export BW_SESSION=\"{{SESSION}}\"\n\u003e $env:BW_SESSION=\"{{SESSION}}\"\n\nYou can also pass the session key to any command with the `--session` option. ex:\n$ bw list items --session {{SESSION}}",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "unlock",
+        "--check"
+      ],
+      "stdout": "Vault is unlocked!",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "lock"
+      ],
+      "stdout": "Your vault is locked.",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "unlock",
+        "--check"
+      ],
+      "stdout": "",
+      "stderr": "Vault is locked.",
+      "exit": 1
+    },
+    {
+      "args": [
+        "list",
+        "items",
+        "--nointeraction"
+      ],
+      "stdout": "",
+      "stderr": "Vault is locked.",
+      "exit": 1
+    },
+    {
+      "args": [
+        "lock"
+      ],
+      "stdout": "Your vault is locked.",
+      "stderr": "",
+      "exit": 0
+    }
+  ]
+}

@@ -1,0 +1,93 @@
+{
+  "name": "sync-logout",
+  "steps": [
+    {
+      "args": [
+        "sync"
+      ],
+      "stdout": "Syncing complete.",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "sync",
+        "-f"
+      ],
+      "stdout": "Syncing complete.",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "sync",
+        "--last",
+        "--raw"
+      ],
+      "stdout": "{{TIME}}",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "sync"
+      ],
+      "stdout": "Syncing complete.",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "login",
+        "--check"
+      ],
+      "stdout": "You are logged in!",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "login",
+        "alice@example.com",
+        "x"
+      ],
+      "stdout": "",
+      "stderr": "You are already logged in as alice@example.com.",
+      "exit": 1
+    },
+    {
+      "args": [
+        "config",
+        "server",
+        "https://example.com"
+      ],
+      "stdout": "",
+      "stderr": "Logout required before server config update.",
+      "exit": 1
+    },
+    {
+      "args": [
+        "logout"
+      ],
+      "stdout": "You have logged out.",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "status"
+      ],
+      "stdout": "{\"serverUrl\":\"{{SERVER}}\",\"lastSync\":null,\"status\":\"unauthenticated\"}",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "logout"
+      ],
+      "stdout": "",
+      "stderr": "You are not logged in.",
+      "exit": 1
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "name": "encode",
+  "steps": [
+    {
+      "args": [
+        "encode"
+      ],
+      "stdout": "eyJuYW1lIjoiTXkgRm9sZGVyIn0K",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "encode",
+        "--response"
+      ],
+      "stdout": "{\"success\":true,\"data\":{\"object\":\"string\",\"data\":\"aMOpbGxv\"}}",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "encode"
+      ],
+      "stdout": "",
+      "stderr": "",
+      "exit": 0
+    }
+  ]
+}

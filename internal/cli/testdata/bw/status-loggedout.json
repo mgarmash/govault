@@ -1,0 +1,31 @@
+{
+  "name": "status-loggedout",
+  "steps": [
+    {
+      "args": [
+        "status"
+      ],
+      "stdout": "{\"serverUrl\":null,\"lastSync\":null,\"status\":\"unauthenticated\"}",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "status",
+        "--response"
+      ],
+      "stdout": "{\"success\":true,\"data\":{\"object\":\"template\",\"template\":{\"serverUrl\":null,\"lastSync\":null,\"status\":\"unauthenticated\"}}}",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "status",
+        "--pretty"
+      ],
+      "stdout": "{\n  \"serverUrl\": null,\n  \"lastSync\": null,\n  \"status\": \"unauthenticated\"\n}",
+      "stderr": "",
+      "exit": 0
+    }
+  ]
+}

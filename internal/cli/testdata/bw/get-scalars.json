@@ -1,0 +1,210 @@
+{
+  "name": "get-scalars",
+  "steps": [
+    {
+      "args": [
+        "get",
+        "username",
+        "a0000001-0000-4000-8000-000000000001"
+      ],
+      "stdout": "alice",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "get",
+        "password",
+        "a0000001-0000-4000-8000-000000000001"
+      ],
+      "stdout": "gh-secret",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "get",
+        "password",
+        "a0000001-0000-4000-8000-000000000001",
+        "--response"
+      ],
+      "stdout": "{\"success\":true,\"data\":{\"object\":\"string\",\"data\":\"gh-secret\"}}",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "get",
+        "password",
+        "github"
+      ],
+      "stdout": "",
+      "stderr": "More than one result was found. Try getting a specific object by `id` instead. The following objects were found:\na0000001-0000-4000-8000-000000000001\na0000002-0000-4000-8000-000000000002",
+      "exit": 1
+    },
+    {
+      "args": [
+        "get",
+        "password",
+        "a0000008-0000-4000-8000-000000000008"
+      ],
+      "stdout": "",
+      "stderr": "No password available for this login.",
+      "exit": 1
+    },
+    {
+      "args": [
+        "get",
+        "username",
+        "a0000008-0000-4000-8000-000000000008"
+      ],
+      "stdout": "root",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "get",
+        "totp",
+        "a0000008-0000-4000-8000-000000000008"
+      ],
+      "stdout": "",
+      "stderr": "No TOTP available for this login.",
+      "exit": 1
+    },
+    {
+      "args": [
+        "get",
+        "uri",
+        "a0000001-0000-4000-8000-000000000001"
+      ],
+      "stdout": "https://github.com/login",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "get",
+        "notes",
+        "a0000001-0000-4000-8000-000000000001"
+      ],
+      "stdout": "Personal account",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "get",
+        "notes",
+        "a0000002-0000-4000-8000-000000000002"
+      ],
+      "stdout": "",
+      "stderr": "Not found.",
+      "exit": 1
+    },
+    {
+      "args": [
+        "get",
+        "password",
+        "a0000003-0000-4000-8000-000000000003"
+      ],
+      "stdout": "",
+      "stderr": "Not found.",
+      "exit": 1
+    },
+    {
+      "args": [
+        "get",
+        "username",
+        "a000000c-0000-4000-8000-00000000000c"
+      ],
+      "stdout": "",
+      "stderr": "Not found.",
+      "exit": 1
+    },
+    {
+      "args": [
+        "get",
+        "uri",
+        "a000000c-0000-4000-8000-00000000000c"
+      ],
+      "stdout": "",
+      "stderr": "Not found.",
+      "exit": 1
+    },
+    {
+      "args": [
+        "get",
+        "password",
+        "recovery"
+      ],
+      "stdout": "",
+      "stderr": "Not found.",
+      "exit": 1
+    },
+    {
+      "args": [
+        "get",
+        "notes",
+        "recovery"
+      ],
+      "stdout": "code-1\ncode-2",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "get",
+        "password",
+        "nothing"
+      ],
+      "stdout": "",
+      "stderr": "Not found.",
+      "exit": 1
+    },
+    {
+      "args": [
+        "get",
+        "password",
+        "modes"
+      ],
+      "stdout": "modes-secret",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "get",
+        "password",
+        "modes",
+        "--raw"
+      ],
+      "stdout": "modes-secret",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "get",
+        "password",
+        "modes",
+        "--quiet"
+      ],
+      "stdout": "",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "get",
+        "password",
+        "modes",
+        "--response",
+        "--quiet"
+      ],
+      "stdout": "{\"success\":true,\"data\":{\"object\":\"string\",\"data\":\"modes-secret\"}}",
+      "stderr": "",
+      "exit": 0
+    }
+  ]
+}

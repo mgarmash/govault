@@ -1,0 +1,128 @@
+{
+  "name": "list-url",
+  "steps": [
+    {
+      "args": [
+        "list",
+        "items",
+        "--url",
+        "https://www.github.com/x"
+      ],
+      "stdout": "[{\"type\":1,\"favorite\":true,\"reprompt\":0,\"id\":\"a0000001-0000-4000-8000-000000000001\",\"collectionIds\":[],\"object\":\"item\",\"folderId\":\"f0f0f0f0-aaaa-4bbb-8ccc-dddddddddddd\",\"name\":\"GitHub\",\"notes\":\"Personal account\",\"fields\":[{\"type\":0,\"name\":\"recovery email\",\"value\":\"alice@recovery.example\"},{\"type\":1,\"name\":\"pin\",\"value\":\"4321\"},{\"type\":2,\"name\":\"2fa\",\"value\":\"true\"},{\"type\":3,\"name\":\"user\",\"linkedId\":100}],\"login\":{\"uris\":[{\"uri\":\"https://github.com/login\"},{\"uri\":\"https://gist.github.com\",\"match\":1}],\"fido2Credentials\":[],\"username\":\"alice\",\"password\":\"gh-secret\",\"totp\":\"JBSWY3DPEHPK3PXP\",\"passwordRevisionDate\":\"2025-12-01T00:00:00.000Z\"},\"passwordHistory\":[{\"lastUsedDate\":\"2025-12-01T00:00:00.000Z\",\"password\":\"old-gh-secret\"}],\"creationDate\":\"2026-01-02T03:04:05.678Z\",\"revisionDate\":\"2026-02-03T04:05:06.789Z\",\"attachments\":[{\"id\":\"att0readme0001\",\"fileName\":\"readme.txt\",\"size\":\"97\",\"sizeName\":\"97 Bytes\",\"url\":\"{{SERVER}}/attachments/a0000001-0000-4000-8000-000000000001/att0readme0001\"}]}]",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "list",
+        "items",
+        "--url",
+        "https://gist.github.com/abc"
+      ],
+      "stdout": "[{\"type\":1,\"favorite\":true,\"reprompt\":0,\"id\":\"a0000001-0000-4000-8000-000000000001\",\"collectionIds\":[],\"object\":\"item\",\"folderId\":\"f0f0f0f0-aaaa-4bbb-8ccc-dddddddddddd\",\"name\":\"GitHub\",\"notes\":\"Personal account\",\"fields\":[{\"type\":0,\"name\":\"recovery email\",\"value\":\"alice@recovery.example\"},{\"type\":1,\"name\":\"pin\",\"value\":\"4321\"},{\"type\":2,\"name\":\"2fa\",\"value\":\"true\"},{\"type\":3,\"name\":\"user\",\"linkedId\":100}],\"login\":{\"uris\":[{\"uri\":\"https://github.com/login\"},{\"uri\":\"https://gist.github.com\",\"match\":1}],\"fido2Credentials\":[],\"username\":\"alice\",\"password\":\"gh-secret\",\"totp\":\"JBSWY3DPEHPK3PXP\",\"passwordRevisionDate\":\"2025-12-01T00:00:00.000Z\"},\"passwordHistory\":[{\"lastUsedDate\":\"2025-12-01T00:00:00.000Z\",\"password\":\"old-gh-secret\"}],\"creationDate\":\"2026-01-02T03:04:05.678Z\",\"revisionDate\":\"2026-02-03T04:05:06.789Z\",\"attachments\":[{\"id\":\"att0readme0001\",\"fileName\":\"readme.txt\",\"size\":\"97\",\"sizeName\":\"97 Bytes\",\"url\":\"{{SERVER}}/attachments/a0000001-0000-4000-8000-000000000001/att0readme0001\"}]}]",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "list",
+        "items",
+        "--url",
+        "https://exact.example.org/path?q=1"
+      ],
+      "stdout": "[{\"type\":1,\"favorite\":false,\"reprompt\":0,\"id\":\"a000000b-0000-4000-8000-00000000000b\",\"collectionIds\":[],\"object\":\"item\",\"name\":\"Match modes\",\"fields\":[],\"login\":{\"uris\":[{\"uri\":\"https://exact.example.org/path?q=1\",\"match\":3},{\"uri\":\"https://starts.example.org/app\",\"match\":2},{\"uri\":\"^https://re\\\\.example\\\\.org/[0-9]+$\",\"match\":4},{\"uri\":\"https://never.example.org\",\"match\":5},{\"uri\":\"https://host.example.org:8443\",\"match\":1}],\"fido2Credentials\":[],\"username\":\"modes\",\"password\":\"modes-secret\",\"passwordRevisionDate\":null},\"passwordHistory\":[],\"creationDate\":\"2026-01-02T03:04:05.678Z\",\"revisionDate\":\"2026-02-03T04:05:06.789Z\",\"attachments\":[]}]",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "list",
+        "items",
+        "--url",
+        "https://exact.example.org/path"
+      ],
+      "stdout": "[]",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "list",
+        "items",
+        "--url",
+        "https://starts.example.org/app/more"
+      ],
+      "stdout": "[{\"type\":1,\"favorite\":false,\"reprompt\":0,\"id\":\"a000000b-0000-4000-8000-00000000000b\",\"collectionIds\":[],\"object\":\"item\",\"name\":\"Match modes\",\"fields\":[],\"login\":{\"uris\":[{\"uri\":\"https://exact.example.org/path?q=1\",\"match\":3},{\"uri\":\"https://starts.example.org/app\",\"match\":2},{\"uri\":\"^https://re\\\\.example\\\\.org/[0-9]+$\",\"match\":4},{\"uri\":\"https://never.example.org\",\"match\":5},{\"uri\":\"https://host.example.org:8443\",\"match\":1}],\"fido2Credentials\":[],\"username\":\"modes\",\"password\":\"modes-secret\",\"passwordRevisionDate\":null},\"passwordHistory\":[],\"creationDate\":\"2026-01-02T03:04:05.678Z\",\"revisionDate\":\"2026-02-03T04:05:06.789Z\",\"attachments\":[]}]",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "list",
+        "items",
+        "--url",
+        "https://re.example.org/123"
+      ],
+      "stdout": "[{\"type\":1,\"favorite\":false,\"reprompt\":0,\"id\":\"a000000b-0000-4000-8000-00000000000b\",\"collectionIds\":[],\"object\":\"item\",\"name\":\"Match modes\",\"fields\":[],\"login\":{\"uris\":[{\"uri\":\"https://exact.example.org/path?q=1\",\"match\":3},{\"uri\":\"https://starts.example.org/app\",\"match\":2},{\"uri\":\"^https://re\\\\.example\\\\.org/[0-9]+$\",\"match\":4},{\"uri\":\"https://never.example.org\",\"match\":5},{\"uri\":\"https://host.example.org:8443\",\"match\":1}],\"fido2Credentials\":[],\"username\":\"modes\",\"password\":\"modes-secret\",\"passwordRevisionDate\":null},\"passwordHistory\":[],\"creationDate\":\"2026-01-02T03:04:05.678Z\",\"revisionDate\":\"2026-02-03T04:05:06.789Z\",\"attachments\":[]}]",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "list",
+        "items",
+        "--url",
+        "https://never.example.org"
+      ],
+      "stdout": "[]",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "list",
+        "items",
+        "--url",
+        "https://host.example.org:8443/x"
+      ],
+      "stdout": "[{\"type\":1,\"favorite\":false,\"reprompt\":0,\"id\":\"a000000b-0000-4000-8000-00000000000b\",\"collectionIds\":[],\"object\":\"item\",\"name\":\"Match modes\",\"fields\":[],\"login\":{\"uris\":[{\"uri\":\"https://exact.example.org/path?q=1\",\"match\":3},{\"uri\":\"https://starts.example.org/app\",\"match\":2},{\"uri\":\"^https://re\\\\.example\\\\.org/[0-9]+$\",\"match\":4},{\"uri\":\"https://never.example.org\",\"match\":5},{\"uri\":\"https://host.example.org:8443\",\"match\":1}],\"fido2Credentials\":[],\"username\":\"modes\",\"password\":\"modes-secret\",\"passwordRevisionDate\":null},\"passwordHistory\":[],\"creationDate\":\"2026-01-02T03:04:05.678Z\",\"revisionDate\":\"2026-02-03T04:05:06.789Z\",\"attachments\":[]}]",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "list",
+        "items",
+        "--url",
+        "https://host.example.org/x"
+      ],
+      "stdout": "[]",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "list",
+        "items",
+        "--url",
+        "db.example.com:5432"
+      ],
+      "stdout": "[{\"type\":1,\"favorite\":false,\"reprompt\":0,\"id\":\"a0000002-0000-4000-8000-000000000002\",\"collectionIds\":[],\"object\":\"item\",\"name\":\"GitHub Enterprise\",\"fields\":[],\"login\":{\"uris\":[{\"uri\":\"https://github.example.com\"}],\"fido2Credentials\":[],\"username\":\"alice-corp\",\"password\":\"ghe-secret\",\"passwordRevisionDate\":null},\"passwordHistory\":[],\"creationDate\":\"2026-01-02T03:04:05.678Z\",\"revisionDate\":\"2026-02-03T04:05:06.789Z\",\"attachments\":[]},{\"type\":1,\"favorite\":false,\"reprompt\":0,\"id\":\"a0000008-0000-4000-8000-000000000008\",\"collectionIds\":[\"c1c1c1c1-1111-4222-8333-444455556666\"],\"object\":\"item\",\"organizationId\":\"0f1e2d3c-4b5a-4968-8776-655443322110\",\"name\":\"Hidden Prod\",\"fields\":[{\"type\":1,\"name\":\"api token\",\"value\":null},{\"type\":0,\"name\":\"region\",\"value\":\"eu-west\"}],\"login\":{\"uris\":[{\"uri\":\"https://prod.example.com\"}],\"fido2Credentials\":[],\"username\":\"root\",\"password\":null,\"totp\":null,\"passwordRevisionDate\":null},\"creationDate\":\"2026-01-02T03:04:05.678Z\",\"revisionDate\":\"2026-02-03T04:05:06.789Z\",\"attachments\":[]},{\"type\":1,\"favorite\":false,\"reprompt\":0,\"id\":\"a0000007-0000-4000-8000-000000000007\",\"collectionIds\":[\"c0c0c0c0-1111-4222-8333-444455556666\"],\"object\":\"item\",\"organizationId\":\"0f1e2d3c-4b5a-4968-8776-655443322110\",\"name\":\"Shared DB\",\"fields\":[],\"login\":{\"uris\":[{\"uri\":\"db.example.com:5432\",\"match\":1}],\"fido2Credentials\":[],\"username\":\"dbadmin\",\"password\":\"db-secret\",\"totp\":\"JBSWY3DPEHPK3PXP\",\"passwordRevisionDate\":null},\"passwordHistory\":[],\"creationDate\":\"2026-01-02T03:04:05.678Z\",\"revisionDate\":\"2026-02-03T04:05:06.789Z\",\"attachments\":[]}]",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "list",
+        "items",
+        "--url",
+        "https://prod.example.com",
+        "--search",
+        "root"
+      ],
+      "stdout": "[{\"type\":1,\"favorite\":false,\"reprompt\":0,\"id\":\"a0000008-0000-4000-8000-000000000008\",\"collectionIds\":[\"c1c1c1c1-1111-4222-8333-444455556666\"],\"object\":\"item\",\"organizationId\":\"0f1e2d3c-4b5a-4968-8776-655443322110\",\"name\":\"Hidden Prod\",\"fields\":[{\"type\":1,\"name\":\"api token\",\"value\":null},{\"type\":0,\"name\":\"region\",\"value\":\"eu-west\"}],\"login\":{\"uris\":[{\"uri\":\"https://prod.example.com\"}],\"fido2Credentials\":[],\"username\":\"root\",\"password\":null,\"totp\":null,\"passwordRevisionDate\":null},\"creationDate\":\"2026-01-02T03:04:05.678Z\",\"revisionDate\":\"2026-02-03T04:05:06.789Z\",\"attachments\":[]}]",
+      "stderr": "",
+      "exit": 0
+    }
+  ]
+}

@@ -160,17 +160,20 @@ govault/
 │   └── research/
 │       └── official-client-and-protocol.md
 ├── cmd/
-│   └── govault/
-│       ├── nsgo.yaml           # NSGo build manifest (co-located with package main for `go tool nsgo build ./cmd/govault`)
-│       ├── locales/            # UI message catalogs: en.yaml source, generated catalog_gen.go (see i18n.md)
-│       ├── main.go
-│       ├── app.go              # menu bar icon, window lifecycle, updates
-│       ├── adapters.go         # NSGo Secrets/Biometric/Clipboard bridges
-│       ├── clipboard_darwin.go # concealed NSPasteboard helper (purego/objc)
-│       ├── secureinput_darwin.go # Secure Event Input release (purego)
-│       ├── sleeplock_darwin.go # sleep/screen-lock observers (purego/objc)
-│       └── ui/                 # Login/2FA, Lock, Vault, Editor, Generator, Settings, favicons
+│   ├── govault/
+│   │   ├── nsgo.yaml           # NSGo build manifest (co-located with package main for `go tool nsgo build ./cmd/govault`)
+│   │   ├── locales/            # UI message catalogs: en.yaml source, generated catalog_gen.go (see i18n.md)
+│   │   ├── main.go
+│   │   ├── app.go              # menu bar icon, window lifecycle, updates
+│   │   ├── adapters.go         # NSGo Secrets/Biometric/Clipboard bridges
+│   │   ├── clipboard_darwin.go # concealed NSPasteboard helper (purego/objc)
+│   │   ├── secureinput_darwin.go # Secure Event Input release (purego)
+│   │   ├── sleeplock_darwin.go # sleep/screen-lock observers (purego/objc)
+│   │   └── ui/                 # Login/2FA, Lock, Vault, Editor, Generator, Settings, favicons
+│   └── gv/                     # read-only, bw-compatible CLI (see cli-design.md)
 ├── internal/
+│   ├── cli/                    # gv commands, parsing, prompts and bw-shaped output
+│   ├── fakeserver/             # Bitwarden-compatible test server
 │   └── vaultcore/
 │       ├── crypto/             # KDF, HKDF, EncString, AES-CBC-HMAC, RSA, zeroize
 │       ├── api/                # HTTP client, auth, sync, cipher/folder endpoints
@@ -178,7 +181,10 @@ govault/
 │       ├── store/              # Store interface + atomic encrypted JSON store
 │       ├── state/              # Vault state machine, in-memory index, fuzzy search
 │       ├── totp/               # RFC 6238 TOTP
-│       └── gen/                # Password & passphrase generator
+│       ├── gen/                # Password & passphrase generator, fingerprint phrases
+│       ├── profile/            # gv's multi-process sign-in, sessions and cache
+│       ├── keyring/            # OS credential stores for gv
+│       └── privatefile/        # user-only files and atomic writes
 └── assets/
     └── Icon.png
 ```

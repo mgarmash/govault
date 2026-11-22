@@ -1,0 +1,81 @@
+{
+  "name": "get-attachment",
+  "steps": [
+    {
+      "args": [
+        "get",
+        "attachment",
+        "readme.txt",
+        "--itemid",
+        "a0000001-0000-4000-8000-000000000001",
+        "--raw"
+      ],
+      "stdout": "attachment body\u0000\u0001\u0002 with binary bytes\n",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "get",
+        "attachment",
+        "readme",
+        "--itemid",
+        "a0000001-0000-4000-8000-000000000001",
+        "--output",
+        "{{TMP}}/"
+      ],
+      "stdout": "Saved {{TMP}}/readme.txt",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "get",
+        "attachment",
+        "att0readme0001",
+        "--itemid",
+        "a0000001-0000-4000-8000-000000000001",
+        "--output",
+        "{{TMP}}/named.bin",
+        "--response"
+      ],
+      "stdout": "{\"success\":true,\"data\":{\"noColor\":false,\"object\":\"message\",\"title\":\"Saved {{TMP}}/named.bin\",\"message\":null,\"raw\":\"{{TMP}}/named.bin\"}}",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "get",
+        "attachment",
+        "nope",
+        "--itemid",
+        "a0000001-0000-4000-8000-000000000001"
+      ],
+      "stdout": "",
+      "stderr": "Attachment `nope` was not found.",
+      "exit": 1
+    },
+    {
+      "args": [
+        "get",
+        "attachment",
+        "readme"
+      ],
+      "stdout": "",
+      "stderr": "--itemid \u003citemid\u003e required.",
+      "exit": 1
+    },
+    {
+      "args": [
+        "get",
+        "attachment",
+        "x",
+        "--itemid",
+        "a0000003-0000-4000-8000-000000000003"
+      ],
+      "stdout": "",
+      "stderr": "No attachments available for this item.",
+      "exit": 1
+    }
+  ]
+}

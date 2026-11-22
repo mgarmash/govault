@@ -1,0 +1,105 @@
+{
+  "name": "loggedout-errors",
+  "steps": [
+    {
+      "args": [
+        "list",
+        "items"
+      ],
+      "stdout": "",
+      "stderr": "You are not logged in.",
+      "exit": 1
+    },
+    {
+      "args": [
+        "list",
+        "items",
+        "--response"
+      ],
+      "stdout": "{\"success\":false,\"message\":\"You are not logged in.\"}",
+      "stderr": "",
+      "exit": 1
+    },
+    {
+      "args": [
+        "get",
+        "item",
+        "x"
+      ],
+      "stdout": "",
+      "stderr": "You are not logged in.",
+      "exit": 1
+    },
+    {
+      "args": [
+        "lock"
+      ],
+      "stdout": "",
+      "stderr": "You are not logged in.",
+      "exit": 1
+    },
+    {
+      "args": [
+        "logout"
+      ],
+      "stdout": "",
+      "stderr": "You are not logged in.",
+      "exit": 1
+    },
+    {
+      "args": [
+        "sync"
+      ],
+      "stdout": "",
+      "stderr": "You are not logged in.",
+      "exit": 1
+    },
+    {
+      "args": [
+        "unlock",
+        "--check"
+      ],
+      "stdout": "",
+      "stderr": "You are not logged in.",
+      "exit": 1
+    },
+    {
+      "args": [
+        "login",
+        "--check"
+      ],
+      "stdout": "",
+      "stderr": "You are not logged in.",
+      "exit": 1
+    },
+    {
+      "args": [
+        "list",
+        "items",
+        "--cleanexit"
+      ],
+      "stdout": "",
+      "stderr": "You are not logged in.",
+      "exit": 0
+    },
+    {
+      "args": [
+        "list",
+        "items",
+        "--quiet"
+      ],
+      "stdout": "",
+      "stderr": "",
+      "exit": 1
+    },
+    {
+      "args": [
+        "sync",
+        "--last"
+      ],
+      "stdout": "",
+      "stderr": "You are not logged in.",
+      "exit": 1
+    }
+  ]
+}
