@@ -117,7 +117,7 @@ Centered card (`420px` wide) inside Main Window:
 +------------------------------------------------------------------+
 ```
 - Pressing `Enter` in Master Password submits; button shows spinner + disabled state during KDF + login (`Argon2id` may take 200–600 ms).
-- **Two-step verification step**: if the server answers with a 2FA challenge, the same card switches to a verification step: an Authenticator App / Email selector (when both are enabled), Send/Resend Code for email, a monospace code field (`Enter` verifies), a "Remember this device" checkbox, Verify, and Back to Sign In. A wrong code shows an inline error; unsupported-only providers show a message naming them.
+- **Two-step verification step**: if the server answers with a 2FA challenge, the same card switches to a verification step: a method selector when the account offers more than one of Authenticator App, Email and YubiKey (segmented buttons while they fit the card in the current language, measured with `MeasureText`, otherwise a full-width popup), Send/Resend Code for email, a monospace code field (`Enter` verifies; for YubiKey a masked field the key types its OTP and `Enter` into), a "Remember this device" checkbox, Verify, and Back to Sign In. A wrong code shows an inline error; unsupported-only providers show a message naming them.
 
 #### Screen B: Lock Screen (`StatusLocked`)
 

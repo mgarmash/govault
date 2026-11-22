@@ -46,8 +46,9 @@ func TestYubiKeyOTPSubmitsOnEnter(t *testing.T) {
 	var releases []bool
 	app := startTwoFactor(t, svc, &releases)
 
-	// YubiKey is the preferred method when offered, as in Bitwarden.
-	app.Find("id:twofactor-provider-yubikey")
+	// YubiKey is the preferred method when offered, as in Bitwarden. In
+	// English the three methods do not fit as buttons, so a popup offers them.
+	app.Find("id:twofactor-method >> text:YubiKey")
 	app.Find("text:Insert your YubiKey and touch it.")
 	app.Press("id:twofactor-remember")
 	app.Settle()
@@ -122,6 +123,18 @@ func TestYubiKeyOfferedOnlyWhenListed(t *testing.T) {
 
 	svc := yubiKeyService()
 	app = startTwoFactor(t, svc, nil)
+	app.Press("id:twofactor-method")
+	app.Press("id:twofactor-method-0")
+	app.WaitFor("text:Enter the 6-digit code from your authenticator app.", 2*time.Second)
+	app.Press("id:twofactor-method")
+	app.Find("id:twofactor-method-2 >> text:YubiKey")
+	app.Press("id:twofactor-method-2")
+	app.WaitFor("text:Insert your YubiKey and touch it.", 2*time.Second)
+
+	// With two methods that fit, they stay buttons.
+	svc = yubiKeyService()
+	svc.twoFactorOffered = []api.TwoFactorProvider{api.TwoFactorAuthenticator, api.TwoFactorYubiKey}
+	app = startTwoFactor(t, svc, nil)
 	app.Press("id:twofactor-provider-authenticator")
 	app.Find("text:Enter the 6-digit code from your authenticator app.")
 	app.Press("id:twofactor-provider-yubikey")
@@ -131,7 +144,7 @@ func TestYubiKeyOfferedOnlyWhenListed(t *testing.T) {
 	svc = yubiKeyService()
 	svc.twoFactorOffered = []api.TwoFactorProvider{api.TwoFactorYubiKey}
 	app = startTwoFactor(t, svc, nil)
-	if app.Exists("id:twofactor-providers") {
+	if app.Exists("id:twofactor-providers") || app.Exists("id:twofactor-method") {
 		t.Fatal("method choice shown for a single method")
 	}
 	app.Find("text:Insert your YubiKey and touch it.")

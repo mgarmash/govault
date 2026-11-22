@@ -1,6 +1,8 @@
 package ui
 
 import (
+	"math"
+
 	"github.com/nsgo-dev/nsgo/base"
 	"github.com/nsgo-dev/nsgo/core"
 	"github.com/nsgo-dev/nsgo/icons/lucide"
@@ -40,27 +42,9 @@ func TwoFactorView(cx *core.Scope, m *AppModel, prompt *TwoFactorPrompt) core.No
 	}
 
 	if len(prompt.Providers) > 1 {
-		var toggles []core.Node
-		for _, p := range prompt.Providers {
-			switch p {
-			case api.TwoFactorAuthenticator:
-				toggles = append(toggles, providerToggle(m, "twofactor-provider-authenticator", p, lucide.Smartphone))
-			case api.TwoFactorEmail:
-				toggles = append(toggles, providerToggle(m, "twofactor-provider-email", p, lucide.Mail))
-			case api.TwoFactorYubiKey:
-				toggles = append(toggles, providerToggle(m, "twofactor-provider-yubikey", p, lucide.Usb))
-			}
-		}
 		body = append(body, core.View{
-			Class: "items-center",
-			Children: []core.Node{
-				ui.ToggleGroup{
-					TestID:   "twofactor-providers",
-					Label:    locales.TwoFactorMethod(cx),
-					Disabled: busy,
-					Children: toggles,
-				},
-			},
+			Class:    "items-center",
+			Children: []core.Node{twoFactorMethodPicker(cx, m, prompt.Providers)},
 		})
 	}
 
@@ -150,10 +134,99 @@ func yubiKeyInput(m *AppModel) core.Node {
 	})
 }
 
-func providerToggle(m *AppModel, testID string, p api.TwoFactorProvider, glyph func() *core.SVG) core.Node {
+// twoFactorMethod is how the method picker shows one method.
+type twoFactorMethod struct {
+	provider api.TwoFactorProvider
+	id       string
+	glyph    func() *core.SVG
+}
+
+func twoFactorMethodOf(p api.TwoFactorProvider) (twoFactorMethod, bool) {
+	switch p {
+	case api.TwoFactorAuthenticator:
+		return twoFactorMethod{p, "authenticator", lucide.Smartphone}, true
+	case api.TwoFactorEmail:
+		return twoFactorMethod{p, "email", lucide.Mail}, true
+	case api.TwoFactorYubiKey:
+		return twoFactorMethod{p, "yubikey", lucide.Usb}, true
+	}
+	return twoFactorMethod{}, false
+}
+
+// authCardContentWidth is the width inside the sign-in card: its
+// w-[380px] less px-8 on each side and the 1 pt border (authScreen).
+const authCardContentWidth core.Points = 380 - 2*32 - 2*1
+
+// ToggleButton's metrics (nsgo ui/togglebutton.go): 14 pt padding on each
+// side, a 1 pt border, a 14 pt icon and a 6 pt gap before 13 pt text; a
+// ToggleGroup puts 4 pt between its buttons.
+const (
+	toggleButtonChrome core.Points = 2*14 + 2*1 + 14 + 6
+	toggleGroupGap     core.Points = 4
+	toggleButtonText   core.Points = 13
+)
+
+// segmentedWidth is how wide a ToggleGroup of labels lays out.
+func segmentedWidth(cx *core.Scope, labels []string) core.Points {
+	var w core.Points
+	for i, label := range labels {
+		if i > 0 {
+			w += toggleGroupGap
+		}
+		text := cx.MeasureText(label, core.Font{Size: toggleButtonText, Weight: ui.Regular}).Width
+		w += core.Points(math.Ceil(float64(text))) + toggleButtonChrome
+	}
+	return w
+}
+
+// twoFactorMethodPicker chooses between the methods offered: a segmented
+// control while its buttons fit the card in the current language, and a
+// popup menu, full width, when they would not. Both are one keyboard stop
+// that screen readers name "Verification method".
+func twoFactorMethodPicker(cx *core.Scope, m *AppModel, providers []api.TwoFactorProvider) core.Node {
+	var methods []twoFactorMethod
+	var labels []string
+	for _, p := range providers {
+		if meth, ok := twoFactorMethodOf(p); ok {
+			methods = append(methods, meth)
+			labels = append(labels, twoFactorProviderName(cx, p))
+		}
+	}
+	if segmentedWidth(cx, labels) <= authCardContentWidth {
+		toggles := make([]core.Node, len(methods))
+		for i, meth := range methods {
+			toggles[i] = providerToggle(m, "twofactor-provider-"+meth.id, labels[i], meth.provider, meth.glyph)
+		}
+		return ui.ToggleGroup{
+			TestID:   "twofactor-providers",
+			Label:    locales.TwoFactorMethod(cx),
+			Disabled: m.LoginBusy.Get,
+			Children: toggles,
+		}
+	}
+	options := make([]ui.Option[api.TwoFactorProvider], len(methods))
+	for i, meth := range methods {
+		options[i] = ui.Option[api.TwoFactorProvider]{
+			Value:   meth.provider,
+			Label:   labels[i],
+			Leading: icon(meth.glyph(), 14, "text-gv-fg2"),
+		}
+	}
+	return ui.Select[api.TwoFactorProvider]{
+		TestID:   "twofactor-method",
+		Label:    locales.TwoFactorMethod(cx),
+		Options:  options,
+		Value:    m.TwoFactorProvider.Get,
+		OnChange: m.SelectTwoFactorProvider,
+		Disabled: m.LoginBusy.Get,
+		Style:    core.Style{Width: core.Pct(100), Height: core.Pt(authFieldHeight)},
+	}
+}
+
+func providerToggle(m *AppModel, testID, text string, p api.TwoFactorProvider, glyph func() *core.SVG) core.Node {
 	return ui.ToggleButton{
 		TestID:   testID,
-		Text:     twoFactorProviderName(m.Scope, p),
+		Text:     text,
 		Icon:     glyph,
 		On:       func() bool { return m.TwoFactorProvider.Get() == p },
 		OnChange: func(bool) { m.SelectTwoFactorProvider(p) },
