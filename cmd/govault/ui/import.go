@@ -116,7 +116,8 @@ func (m *AppModel) confirmExport(cx *core.Scope) {
 		m.BackupError.Set("The passwords do not match.")
 		return
 	}
-	if n := len(m.Core.UnreadableItems()); n > 0 {
+	backup := m.Core.BackupData()
+	if n := len(backup.Unreadable); n > 0 {
 		m.BackupError.Set(fmt.Sprintf("%d personal item(s) are in a format GoVault cannot read, so the backup would be incomplete. Export from the Bitwarden web vault instead.", n))
 		return
 	}
@@ -125,7 +126,7 @@ func (m *AppModel) confirmExport(cx *core.Scope) {
 	m.BackupError.Set("")
 	gen := m.LockGeneration()
 	pwBytes := []byte(pw)
-	ciphers, folders := m.Core.AllCiphers(), m.Core.Folders()
+	ciphers, folders := backup.Ciphers, backup.Folders
 	go func() {
 		defer crypto.ZeroBytes(pwBytes)
 		var data []byte

@@ -119,7 +119,7 @@ func (m *AppModel) CloneActive(cx *core.Scope) {
 		draft := draftFromCipher(&src)
 		draft.IsNew = true
 		draft.Revision = nil
-		m.EditDraft.Set(draft)
+		m.openDraft(draft)
 		m.EditDirty.Set(true)
 		m.EditError.Set("")
 		m.EditMode.Set(true)

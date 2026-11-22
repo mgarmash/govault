@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"github.com/nsgo-dev/nsgo/core"
 	"testing"
 	"time"
 
@@ -129,4 +130,70 @@ func TestSnapshotMetadataNeverSetsTheServer(t *testing.T) {
 	if got := m.Prefs.Get().ServerURL; got != "https://vault.example" {
 		t.Fatalf("server in settings = %q, want the one the user signed in to", got)
 	}
+}
+
+func TestSessionExitClearsDialogsAndTheGeneratedPassword(t *testing.T) {
+	svc := newMockVaultService(state.StatusUnlocked)
+	app, m, _ := startSecurityApp(t, svc, PlatformHooks{})
+	app.Post(func() {
+		m.FolderDialog.Set(FolderModal{Open: true, FolderID: "f-1", Name: "Secret project"})
+		m.GenResult.Set("generated-secret")
+	})
+	app.WaitFor("id:folder-name-input", 2*time.Second)
+
+	svc.mu.Lock()
+	svc.status = state.StatusLoggedOut
+	svc.mu.Unlock()
+	app.Post(func() { m.ServiceLeftUnlocked(state.StatusLoggedOut) })
+	app.WaitForGone("id:folder-name-input", 2*time.Second)
+	if m.FolderDialog.Get().Open || m.FolderDialog.Get().Name != "" || m.GenResult.Get() != "" {
+		t.Fatalf("after logout: folder dialog %+v, generated %q", m.FolderDialog.Get(), m.GenResult.Get())
+	}
+
+	// A dialog opened while locked is never mounted.
+	app.Post(func() { m.FolderDialog.Set(FolderModal{Open: true, Name: "x"}) })
+	app.Settle()
+	if app.Exists("id:folder-name-input") {
+		t.Fatal("a vault dialog is shown over the sign-in screen")
+	}
+}
+
+func TestLateSaveLeavesANewerDraftAlone(t *testing.T) {
+	svc := newMockVaultService(state.StatusUnlocked)
+	gate := make(chan struct{})
+	svc.saveGate = gate
+	app, m, root := startSecurityApp(t, svc, PlatformHooks{})
+	app.OnAlert = func(core.AlertConfig) int { return 1 }
+
+	app.Post(func() { m.StartCreateCipher(root) })
+	app.WaitUntil(2*time.Second, func() bool { return m.EditMode.Get() })
+	app.Post(func() { m.MutateDraft(func(d *EditDraft) { d.Name = "First" }); m.SaveDraft(root) })
+	app.WaitUntil(2*time.Second, func() bool { return m.EditBusy.Get() })
+	// While it saves, the user discards the editor and starts another item.
+	app.Post(func() { m.EditMode.Set(false); m.EditDraft.Set(nil); m.EditDirty.Set(false) })
+	app.Post(func() { m.StartCreateCipher(root) })
+	app.Post(func() { m.MutateDraft(func(d *EditDraft) { d.Name = "Second" }) })
+	app.WaitUntil(2*time.Second, func() bool { d := m.EditDraft.Get(); return d != nil && d.Name == "Second" })
+	close(gate)
+	app.WaitUntil(2*time.Second, func() bool { return !m.EditBusy.Get() })
+	app.Settle()
+	if d := m.EditDraft.Get(); d == nil || d.Name != "Second" || !m.EditMode.Get() {
+		t.Fatalf("the newer draft was replaced: %+v", d)
+	}
+}
+
+func TestLockDuringSaveClearsBusy(t *testing.T) {
+	svc := newMockVaultService(state.StatusUnlocked)
+	svc.saveGate = make(chan struct{})
+	app, m, root := startSecurityApp(t, svc, PlatformHooks{})
+	app.Post(func() { m.StartCreateCipher(root) })
+	app.WaitUntil(2*time.Second, func() bool { return m.EditMode.Get() })
+	app.Post(func() { m.MutateDraft(func(d *EditDraft) { d.Name = "x" }); m.SaveDraft(root) })
+	app.WaitUntil(2*time.Second, func() bool { return m.EditBusy.Get() })
+	app.Post(m.Lock)
+	app.WaitUntil(2*time.Second, func() bool { return m.LockState.Get() == state.StatusLocked })
+	if m.EditBusy.Get() {
+		t.Fatal("EditBusy survived the lock and would block every later save")
+	}
+	close(svc.saveGate)
 }

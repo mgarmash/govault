@@ -286,3 +286,17 @@ func TestService_SessionContextEndsWithTheSession(t *testing.T) {
 		t.Fatal("a save bound to the old session reached the server")
 	}
 }
+
+func TestService_BackupDataIsOneConsistentRead(t *testing.T) {
+	env := newVaultTestEnv(t)
+	env.ciphers["c-blob"] = api.EncryptedCipher{ID: "c-blob", Type: api.CipherTypeLogin, Data: []byte(`"2.opaque|blob|mac"`)}
+	svc := loggedInTestService(t, env)
+	d := svc.BackupData()
+	if len(d.Unreadable) != 1 || len(d.Ciphers) == 0 || len(d.Folders) == 0 {
+		t.Fatalf("backup data = %d ciphers, %d folders, unreadable %v", len(d.Ciphers), len(d.Folders), d.Unreadable)
+	}
+	svc.Lock()
+	if d := svc.BackupData(); d.Ciphers != nil || d.Unreadable != nil {
+		t.Fatal("backup data available while locked")
+	}
+}

@@ -337,6 +337,10 @@ func (s *Service) LocalOnly() bool { return false }
 
 func (s *Service) CredentialsNotSaved() bool { return false }
 
+func (s *Service) BackupData() state.BackupData {
+	return state.BackupData{Ciphers: s.AllCiphers(), Folders: s.Folders(), Unreadable: nil}
+}
+
 func (s *Service) UnreadableItems() []string { return nil }
 
 func (s *Service) SessionContext(parent context.Context) (context.Context, context.CancelFunc, error) {

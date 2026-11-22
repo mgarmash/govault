@@ -233,6 +233,9 @@ type EditDraft struct {
 	Fields     []EditFieldDraft
 	Revision   *time.Time
 	Source     *state.Cipher
+	// session identifies one opening of the editor; edits keep it, so a
+	// save that finishes late knows whether its draft is still open.
+	session uint64
 	// RemovedPasskeys are indexes into Source.Login.Fido2Credentials of the
 	// passkeys the user removed. They go only when the draft is saved.
 	RemovedPasskeys []int
@@ -471,6 +474,7 @@ type AppModel struct {
 	// backupOp counts backup dialog operations, so a worker finishing after
 	// Cancel, lock or a newer attempt is ignored.
 	backupOp uint64
+	draftSeq uint64
 
 	SSHAgentError *core.Signal[string]
 	vaultRev      *core.Signal[int]
@@ -1308,6 +1312,12 @@ func (m *AppModel) forgetAccount() {
 // clearUnlockedUI removes everything the unlocked vault put on screen or in
 // memory: drafts, dialogs, revealed secrets, backups and lists.
 func (m *AppModel) clearUnlockedUI() {
+	m.FolderDialog.Set(FolderModal{})
+	m.FolderError.Set("")
+	m.FolderBusy.Set(false)
+	m.GenResult.Set("")
+	m.EditBusy.Set(false)
+	m.RepromptBusy.Set(false)
 	if m.Hooks.SSHAgent != nil {
 		m.Hooks.SSHAgent.Clear()
 	}
@@ -1792,7 +1802,7 @@ func (m *AppModel) StartCreateCipher(cx *core.Scope) {
 			FolderID: f.FolderID,
 			URIs:     []EditURIDraft{{URI: ""}},
 		}
-		m.EditDraft.Set(draft)
+		m.openDraft(draft)
 		m.EditDirty.Set(false)
 		m.EditError.Set("")
 		m.EditMode.Set(true)
@@ -1809,11 +1819,18 @@ func (m *AppModel) StartEditCipher(cx *core.Scope) {
 		if cur := m.ActiveCipher.Get(); cur == nil || cur.ID != c.ID {
 			return
 		}
-		m.EditDraft.Set(draftFromCipher(c))
+		m.openDraft(draftFromCipher(c))
 		m.EditDirty.Set(false)
 		m.EditError.Set("")
 		m.EditMode.Set(true)
 	})
+}
+
+// openDraft opens d in the editor as a new editing session.
+func (m *AppModel) openDraft(d *EditDraft) {
+	m.draftSeq++
+	d.session = m.draftSeq
+	m.EditDraft.Set(d)
 }
 
 func (m *AppModel) CancelEdit(cx *core.Scope) {
@@ -1855,6 +1872,7 @@ func (m *AppModel) SaveDraft(cx *core.Scope) {
 	cipher := cipherFromDraft(draft)
 	m.ReleaseSecureInput()
 	gen := m.LockGeneration()
+	session := draft.session
 	m.EditBusy.Set(true)
 	m.EditError.Set("")
 
@@ -1872,6 +1890,16 @@ func (m *AppModel) SaveDraft(cx *core.Scope) {
 				return
 			}
 			m.EditBusy.Set(false)
+			if cur := m.EditDraft.Get(); cur == nil || cur.session != session {
+				// The user left this draft; another one may be open now.
+				if err == nil || localCopyFailed {
+					m.RefreshVaultData()
+					m.ShowToast(ui.ToastSuccess, "Item saved", "")
+				} else {
+					m.ShowToast(ui.ToastError, "Save failed", friendlyError(err))
+				}
+				return
+			}
 			if err != nil && !localCopyFailed {
 				if errors.Is(err, api.ErrRevisionConflict) {
 					cx.ShowAlert(core.AlertConfig{

@@ -317,6 +317,10 @@ func (m *mockVaultService) LocalOnly() bool { return m.localOnly }
 
 func (m *mockVaultService) CredentialsNotSaved() bool { return m.credsUnsaved }
 
+func (m *mockVaultService) BackupData() state.BackupData {
+	return state.BackupData{Ciphers: m.AllCiphers(), Folders: m.Folders(), Unreadable: m.unreadable}
+}
+
 func (m *mockVaultService) UnreadableItems() []string { return m.unreadable }
 
 func (m *mockVaultService) SessionContext(parent context.Context) (context.Context, context.CancelFunc, error) {

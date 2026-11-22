@@ -40,9 +40,9 @@ func MainWindowView(cx *core.Scope, m *AppModel) core.Node {
 					return LoginView(cx, m)
 				}
 			}),
-			repromptDialog(m),
-			backupDialog(cx, m),
-			folderDialog(m),
+			whenUnlocked(m, func(*core.Scope) core.Node { return repromptDialog(m) }),
+			whenUnlocked(m, func(cx *core.Scope) core.Node { return backupDialog(cx, m) }),
+			whenUnlocked(m, func(*core.Scope) core.Node { return folderDialog(m) }),
 			ui.Toasts{
 				Toaster:   m.Toaster,
 				Placement: ui.ToastBottomEnd,
@@ -327,5 +327,14 @@ func folderDialog(m *AppModel) core.Node {
 				OnPress: m.SaveFolderModal,
 			},
 		},
+	}
+}
+
+// whenUnlocked mounts a vault dialog only while the vault is unlocked, so
+// none of its contents outlive the session.
+func whenUnlocked(m *AppModel, node func(cx *core.Scope) core.Node) core.Node {
+	return core.Show{
+		When: func() bool { return m.LockState.Get() == state.StatusUnlocked },
+		Then: node,
 	}
 }

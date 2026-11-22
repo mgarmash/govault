@@ -750,6 +750,33 @@ func (s *Service) GetCipher(id string) (*Cipher, error) {
 func (s *Service) AllCiphers() []*Cipher {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
+	return s.allCiphersLocked()
+}
+
+// BackupData is everything an export reads, taken at one moment.
+type BackupData struct {
+	Ciphers    []*Cipher
+	Folders    []Folder
+	Unreadable []string
+}
+
+// BackupData returns the items, folders and unreadable item IDs under one
+// read lock, so a sync can never slip between checking that the backup is
+// complete and reading what goes into it.
+func (s *Service) BackupData() BackupData {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	if s.status != StatusUnlocked {
+		return BackupData{}
+	}
+	d := BackupData{Ciphers: s.allCiphersLocked(), Unreadable: slices.Clone(s.unreadable)}
+	for _, f := range s.folders {
+		d.Folders = append(d.Folders, Folder{ID: f.ID, Name: f.Name, RevisionDate: cloneTimePtr(f.RevisionDate), Extra: cloneExtra(f.Extra)})
+	}
+	return d
+}
+
+func (s *Service) allCiphersLocked() []*Cipher {
 	if s.status != StatusUnlocked {
 		return nil
 	}

@@ -325,6 +325,7 @@ type VaultService interface {
 	HardDeleteCipher(ctx context.Context, id string) error
 	TrashSelection() TrashSelection
 	UnreadableItems() []string
+	BackupData() BackupData
 	AuthAttempt() uint64
 	RevokeAuthAttempts()
 	LocalOnly() bool
