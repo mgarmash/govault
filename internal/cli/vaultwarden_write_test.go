@@ -15,12 +15,37 @@ import (
 func writesEnabled() bool { return os.Getenv("GV_WRITE_TESTS") == "1" }
 
 // checkWrites changes only objects named with a prefix unique to this run
-// and removes every one of them when the test ends, also after a failure.
+// and removes every one of them before it returns, also after a failure,
+// then checks every other item kept its revision.
 func (vw *vwRun) checkWrites(t *testing.T) {
 	var b [4]byte
 	_, _ = rand.Read(b[:])
 	prefix := "gv-write-test-" + hex.EncodeToString(b[:])
-	t.Cleanup(func() { vw.cleanUp(t, prefix) })
+	before := vw.revisions(t)
+	// A defer, not t.Cleanup: it runs on t.Fatal too, before the suite
+	// locks and logs out.
+	defer func() {
+		vw.cleanUp(t, prefix)
+		after := vw.revisions(t)
+		for id, rev := range before {
+			if after[id] != rev {
+				t.Errorf("item %s that the suite did not create changed: revision %s, now %q", id, rev, after[id])
+			}
+		}
+		for id := range after {
+			if _, ok := before[id]; !ok {
+				t.Errorf("item %s the suite created is still there", id)
+			}
+		}
+		var folders []struct{ Name string }
+		_ = json.Unmarshal([]byte(vw.must(t, "list", "folders")), &folders)
+		for _, f := range folders {
+			if strings.HasPrefix(f.Name, prefix) {
+				t.Errorf("folder %q is still there", f.Name)
+			}
+		}
+		t.Logf("ok: cleanup left no %s objects; %d other items unchanged", prefix, len(before))
+	}()
 	id := func(out string) string {
 		var o struct{ ID string }
 		if err := json.Unmarshal([]byte(out), &o); err != nil || o.ID == "" {
@@ -63,6 +88,15 @@ func (vw *vwRun) checkWrites(t *testing.T) {
 		t.Fatalf("create attachment: %s", r.err)
 	}
 
+	switch r := vw.run("archive", "item", item); {
+	case r.code == 0:
+		vw.must(t, "restore", "item", item)
+		t.Log("ok: archive and unarchive")
+	case strings.Contains(r.err, "Premium"):
+		t.Log("archive refused: the account has no premium")
+	default:
+		t.Fatalf("archive: %s", r.err)
+	}
 	vw.must(t, "delete", "item", item)
 	vw.must(t, "restore", "item", item)
 	vw.must(t, "sync", "-f")

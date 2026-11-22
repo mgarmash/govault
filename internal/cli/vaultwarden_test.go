@@ -238,22 +238,92 @@ func (vw *vwRun) checkReads(t *testing.T) {
 			t.Fatalf("list %s: %v", kind, err)
 		}
 	}
-	fields := 0
+	// Every field of every item is read from the local copy: no network.
+	got := map[string]int{}
 	for _, it := range items {
 		id := it["id"].(string)
 		vw.must(t, "get", "item", id)
 		login, _ := it["login"].(map[string]any)
-		if _, ok := login["username"].(string); ok && fields < 4 {
-			vw.must(t, "get", "username", id)
-			fields++
+		for _, f := range []string{"username", "password", "totp"} {
+			if v, ok := login[f].(string); ok && v != "" {
+				r := vw.run("get", f, id)
+				switch {
+				// As bw, TOTP codes need premium, or an organization
+				// that uses them.
+				case f == "totp" && r.code == 1 && r.err == "Premium status is required to use this feature.":
+					got["totp (premium required)"]++
+				case r.code != 0 || r.out == "":
+					t.Fatalf("get %s: exit %d: %s", f, r.code, r.err)
+				default:
+					got[f]++
+				}
+			}
 		}
-		if _, ok := login["password"].(string); ok && fields < 4 {
-			vw.must(t, "get", "password", id)
-			fields++
+		if uris, _ := login["uris"].([]any); len(uris) > 0 {
+			vw.must(t, "get", "uri", id)
+			got["uri"]++
+		}
+		if n, ok := it["notes"].(string); ok && n != "" {
+			vw.must(t, "get", "notes", id)
+			got["notes"]++
+		}
+		if k, ok := it["sshKey"].(map[string]any); ok {
+			if k["privateKey"] == "" || k["publicKey"] == "" || k["keyFingerprint"] == "" {
+				t.Fatal("an SSH key item lacks its key")
+			}
+			got["sshKey"]++
+		}
+		if c, ok := it["card"].(map[string]any); ok && c["number"] != nil {
+			got["card"]++
+		}
+		if _, ok := it["identity"].(map[string]any); ok {
+			got["identity"]++
 		}
 	}
 	vw.must(t, "get", "fingerprint", "me")
-	t.Logf("ok: status, sync -f, list items/folders/collections/organizations, get item (%d items), %d login fields, fingerprint", len(items), fields)
+	t.Logf("ok: status, sync -f, list items/folders/collections/organizations, get item (%d items), fields %v, fingerprint", len(items), got)
+	leftovers := 0
+	for _, args := range [][]string{{"list", "items", "--trash"}, {"list", "items", "--archived"}, {"list", "folders"}, {"list", "items"}} {
+		var list []struct{ Name string }
+		if r := vw.run(args...); r.code == 0 {
+			_ = json.Unmarshal([]byte(r.out), &list)
+		}
+		for _, o := range list {
+			if strings.HasPrefix(o.Name, "gv-write-test-") {
+				leftovers++
+			}
+		}
+		if args[len(args)-1] != "items" && args[len(args)-1] != "folders" {
+			t.Logf("%s: %d", strings.Join(args, " "), len(list))
+		}
+	}
+	t.Logf("gv-write-test objects in the vault: %d", leftovers)
+	for _, it := range items {
+		if name, _ := it["name"].(string); strings.HasPrefix(name, "GV Test") {
+			t.Logf("fixture %q revision %v", name, it["revisionDate"])
+		}
+	}
+}
+
+// revisions are the revision dates of the vault's items by ID.
+func (vw *vwRun) revisions(t *testing.T) map[string]string {
+	t.Helper()
+	vw.must(t, "sync", "-f")
+	out := map[string]string{}
+	for _, args := range [][]string{{"list", "items"}, {"list", "items", "--trash"}, {"list", "items", "--archived"}} {
+		var items []struct{ ID, RevisionDate string }
+		r := vw.run(args...)
+		if r.code != 0 {
+			continue
+		}
+		if err := json.Unmarshal([]byte(r.out), &items); err != nil {
+			t.Fatal(err)
+		}
+		for _, it := range items {
+			out[it.ID] = it.RevisionDate
+		}
+	}
+	return out
 }
 
 func (vw *vwRun) spoilAccessToken(t *testing.T, ring *keyring.Memory) {
