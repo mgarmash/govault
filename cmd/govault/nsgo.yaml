@@ -1,6 +1,6 @@
 name: GoVault
 id: dev.txchen.govault
-version: 0.2.6
+version: 0.2.7
 
 icon:
   png: assets/Icon.png
@@ -11,7 +11,7 @@ dev:
 build:
   output: ../../dist
   installers: false
-  targets: [macos_arm64]
+  targets: [macos_arm64, linux_x64, linux_arm64, windows_x64, windows_arm64]
 
 release:
   github: txchen/govault

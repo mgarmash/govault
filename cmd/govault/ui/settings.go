@@ -388,7 +388,7 @@ func biometricRows(cx *core.Scope, m *AppModel, available, enabled bool) []core.
 			OnChange: func(on bool) { m.ToggleBiometric(cx, on) },
 		},
 	)}
-	if enabled {
+	if enabled && runtime.GOOS == "darwin" {
 		rows = append(rows, core.View{
 			Class: "flex-row items-center gap-2 px-4 py-2.5",
 			Children: []core.Node{
@@ -410,6 +410,8 @@ func biometricRows(cx *core.Scope, m *AppModel, available, enabled bool) []core.
 				},
 			},
 		})
+	}
+	if enabled {
 		rows = append(rows, settingsRow(
 			"Prompt automatically",
 			"Ask for "+m.BiometricLabel()+" as soon as the locked window opens.",

@@ -12,7 +12,7 @@
   <a href="https://github.com/txchen/govault/releases/latest"><img src="https://img.shields.io/github/v/release/txchen/govault?label=release" alt="Latest release"></a>
   <a href="go.mod"><img src="https://img.shields.io/github/go-mod/go-version/txchen/govault" alt="Go version"></a>
   <img src="https://img.shields.io/badge/CGO-zero-2ea44f" alt="Zero CGO">
-  <img src="https://img.shields.io/badge/platforms-macOS%20%7C%20Linux-0a84ff" alt="macOS and Linux">
+  <img src="https://img.shields.io/badge/platforms-macOS%20%7C%20Linux%20%7C%20Windows-0a84ff" alt="macOS, Linux and Windows">
   <a href="LICENSE"><img src="https://img.shields.io/github/license/txchen/govault" alt="MIT License"></a>
 </p>
 
@@ -64,6 +64,18 @@ For example: `curl -fsSL https://raw.githubusercontent.com/txchen/govault/master
 
 GoVault needs GTK 4 on Linux; the AppImage also needs FUSE 2.
 
+### Windows (x64 and arm64)
+
+In PowerShell:
+
+```powershell
+irm https://github.com/txchen/govault/releases/latest/download/install.ps1 | iex
+```
+
+The script picks the installer for your processor, checks its SHA-256 and installs GoVault for your user account. You can also download `govault-<version>-windows-x64-setup.exe` (or `windows-arm64-setup.exe`) from [Releases](https://github.com/txchen/govault/releases/latest) and run it.
+
+The installer is not code-signed yet, so Windows SmartScreen may show a warning the first time you run it: choose **More info**, then **Run anyway**. GoVault updates itself; you can also choose **Check for Updates…** from the tray icon or the GoVault menu (press Alt to show the menu bar).
+
 ### Try it without a server, or build from source
 
 You need Go (see [`go.mod`](go.mod) for the version).
@@ -77,7 +89,7 @@ go tool nsgo build -target macos_arm64 ./cmd/govault   # app bundle and installe
 
 ## Why GoVault?
 
-Bitwarden's mobile apps are native, but its desktop app is an Electron and Angular application: it ships a Chromium browser engine and Node.js, runs several processes, and is large to download and keep in memory. GoVault is a desktop client written in Go on native platform views (AppKit on macOS, GTK 4 on Linux), with no CGO and a single process.
+Bitwarden's mobile apps are native, but its desktop app is an Electron and Angular application: it ships a Chromium browser engine and Node.js, runs several processes, and is large to download and keep in memory. GoVault is a desktop client written in Go on native platform views (AppKit on macOS, GTK 4 on Linux, Win32 with Direct2D on Windows), with no CGO and a single process.
 
 | | GoVault 0.2.5 | Bitwarden Desktop 2026.10.4 |
 |---|---|---|
@@ -91,7 +103,7 @@ Bitwarden's mobile apps are native, but its desktop app is an Electron and Angul
 
 <sub>Measured on an Apple silicon Mac running macOS 27.2. Memory is the physical footprint from `footprint`, summed over all of an app's processes. CPU is from seven `top` samples 5 seconds apart and from the CPU time each app used over the same 30 seconds. Both apps were signed in to the same account and vault (about 440 items), showing the main vault list with no item open, idle for at least 30 seconds (CPU time used: GoVault 0.02 s, Bitwarden 0.96 s). Download sizes are the release assets on GitHub.</sub>
 
-GoVault does not replace everything the official app does. It has no Windows or Intel Mac build, no Bitwarden Send, no passkey management and no browser-extension integration, and accounts are created on your server's web vault.
+GoVault does not replace everything the official app does. It has no Intel Mac build, no Bitwarden Send, no passkey management and no browser-extension integration, and accounts are created on your server's web vault.
 
 ## Features
 

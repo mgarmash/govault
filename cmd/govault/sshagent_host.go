@@ -14,7 +14,12 @@ type sshAgentHost struct {
 	srv *sshagent.Server
 }
 
-func newSSHAgentHost(dataDir string) *sshAgentHost {
+// newSSHAgentHost returns nil where SSH clients do not use a Unix socket
+// agent: on Windows, OpenSSH talks to a named pipe. A nil host does nothing.
+func newSSHAgentHost(goos, dataDir string) *sshAgentHost {
+	if goos == "windows" {
+		return nil
+	}
 	return &sshAgentHost{path: filepath.Join(dataDir, "ssh-agent.sock")}
 }
 
@@ -35,6 +40,9 @@ func (h *sshAgentHost) Start() error {
 }
 
 func (h *sshAgentHost) Stop() {
+	if h == nil {
+		return
+	}
 	h.mu.Lock()
 	srv := h.srv
 	h.srv = nil
@@ -53,6 +61,9 @@ func (h *sshAgentHost) SetKeys(keys []sshagent.Key) {
 }
 
 func (h *sshAgentHost) Clear() {
+	if h == nil {
+		return
+	}
 	h.mu.Lock()
 	defer h.mu.Unlock()
 	if h.srv != nil {

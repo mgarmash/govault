@@ -21,6 +21,13 @@ import (
 //go:embed assets/TrayTemplate.png
 var trayTemplatePNG []byte
 
+// trayColorPNG is the app icon at 64x64 for the Windows notification area
+// and Linux trays, which draw icons as they are, so a black template glyph
+// would vanish on a dark taskbar.
+//
+//go:embed assets/TrayIcon.png
+var trayColorPNG []byte
+
 type DesktopShell struct {
 	scope     *core.Scope
 	dataDir   string
@@ -52,7 +59,7 @@ func NewDesktopShell(app *core.Scope, demoMode bool) *DesktopShell {
 		scope:     app,
 		dataDir:   dataDir,
 		clipboard: clip,
-		sshAgent:  newSSHAgentHost(dataDir),
+		sshAgent:  newSSHAgentHost(runtime.GOOS, dataDir),
 	}
 	if cacheDir := app.CacheDir(); cacheDir != "" {
 		shell.favicons = govaultui.NewFaviconStore(govaultui.FaviconStoreConfig{CacheDir: filepath.Join(cacheDir, "icons")})
@@ -315,9 +322,13 @@ func (s *DesktopShell) SetTrayVisible(on bool) {
 		return
 	}
 	s.trayScope = s.scope.Child()
+	icon, template := trayColorPNG, false
+	if runtime.GOOS == "darwin" {
+		icon, template = trayTemplatePNG, true
+	}
 	desktop.NewTray(s.trayScope, desktop.TrayOptions{
-		Icon:     trayTemplatePNG,
-		Template: true,
+		Icon:     icon,
+		Template: template,
 		Tooltip:  "GoVault",
 		OnClick:  s.OpenMainWindow,
 		Menu:     s.trayMenu,

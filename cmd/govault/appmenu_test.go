@@ -34,9 +34,11 @@ func TestApplicationMenuKeepsStandardRoles(t *testing.T) {
 			t.Errorf("macOS menu lacks role %v", r)
 		}
 	}
-	linux := applicationMenu("linux", func() {})
-	if len(linux) != 1 || roles(linux)[desktop.MenuCopy] {
-		t.Fatalf("Linux menu = %+v, want only the app items", linux)
+	for _, goos := range []string{"linux", "windows"} {
+		menu := applicationMenu(goos, func() {})
+		if len(menu) != 1 || roles(menu)[desktop.MenuCopy] {
+			t.Fatalf("%s menu = %+v, want only the app items", goos, menu)
+		}
 	}
 }
 

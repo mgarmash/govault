@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"runtime"
 	"slices"
 	"strings"
 	"sync"
@@ -744,6 +745,9 @@ func (m *AppModel) CanUseBiometric() bool {
 }
 
 func (m *AppModel) BiometricLabel() string {
+	if runtime.GOOS == "windows" {
+		return "Windows Hello"
+	}
 	switch m.BiometricKind.Get() {
 	case core.BiometricFace:
 		return "Face ID"
