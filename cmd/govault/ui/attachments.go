@@ -13,6 +13,7 @@ import (
 	"github.com/nsgo-dev/nsgo/core"
 	"github.com/nsgo-dev/nsgo/icons/lucide"
 	"github.com/nsgo-dev/nsgo/ui"
+	"github.com/txchen/govault/cmd/govault/locales"
 	"github.com/txchen/govault/internal/vaultcore/api"
 	"github.com/txchen/govault/internal/vaultcore/crypto"
 	"github.com/txchen/govault/internal/vaultcore/state"
@@ -43,7 +44,7 @@ func (m *AppModel) DownloadAttachment(cx *core.Scope, c *state.Cipher, att state
 	if !m.CanDownloadAttachments(c) || m.AttachmentBusy.Get() != "" {
 		return
 	}
-	m.GateReprompt(cx, c, "download attachment", func() {
+	m.GateReprompt(cx, c, RepromptDownloadAttachment, func() {
 		m.ResetIdleTimer()
 		m.AttachmentBusy.Set(att.ID)
 		gen := m.LockGeneration()
@@ -57,7 +58,7 @@ func (m *AppModel) DownloadAttachment(cx *core.Scope, c *state.Cipher, att state
 				}
 				m.AttachmentBusy.Set("")
 				if err != nil {
-					m.ShowToast(ui.ToastError, "Download failed", friendlyError(err))
+					m.ShowToast(ui.ToastError, locales.DownloadFailed(cx), m.errorText(err))
 					return
 				}
 				if name == "" {
@@ -67,7 +68,7 @@ func (m *AppModel) DownloadAttachment(cx *core.Scope, c *state.Cipher, att state
 					if err != nil || target.dir == "" || !m.StillUnlocked(gen) {
 						crypto.ZeroBytes(data)
 						if err != nil {
-							m.ShowToast(ui.ToastError, "Save failed", err.Error())
+							m.ShowToast(ui.ToastError, locales.SaveFailed(cx), m.errorText(err))
 						}
 						return
 					}
@@ -76,9 +77,9 @@ func (m *AppModel) DownloadAttachment(cx *core.Scope, c *state.Cipher, att state
 						m.Scope.Post(func() {
 							switch {
 							case err != nil:
-								m.ShowToast(ui.ToastError, "Save failed", err.Error())
+								m.ShowToast(ui.ToastError, locales.SaveFailed(cx), m.errorText(err))
 							case published:
-								m.ShowToast(ui.ToastSuccess, "Attachment saved", filepath.Base(path))
+								m.ShowToast(ui.ToastSuccess, locales.AttachmentSaved(cx), filepath.Base(path))
 							}
 						})
 					}()
@@ -116,7 +117,7 @@ func (m *AppModel) chooseSavePath(cx *core.Scope, name string, done func(saveTar
 		})
 		return
 	}
-	cx.PickDirectories(core.PickDirectoriesOptions{Title: "Save Attachment", Button: "Save Here"}, func(dirs []core.Directory, err error) {
+	cx.PickDirectories(core.PickDirectoriesOptions{Title: locales.SaveAttachmentTitle(cx), Button: locales.SaveHere(cx)}, func(dirs []core.Directory, err error) {
 		if err != nil || len(dirs) == 0 || dirs[0].Path == "" {
 			done(saveTarget{}, err)
 			return
@@ -183,9 +184,9 @@ func (m *AppModel) AttachFile(cx *core.Scope, c *state.Cipher) {
 	}
 	m.ResetIdleTimer()
 	cipherID := c.ID
-	cx.PickFiles(core.PickFilesOptions{Title: "Attach File", Button: "Attach"}, func(files []core.File, err error) {
+	cx.PickFiles(core.PickFilesOptions{Title: locales.AttachFileTitle(cx), Button: locales.AttachButton(cx)}, func(files []core.File, err error) {
 		if err != nil {
-			m.ShowToast(ui.ToastError, "Could not open file", err.Error())
+			m.ShowToast(ui.ToastError, locales.CouldNotOpenFile(cx), m.errorText(err))
 			return
 		}
 		if len(files) == 0 {
@@ -193,7 +194,7 @@ func (m *AppModel) AttachFile(cx *core.Scope, c *state.Cipher) {
 		}
 		f := files[0]
 		if f.Size > api.MaxAttachmentSize {
-			m.ShowToast(ui.ToastError, "File too large", "Attachments are limited to 100 MiB.")
+			m.ShowToast(ui.ToastError, locales.FileTooLarge(cx), locales.AttachmentLimit(cx))
 			return
 		}
 		m.AttachmentBusy.Set(attachmentUploadBusy)
@@ -209,7 +210,7 @@ func (m *AppModel) AttachFile(cx *core.Scope, c *state.Cipher) {
 				// failed; uploading again would attach it twice.
 				var lc *state.LocalCopyError
 				if err != nil && !errors.As(err, &lc) {
-					m.ShowToast(ui.ToastError, "Upload failed", friendlyError(err))
+					m.ShowToast(ui.ToastError, locales.UploadFailed(cx), m.errorText(err))
 					return
 				}
 				if updated == nil && lc != nil {
@@ -217,10 +218,10 @@ func (m *AppModel) AttachFile(cx *core.Scope, c *state.Cipher) {
 				}
 				m.applyCipherUpdate(updated)
 				if lc != nil {
-					m.ShowLocalCopyWarning("File attached")
+					m.ShowLocalCopyWarning(locales.FileAttached(cx))
 					return
 				}
-				m.ShowToast(ui.ToastSuccess, "File attached", f.Name)
+				m.ShowToast(ui.ToastSuccess, locales.FileAttached(cx), f.Name)
 			})
 		}()
 	})
@@ -252,11 +253,11 @@ func (m *AppModel) DeleteAttachment(cx *core.Scope, c *state.Cipher, att state.A
 	}
 	cipherID := c.ID
 	cx.ShowAlert(core.AlertConfig{
-		Title:   "Delete attachment?",
-		Message: fmt.Sprintf("%q will be permanently deleted.", att.FileName),
+		Title:   locales.DeleteAttachmentTitle(cx),
+		Message: locales.DeleteAttachmentMessage(cx, att.FileName),
 		Actions: []core.AlertAction{
-			{Label: "Cancel", Role: core.AlertCancel},
-			{Label: "Delete", Role: core.AlertDestructive},
+			{Label: locales.Cancel(cx), Role: core.AlertCancel},
+			{Label: locales.Delete(cx), Role: core.AlertDestructive},
 		},
 		Cancelable: true,
 	}, func(idx int) {
@@ -274,7 +275,7 @@ func (m *AppModel) DeleteAttachment(cx *core.Scope, c *state.Cipher, att state.A
 				m.AttachmentBusy.Set("")
 				var lc *state.LocalCopyError
 				if err != nil && !errors.As(err, &lc) {
-					m.ShowToast(ui.ToastError, "Delete failed", friendlyError(err))
+					m.ShowToast(ui.ToastError, locales.DeleteFailed(cx), m.errorText(err))
 					return
 				}
 				if updated == nil && lc != nil {
@@ -282,33 +283,20 @@ func (m *AppModel) DeleteAttachment(cx *core.Scope, c *state.Cipher, att state.A
 				}
 				m.applyCipherUpdate(updated)
 				if lc != nil {
-					m.ShowLocalCopyWarning("Attachment deleted")
+					m.ShowLocalCopyWarning(locales.AttachmentDeleted(cx))
 					return
 				}
-				m.ShowToast(ui.ToastInfo, "Attachment deleted", "")
+				m.ShowToast(ui.ToastInfo, locales.AttachmentDeleted(cx), "")
 			})
 		}()
 	})
 }
 
-func attachmentSizeLabel(a state.Attachment) string {
-	if a.SizeName != "" {
-		return a.SizeName
+func attachmentSizeLabel(cx *core.Scope, a state.Attachment) string {
+	if a.Size > 0 || a.SizeName == "" {
+		return formatByteSize(cx, a.Size)
 	}
-	return formatByteSize(a.Size)
-}
-
-func formatByteSize(n int64) string {
-	const unit = 1024
-	if n < unit {
-		return fmt.Sprintf("%d B", n)
-	}
-	div, exp := int64(unit), 0
-	for v := n / unit; v >= unit; v /= unit {
-		div *= unit
-		exp++
-	}
-	return fmt.Sprintf("%.1f %cB", float64(n)/float64(div), "KMGT"[exp])
+	return a.SizeName
 }
 
 func attachmentsSection(cx *core.Scope, m *AppModel, c *state.Cipher) core.Node {
@@ -325,7 +313,7 @@ func attachmentsSection(cx *core.Scope, m *AppModel, c *state.Cipher) core.Node 
 			actions = append(actions, ui.Button{
 				TestID:   fmt.Sprintf("detail-attachment-download-%d", i),
 				Icon:     lucide.Download,
-				Label:    "Download " + att.FileName,
+				Label:    locales.DownloadFile(cx, att.FileName),
 				Variant:  ui.ButtonGhost,
 				Side:     28,
 				IconSize: 14,
@@ -338,7 +326,7 @@ func attachmentsSection(cx *core.Scope, m *AppModel, c *state.Cipher) core.Node 
 			actions = append(actions, ui.Button{
 				TestID:   fmt.Sprintf("detail-attachment-delete-%d", i),
 				Icon:     lucide.Trash,
-				Label:    "Delete " + att.FileName,
+				Label:    locales.DeleteFile(cx, att.FileName),
 				Variant:  ui.ButtonGhost,
 				Side:     28,
 				IconSize: 14,
@@ -355,7 +343,7 @@ func attachmentsSection(cx *core.Scope, m *AppModel, c *state.Cipher) core.Node 
 					Class: "flex-1 gap-[2px] overflow-hidden",
 					Children: []core.Node{
 						core.Text{MaxLines: 1, Class: "text-[13.5px] text-gv-fg", Content: att.FileName},
-						core.Text{Class: "text-[11.5px] text-gv-fg3 tabular-nums", Content: attachmentSizeLabel(att)},
+						core.Text{Class: "text-[11.5px] text-gv-fg3 tabular-nums", Content: attachmentSizeLabel(cx, att)},
 					},
 				},
 				core.View{Class: "flex-row items-center gap-0.5", Children: actions},
@@ -368,7 +356,7 @@ func attachmentsSection(cx *core.Scope, m *AppModel, c *state.Cipher) core.Node 
 			Children: []core.Node{
 				ui.Button{
 					TestID:  "detail-attach-file",
-					Text:    "Attach File",
+					Text:    locales.AttachFile(cx),
 					Icon:    lucide.Plus,
 					Variant: ui.ButtonGhost,
 					Size:    ui.SizeSmall,
@@ -378,5 +366,5 @@ func attachmentsSection(cx *core.Scope, m *AppModel, c *state.Cipher) core.Node 
 			},
 		})
 	}
-	return section("Attachments", card(rows...))
+	return section(locales.Attachments(cx), card(rows...))
 }

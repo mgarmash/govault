@@ -14,6 +14,7 @@ import (
 	"github.com/nsgo-dev/nsgo/core"
 	"github.com/nsgo-dev/nsgo/icons/lucide"
 	"github.com/nsgo-dev/nsgo/ui"
+	"github.com/txchen/govault/cmd/govault/locales"
 	"github.com/txchen/govault/internal/vaultcore/crypto"
 	"github.com/txchen/govault/internal/vaultcore/export"
 	"github.com/txchen/govault/internal/vaultcore/state"
@@ -65,7 +66,7 @@ func (m *AppModel) StartExport() {
 	}
 	m.ResetIdleTimer()
 	gen := m.LockGeneration()
-	m.openRepromptDialog("export your vault", func() {
+	m.openRepromptDialog(RepromptExportVault, func() {
 		if m.StillUnlocked(gen) {
 			m.openBackupDialog(BackupExport)
 		}
@@ -110,15 +111,15 @@ func (m *AppModel) confirmExport(cx *core.Scope) {
 	pw := m.BackupPW.Get()
 	switch {
 	case len([]rune(pw)) < minBackupPasswordLength:
-		m.BackupError.Set(fmt.Sprintf("Use at least %d characters.", minBackupPasswordLength))
+		m.BackupError.Set(locales.BackupPasswordTooShort(cx, minBackupPasswordLength))
 		return
 	case pw != m.BackupPW2.Get():
-		m.BackupError.Set("The passwords do not match.")
+		m.BackupError.Set(locales.BackupPasswordsDiffer(cx))
 		return
 	}
 	backup := m.Core.BackupData()
 	if n := len(backup.Unreadable); n > 0 {
-		m.BackupError.Set(fmt.Sprintf("%d personal item(s) are in a format GoVault cannot read, so the backup would be incomplete. Export from the Bitwarden web vault instead.", n))
+		m.BackupError.Set(locales.BackupIncomplete(cx, n))
 		return
 	}
 	m.ReleaseSecureInput()
@@ -141,7 +142,7 @@ func (m *AppModel) confirmExport(cx *core.Scope) {
 			}
 			m.BackupBusy.Set(false)
 			if err != nil {
-				m.BackupError.Set(err.Error())
+				m.BackupError.Set(m.errorText(err))
 				return
 			}
 			m.CloseBackupDialog()
@@ -150,7 +151,7 @@ func (m *AppModel) confirmExport(cx *core.Scope) {
 				if err != nil || target.dir == "" || !m.StillUnlocked(gen) {
 					crypto.ZeroBytes(data)
 					if err != nil {
-						m.ShowToast(ui.ToastError, "Export failed", err.Error())
+						m.ShowToast(ui.ToastError, locales.ExportFailed(m.Scope), m.errorText(err))
 					}
 					return
 				}
@@ -159,9 +160,9 @@ func (m *AppModel) confirmExport(cx *core.Scope) {
 					m.Scope.Post(func() {
 						switch {
 						case err != nil:
-							m.ShowToast(ui.ToastError, "Export failed", err.Error())
+							m.ShowToast(ui.ToastError, locales.ExportFailed(m.Scope), m.errorText(err))
 						case published:
-							m.ShowToast(ui.ToastSuccess, "Encrypted backup saved", "Keep the backup password safe; it cannot be recovered.")
+							m.ShowToast(ui.ToastSuccess, locales.BackupSaved(m.Scope), locales.BackupSavedDetail(m.Scope))
 						}
 					})
 				}()
@@ -178,9 +179,9 @@ func (m *AppModel) StartImport(cx *core.Scope) {
 	}
 	m.ResetIdleTimer()
 	gen := m.LockGeneration()
-	cx.PickFiles(core.PickFilesOptions{Title: "Import Backup", Button: "Import", Types: []string{".json"}}, func(files []core.File, err error) {
+	cx.PickFiles(core.PickFilesOptions{Title: locales.ImportBackupTitle(cx), Button: locales.ImportButton(cx), Types: []string{".json"}}, func(files []core.File, err error) {
 		if err != nil {
-			m.ShowToast(ui.ToastError, "Could not open file", err.Error())
+			m.ShowToast(ui.ToastError, locales.CouldNotOpenFile(m.Scope), m.errorText(err))
 			return
 		}
 		if len(files) == 0 {
@@ -195,7 +196,7 @@ func (m *AppModel) StartImport(cx *core.Scope) {
 					return
 				}
 				if err != nil {
-					m.ShowToast(ui.ToastError, "Import failed", err.Error())
+					m.ShowToast(ui.ToastError, locales.ImportFailed(m.Scope), m.errorText(err))
 					return
 				}
 				m.receiveBackup(f.Name, data)
@@ -203,6 +204,9 @@ func (m *AppModel) StartImport(cx *core.Scope) {
 		}()
 	})
 }
+
+// errBackupFileTooLarge means a picked backup is larger than GoVault reads.
+var errBackupFileTooLarge = fmt.Errorf("the file is larger than %d MiB", export.MaxFileSize>>20)
 
 func readBackupFile(f core.File) ([]byte, error) {
 	if f.Temporary && f.Path != "" {
@@ -220,7 +224,7 @@ func readBackupFile(f core.File) ([]byte, error) {
 	}
 	if len(data) > export.MaxFileSize {
 		crypto.ZeroBytes(data)
-		return nil, fmt.Errorf("the file is larger than %d MiB", export.MaxFileSize>>20)
+		return nil, errBackupFileTooLarge
 	}
 	return data, nil
 }
@@ -229,7 +233,7 @@ func (m *AppModel) receiveBackup(name string, data []byte) {
 	needs, err := export.NeedsPassword(data)
 	if err != nil {
 		crypto.ZeroBytes(data)
-		m.ShowToast(ui.ToastError, "Import failed", backupError(err))
+		m.ShowToast(ui.ToastError, locales.ImportFailed(m.Scope), m.backupError(err))
 		return
 	}
 	if needs {
@@ -240,7 +244,7 @@ func (m *AppModel) receiveBackup(name string, data []byte) {
 	v, err := export.Read(data, nil)
 	crypto.ZeroBytes(data)
 	if err != nil {
-		m.ShowToast(ui.ToastError, "Import failed", backupError(err))
+		m.ShowToast(ui.ToastError, locales.ImportFailed(m.Scope), m.backupError(err))
 		return
 	}
 	m.beginImportReview(name, v)
@@ -250,7 +254,7 @@ func (m *AppModel) confirmImportPassword() {
 	pending := m.importPending
 	pw := m.BackupPW.Get()
 	if pending == nil || pw == "" {
-		m.BackupError.Set("Enter the backup password.")
+		m.BackupError.Set(locales.BackupPasswordRequired(m.Scope))
 		return
 	}
 	m.ReleaseSecureInput()
@@ -272,12 +276,12 @@ func (m *AppModel) confirmImportPassword() {
 			}
 			m.BackupBusy.Set(false)
 			if errors.Is(err, export.ErrWrongPassword) {
-				m.BackupError.Set("Incorrect backup password.")
+				m.BackupError.Set(locales.IncorrectBackupPassword(m.Scope))
 				return
 			}
 			m.CloseBackupDialog()
 			if err != nil {
-				m.ShowToast(ui.ToastError, "Import failed", backupError(err))
+				m.ShowToast(ui.ToastError, locales.ImportFailed(m.Scope), m.backupError(err))
 				return
 			}
 			m.beginImportReview(pending.name, v)
@@ -285,14 +289,11 @@ func (m *AppModel) confirmImportPassword() {
 	}()
 }
 
-func backupError(err error) string {
-	switch {
-	case errors.Is(err, export.ErrNotBitwardenExport):
-		return "This is not a Bitwarden JSON export."
-	case errors.Is(err, export.ErrAccountRestricted):
-		return "This backup is locked to its account. Export it again as a password-protected file."
+func (m *AppModel) backupError(err error) string {
+	if errors.Is(err, errBackupFileTooLarge) {
+		return locales.BackupFileTooLarge(m.Scope, export.MaxFileSize>>20)
 	}
-	return friendlyError(err)
+	return m.errorText(err)
 }
 
 func (m *AppModel) beginImportReview(name string, v *export.Vault) {
@@ -325,7 +326,7 @@ func (m *AppModel) SetImportAction(i int, a export.Action) {
 	}
 	if e := &sess.Plan.Entries[i]; a == export.ActionUpdate && e.NeedsReprompt() && slices.Contains(e.Allowed(), a) {
 		gen := m.LockGeneration()
-		m.openRepromptDialog("update a protected item", func() {
+		m.openRepromptDialog(RepromptUpdateProtectedItem, func() {
 			if m.StillUnlocked(gen) && m.ImportSession.Get() == sess {
 				m.mutateImport(func(*export.Plan) {
 					e.ApproveReprompt()
@@ -391,31 +392,65 @@ func (m *AppModel) ApplyImport() {
 			m.ImportSession.Set(nil)
 			m.Route.Set(RouteVault)
 			m.RefreshVaultData()
-			title := fmt.Sprintf("Imported: %d created, %d updated", res.Created, res.Updated)
+			title := locales.ImportResult(m.Scope, res.Created, res.Updated)
 			if res.LocalCopyErr != nil && res.Failed == 0 {
 				m.ShowLocalCopyWarning(title)
 				return
 			}
 			if res.Failed > 0 {
-				m.ShowToast(ui.ToastWarning, title, fmt.Sprintf("%d item(s) failed: %s", res.Failed, friendlyError(res.Err)))
+				m.ShowToast(ui.ToastWarning, title, locales.ImportSomeFailed(m.Scope, res.Failed, m.errorText(res.Err)))
 				return
 			}
-			m.ShowToast(ui.ToastSuccess, title, fmt.Sprintf("%d skipped", res.Skipped))
+			m.ShowToast(ui.ToastSuccess, title, locales.ImportSkipped(m.Scope, res.Skipped))
 		})
 	}()
 }
 
-func importActionLabel(e *export.Entry, a export.Action) string {
+func importActionLabel(cx *core.Scope, e *export.Entry, a export.Action) string {
 	switch a {
 	case export.ActionCreate:
 		if e.Class == export.ClassNew {
-			return "Create"
+			return locales.ImportCreate(cx)
 		}
-		return "Create Copy"
+		return locales.ImportCreateCopy(cx)
 	case export.ActionUpdate:
-		return "Update Existing"
+		return locales.ImportUpdate(cx)
 	}
-	return "Skip"
+	return locales.ImportSkip(cx)
+}
+
+func diffFieldName(cx *core.Scope, f export.DiffField) string {
+	switch f {
+	case export.FieldName:
+		return locales.DiffName(cx)
+	case export.FieldNotes:
+		return locales.DiffNotes(cx)
+	case export.FieldFolder:
+		return locales.DiffFolder(cx)
+	case export.FieldFavorite:
+		return locales.DiffFavorite(cx)
+	case export.FieldReprompt:
+		return locales.DiffReprompt(cx)
+	case export.FieldUsername:
+		return locales.DiffUsername(cx)
+	case export.FieldPassword:
+		return locales.DiffPassword(cx)
+	case export.FieldTOTP:
+		return locales.DiffTOTP(cx)
+	case export.FieldWebsites:
+		return locales.DiffWebsites(cx)
+	case export.FieldPasskey:
+		return locales.DiffPasskey(cx)
+	case export.FieldCard:
+		return locales.DiffCard(cx)
+	case export.FieldIdentity:
+		return locales.DiffIdentity(cx)
+	case export.FieldSSHKey:
+		return locales.DiffSSHKey(cx)
+	case export.FieldCustomFields:
+		return locales.DiffCustomFields(cx)
+	}
+	return string(f)
 }
 
 func ImportView(cx *core.Scope, m *AppModel) core.Node {
@@ -429,8 +464,8 @@ func ImportView(cx *core.Scope, m *AppModel) core.Node {
 					return core.View{
 						Class: "flex-1 items-center justify-center gap-2",
 						Children: []core.Node{
-							core.Text{Class: "text-[13px] font-semibold text-gv-fg", Content: "No Import in Progress"},
-							core.Text{Class: "text-[12px] text-gv-fg2", Content: "Choose Import Backup in Settings to review a backup."},
+							core.Text{Class: "text-[13px] font-semibold text-gv-fg", Content: locales.NoImport(cx)},
+							core.Text{Class: "text-[12px] text-gv-fg2", Content: locales.NoImportHint(cx)},
 						},
 					}
 				}
@@ -458,26 +493,26 @@ func importReview(cx *core.Scope, m *AppModel, sess *ImportSession) core.Node {
 							core.View{
 								Class: "gap-1",
 								Children: []core.Node{
-									core.Text{Class: "text-[17px] font-semibold text-gv-fg", Content: "Review Import"},
+									core.Text{Class: "text-[17px] font-semibold text-gv-fg", Content: locales.ReviewImport(cx)},
 									core.Text{
 										TestID:  "import-summary",
 										Class:   "text-[12.5px] text-gv-fg2",
-										Content: fmt.Sprintf("%s · %d new, %d changed, %d identical. Nothing changes until you apply.", sess.FileName, c.New, c.Conflicts, c.Identical),
+										Content: locales.ImportSummary(cx, sess.FileName, c.New, c.Conflicts, c.Identical),
 									},
 								},
 							},
 							core.View{
 								Class: "flex-row flex-wrap gap-2",
 								Children: []core.Node{
-									batch("import-all-new", "Select All New", func() { m.BatchImport(export.ClassNew, export.ActionCreate) }),
-									batch("import-skip-conflicts", "Skip All Conflicts", func() { m.BatchImport(export.ClassConflict, export.ActionSkip) }),
-									batch("import-copy-conflicts", "Copy All Conflicts", func() { m.BatchImport(export.ClassConflict, export.ActionCreate) }),
-									batch("import-update-conflicts", "Update All Conflicts", func() { m.BatchImport(export.ClassConflict, export.ActionUpdate) }),
-									batch("import-skip-all", "Skip All", m.SkipAllImport),
+									batch("import-all-new", locales.SelectAllNew(cx), func() { m.BatchImport(export.ClassNew, export.ActionCreate) }),
+									batch("import-skip-conflicts", locales.SkipAllConflicts(cx), func() { m.BatchImport(export.ClassConflict, export.ActionSkip) }),
+									batch("import-copy-conflicts", locales.CopyAllConflicts(cx), func() { m.BatchImport(export.ClassConflict, export.ActionCreate) }),
+									batch("import-update-conflicts", locales.UpdateAllConflicts(cx), func() { m.BatchImport(export.ClassConflict, export.ActionUpdate) }),
+									batch("import-skip-all", locales.SkipAll(cx), m.SkipAllImport),
 								},
 							},
 						}
-						group := func(class export.Class, title string) {
+						group := func(class export.Class, title func(int) string) {
 							var rows []core.Node
 							for i := range p.Entries {
 								if p.Entries[i].Class == class {
@@ -485,21 +520,21 @@ func importReview(cx *core.Scope, m *AppModel, sess *ImportSession) core.Node {
 								}
 							}
 							if len(rows) > 0 {
-								blocks = append(blocks, section(fmt.Sprintf("%s (%d)", title, len(rows)), card(rows...)))
+								blocks = append(blocks, section(title(len(rows)), card(rows...)))
 							}
 						}
-						group(export.ClassConflict, "Changed")
-						group(export.ClassNew, "New")
+						group(export.ClassConflict, func(n int) string { return locales.ImportGroupChanged(cx, n) })
+						group(export.ClassNew, func(n int) string { return locales.ImportGroupNew(cx, n) })
 						if c.Identical > 0 {
 							blocks = append(blocks, ui.Button{
 								TestID:  "import-toggle-identical",
-								Text:    identicalToggleLabel(m.ImportShowIdentical.Get(), c.Identical),
+								Text:    identicalToggleLabel(cx, m.ImportShowIdentical.Get(), c.Identical),
 								Variant: ui.ButtonGhost,
 								Size:    ui.SizeSmall,
 								OnPress: func() { m.ImportShowIdentical.Set(!m.ImportShowIdentical.Get()) },
 							})
 							if m.ImportShowIdentical.Get() {
-								group(export.ClassIdentical, "Identical")
+								group(export.ClassIdentical, func(n int) string { return locales.ImportGroupIdentical(cx, n) })
 							}
 						}
 						return core.View{Class: "w-full max-w-[760px] self-center px-7 pt-6 pb-8 gap-4", Children: blocks}
@@ -511,7 +546,7 @@ func importReview(cx *core.Scope, m *AppModel, sess *ImportSession) core.Node {
 				Children: []core.Node{
 					ui.Button{
 						TestID:   "import-cancel",
-						Text:     "Cancel",
+						Text:     locales.Cancel(cx),
 						Variant:  ui.ButtonSecondary,
 						Disabled: m.ImportBusy.Get,
 						OnPress:  m.CancelImport,
@@ -521,7 +556,7 @@ func importReview(cx *core.Scope, m *AppModel, sess *ImportSession) core.Node {
 						c := sess.Plan.Counts()
 						return ui.Button{
 							TestID:   "import-apply",
-							Text:     fmt.Sprintf("Apply: %d create, %d update, %d skipped", c.Create, c.Update, c.Skip),
+							Text:     locales.ImportApply(cx, c.Create, c.Update, c.Skip),
 							Icon:     lucide.Check,
 							Variant:  ui.ButtonPrimary,
 							Busy:     m.ImportBusy.Get,
@@ -538,10 +573,11 @@ func importReview(cx *core.Scope, m *AppModel, sess *ImportSession) core.Node {
 // importDestination names where a matched vault item lives: the personal
 // vault, or an organization and its collections.
 func (m *AppModel) importDestination(c *state.Cipher) string {
+	cx := m.Scope
 	if c == nil || c.OrganizationID == nil || *c.OrganizationID == "" {
-		return "your personal vault"
+		return locales.PersonalVault(cx)
 	}
-	org := "an organization"
+	org := locales.AnOrganization(cx)
 	for _, o := range m.Core.Organizations() {
 		if o.ID == *c.OrganizationID {
 			org = o.Name
@@ -554,21 +590,22 @@ func (m *AppModel) importDestination(c *state.Cipher) string {
 		}
 	}
 	if len(cols) == 0 {
-		return "the shared vault of " + org
+		return locales.SharedVaultOf(cx, org)
 	}
-	return org + " · " + strings.Join(cols, ", ")
+	return locales.OrganizationCollections(cx, org, joinList(cols))
 }
 
-func identicalToggleLabel(shown bool, n int) string {
+func identicalToggleLabel(cx *core.Scope, shown bool, n int) string {
 	if shown {
-		return fmt.Sprintf("Hide %d identical items", n)
+		return locales.HideIdentical(cx, n)
 	}
-	return fmt.Sprintf("Show %d identical items", n)
+	return locales.ShowIdentical(cx, n)
 }
 
 func importRow(m *AppModel, p *export.Plan, i int) core.Node {
+	cx := m.Scope
 	e := &p.Entries[i]
-	sub := CipherTypeLabel(e.Item.Type)
+	sub := CipherTypeLabel(cx, e.Item.Type)
 	if e.Item.Login != nil && e.Item.Login.Username != nil && *e.Item.Login.Username != "" {
 		sub = *e.Item.Login.Username
 	}
@@ -578,30 +615,37 @@ func importRow(m *AppModel, p *export.Plan, i int) core.Node {
 	var note string
 	switch e.Class {
 	case export.ClassConflict:
-		note = "Differs: " + strings.Join(e.Diff, ", ") + " · in " + m.importDestination(e.Match)
-		switch {
-		case e.UpdateBlocked != "":
-			note += " · cannot update: " + e.UpdateBlocked
-		case !e.CanUpdate:
-			note += " · existing item is read-only"
-		case e.NeedsReprompt():
-			note += " · protected: Update asks for your master password"
+		fields := make([]string, len(e.Diff))
+		for j, f := range e.Diff {
+			fields[j] = diffFieldName(cx, f)
 		}
+		notes := []string{locales.ImportDiffers(cx, joinList(fields), m.importDestination(e.Match))}
+		switch {
+		case e.UpdateBlocked == export.UpdateBlockedIncomplete:
+			notes = append(notes, locales.ImportCannotUpdateIncomplete(cx))
+		case e.UpdateBlocked == export.UpdateBlockedUnmatchable:
+			notes = append(notes, locales.ImportCannotUpdateUnmatchable(cx))
+		case !e.CanUpdate:
+			notes = append(notes, locales.ImportReadOnly(cx))
+		case e.NeedsReprompt():
+			notes = append(notes, locales.ImportProtected(cx))
+		}
+		note = strings.Join(notes, " · ")
 	case export.ClassIdentical:
-		note = "Already in " + m.importDestination(e.Match)
+		note = locales.ImportAlreadyIn(cx, m.importDestination(e.Match))
 	case export.ClassNew:
 		switch {
 		case e.Unsupported:
-			note = "GoVault cannot save this type of item yet, so it is skipped."
+			note = locales.ImportUnsupported(cx)
 		case e.Ambiguous:
-			note = "Several vault items have this name, so it is not matched to any. Choose Create to add it as a new item."
+			note = locales.ImportAmbiguous(cx)
 		case e.Item.ArchivedDate != nil && !m.Core.CanArchive():
-			note = "Archived in the backup; it is created in your vault, since Archive needs a premium membership."
+			note = locales.ImportArchivedNoPremium(cx)
 		}
 	}
 	opts := make([]ui.Option[export.Action], 0, 3)
 	for _, a := range e.Allowed() {
-		opts = append(opts, ui.Option[export.Action]{Value: a, Label: importActionLabel(e, a)})
+		opts = append(opts, ui.Option[export.Action]{Value: a, Label: importActionLabel(cx, e, a)})
 	}
 	texts := []core.Node{
 		core.Text{MaxLines: 1, Class: "text-[13.5px] text-gv-fg", Content: e.Item.Name},

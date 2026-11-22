@@ -23,6 +23,7 @@ import (
 
 	"github.com/nsgo-dev/nsgo/core"
 	"github.com/nsgo-dev/nsgo/ui"
+	"github.com/txchen/govault/cmd/govault/locales"
 	"github.com/txchen/govault/internal/vaultcore/api"
 )
 
@@ -477,12 +478,12 @@ func (m *AppModel) SetShowFavicons(on bool) {
 func (m *AppModel) ClearIconCache() {
 	if f := m.Hooks.Favicons; f != nil {
 		if err := f.Clear(); err != nil {
-			m.ShowToast(ui.ToastError, "Could not clear icon cache", err.Error())
+			m.ShowToast(ui.ToastError, locales.IconCacheClearFailed(m.Scope), m.errorText(err))
 			return
 		}
 	}
 	m.iconEpoch.Update(func(v int) int { return v + 1 })
-	m.ShowToast(ui.ToastSuccess, "Icon cache cleared", "")
+	m.ShowToast(ui.ToastSuccess, locales.IconCacheCleared(m.Scope), "")
 }
 
 func (m *AppModel) resetFaviconMemory() {

@@ -2,7 +2,6 @@ package main
 
 import (
 	"errors"
-	"fmt"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -236,21 +235,13 @@ func VerifyMasterPasswordOffline(dataDir, accountID string, password []byte) err
 }
 
 func snapshotToMeta(snap *store.Snapshot) *govaultui.AccountSnapshotMeta {
+	kdf := snap.KDF
 	return &govaultui.AccountSnapshotMeta{
 		AccountID:  snap.AccountID,
 		ServerURL:  snap.ServerURL,
 		Email:      snap.Email,
-		KDFSummary: formatKDFSummary(snap.KDF),
+		KDF:        &kdf,
 		LastSyncAt: snap.LastSyncAt,
-	}
-}
-
-func formatKDFSummary(kdf crypto.KDFConfig) string {
-	switch kdf.Type {
-	case crypto.KDFArgon2id:
-		return fmt.Sprintf("Argon2id (%d iter, %d MiB, %d threads)", kdf.Iterations, kdf.MemoryMB, kdf.Parallelism)
-	default:
-		return fmt.Sprintf("PBKDF2-SHA256 (%d iterations)", kdf.Iterations)
 	}
 }
 

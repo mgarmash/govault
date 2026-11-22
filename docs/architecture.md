@@ -162,6 +162,7 @@ govault/
 ├── cmd/
 │   └── govault/
 │       ├── nsgo.yaml           # NSGo build manifest (co-located with package main for `go tool nsgo build ./cmd/govault`)
+│       ├── locales/            # UI message catalogs: en.yaml source, generated catalog_gen.go (see i18n.md)
 │       ├── main.go
 │       ├── app.go              # menu bar icon, window lifecycle, updates
 │       ├── adapters.go         # NSGo Secrets/Biometric/Clipboard bridges

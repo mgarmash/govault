@@ -6,7 +6,9 @@ import (
 	"github.com/nsgo-dev/nsgo/base"
 	"github.com/nsgo-dev/nsgo/core"
 	"github.com/nsgo-dev/nsgo/desktop"
+	"github.com/nsgo-dev/nsgo/i18n"
 	"github.com/nsgo-dev/nsgo/ui"
+	"github.com/txchen/govault/cmd/govault/locales"
 	"github.com/txchen/govault/internal/vaultcore/state"
 )
 
@@ -23,6 +25,15 @@ func MainWindowView(cx *core.Scope, m *AppModel) core.Node {
 	})
 	bindMainWindowShortcuts(cx, m)
 
+	// A new language builds the window again in it. What it shows lives in
+	// the model, so nothing typed or open is lost.
+	return core.Dynamic(func(cx *core.Scope) core.Node {
+		i18n.Language(cx)
+		return core.Func(func(cx *core.Scope) core.Node { return mainWindowContent(m) })
+	})
+}
+
+func mainWindowContent(m *AppModel) core.Node {
 	return core.View{
 		TestID: "main-window-root",
 		Class:  "flex-1 bg-gv-canvas",
@@ -90,8 +101,8 @@ func bindMainWindowShortcuts(cx *core.Scope, m *AppModel) {
 		if c == nil || c.Login == nil || c.Login.Password == "" || m.PasswordHidden(c) {
 			return
 		}
-		m.GateReprompt(cx, c, "copy password", func() {
-			m.CopySecretValue("Password", c.Login.Password)
+		m.GateReprompt(cx, c, RepromptCopyPassword, func() {
+			m.CopySecretValue(locales.PasswordCopied(cx), c.Login.Password)
 		})
 	})
 	cx.OnKeyWith("mod+shift+u", core.KeyOptions{When: core.KeyAlways}, func() {
@@ -100,7 +111,7 @@ func bindMainWindowShortcuts(cx *core.Scope, m *AppModel) {
 		}
 		c := m.ActiveCipher.Get()
 		if c != nil && c.Login != nil && c.Login.Username != "" {
-			m.CopyPlainValue("Username", c.Login.Username)
+			m.CopyPlainValue(locales.UsernameCopied(cx), c.Login.Username)
 		}
 	})
 	cx.OnKeyWith("mod+shift+t", core.KeyOptions{When: core.KeyAlways}, func() {
@@ -111,9 +122,9 @@ func bindMainWindowShortcuts(cx *core.Scope, m *AppModel) {
 		if c == nil || c.Login == nil || strings.TrimSpace(c.Login.TOTP) == "" {
 			return
 		}
-		m.GateReprompt(cx, c, "copy TOTP code", func() {
+		m.GateReprompt(cx, c, RepromptCopyTOTP, func() {
 			if code := m.TOTPCode.Get(); code != "" {
-				m.CopySecretValue("TOTP code", code)
+				m.CopySecretValue(locales.VerificationCodeCopied(cx), code)
 			}
 		})
 	})
@@ -154,19 +165,15 @@ func repromptDialog(m *AppModel) core.Node {
 			}
 		},
 		OnConfirm: m.SubmitReprompt,
-		Title:     "Master Password Verification",
+		Title:     locales.RepromptTitle(m.Scope),
 		DescriptionFunc: func() string {
-			act := m.Reprompt.Get().Action
-			if act == "" {
-				return "Enter your master password to continue."
-			}
-			return "Enter your master password to " + act + "."
+			return locales.RepromptPrompt(m.Scope, string(m.Reprompt.Get().Action))
 		},
 		Children: []core.Node{
 			ui.Input{
 				TestID:        "reprompt-password",
 				OnBlur:        settleSecureInput,
-				Placeholder:   "Master Password",
+				Placeholder:   locales.MasterPassword(m.Scope),
 				Masked:        true,
 				AutoFocus:     true,
 				NoAutoCorrect: true,
@@ -186,13 +193,13 @@ func repromptDialog(m *AppModel) core.Node {
 		},
 		Footer: []core.Node{
 			ui.Button{
-				Text:    "Cancel",
+				Text:    locales.Cancel(m.Scope),
 				Variant: ui.ButtonSecondary,
 				OnPress: m.CloseReprompt,
 			},
 			ui.Button{
 				TestID:  "reprompt-confirm",
-				Text:    "Verify",
+				Text:    locales.Verify(m.Scope),
 				Variant: ui.ButtonPrimary,
 				Busy:    m.RepromptBusy.Get,
 				OnPress: m.SubmitReprompt,
@@ -226,22 +233,22 @@ func backupDialog(cx *core.Scope, m *AppModel) core.Node {
 		OnConfirm: func() { m.ConfirmBackupDialog(cx) },
 		TitleFunc: func() string {
 			if m.BackupDialog.Get() == BackupImport {
-				return "Backup Password"
+				return locales.BackupPasswordTitle(cx)
 			}
-			return "Protect Your Backup"
+			return locales.ProtectBackupTitle(cx)
 		},
 		DescriptionFunc: func() string {
 			if m.BackupDialog.Get() == BackupImport {
-				return "Enter the password this backup was exported with."
+				return locales.BackupPasswordPrompt(cx)
 			}
-			return "Choose a password for the encrypted backup. It cannot be recovered if you forget it."
+			return locales.ProtectBackupPrompt(cx)
 		},
 		Children: []core.Node{
-			input("backup-password", "Backup password", m.BackupPW, true),
+			input("backup-password", locales.BackupPassword(cx), m.BackupPW, true),
 			core.Show{
 				When: func() bool { return m.BackupDialog.Get() == BackupExport },
 				Then: func(cx *core.Scope) core.Node {
-					return input("backup-password-confirm", "Confirm password", m.BackupPW2, false)
+					return input("backup-password-confirm", locales.ConfirmPassword(cx), m.BackupPW2, false)
 				},
 			},
 			core.Show{
@@ -252,11 +259,11 @@ func backupDialog(cx *core.Scope, m *AppModel) core.Node {
 			},
 		},
 		Footer: []core.Node{
-			ui.Button{Text: "Cancel", Variant: ui.ButtonSecondary, OnPress: m.CloseBackupDialog},
+			ui.Button{Text: locales.Cancel(cx), Variant: ui.ButtonSecondary, OnPress: m.CloseBackupDialog},
 			core.Dynamic(func(cx *core.Scope) core.Node {
-				text := "Export"
+				text := locales.Export(cx)
 				if m.BackupDialog.Get() == BackupImport {
-					text = "Decrypt"
+					text = locales.Decrypt(cx)
 				}
 				return ui.Button{
 					TestID:  "backup-confirm",
@@ -283,14 +290,14 @@ func folderDialog(m *AppModel) core.Node {
 		OnConfirm: m.SaveFolderModal,
 		TitleFunc: func() string {
 			if m.FolderDialog.Get().FolderID == "" {
-				return "New Folder"
+				return locales.NewFolderTitle(m.Scope)
 			}
-			return "Rename Folder"
+			return locales.RenameFolderTitle(m.Scope)
 		},
 		Children: []core.Node{
 			ui.Input{
 				TestID:      "folder-name-input",
-				Placeholder: "Folder name",
+				Placeholder: locales.FolderName(m.Scope),
 				AutoFocus:   true,
 				Value:       func() string { return m.FolderDialog.Get().Name },
 				OnChange: func(v string) {
@@ -312,7 +319,7 @@ func folderDialog(m *AppModel) core.Node {
 		},
 		Footer: []core.Node{
 			ui.Button{
-				Text:    "Cancel",
+				Text:    locales.Cancel(m.Scope),
 				Variant: ui.ButtonSecondary,
 				OnPress: func() {
 					m.FolderError.Set("")
@@ -321,7 +328,7 @@ func folderDialog(m *AppModel) core.Node {
 			},
 			ui.Button{
 				TestID:  "folder-save-btn",
-				Text:    "Save",
+				Text:    locales.Save(m.Scope),
 				Variant: ui.ButtonPrimary,
 				Busy:    m.FolderBusy.Get,
 				OnPress: m.SaveFolderModal,

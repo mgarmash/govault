@@ -29,24 +29,24 @@ func ids(items []Issue) []string {
 }
 
 func TestWeakReason(t *testing.T) {
-	weak := map[string]string{
-		"P@ssw0rd":           "Common password",
-		"Summer2024!":        "Common password",
-		"Xk9#mQ":             "Shorter than 10 characters",
-		"abcdefghij1":        "Mostly a sequence or repeated characters",
-		"aaaaaaaaaaaaaa":     "Mostly a sequence or repeated characters",
-		"9182736450":         "Uses only one type of character",
-		"kitchenwindow":      "Uses only one type of character",
-		"abababababababab12": "Easy to guess",
+	weak := map[string]Weakness{
+		"P@ssw0rd":           WeakCommon,
+		"Summer2024!":        WeakCommon,
+		"Xk9#mQ":             WeakShort,
+		"abcdefghij1":        WeakPattern,
+		"aaaaaaaaaaaaaa":     WeakPattern,
+		"9182736450":         WeakOneClass,
+		"kitchenwindow":      WeakOneClass,
+		"abababababababab12": WeakGuessable,
 	}
 	for pw, want := range weak {
-		if got := WeakReason(pw); got != want {
-			t.Errorf("WeakReason(%q) = %q, want %q", pw, got, want)
+		if got := WeaknessOf(pw); got != want {
+			t.Errorf("WeaknessOf(%q) = %v, want %v", pw, got, want)
 		}
 	}
 	for _, pw := range []string{"x7#Kq9!vLm2@Pz4w&Rt8", "Tr0ub4dor&3x", "correct horse battery staple", "lantern-orbit-meadow-42"} {
-		if got := WeakReason(pw); got != "" {
-			t.Errorf("WeakReason(%q) = %q, want strong", pw, got)
+		if got := WeaknessOf(pw); got != NotWeak {
+			t.Errorf("WeaknessOf(%q) = %v, want strong", pw, got)
 		}
 	}
 }
@@ -76,22 +76,22 @@ func TestAnalyze(t *testing.T) {
 		card("nodate", "", ""),
 	}, now)
 
-	if len(report.Reused) != 1 || report.Reused[0].Count != 3 || len(report.Reused[0].Items) != 3 || report.Reused[0].Items[0].Detail != "Used in 3 items" {
+	if len(report.Reused) != 1 || report.Reused[0].Count != 3 || len(report.Reused[0].Items) != 3 || report.Reused[0].Items[0].ReusedCount != 3 {
 		t.Fatalf("Reused = %+v", report.Reused)
 	}
 	for _, it := range report.Reused[0].Items {
-		if it.Detail == shared || it.Subtitle == shared {
+		if it.URI == shared || it.Subtitle == shared {
 			t.Fatalf("report leaks the password: %+v", it)
 		}
 	}
 	if got := ids(report.Weak); len(got) != 1 || got[0] != "e" {
 		t.Fatalf("Weak = %v", got)
 	}
-	if got := ids(report.Unsecured); len(got) != 1 || got[0] != "b" || report.Unsecured[0].Detail != "http://b.example.com/login" {
+	if got := ids(report.Unsecured); len(got) != 1 || got[0] != "b" || report.Unsecured[0].URI != "http://b.example.com/login" {
 		t.Fatalf("Unsecured = %+v", report.Unsecured)
 	}
-	if len(report.Cards) != 2 || report.Cards[0].CipherID != "expired" || !report.Cards[0].Expired || report.Cards[0].Detail != "Expired 04/2026" ||
-		report.Cards[1].CipherID != "soon" || report.Cards[1].Expired || report.Cards[1].Detail != "Expires 06/2026" {
+	if len(report.Cards) != 2 || report.Cards[0].CipherID != "expired" || !report.Cards[0].Expired || report.Cards[0].ExpMonth != 4 || report.Cards[0].ExpYear != 2026 ||
+		report.Cards[1].CipherID != "soon" || report.Cards[1].Expired || report.Cards[1].ExpMonth != 6 || report.Cards[1].ExpYear != 2026 {
 		t.Fatalf("Cards = %+v", report.Cards)
 	}
 	if report.TotalIssues() != 3+1+1+2 {

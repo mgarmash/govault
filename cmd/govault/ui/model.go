@@ -17,6 +17,7 @@ import (
 
 	"github.com/nsgo-dev/nsgo/core"
 	"github.com/nsgo-dev/nsgo/ui"
+	"github.com/txchen/govault/cmd/govault/locales"
 	"github.com/txchen/govault/internal/vaultcore/api"
 	"github.com/txchen/govault/internal/vaultcore/crypto"
 	"github.com/txchen/govault/internal/vaultcore/gen"
@@ -53,11 +54,13 @@ const (
 )
 
 type UserPrefs struct {
-	DeviceID              string                `json:"deviceId"`
-	AccountID             string                `json:"accountId"`
-	ServerURL             string                `json:"serverUrl"`
-	Email                 string                `json:"email"`
-	KDFSummary            string                `json:"kdfSummary"`
+	DeviceID  string            `json:"deviceId"`
+	AccountID string            `json:"accountId"`
+	ServerURL string            `json:"serverUrl"`
+	Email     string            `json:"email"`
+	KDF       *crypto.KDFConfig `json:"kdf,omitempty"`
+	// Language is the language chosen in Settings, "" the system's.
+	Language              string                `json:"language,omitempty"`
 	BiometricEnabled      bool                  `json:"biometricEnabled"`
 	AutoPromptBiometric   bool                  `json:"autoPromptBiometric"`
 	AutoLockMinutes       int                   `json:"autoLockMinutes"`
@@ -133,7 +136,7 @@ type AccountSnapshotMeta struct {
 	AccountID  string
 	ServerURL  string
 	Email      string
-	KDFSummary string
+	KDF        *crypto.KDFConfig
 	LastSyncAt time.Time
 }
 
@@ -255,8 +258,7 @@ func (d *EditDraft) PasskeyRemoved(i int) bool {
 
 type RepromptModal struct {
 	Open    bool
-	Title   string
-	Action  string
+	Action  RepromptAction
 	OnAllow func()
 }
 
@@ -561,6 +563,9 @@ func NewAppModel(app *core.Scope, coreSvc state.VaultService, hooks PlatformHook
 	}
 	prefs := core.NewPersisted(app, prefsKey, DefaultUserPrefs(), core.PersistOptions{Version: 1})
 	p := EnsureDeviceID(prefs)
+	if p.Language != "" {
+		app.SetLocale(p.Language)
+	}
 
 	m := &AppModel{
 		Scope:               app,
@@ -770,7 +775,7 @@ func (m *AppModel) ResetIdleTimer() {
 		m.Scope.Post(func() {
 			if m.LockState.Get() == state.StatusUnlocked {
 				m.Lock()
-				m.ShowToast(ui.ToastInfo, "Vault locked", "Locked automatically due to inactivity.")
+				m.ShowToast(ui.ToastInfo, locales.VaultLocked(m.Scope), locales.VaultLockedInactivity(m.Scope))
 			}
 		})
 	})
@@ -803,7 +808,7 @@ func (m *AppModel) BiometricLabel() string {
 	case core.BiometricFingerprint:
 		return "Touch ID"
 	default:
-		return "Biometric"
+		return locales.BiometricGeneric(m.Scope)
 	}
 }
 
@@ -900,8 +905,8 @@ func (m *AppModel) SyncAccountMetaFromSnapshot() {
 		if meta.Email != "" {
 			p.Email = meta.Email
 		}
-		if meta.KDFSummary != "" {
-			p.KDFSummary = meta.KDFSummary
+		if meta.KDF != nil {
+			p.KDF = meta.KDF
 		}
 		return p
 	})
@@ -948,7 +953,7 @@ func (m *AppModel) Login() {
 	}
 	req, ok := m.loginRequest()
 	if !ok {
-		m.LoginError.Set("Server URL, email, and master password are required.")
+		m.LoginError.Set(locales.SignInFieldsRequired(m.Scope))
 		return
 	}
 	m.submitLogin(req)
@@ -960,7 +965,7 @@ func (m *AppModel) VerifyTwoFactor() {
 	}
 	code := strings.Join(strings.Fields(m.TwoFactorCode.Get()), "")
 	if code == "" {
-		m.LoginError.Set("Enter the verification code.")
+		m.LoginError.Set(locales.TwoFactorCodeRequired(m.Scope))
 		return
 	}
 	req, ok := m.loginRequest()
@@ -1005,11 +1010,11 @@ func (m *AppModel) loginFailed(err error, verifying bool) {
 	switch {
 	case verifying && (errors.As(err, &tfErr) || errors.As(err, &apiErr) && apiErr.StatusCode == http.StatusBadRequest):
 		m.TwoFactorCode.Set("")
-		m.LoginError.Set("Invalid verification code. Check the code and try again.")
+		m.LoginError.Set(locales.TwoFactorCodeInvalid(m.Scope))
 	case errors.As(err, &tfErr):
 		m.enterTwoFactor(tfErr.Challenge)
 	default:
-		m.LoginError.Set(friendlyError(err))
+		m.LoginError.Set(m.errorText(err))
 	}
 }
 
@@ -1023,10 +1028,9 @@ func (m *AppModel) enterTwoFactor(ch api.TwoFactorChallenge) {
 	if len(prompt.Providers) == 0 {
 		names := make([]string, len(ch.Providers))
 		for i, p := range ch.Providers {
-			names[i] = p.String()
+			names[i] = twoFactorProviderName(m.Scope, p)
 		}
-		m.LoginError.Set("This account requires two-step login with " + strings.Join(names, ", ") +
-			", which GoVault does not support yet. Enable Authenticator App or Email two-step login in your vault web settings to sign in here.")
+		m.LoginError.Set(locales.TwoFactorUnsupported(m.Scope, joinList(names)))
 		return
 	}
 	m.TwoFactorProvider.Set(prompt.Providers[0])
@@ -1034,7 +1038,7 @@ func (m *AppModel) enterTwoFactor(ch api.TwoFactorChallenge) {
 	m.TwoFactorRemember.Set(false)
 	m.TwoFactorNotice.Set("")
 	if len(ch.Providers) == 1 && ch.Providers[0] == api.TwoFactorEmail {
-		m.TwoFactorNotice.Set(emailSentNotice(prompt.EmailHint))
+		m.TwoFactorNotice.Set(m.emailSentNotice(prompt.EmailHint))
 	}
 	m.LoginError.Set("")
 	m.TwoFactor.Set(prompt)
@@ -1074,10 +1078,10 @@ func (m *AppModel) SendTwoFactorEmail() {
 			}
 			m.TwoFactorSending.Set(false)
 			if err != nil {
-				m.LoginError.Set("Could not send the verification email. " + friendlyError(err))
+				m.LoginError.Set(locales.TwoFactorEmailFailed(m.Scope, m.errorText(err)))
 				return
 			}
-			m.TwoFactorNotice.Set(emailSentNotice(hint))
+			m.TwoFactorNotice.Set(m.emailSentNotice(hint))
 		})
 	}()
 }
@@ -1090,11 +1094,11 @@ func (m *AppModel) CancelTwoFactor() {
 	m.ReleaseSecureInput()
 }
 
-func emailSentNotice(hint string) string {
+func (m *AppModel) emailSentNotice(hint string) string {
 	if hint == "" {
-		return "A verification code was sent to your email."
+		return locales.TwoFactorEmailSent(m.Scope)
 	}
-	return "A verification code was sent to " + hint + "."
+	return locales.TwoFactorEmailSentTo(m.Scope, hint)
 }
 
 // SignInAgain shows the sign-in form over a locked vault without removing
@@ -1168,7 +1172,7 @@ func (m *AppModel) UnlockWithPassword() {
 	}
 	password := m.LockPassword.Get()
 	if password == "" {
-		m.LockError.Set("Enter your master password.")
+		m.LockError.Set(locales.MasterPasswordRequired(m.Scope))
 		return
 	}
 	m.ReleaseSecureInput()
@@ -1187,7 +1191,7 @@ func (m *AppModel) UnlockWithPassword() {
 			}
 			m.LockBusy.Set(false)
 			if err != nil {
-				m.LockError.Set(friendlyError(err))
+				m.LockError.Set(m.errorText(err))
 				m.LockPasswordRef.Focus()
 				return
 			}
@@ -1235,18 +1239,18 @@ func (m *AppModel) UnlockWithBiometric(cx *core.Scope) {
 				return
 			}
 			if err != nil || !ok || encoded == "" {
-				m.Scope.Post(func() { m.unlockFailed("Saved biometric key unavailable. Unlock with master password.") })
+				m.Scope.Post(func() { m.unlockFailed(locales.BiometricKeyUnavailable(m.Scope)) })
 				return
 			}
 			raw, err := base64.StdEncoding.DecodeString(encoded)
 			if err != nil {
-				m.Scope.Post(func() { m.unlockFailed("Corrupt biometric key. Unlock with master password.") })
+				m.Scope.Post(func() { m.unlockFailed(locales.BiometricKeyCorrupt(m.Scope)) })
 				return
 			}
 			defer crypto.ZeroBytes(raw)
 			key, err := crypto.SymmetricKeyFromBytes(raw)
 			if err != nil {
-				m.Scope.Post(func() { m.unlockFailed("Invalid biometric key. Unlock with master password.") })
+				m.Scope.Post(func() { m.unlockFailed(locales.BiometricKeyInvalid(m.Scope)) })
 				return
 			}
 			defer key.Zero()
@@ -1257,7 +1261,7 @@ func (m *AppModel) UnlockWithBiometric(cx *core.Scope) {
 					return
 				}
 				if err != nil {
-					m.unlockFailed(friendlyError(err))
+					m.unlockFailed(m.errorText(err))
 					return
 				}
 				m.LockBusy.Set(false)
@@ -1270,11 +1274,11 @@ func (m *AppModel) UnlockWithBiometric(cx *core.Scope) {
 		readKey()
 		return
 	}
-	cx.AuthenticateBiometric("Unlock GoVault", func(res core.BiometricResult) {
+	cx.AuthenticateBiometric(locales.BiometricUnlockReason(m.Scope), func(res core.BiometricResult) {
 		if res != core.BiometricSuccess {
 			msg := ""
 			if res != core.BiometricCancelled {
-				msg = "Biometric authentication failed. Enter master password."
+				msg = locales.BiometricFailed(m.Scope)
 			}
 			m.unlockFailed(msg)
 			return
@@ -1285,7 +1289,7 @@ func (m *AppModel) UnlockWithBiometric(cx *core.Scope) {
 
 func (m *AppModel) ToggleBiometric(cx *core.Scope, enable bool) {
 	if m.Hooks.Secrets == nil {
-		m.ShowToast(ui.ToastError, "Keychain unavailable", "Cannot access system keychain.")
+		m.ShowToast(ui.ToastError, locales.KeychainUnavailable(m.Scope), locales.KeychainUnavailableDetail(m.Scope))
 		return
 	}
 	if !enable {
@@ -1294,20 +1298,20 @@ func (m *AppModel) ToggleBiometric(cx *core.Scope, enable bool) {
 			err := m.Core.DisableBiometricUnlock(secrets)
 			m.Scope.Post(func() {
 				if err != nil {
-					m.ShowToast(ui.ToastError, "Disable failed", err.Error())
+					m.ShowToast(ui.ToastError, locales.BiometricDisableFailed(m.Scope), m.errorText(err))
 					return
 				}
 				m.UpdatePrefs(func(p UserPrefs) UserPrefs {
 					p.BiometricEnabled = false
 					return p
 				})
-				m.ShowToast(ui.ToastInfo, m.BiometricLabel()+" disabled", "")
+				m.ShowToast(ui.ToastInfo, locales.BiometricDisabled(m.Scope, m.BiometricLabel()), "")
 			})
 		}()
 		return
 	}
 
-	cx.AuthenticateBiometric("Enable "+m.BiometricLabel()+" for GoVault", func(res core.BiometricResult) {
+	cx.AuthenticateBiometric(locales.BiometricEnableReason(m.Scope, m.BiometricLabel()), func(res core.BiometricResult) {
 		if res != core.BiometricSuccess {
 			return
 		}
@@ -1316,7 +1320,7 @@ func (m *AppModel) ToggleBiometric(cx *core.Scope, enable bool) {
 			err := m.Core.EnableBiometricUnlock(secrets)
 			m.Scope.Post(func() {
 				if err != nil {
-					m.ShowToast(ui.ToastError, "Enable failed", err.Error())
+					m.ShowToast(ui.ToastError, locales.BiometricEnableFailed(m.Scope), m.errorText(err))
 					return
 				}
 				m.UpdatePrefs(func(p UserPrefs) UserPrefs {
@@ -1324,7 +1328,7 @@ func (m *AppModel) ToggleBiometric(cx *core.Scope, enable bool) {
 					return p
 				})
 				m.RefreshBiometricProtection()
-				m.ShowToast(ui.ToastSuccess, m.BiometricLabel()+" enabled", "You can now unlock GoVault with "+m.BiometricLabel()+".")
+				m.ShowToast(ui.ToastSuccess, locales.BiometricEnabled(m.Scope, m.BiometricLabel()), locales.BiometricEnabledDetail(m.Scope, m.BiometricLabel()))
 			})
 		}()
 	})
@@ -1447,11 +1451,11 @@ func (m *AppModel) clearAuthInputs() {
 
 func (m *AppModel) Logout(cx *core.Scope) {
 	cx.ShowAlert(core.AlertConfig{
-		Title:   "Log out of GoVault?",
-		Message: "Your local encrypted vault cache and saved biometric key will be removed from this device.",
+		Title:   locales.LogOutTitle(m.Scope),
+		Message: locales.LogOutMessage(m.Scope),
 		Actions: []core.AlertAction{
-			{Label: "Cancel", Role: core.AlertCancel},
-			{Label: "Log Out", Role: core.AlertDestructive},
+			{Label: locales.Cancel(m.Scope), Role: core.AlertCancel},
+			{Label: locales.LogOut(m.Scope), Role: core.AlertDestructive},
 		},
 		Cancelable: true,
 	}, func(idx int) {
@@ -1467,7 +1471,7 @@ func (m *AppModel) Logout(cx *core.Scope) {
 			err := m.Core.Logout(context.Background(), secrets)
 			m.Scope.Post(func() {
 				if err != nil {
-					m.ShowToast(ui.ToastWarning, "Logged out", "Some saved secrets could not be removed: "+err.Error())
+					m.ShowToast(ui.ToastWarning, locales.LoggedOut(m.Scope), locales.LogOutSecretsLeft(m.Scope, m.errorText(err)))
 				}
 				m.Lock()
 				m.LockState.Set(state.StatusLoggedOut)
@@ -1514,17 +1518,17 @@ func (m *AppModel) syncNow(silent, retryDeferred bool) {
 				case errors.Is(err, api.ErrUnauthorized):
 					m.SyncState.Set(SyncAuthExpired)
 					if !silent {
-						m.ShowToast(ui.ToastWarning, "Session expired", "Sign in again to resume syncing.")
+						m.ShowToast(ui.ToastWarning, locales.SessionExpiredToast(m.Scope), locales.SessionExpiredToastDetail(m.Scope))
 					}
 				case errors.Is(err, api.ErrNetworkOffline):
 					m.SyncState.Set(SyncOffline)
 					if !silent {
-						m.ShowToast(ui.ToastWarning, "Offline", "Showing cached vault.")
+						m.ShowToast(ui.ToastWarning, locales.Offline(m.Scope), locales.OfflineToastDetail(m.Scope))
 					}
 				default:
 					m.SyncState.Set(SyncOffline)
 					if !silent {
-						m.ShowToast(ui.ToastError, "Sync failed", friendlyError(err))
+						m.ShowToast(ui.ToastError, locales.SyncFailed(m.Scope), m.errorText(err))
 					}
 				}
 				return
@@ -1533,7 +1537,7 @@ func (m *AppModel) syncNow(silent, retryDeferred bool) {
 			m.LastSync.Set(time.Now())
 			m.RefreshVaultData()
 			if !silent {
-				m.ShowToast(ui.ToastSuccess, "Vault synced", "")
+				m.ShowToast(ui.ToastSuccess, locales.VaultSynced(m.Scope), "")
 			}
 		})
 	}()
@@ -1710,7 +1714,7 @@ func (m *AppModel) SetSSHAgentEnabled(on bool) {
 
 func (m *AppModel) CopySSHAuthSock() {
 	if path := m.SSHAgentSocketPath(); path != "" {
-		m.CopyPlainValue("SSH_AUTH_SOCK", fmt.Sprintf("export SSH_AUTH_SOCK=%q", path))
+		m.CopyPlainValue(locales.Copied(m.Scope, "SSH_AUTH_SOCK"), fmt.Sprintf("export SSH_AUTH_SOCK=%q", path))
 	}
 }
 
@@ -1725,7 +1729,7 @@ func (m *AppModel) syncSSHAgent() {
 		return
 	}
 	if err := host.Start(); err != nil {
-		m.SSHAgentError.Set(err.Error())
+		m.SSHAgentError.Set(m.errorText(err))
 		return
 	}
 	m.SSHAgentError.Set("")
@@ -1790,11 +1794,11 @@ func (m *AppModel) GuardDirty(cx *core.Scope, proceed func()) {
 		return
 	}
 	cx.ShowAlert(core.AlertConfig{
-		Title:   "Discard unsaved changes?",
-		Message: "Your edits to this item have not been saved.",
+		Title:   locales.DiscardChangesTitle(m.Scope),
+		Message: locales.DiscardChangesMessage(m.Scope),
 		Actions: []core.AlertAction{
-			{Label: "Keep Editing", Role: core.AlertCancel},
-			{Label: "Discard", Role: core.AlertDestructive},
+			{Label: locales.KeepEditing(m.Scope), Role: core.AlertCancel},
+			{Label: locales.Discard(m.Scope), Role: core.AlertDestructive},
 		},
 		Cancelable: true,
 	}, func(idx int) {
@@ -1892,7 +1896,7 @@ func (m *AppModel) StartEditCipher(cx *core.Scope) {
 		return
 	}
 	m.ResetIdleTimer()
-	m.GateReprompt(cx, c, "edit item", func() {
+	m.GateReprompt(cx, c, RepromptEditItem, func() {
 		if cur := m.ActiveCipher.Get(); cur == nil || cur.ID != c.ID {
 			return
 		}
@@ -1940,11 +1944,11 @@ func (m *AppModel) SaveDraft(cx *core.Scope) {
 		return
 	}
 	if strings.TrimSpace(draft.Name) == "" {
-		m.EditError.Set("Name is required.")
+		m.EditError.Set(locales.NameRequired(m.Scope))
 		return
 	}
 	if m.SyncState.Get() == SyncOffline {
-		m.EditError.Set("Cannot save while offline.")
+		m.EditError.Set(locales.CannotSaveOffline(m.Scope))
 		return
 	}
 
@@ -1973,20 +1977,20 @@ func (m *AppModel) SaveDraft(cx *core.Scope) {
 				// The user left this draft; another one may be open now.
 				if err == nil || localCopyFailed {
 					m.RefreshVaultData()
-					m.ShowToast(ui.ToastSuccess, "Item saved", "")
+					m.ShowToast(ui.ToastSuccess, locales.ItemSaved(m.Scope), "")
 				} else {
-					m.ShowToast(ui.ToastError, "Save failed", friendlyError(err))
+					m.ShowToast(ui.ToastError, locales.SaveFailed(m.Scope), m.errorText(err))
 				}
 				return
 			}
 			if err != nil && !localCopyFailed {
 				if errors.Is(err, api.ErrRevisionConflict) {
 					cx.ShowAlert(core.AlertConfig{
-						Title:   "Item changed on another device",
-						Message: "This item was updated elsewhere since your last sync. Reload the latest version to avoid overwriting changes.",
+						Title:   locales.ItemChangedTitle(m.Scope),
+						Message: locales.ItemChangedMessage(m.Scope),
 						Actions: []core.AlertAction{
-							{Label: "Cancel", Role: core.AlertCancel},
-							{Label: "Reload Latest", Role: core.AlertDefault},
+							{Label: locales.Cancel(m.Scope), Role: core.AlertCancel},
+							{Label: locales.ReloadLatest(m.Scope), Role: core.AlertDefault},
 						},
 						Cancelable: true,
 					}, func(idx int) {
@@ -1999,7 +2003,7 @@ func (m *AppModel) SaveDraft(cx *core.Scope) {
 					})
 					return
 				}
-				m.EditError.Set(friendlyError(err))
+				m.EditError.Set(m.errorText(err))
 				return
 			}
 			m.EditMode.Set(false)
@@ -2013,10 +2017,10 @@ func (m *AppModel) SaveDraft(cx *core.Scope) {
 			}
 			m.ReleaseSecureInput()
 			if localCopyFailed {
-				m.ShowLocalCopyWarning("Item saved")
+				m.ShowLocalCopyWarning(locales.ItemSaved(m.Scope))
 				return
 			}
-			m.ShowToast(ui.ToastSuccess, "Item saved", "")
+			m.ShowToast(ui.ToastSuccess, locales.ItemSaved(m.Scope), "")
 		})
 	}()
 }
@@ -2031,8 +2035,8 @@ func (m *AppModel) ShowLocalCopyWarning(title string) {
 	m.Toaster.Show(ui.ToastContent{
 		Type:        ui.ToastWarning,
 		Title:       title,
-		Description: "Saved on the server, but the copy on this device could not be updated.",
-		Action:      "Sync now",
+		Description: locales.LocalCopyNotUpdated(m.Scope),
+		Action:      locales.SyncNowAction(m.Scope),
 		OnAction:    func() { m.SyncNow(false) },
 		Duration:    10 * time.Second,
 	})
@@ -2054,12 +2058,12 @@ func (m *AppModel) ToggleFavorite() {
 			}
 			var lc *state.LocalCopyError
 			if err != nil && !errors.As(err, &lc) {
-				m.ShowToast(ui.ToastError, "Update failed", friendlyError(err))
+				m.ShowToast(ui.ToastError, locales.UpdateFailed(m.Scope), m.errorText(err))
 				return
 			}
 			m.applyCipherUpdate(saved)
 			if lc != nil {
-				m.ShowLocalCopyWarning("Favorite updated")
+				m.ShowLocalCopyWarning(locales.FavoriteUpdated(m.Scope))
 			}
 		})
 	}()
@@ -2075,13 +2079,13 @@ func (m *AppModel) SoftDeleteActive() {
 		err := m.Core.SoftDeleteCipher(context.Background(), id)
 		m.Scope.Post(func() {
 			if err != nil {
-				m.ShowToast(ui.ToastError, "Move to Trash failed", friendlyError(err))
+				m.ShowToast(ui.ToastError, locales.MoveToTrashFailed(m.Scope), m.errorText(err))
 				return
 			}
 			m.SelectedID.Set("")
 			m.ActiveCipher.Set(nil)
 			m.RefreshVaultData()
-			m.ShowToast(ui.ToastInfo, "Moved to Trash", "")
+			m.ShowToast(ui.ToastInfo, locales.MovedToTrash(m.Scope), "")
 		})
 	}()
 }
@@ -2117,11 +2121,11 @@ func (m *AppModel) ArchiveActive(cx *core.Scope, archive bool) {
 		return
 	}
 	id := c.ID
-	label := "archive item"
+	action := RepromptArchiveItem
 	if !archive {
-		label = "unarchive item"
+		action = RepromptUnarchiveItem
 	}
-	m.GateReprompt(cx, c, label, func() {
+	m.GateReprompt(cx, c, action, func() {
 		if cur := m.ActiveCipher.Get(); cur == nil || cur.ID != id {
 			return
 		}
@@ -2149,17 +2153,17 @@ func (m *AppModel) setArchived(id string, archive bool) {
 			}
 			var lc *state.LocalCopyError
 			if err != nil && !errors.As(err, &lc) {
-				title := "Archive failed"
+				title := locales.ArchiveFailed(m.Scope)
 				if !archive {
-					title = "Unarchive failed"
+					title = locales.UnarchiveFailed(m.Scope)
 				}
-				m.ShowToast(ui.ToastError, title, friendlyError(err))
+				m.ShowToast(ui.ToastError, title, m.errorText(err))
 				return
 			}
 			m.RefreshVaultData()
-			title := "Item archived"
+			title := locales.ItemArchived(m.Scope)
 			if !archive {
-				title = "Item unarchived"
+				title = locales.ItemUnarchived(m.Scope)
 			}
 			if lc != nil {
 				m.ShowLocalCopyWarning(title)
@@ -2180,13 +2184,13 @@ func (m *AppModel) RestoreActive() {
 		err := m.Core.RestoreCipher(context.Background(), id)
 		m.Scope.Post(func() {
 			if err != nil {
-				m.ShowToast(ui.ToastError, "Restore failed", friendlyError(err))
+				m.ShowToast(ui.ToastError, locales.RestoreFailed(m.Scope), m.errorText(err))
 				return
 			}
 			m.SelectedID.Set("")
 			m.ActiveCipher.Set(nil)
 			m.RefreshVaultData()
-			m.ShowToast(ui.ToastSuccess, "Item restored", "")
+			m.ShowToast(ui.ToastSuccess, locales.ItemRestored(m.Scope), "")
 		})
 	}()
 }
@@ -2199,11 +2203,11 @@ func (m *AppModel) HardDeleteActive(cx *core.Scope) {
 	id := c.ID
 	name := c.Name
 	cx.ShowAlert(core.AlertConfig{
-		Title:   "Delete permanently?",
-		Message: fmt.Sprintf("%q will be permanently deleted and cannot be recovered.", name),
+		Title:   locales.DeletePermanentlyTitle(m.Scope),
+		Message: locales.DeletePermanentlyMessage(m.Scope, name),
 		Actions: []core.AlertAction{
-			{Label: "Cancel", Role: core.AlertCancel},
-			{Label: "Delete Permanently", Role: core.AlertDestructive},
+			{Label: locales.Cancel(m.Scope), Role: core.AlertCancel},
+			{Label: locales.DeletePermanently(m.Scope), Role: core.AlertDestructive},
 		},
 		Cancelable: true,
 	}, func(idx int) {
@@ -2214,13 +2218,13 @@ func (m *AppModel) HardDeleteActive(cx *core.Scope) {
 			err := m.Core.HardDeleteCipher(context.Background(), id)
 			m.Scope.Post(func() {
 				if err != nil {
-					m.ShowToast(ui.ToastError, "Delete failed", friendlyError(err))
+					m.ShowToast(ui.ToastError, locales.DeleteFailed(m.Scope), m.errorText(err))
 					return
 				}
 				m.SelectedID.Set("")
 				m.ActiveCipher.Set(nil)
 				m.RefreshVaultData()
-				m.ShowToast(ui.ToastInfo, "Permanently deleted", "")
+				m.ShowToast(ui.ToastInfo, locales.PermanentlyDeleted(m.Scope), "")
 			})
 		}()
 	})
@@ -2240,7 +2244,7 @@ func (m *AppModel) SaveFolderModal() {
 	dlg := m.FolderDialog.Get()
 	name := strings.TrimSpace(dlg.Name)
 	if name == "" {
-		m.FolderError.Set("Folder name is required.")
+		m.FolderError.Set(locales.FolderNameRequired(m.Scope))
 		return
 	}
 	if m.FolderBusy.Get() {
@@ -2254,23 +2258,23 @@ func (m *AppModel) SaveFolderModal() {
 		m.Scope.Post(func() {
 			m.FolderBusy.Set(false)
 			if err != nil {
-				m.FolderError.Set(friendlyError(err))
+				m.FolderError.Set(m.errorText(err))
 				return
 			}
 			m.FolderDialog.Set(FolderModal{})
 			m.RefreshVaultData()
-			m.ShowToast(ui.ToastSuccess, "Folder saved", "")
+			m.ShowToast(ui.ToastSuccess, locales.FolderSaved(m.Scope), "")
 		})
 	}()
 }
 
 func (m *AppModel) DeleteFolder(cx *core.Scope, f state.Folder) {
 	cx.ShowAlert(core.AlertConfig{
-		Title:   "Delete folder?",
-		Message: fmt.Sprintf("Items inside %q will be moved to No Folder.", f.Name),
+		Title:   locales.DeleteFolderTitle(m.Scope),
+		Message: locales.DeleteFolderMessage(m.Scope, f.Name),
 		Actions: []core.AlertAction{
-			{Label: "Cancel", Role: core.AlertCancel},
-			{Label: "Delete Folder", Role: core.AlertDestructive},
+			{Label: locales.Cancel(m.Scope), Role: core.AlertCancel},
+			{Label: locales.DeleteFolder(m.Scope), Role: core.AlertDestructive},
 		},
 		Cancelable: true,
 	}, func(idx int) {
@@ -2281,7 +2285,7 @@ func (m *AppModel) DeleteFolder(cx *core.Scope, f state.Folder) {
 			err := m.Core.DeleteFolder(context.Background(), f.ID)
 			m.Scope.Post(func() {
 				if err != nil {
-					m.ShowToast(ui.ToastError, "Delete folder failed", friendlyError(err))
+					m.ShowToast(ui.ToastError, locales.DeleteFolderFailed(m.Scope), m.errorText(err))
 					return
 				}
 				cur := m.SidebarFilter.Get()
@@ -2289,13 +2293,13 @@ func (m *AppModel) DeleteFolder(cx *core.Scope, f state.Folder) {
 					m.SidebarFilter.Set(state.SearchFilter{Category: state.FilterAll})
 				}
 				m.RefreshVaultData()
-				m.ShowToast(ui.ToastInfo, "Folder deleted", "")
+				m.ShowToast(ui.ToastInfo, locales.FolderDeleted(m.Scope), "")
 			})
 		}()
 	})
 }
 
-func (m *AppModel) GateReprompt(cx *core.Scope, cipher *state.Cipher, actionLabel string, allow func()) {
+func (m *AppModel) GateReprompt(cx *core.Scope, cipher *state.Cipher, action RepromptAction, allow func()) {
 	if cipher == nil || cipher.Reprompt != 1 {
 		allow()
 		return
@@ -2307,25 +2311,24 @@ func (m *AppModel) GateReprompt(cx *core.Scope, cipher *state.Cipher, actionLabe
 		}
 	}
 	if m.CanUseBiometric() && m.Prefs.Get().BiometricEnabled {
-		cx.AuthenticateBiometric("Verify to "+actionLabel, func(res core.BiometricResult) {
+		cx.AuthenticateBiometric(locales.RepromptBiometricReason(m.Scope, string(action)), func(res core.BiometricResult) {
 			if res == core.BiometricSuccess {
 				onAllow()
 			} else if res != core.BiometricCancelled {
-				m.openRepromptDialog(actionLabel, onAllow)
+				m.openRepromptDialog(action, onAllow)
 			}
 		})
 		return
 	}
-	m.openRepromptDialog(actionLabel, onAllow)
+	m.openRepromptDialog(action, onAllow)
 }
 
-func (m *AppModel) openRepromptDialog(actionLabel string, onAllow func()) {
+func (m *AppModel) openRepromptDialog(action RepromptAction, onAllow func()) {
 	m.RepromptPW.Set("")
 	m.RepromptError.Set("")
 	m.Reprompt.Set(RepromptModal{
 		Open:    true,
-		Title:   "Master Password Verification",
-		Action:  actionLabel,
+		Action:  action,
 		OnAllow: onAllow,
 	})
 }
@@ -2343,11 +2346,11 @@ func (m *AppModel) SubmitReprompt() {
 	}
 	pw := m.RepromptPW.Get()
 	if pw == "" {
-		m.RepromptError.Set("Enter your master password.")
+		m.RepromptError.Set(locales.MasterPasswordRequired(m.Scope))
 		return
 	}
 	if m.Hooks.VerifyMasterPassword == nil {
-		m.RepromptError.Set("Master password verification is unavailable.")
+		m.RepromptError.Set(locales.RepromptUnavailable(m.Scope))
 		return
 	}
 	m.ReleaseSecureInput()
@@ -2363,7 +2366,7 @@ func (m *AppModel) SubmitReprompt() {
 		m.Scope.Post(func() {
 			m.RepromptBusy.Set(false)
 			if err != nil {
-				m.RepromptError.Set("Incorrect master password.")
+				m.RepromptError.Set(locales.IncorrectMasterPassword(m.Scope))
 				return
 			}
 			m.RepromptPW.Set("")
@@ -2376,7 +2379,9 @@ func (m *AppModel) SubmitReprompt() {
 	}()
 }
 
-func (m *AppModel) CopySecretValue(label, secret string) {
+// CopySecretValue copies secret, concealed where the platform can, and
+// shows copiedTitle, such as “Password copied”.
+func (m *AppModel) CopySecretValue(copiedTitle, secret string) {
 	if secret == "" {
 		return
 	}
@@ -2388,7 +2393,7 @@ func (m *AppModel) CopySecretValue(label, secret string) {
 		var err error
 		concealed, err = m.Hooks.CopySecret(secret, clearAfter)
 		if err != nil {
-			m.ShowToast(ui.ToastError, "Copy failed", err.Error())
+			m.ShowToast(ui.ToastError, locales.CopyFailed(m.Scope), m.errorText(err))
 			return
 		}
 	} else {
@@ -2397,17 +2402,19 @@ func (m *AppModel) CopySecretValue(label, secret string) {
 	desc := ""
 	if secs > 0 {
 		if concealed {
-			desc = fmt.Sprintf("Concealed · clears in %ds", secs)
+			desc = locales.ClearsInConcealed(m.Scope, secs)
 		} else {
-			desc = fmt.Sprintf("Clears in %ds", secs)
+			desc = locales.ClearsIn(m.Scope, secs)
 		}
 	} else if concealed {
-		desc = "Concealed from clipboard history"
+		desc = locales.ConcealedFromHistory(m.Scope)
 	}
-	m.ShowToast(ui.ToastSuccess, label+" copied", desc)
+	m.ShowToast(ui.ToastSuccess, copiedTitle, desc)
 }
 
-func (m *AppModel) CopyPlainValue(label, text string) {
+// CopyPlainValue copies text and shows copiedTitle, such as “Username
+// copied”.
+func (m *AppModel) CopyPlainValue(copiedTitle, text string) {
 	if text == "" {
 		return
 	}
@@ -2417,7 +2424,7 @@ func (m *AppModel) CopyPlainValue(label, text string) {
 	} else {
 		m.Scope.SetClipboard(text)
 	}
-	m.ShowToast(ui.ToastInfo, label+" copied", "")
+	m.ShowToast(ui.ToastInfo, copiedTitle, "")
 }
 
 func (m *AppModel) RegenerateSecret() {
@@ -2668,30 +2675,7 @@ func cipherFromDraft(d *EditDraft) *state.Cipher {
 	return &base
 }
 
-func friendlyError(err error) string {
-	switch {
-	case errors.Is(err, api.ErrTwoFactorRequired):
-		return "Two-step login is required for this account."
-	case errors.Is(err, api.ErrUnauthorized):
-		return "Invalid email or master password."
-	case errors.Is(err, api.ErrNetworkOffline):
-		return "Server unreachable. Check your connection and server URL."
-	case errors.Is(err, crypto.ErrInvalidMAC):
-		return "Incorrect master password."
-	case errors.Is(err, state.ErrArchiveUnsupported):
-		return "This server does not support Archive. It needs Vaultwarden 1.36 or later."
-	case errors.Is(err, state.ErrPremiumRequired):
-		return "Archive needs a premium membership."
-	case errors.Is(err, state.ErrAccountIDUnknown):
-		return "Could not confirm your account ID with the server. Sync and try again."
-	case errors.Is(err, state.ErrArchiveNotConfirmed):
-		return "The server did not confirm the change. GoVault synced to show where the item is now."
-	case errors.Is(err, state.ErrCipherInTrash):
-		return "Items in Trash cannot be archived. Restore the item first."
-	default:
-		return err.Error()
-	}
-}
+func (m *AppModel) errorText(err error) string { return errorText(m.Scope, err) }
 
 // EnsureDeviceID gives the app its device identifier on first launch and
 // saves it, so the first sign-in already sends the identifier every later
@@ -2721,21 +2705,4 @@ func FormatTOTPCode(code string) string {
 		return code[:4] + " " + code[4:]
 	}
 	return code
-}
-
-func CipherTypeLabel(t api.CipherType) string {
-	switch t {
-	case api.CipherTypeLogin:
-		return "Login"
-	case api.CipherTypeSecureNote:
-		return "Secure Note"
-	case api.CipherTypeCard:
-		return "Card"
-	case api.CipherTypeIdentity:
-		return "Identity"
-	case api.CipherTypeSSHKey:
-		return "SSH Key"
-	default:
-		return "Item"
-	}
 }

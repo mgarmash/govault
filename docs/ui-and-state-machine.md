@@ -224,12 +224,13 @@ Default window size `980 x 640`, minimum `780 x 500`.
 
 #### Screen E: Settings View (`RouteSettings`)
 Single scrollable column inside the main content area:
-1. **Account**: server, email, KDF summary, last sync, `[ Sync Now ]`, `[ Log Out ]`.
-2. **Security**: Touch ID unlock and auto-prompt (macOS), auto-lock timeout (`1 min`, `5 min`, `15 min` default, `1 hour`, `Never`), `Lock on sleep or screen lock` (macOS, on by default).
-3. **Privacy**: `Show website icons` (on by default) and `[ Clear Icon Cache ]`.
-4. **Clipboard**: clear-after timeout (`15s`, `30s` default, `60s`, `Never`) and concealed clipboard status.
-5. **Menu Bar & Startup**: show menu bar icon, launch at login, hide Dock icon (macOS).
-6. **About**: version and `[ Check for Updates… ]`.
+1. **General**: `Language`: `System default` or one of the languages GoVault offers, each named in itself. The choice applies at once, menus and tray included, and is kept for later launches.
+2. **Account**: server, email, KDF summary, last sync, `[ Sync Now ]`, `[ Log Out ]`.
+3. **Security**: Touch ID unlock and auto-prompt (macOS), auto-lock timeout (`1 min`, `5 min`, `15 min` default, `1 hour`, `Never`), `Lock on sleep or screen lock` (macOS, on by default).
+4. **Privacy**: `Show website icons` (on by default) and `[ Clear Icon Cache ]`.
+5. **Clipboard**: clear-after timeout (`15s`, `30s` default, `60s`, `Never`) and concealed clipboard status.
+6. **Menu Bar & Startup**: show menu bar icon, launch at login, hide Dock icon (macOS).
+7. **About**: version and `[ Check for Updates… ]`.
 
 #### Menu Bar Menu (`desktop.NewTray`)
 - `Open GoVault`

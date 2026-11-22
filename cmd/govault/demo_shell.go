@@ -28,7 +28,8 @@ func newDemoShell(app *core.Scope) *DesktopShell {
 		p.AccountID = demo.AccountID
 		p.Email = demo.Email
 		p.ServerURL = demo.ServerURL
-		p.KDFSummary = demo.KDF
+		kdf := demo.KDF
+		p.KDF = &kdf
 		p.BiometricEnabled = true
 		p.AutoPromptBiometric = false
 		return p

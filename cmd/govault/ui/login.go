@@ -5,6 +5,7 @@ import (
 	"github.com/nsgo-dev/nsgo/core"
 	"github.com/nsgo-dev/nsgo/icons/lucide"
 	"github.com/nsgo-dev/nsgo/ui"
+	"github.com/txchen/govault/cmd/govault/locales"
 	"github.com/txchen/govault/internal/vaultcore/api"
 )
 
@@ -25,17 +26,17 @@ func signInView(cx *core.Scope, m *AppModel) core.Node {
 			Class: "items-center gap-2.5 pb-1",
 			Children: []core.Node{
 				brandEmblem(56),
-				core.Text{Class: "mt-1.5 text-[19px] font-semibold text-gv-fg", Content: "Sign in to GoVault"},
+				core.Text{Class: "mt-1.5 text-[19px] font-semibold text-gv-fg", Content: locales.SignInTitle(cx)},
 				core.Text{
 					Class:   "text-[12.5px] text-gv-fg2 text-center",
-					Content: "Connect to your Bitwarden or Vaultwarden server.",
+					Content: locales.SignInSubtitle(cx),
 				},
 			},
 		},
 		core.View{
 			Class: "gap-3.5",
 			Children: []core.Node{
-				formField("Server URL", authInput(base.Input{
+				formField(locales.ServerURL(cx), authInput(base.Input{
 					TestID:        "login-server",
 					Placeholder:   "https://vault.example.com",
 					NoAutoCorrect: true,
@@ -43,17 +44,17 @@ func signInView(cx *core.Scope, m *AppModel) core.Node {
 					OnChange:      m.LoginServer.Set,
 					Disabled:      func() bool { return m.LoginBusy.Get() || (m.CanReturnToUnlock() && m.ReSignInServer.Get() != "") },
 				})),
-				formField("Email", authInput(base.Input{
+				formField(locales.Email(cx), authInput(base.Input{
 					TestID:        "login-email",
-					Placeholder:   "name@example.com",
+					Placeholder:   locales.EmailPlaceholder(cx),
 					NoAutoCorrect: true,
 					Value:         m.LoginEmail.Get,
 					OnChange:      m.LoginEmail.Set,
 					Disabled:      func() bool { return m.LoginBusy.Get() || m.CanReturnToUnlock() },
 				})),
-				formField("Master Password", passwordField(cx, base.Input{
+				formField(locales.MasterPassword(cx), passwordField(cx, base.Input{
 					TestID:        "login-password",
-					Placeholder:   "Required",
+					Placeholder:   locales.Required(cx),
 					NoAutoCorrect: true,
 					Value:         m.LoginPassword.Get,
 					OnChange:      m.LoginPassword.Set,
@@ -68,7 +69,7 @@ func signInView(cx *core.Scope, m *AppModel) core.Node {
 				return core.Text{
 					TestID:  "login-insecure",
 					Class:   "text-[12px] text-gv-warn",
-					Content: "This server does not use HTTPS. Your master password and vault data are sent unencrypted; use it only on a network you trust.",
+					Content: locales.InsecureServer(cx),
 				}
 			},
 		},
@@ -78,7 +79,7 @@ func signInView(cx *core.Scope, m *AppModel) core.Node {
 		},
 		ui.Button{
 			TestID:  "login-submit",
-			Text:    "Sign In",
+			Text:    locales.SignIn(cx),
 			Variant: ui.ButtonPrimary,
 			Size:    ui.SizeLarge,
 			Busy:    m.LoginBusy.Get,
@@ -90,7 +91,7 @@ func signInView(cx *core.Scope, m *AppModel) core.Node {
 			Then: func(cx *core.Scope) core.Node {
 				return ui.Button{
 					TestID:  "login-back-to-unlock",
-					Text:    "Back to Unlock",
+					Text:    locales.BackToUnlock(cx),
 					Variant: ui.ButtonGhost,
 					Size:    ui.SizeLarge,
 					Style:   core.Style{Width: core.Pct(100)},
@@ -98,7 +99,7 @@ func signInView(cx *core.Scope, m *AppModel) core.Node {
 				}
 			},
 		},
-	}, "End-to-end encrypted. Your master password never leaves this device.")
+	}, locales.SignInFootnote(cx))
 }
 
 func authScreen(testID string, body []core.Node, footnote string) core.Node {
@@ -161,7 +162,7 @@ func passwordField(cx *core.Scope, in base.Input, height core.Points, show *core
 			TestID:   toggleTestID,
 			Variant:  ui.ButtonGhost,
 			Icon:     func() *core.SVG { return eyeIcon(show.Get()) },
-			Label:    "Toggle password visibility",
+			Label:    locales.TogglePasswordVisibility(cx),
 			Side:     height - 8,
 			IconSize: 14,
 			Tint:     func() core.Color { return themeColor(cx, "gv-fg3") },

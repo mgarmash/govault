@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"sync/atomic"
 
 	govaultui "github.com/txchen/govault/cmd/govault/ui"
 	"github.com/txchen/govault/internal/vaultcore/store"
@@ -53,11 +54,21 @@ type hardwareKeychain interface {
 type BiometricSecretStore struct {
 	fallback store.SecretStore
 	hw       hardwareKeychain
-	prompt   string
+	// prompt completes the system's Touch ID prompt, “GoVault is trying
+	// to …”, in the language shown; "" leaves the keychain's default.
+	prompt atomic.Value
 }
 
 func NewBiometricSecretStore(fallback store.SecretStore, hw hardwareKeychain) *BiometricSecretStore {
-	return &BiometricSecretStore{fallback: fallback, hw: hw, prompt: "unlock GoVault"}
+	return &BiometricSecretStore{fallback: fallback, hw: hw}
+}
+
+// SetPrompt sets the reason the hardware keychain's Touch ID prompt gives.
+func (s *BiometricSecretStore) SetPrompt(reason string) { s.prompt.Store(reason) }
+
+func (s *BiometricSecretStore) promptReason() string {
+	reason, _ := s.prompt.Load().(string)
+	return reason
 }
 
 func isBiometricKey(account string) bool { return strings.HasPrefix(account, biometricKeyPrefix) }
@@ -70,7 +81,7 @@ func hardwareUnavailable(err error) bool {
 
 func (s *BiometricSecretStore) Get(account string) (string, bool, error) {
 	if s.hw != nil && isBiometricKey(account) {
-		data, err := s.hw.Copy(account, s.prompt)
+		data, err := s.hw.Copy(account, s.promptReason())
 		switch {
 		case err == nil:
 			return string(data), true, nil

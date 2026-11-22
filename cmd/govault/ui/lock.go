@@ -5,6 +5,7 @@ import (
 	"github.com/nsgo-dev/nsgo/core"
 	"github.com/nsgo-dev/nsgo/icons/lucide"
 	"github.com/nsgo-dev/nsgo/ui"
+	"github.com/txchen/govault/cmd/govault/locales"
 )
 
 func LockView(cx *core.Scope, m *AppModel) core.Node {
@@ -20,7 +21,7 @@ func LockView(cx *core.Scope, m *AppModel) core.Node {
 		return passwordField(cx, base.Input{
 			TestID:        "lock-password",
 			Ref:           &m.LockPasswordRef,
-			Placeholder:   "Master password",
+			Placeholder:   locales.MasterPasswordPlaceholder(cx),
 			AutoFocus:     !biometric(),
 			NoAutoCorrect: true,
 			Value:         m.LockPassword.Get,
@@ -46,7 +47,7 @@ func LockView(cx *core.Scope, m *AppModel) core.Node {
 						},
 					},
 				},
-				core.Text{Class: "text-[18px] font-semibold text-gv-fg", Content: "GoVault is Locked"},
+				core.Text{Class: "text-[18px] font-semibold text-gv-fg", Content: locales.LockedTitle(cx)},
 				core.Text{
 					MaxLines:    1,
 					Class:       "text-[13px] text-gv-fg2",
@@ -67,7 +68,7 @@ func LockView(cx *core.Scope, m *AppModel) core.Node {
 					Children: []core.Node{
 						ui.Button{
 							TestID:  "lock-biometric",
-							Text:    "Unlock with " + m.BiometricLabel(),
+							Text:    locales.UnlockWith(cx, m.BiometricLabel()),
 							Icon:    lucide.FingerprintPattern,
 							Variant: ui.ButtonPrimary,
 							Size:    ui.SizeLarge,
@@ -79,14 +80,14 @@ func LockView(cx *core.Scope, m *AppModel) core.Node {
 							Class: "flex-row items-center gap-2.5",
 							Children: []core.Node{
 								core.View{Class: "flex-1 h-px bg-gv-line"},
-								core.Text{Class: "text-[11px] text-gv-fg3", Content: "or use your master password"},
+								core.Text{Class: "text-[11px] text-gv-fg3", Content: locales.OrUseMasterPassword(cx)},
 								core.View{Class: "flex-1 h-px bg-gv-line"},
 							},
 						},
 						passwordInput(ui.Button{
 							TestID:   "lock-submit",
 							Icon:     lucide.ArrowRight,
-							Label:    "Unlock",
+							Label:    locales.Unlock(cx),
 							Variant:  ui.ButtonPrimary,
 							Side:     authFieldHeight - 10,
 							IconSize: 13,
@@ -101,10 +102,10 @@ func LockView(cx *core.Scope, m *AppModel) core.Node {
 				return core.View{
 					Class: "gap-4",
 					Children: []core.Node{
-						formField("Master Password", passwordInput()),
+						formField(locales.MasterPassword(cx), passwordInput()),
 						ui.Button{
 							TestID:  "lock-submit",
-							Text:    "Unlock",
+							Text:    locales.Unlock(cx),
 							Variant: ui.ButtonPrimary,
 							Size:    ui.SizeLarge,
 							Busy:    m.LockBusy.Get,
@@ -125,14 +126,14 @@ func LockView(cx *core.Scope, m *AppModel) core.Node {
 				core.View{
 					TestID:  "lock-logout",
 					Role:    core.RoleButton,
-					Label:   "Log Out or Switch Account",
+					Label:   locales.LogOutOrSwitchAccountLabel(cx),
 					Class:   "h-[24px] px-2 rounded-[6px] justify-center active:bg-gv-fill",
 					OnPress: func(core.PressEvent) { m.Logout(cx) },
 					Children: []core.Node{
-						core.Text{Class: "text-[12px] font-medium text-gv-fg2", Content: "Log Out or Switch Account…"},
+						core.Text{Class: "text-[12px] font-medium text-gv-fg2", Content: locales.LogOutOrSwitchAccount(cx)},
 					},
 				},
 			},
 		},
-	}, "Locked vaults stay encrypted at rest on this device.")
+	}, locales.LockFootnote(cx))
 }

@@ -1,0 +1,1040 @@
+# GoVault's messages in English, the source language. docs/i18n.md explains
+# how to translate them.
+
+# Common words
+
+cancel: Cancel
+save: Save
+delete: Delete
+remove: Remove
+edit:
+  message: Edit
+  description: A button or menu item that opens the selected item in the editor (verb).
+restore:
+  message: Restore
+  description: A button or menu item that moves an item out of Trash (verb).
+verify:
+  message: Verify
+  description: A button that checks a code or the master password (verb).
+copy:
+  message: Copy
+  description: A button that copies a value to the clipboard (verb).
+undo:
+  message: Undo
+  description: A button that takes back removing a passkey before the item is saved.
+never:
+  message: Never
+  description: A choice for a timeout that never runs, such as auto-lock or clearing the clipboard.
+notAvailable:
+  message: "—"
+  description: Shown in place of a value that is not known yet.
+
+# Item types
+
+typeLogin: Login
+typeSecureNote: Secure Note
+typeCard: Card
+typeIdentity: Identity
+typeSSHKey: SSH Key
+typeItem:
+  message: Item
+  description: A vault item of a type GoVault does not know.
+typeLogins:
+  message: Logins
+  description: The sidebar category listing every login.
+typeCards:
+  message: Cards
+  description: The sidebar category listing every card.
+typeIdentities:
+  message: Identities
+  description: The sidebar category listing every identity.
+typeSecureNotes:
+  message: Secure Notes
+  description: The sidebar category listing every secure note.
+typeSSHKeys:
+  message: SSH Keys
+  description: The sidebar category listing every SSH key.
+
+# Sign in
+
+signInTitle: Sign in to GoVault
+signInSubtitle: Connect to your Bitwarden or Vaultwarden server.
+serverURL: Server URL
+email: Email
+masterPassword: Master Password
+masterPasswordPlaceholder:
+  message: Master password
+  description: The placeholder of the lock screen's password field.
+required:
+  message: Required
+  description: The placeholder of a field that must be filled in.
+emailPlaceholder:
+  message: name@example.com
+  description: An example email address in an empty email field. Use an address that looks natural in your language.
+insecureServer: This server does not use HTTPS. Your master password and vault data are sent unencrypted; use it only on a network you trust.
+signIn:
+  message: Sign In
+  description: The button that signs in to the server.
+backToUnlock: Back to Unlock
+signInFootnote: End-to-end encrypted. Your master password never leaves this device.
+signInFieldsRequired: Server URL, email, and master password are required.
+togglePasswordVisibility:
+  message: Toggle password visibility
+  description: What screen readers say of the eye button beside a password field.
+
+# Two-step login
+
+twoFactorTitle: Two-step verification
+twoFactorEnterEmailCodeTo: "Enter the code sent to {email}."
+twoFactorEnterEmailCode: Enter the code sent to your email.
+twoFactorEnterAuthenticatorCode: Enter the 6-digit code from your authenticator app.
+twoFactorMethod:
+  message: Verification method
+  description: What screen readers say of the choice between authenticator app and email codes.
+twoFactorAuthenticator:
+  message: Authenticator App
+  description: The two-step login method that uses codes from an authenticator app.
+twoFactorEmail:
+  message: Email
+  description: The two-step login method that emails a code.
+twoFactorYubiKey:
+  message: YubiKey
+  description: A two-step login method; a brand name.
+twoFactorDuo:
+  message: Duo
+  description: A two-step login method; a brand name.
+twoFactorOrganizationDuo:
+  message: Duo (Organization)
+  description: Duo two-step login that an organization requires.
+twoFactorU2F:
+  message: FIDO U2F
+  description: A two-step login method with a security key.
+twoFactorWebAuthn:
+  message: Passkey / WebAuthn
+  description: A two-step login method with a passkey or security key.
+twoFactorRememberedDevice:
+  message: Remembered Device
+  description: The two-step login method of a device the user chose to remember.
+twoFactorOtherProvider:
+  message: "Method {number, number, integer}"
+  description: A two-step login method GoVault does not know, by its number.
+verificationCode: Verification Code
+rememberDevice: Remember this device
+backToSignIn: Back to Sign In
+sendCode: Send Code
+resendCode: Resend Code
+twoFactorFootnote: Two-step login keeps your vault safe even if your password leaks.
+twoFactorCodeRequired: Enter the verification code.
+twoFactorCodeInvalid: Invalid verification code. Check the code and try again.
+twoFactorUnsupported:
+  message: "This account requires two-step login with {methods}, which GoVault does not support yet. Enable Authenticator App or Email two-step login in your vault web settings to sign in here."
+  description: methods lists the account's two-step login methods, separated by commas.
+twoFactorEmailFailed:
+  message: "Could not send the verification email. {reason}"
+  description: reason is a sentence that says what went wrong.
+twoFactorEmailSentTo: "A verification code was sent to {email}."
+twoFactorEmailSent: A verification code was sent to your email.
+
+# Lock screen
+
+lockedTitle: GoVault is Locked
+unlock:
+  message: Unlock
+  description: The button that unlocks the vault (verb).
+unlockWith:
+  message: "Unlock with {method}"
+  description: method is Touch ID, Face ID, Windows Hello or the word for biometrics.
+orUseMasterPassword: or use your master password
+logOutOrSwitchAccount: Log Out or Switch Account…
+logOutOrSwitchAccountLabel:
+  message: Log Out or Switch Account
+  description: What screen readers say of the lock screen's Log Out or Switch Account… button.
+lockFootnote: Locked vaults stay encrypted at rest on this device.
+masterPasswordRequired: Enter your master password.
+biometricGeneric:
+  message: Biometrics
+  description: Fingerprint or face unlock, where the system has no name of its own such as Touch ID.
+biometricUnlockReason:
+  message: Unlock GoVault
+  description: Why the system's Touch ID or Windows Hello prompt asks.
+biometricEnableReason:
+  message: "Enable {method} for GoVault"
+  description: Why the system's Touch ID or Windows Hello prompt asks, when the user turns biometric unlock on.
+keychainPromptReason:
+  message: unlock GoVault
+  description: Ends the system's Touch ID prompt, which reads “GoVault is trying to unlock GoVault.”
+biometricKeyUnavailable: Saved biometric key unavailable. Unlock with master password.
+biometricKeyCorrupt: Corrupt biometric key. Unlock with master password.
+biometricKeyInvalid: Invalid biometric key. Unlock with master password.
+biometricFailed: Biometric authentication failed. Enter master password.
+keychainUnavailable: Keychain unavailable
+keychainUnavailableDetail: Cannot access system keychain.
+biometricDisableFailed: Could not turn off biometric unlock
+biometricEnableFailed: Could not turn on biometric unlock
+biometricDisabled:
+  message: "{method} turned off"
+  description: method is Touch ID, Face ID, Windows Hello or the word for biometrics.
+biometricEnabled:
+  message: "{method} turned on"
+  description: method is Touch ID, Face ID, Windows Hello or the word for biometrics.
+biometricEnabledDetail: "You can now unlock GoVault with {method}."
+vaultLocked: Vault locked
+vaultLockedInactivity: Locked automatically due to inactivity.
+
+# Log out
+
+logOutTitle: Log out of GoVault?
+logOutMessage: Your local encrypted vault cache and saved biometric key will be removed from this device.
+logOut:
+  message: Log Out
+  description: The button that signs out of the account and removes the vault from this device (verb).
+loggedOut: Logged out
+logOutSecretsLeft:
+  message: "Some saved secrets could not be removed: {reason}"
+  description: reason says what went wrong.
+
+# Toolbar and sidebar
+
+back:
+  message: Back
+  description: The toolbar button that goes back to the previous view.
+forward:
+  message: Forward
+  description: The toolbar button that goes forward again.
+searchVault: Search vault
+clearSearch: Clear search
+offline:
+  message: Offline
+  description: A badge saying the server cannot be reached.
+syncNowLabel:
+  message: Sync now
+  description: What screen readers say of the toolbar's sync button.
+lockVault:
+  message: Lock vault
+  description: What screen readers say of the toolbar's lock button.
+newItem: New Item
+allItems: All Items
+favorites: Favorites
+categories:
+  message: Categories
+  description: The sidebar heading over the item types.
+folders: Folders
+newFolder: New Folder
+collections: Collections
+tools:
+  message: Tools
+  description: The sidebar heading over Generator, Vault Health, Archive, Trash and Settings.
+generator: Generator
+vaultHealth: Vault Health
+archive:
+  message: Archive
+  description: The place archived items are kept (noun), in the sidebar and as a title.
+trash:
+  message: Trash
+  description: The place deleted items are kept until they are deleted permanently (noun).
+settings: Settings
+importTitle:
+  message: Import
+  description: The title of the view reviewing a backup before it is imported (noun).
+noFolder: No Folder
+collection:
+  message: Collection
+  description: The title of a collection whose name is not known.
+folder:
+  message: Folder
+  description: The title of a folder whose name is not known.
+folderActions: Folder actions
+renameFolderMenu: Rename Folder…
+deleteFolder: Delete Folder
+resizePane:
+  message: Resize pane
+  description: What screen readers say of the handle between two panes.
+syncing: Syncing…
+syncPending: Sync pending
+syncOfflineCached: Offline · cached vault
+sessionExpired: Session expired
+synced:
+  message: Synced
+  description: The sidebar footer's sync status, when the time of the last sync is not known.
+syncedWhen:
+  message: "Synced {when}"
+  description: The sidebar footer's sync status. when is a relative time, such as “5 minutes ago”, or a date.
+justNow:
+  message: just now
+  description: A relative time, as in “Synced just now”.
+minutesAgo: "{count, plural, one {# minute ago} other {# minutes ago}}"
+hoursAgo: "{count, plural, one {# hour ago} other {# hours ago}}"
+daysAgo: "{count, plural, one {# day ago} other {# days ago}}"
+shortDate:
+  message: "{date, date, ::MMMd}"
+  description: A date without its year, as a relative time for something older than a week.
+signInAgainToSync: Sign in again to sync. Your vault is available offline until then.
+sessionExpiredBanner: Session expired — your cached vault is still readable. Sign in again to resume syncing.
+signInNotSaved: Your sign-in could not be saved. Sign in again so GoVault can still sync after you lock.
+signInAgain: Sign In Again
+
+# Item list
+
+itemCount: "{count, plural, one {# item} other {# items}}"
+trashCanRestore: Items in Trash can be restored.
+emptyTrash: Empty Trash
+searchInAllItems: In All Items
+searchIn:
+  message: "In {section}"
+  description: Where a search looks; section is a sidebar section, such as Logins or a folder's name.
+searchOnlyIn:
+  message: "Only {section}"
+  description: A button that narrows a search to one sidebar section, such as Logins or a folder's name.
+searchAllItems: Search All Items
+noResults: No Results
+trashIsEmpty: Trash Is Empty
+noItems: No Items
+nothingInSectionMatches:
+  message: "Nothing in {section} matches “{query}”."
+  description: section is a sidebar section, such as Logins or a folder's name; query is what the user typed.
+nothingMatches: "Nothing matches “{query}”."
+trashEmptyHint: Items you delete appear here.
+noItemsHint: Choose New Item to add your first entry.
+noItemSelected: No Item Selected
+noItemSelectedHint: Choose an item from the list to see its details.
+shortcutSearch:
+  message: Search
+  description: Beside a keyboard shortcut, the action it runs (verb).
+shortcutNewItem:
+  message: New Item
+  description: Beside a keyboard shortcut, the action it runs.
+shortcutLock:
+  message: Lock
+  description: Beside a keyboard shortcut, the action it runs (verb).
+
+# Item context menu
+
+copyUsernameMenu: Copy Username
+copyPasswordMenu: Copy Password
+copyVerificationCodeMenu: Copy Verification Code
+copyPublicKeyMenu: Copy Public Key
+deletePermanentlyMenu: Delete Permanently…
+addToFavorites: Add to Favorites
+removeFromFavorites: Remove from Favorites
+clone:
+  message: Clone
+  description: A menu item that opens a copy of the item as a new item (verb).
+archiveAction:
+  message: Archive
+  description: A button or menu item that moves the item to the Archive (verb).
+unarchiveAction:
+  message: Unarchive
+  description: A button or menu item that moves the item out of the Archive (verb).
+moveToTrash:
+  message: Move to Trash
+  description: A button or menu item that moves the item to Trash (verb).
+
+# Item details
+
+username: Username
+password: Password
+hiddenByOrganization: Hidden by your organization
+revealPassword: Reveal password
+copyPassword: Copy password
+copyUsername: Copy username
+credentials:
+  message: Credentials
+  description: The section with a login's username, password, verification code and passkeys.
+website: Website
+websiteNumbered:
+  message: "Website {number, number, integer}"
+  description: One of several websites of a login, by its position.
+openWebsite: Open website
+copyWebsite: Copy website
+websites: Websites
+cardholderName: Cardholder Name
+copyCardholder: Copy cardholder name
+cardNumber: Card Number
+revealCardNumber: Reveal card number
+copyCardNumber: Copy card number
+expiration: Expiration
+copyExpiration: Copy expiration
+securityCode: Security Code
+brand:
+  message: Brand
+  description: A card's brand, such as Visa or Mastercard.
+cardDetails: Card Details
+fullName: Full Name
+company: Company
+phone: Phone
+personal:
+  message: Personal
+  description: The section with an identity's name, company, email, phone and username.
+address: Address
+copyAddress: Copy address
+socialSecurityNumber: Social Security Number
+passportNumber: Passport Number
+copyPassportNumber: Copy passport number
+licenseNumber: License Number
+copyLicenseNumber: Copy license number
+documents:
+  message: Documents
+  description: The section with an identity's social security, passport and license numbers.
+customFields: Custom Fields
+notes: Notes
+fingerprint:
+  message: Fingerprint
+  description: An SSH key's fingerprint.
+copyFingerprint: Copy fingerprint
+publicKey: Public Key
+copyPublicKey: Copy public key
+privateKey: Private Key
+revealField:
+  message: "Reveal {field}"
+  description: What screen readers say of the eye button beside a hidden value; field names the value, such as a custom field's name.
+copyField:
+  message: "Copy {field}"
+  description: What screen readers say of the copy button beside a value; field names the value, such as a custom field's name.
+passwordHistory: "Password History ({count, number, integer})"
+usedUntil:
+  message: "Used until {date, date, medium} at {date, time, short}"
+  description: When an old password of the item was replaced.
+oldPassword: old password
+viewOnly:
+  message: View only
+  description: A badge on an item the user may see but not change.
+passwordReprompt:
+  message: Password reprompt
+  description: A badge on an item that asks for the master password before showing its secrets.
+inTrash: In Trash
+archived:
+  message: Archived
+  description: A badge on an item in the Archive (adjective).
+deletePermanently: Delete Permanently
+toggleFavorite: Toggle favorite
+cloneItem:
+  message: Clone item
+  description: What screen readers say of the button that opens a copy of the item as a new item.
+timeRemaining: Time remaining
+secondsLeft:
+  message: "{seconds, plural, one {#s} other {#s}}"
+  description: Seconds left before the verification code changes, written short.
+revealVerificationCode: Reveal verification code
+copyVerificationCode: Copy verification code
+cardPictureBrand:
+  message: CARD
+  description: On the picture of a card without a brand, in capitals where the language has them.
+cardPictureCardholder:
+  message: CARDHOLDER
+  description: On the picture of a card, over the cardholder's name, in capitals where the language has them.
+cardPictureExpires:
+  message: EXPIRES
+  description: On the picture of a card, over its expiry date, in capitals where the language has them.
+updatedOn: "Updated {date, date, medium} at {date, time, short}"
+createdOn: "Created {date, date, medium}"
+deletedWhen:
+  message: "Deleted {when}"
+  description: when is a relative time, such as “5 minutes ago”, or a date.
+
+# Copying
+
+copied:
+  message: "{field} copied"
+  description: A notice after a value is copied; field names it, such as a custom field's name.
+passwordCopied: Password copied
+usernameCopied: Username copied
+verificationCodeCopied: Verification code copied
+publicKeyCopied: Public key copied
+websiteCopied: Website copied
+cardholderNameCopied: Cardholder name copied
+cardNumberCopied: Card number copied
+expirationCopied: Expiration copied
+securityCodeCopied: Security code copied
+fullNameCopied: Full name copied
+companyCopied: Company copied
+emailCopied: Email copied
+phoneCopied: Phone copied
+addressCopied: Address copied
+ssnCopied: Social Security Number copied
+passportNumberCopied: Passport number copied
+licenseNumberCopied: License number copied
+fingerprintCopied: Fingerprint copied
+privateKeyCopied: Private key copied
+oldPasswordCopied: Old password copied
+generatedCopied:
+  message: Generated password copied
+  description: A notice after the generator's password or passphrase is copied.
+copyFailed: Copy failed
+clearsInConcealed: "Concealed · clears in {seconds, plural, one {# second} other {# seconds}}"
+clearsIn: "Clears in {seconds, plural, one {# second} other {# seconds}}"
+concealedFromHistory: Concealed from clipboard history
+
+# Master password reprompt
+
+repromptTitle: Master Password Verification
+repromptPrompt:
+  message: "{action, select, copyPassword {Enter your master password to copy the password.} copyTOTP {Enter your master password to copy the verification code.} revealTOTP {Enter your master password to reveal the verification code.} revealPassword {Enter your master password to reveal the password.} revealCardNumber {Enter your master password to reveal the card number.} copyCardNumber {Enter your master password to copy the card number.} revealSecurityCode {Enter your master password to reveal the security code.} copySecurityCode {Enter your master password to copy the security code.} revealSSN {Enter your master password to reveal the Social Security Number.} copySSN {Enter your master password to copy the Social Security Number.} revealField {Enter your master password to reveal the custom field.} copyField {Enter your master password to copy the custom field.} revealPrivateKey {Enter your master password to reveal the private key.} copyPrivateKey {Enter your master password to copy the private key.} revealOldPassword {Enter your master password to reveal the old password.} copyOldPassword {Enter your master password to copy the old password.} editItem {Enter your master password to edit the item.} cloneItem {Enter your master password to clone the item.} archiveItem {Enter your master password to archive the item.} unarchiveItem {Enter your master password to unarchive the item.} downloadAttachment {Enter your master password to download the attachment.} exportVault {Enter your master password to export your vault.} updateProtectedItem {Enter your master password to update a protected item.} other {Enter your master password to continue.}}"
+  description: The master password dialog's text, by what the user is about to do. Translate each sentence; keep the words before the braces (copyPassword, other) as they are.
+repromptBiometricReason:
+  message: "{action, select, copyPassword {Verify to copy the password} copyTOTP {Verify to copy the verification code} revealTOTP {Verify to reveal the verification code} revealPassword {Verify to reveal the password} revealCardNumber {Verify to reveal the card number} copyCardNumber {Verify to copy the card number} revealSecurityCode {Verify to reveal the security code} copySecurityCode {Verify to copy the security code} revealSSN {Verify to reveal the Social Security Number} copySSN {Verify to copy the Social Security Number} revealField {Verify to reveal the custom field} copyField {Verify to copy the custom field} revealPrivateKey {Verify to reveal the private key} copyPrivateKey {Verify to copy the private key} revealOldPassword {Verify to reveal the old password} copyOldPassword {Verify to copy the old password} editItem {Verify to edit the item} cloneItem {Verify to clone the item} archiveItem {Verify to archive the item} unarchiveItem {Verify to unarchive the item} downloadAttachment {Verify to download the attachment} exportVault {Verify to export your vault} updateProtectedItem {Verify to update a protected item} other {Verify to continue}}"
+  description: Why the system's Touch ID or Windows Hello prompt asks, by what the user is about to do. Translate each phrase; keep the words before the braces as they are.
+repromptUnavailable: Master password verification is unavailable.
+incorrectMasterPassword: Incorrect master password.
+
+# Saving, trash and folders
+
+discardChangesTitle: Discard unsaved changes?
+discardChangesMessage: Your edits to this item have not been saved.
+keepEditing: Keep Editing
+discard:
+  message: Discard
+  description: The button that throws away unsaved edits (verb).
+nameRequired: Name is required.
+cannotSaveOffline: Cannot save while offline.
+itemSaved: Item saved
+saveFailed: Save failed
+itemChangedTitle: Item changed on another device
+itemChangedMessage: This item was updated elsewhere since your last sync. Reload the latest version to avoid overwriting changes.
+reloadLatest: Reload Latest
+localCopyNotUpdated: Saved on the server, but the copy on this device could not be updated.
+syncNowAction:
+  message: Sync now
+  description: A notice's button that syncs the vault (verb).
+updateFailed: Update failed
+favoriteUpdated: Favorite updated
+moveToTrashFailed: Move to Trash failed
+movedToTrash: Moved to Trash
+archiveFailed: Archive failed
+unarchiveFailed: Unarchive failed
+itemArchived: Item archived
+itemUnarchived: Item unarchived
+restoreFailed: Restore failed
+itemRestored: Item restored
+deletePermanentlyTitle: Delete permanently?
+deletePermanentlyMessage: "“{name}” will be permanently deleted and cannot be recovered."
+deleteFailed: Delete failed
+permanentlyDeleted: Permanently deleted
+emptyTrashTitle: Empty Trash?
+emptyTrashMessage: "{count, plural, one {# item will be permanently deleted and cannot be recovered.} other {# items will be permanently deleted and cannot be recovered.}}"
+emptyTrashFailed: Empty Trash failed
+trashEmptied: Trash emptied
+trashReadOnlyKept: "{count, plural, one {# read-only item stayed in Trash.} other {# read-only items stayed in Trash.}}"
+trashChangedKept: "{count, plural, one {# item changed on another device and was kept.} other {# items changed on another device and were kept.}}"
+trashPartlyDeleted: "{count, plural, one {Deleted # item} other {Deleted # items}}"
+trashSomeNotDeleted:
+  message: "Some items could not be deleted: {reason}"
+  description: reason says what went wrong.
+passkeysNotCopied: Passkeys are not copied
+passkeysNotCopiedDetail: The copy has the login details without the passkey.
+cloneName:
+  message: "{name} (Copy)"
+  description: The name of a new item cloned from the item called name.
+newFolderTitle: New Folder
+renameFolderTitle: Rename Folder
+folderName: Folder name
+folderNameRequired: Folder name is required.
+folderSaved: Folder saved
+deleteFolderTitle: Delete folder?
+deleteFolderMessage: "Items inside “{name}” will be moved to No Folder."
+deleteFolderFailed: Delete folder failed
+folderDeleted: Folder deleted
+
+# Sync
+
+sessionExpiredToast: Session expired
+sessionExpiredToastDetail: Sign in again to resume syncing.
+offlineToastDetail: Showing cached vault.
+syncFailed: Sync failed
+vaultSynced: Vault synced
+
+# Editor
+
+newItemOfType:
+  message: "{kind, select, login {New Login} secureNote {New Secure Note} card {New Card} identity {New Identity} sshKey {New SSH Key} other {New Item}}"
+  description: The editor's title for a new item, by its type.
+editItemOfType:
+  message: "{kind, select, login {Edit Login} secureNote {Edit Secure Note} card {Edit Card} identity {Edit Identity} sshKey {Edit SSH Key} other {Edit Item}}"
+  description: The editor's title for an existing item, by its type.
+unsavedChanges: Unsaved changes
+noChanges: No changes
+itemSection:
+  message: Item
+  description: The editor's section with the item's type, name, folder and favorite.
+type:
+  message: Type
+  description: The item's type, such as Login or Card.
+name: Name
+favorite:
+  message: Favorite
+  description: The switch that marks the item as a favorite.
+masterPasswordReprompt: Master password reprompt
+addNote: Add a note
+generatePassword: Generate password
+authenticatorKey:
+  message: Authenticator
+  description: The editor's field for a login's TOTP authenticator key.
+authenticatorKeyPlaceholder: otpauth:// URI or setup key
+removeWebsite: Remove website
+addWebsite: Add Website
+cardholder:
+  message: Cardholder
+  description: The editor's field for the name on a card.
+nameOnCard: Name on card
+brandPlaceholder:
+  message: Visa, Mastercard, Amex…
+  description: Example card brands in the empty brand field.
+cardNumberLabel:
+  message: Number
+  description: The editor's field for a card's number.
+expiryMonthPlaceholder:
+  message: MM
+  description: The placeholder of the card expiry month field, two digits.
+expiryYearPlaceholder:
+  message: YYYY
+  description: The placeholder of the card expiry year field, four digits.
+securityCodePlaceholder:
+  message: CVV
+  description: The placeholder of a card's security code field.
+firstName: First
+lastName: Last
+phonePlaceholder:
+  message: +1 555 0100
+  description: An example phone number in the empty phone field.
+street: Street
+streetPlaceholder:
+  message: 123 Main St
+  description: An example street address in the empty street field.
+city: City
+stateZip: State / ZIP
+stateRegion: State
+postalCode: Postal code
+country: Country
+generateSSHKey: Generate Ed25519 Key
+sshKeyGenerateFailed:
+  message: "Could not generate SSH key: {reason}"
+  description: reason says what went wrong.
+fieldTypeText:
+  message: Text
+  description: A custom field type whose value shows as it is.
+fieldTypeHidden:
+  message: Hidden
+  description: A custom field type whose value is masked until revealed.
+fieldName: Field name
+fieldValue: Value
+removeField: Remove field
+addField: Add Field
+passkey: Passkey
+removedWhenSaved: Removed when you save
+removePasskey: Remove passkey
+removePasskeyTitle: Remove passkey?
+removePasskeyMessage: You will no longer be able to sign in with this passkey.
+passkeySiteCreated:
+  message: "{site} · Created {date, date, medium}"
+  description: A passkey, by the website it signs in to and when it was made.
+passkeyCreated: "Created {date, date, medium}"
+passkeyStored: Stored in this item
+
+# Attachments
+
+attachments: Attachments
+attachFile: Attach File
+attachFileTitle: Attach File
+attachButton:
+  message: Attach
+  description: The file picker's button that attaches the chosen file (verb).
+downloadFile:
+  message: "Download {file}"
+  description: What screen readers say of an attachment's download button; file is its name.
+deleteFile:
+  message: "Delete {file}"
+  description: What screen readers say of an attachment's delete button; file is its name.
+saveAttachmentTitle: Save Attachment
+saveHere: Save Here
+downloadFailed: Download failed
+attachmentSaved: Attachment saved
+couldNotOpenFile: Could not open file
+fileTooLarge: File too large
+attachmentLimit: Attachments are limited to 100 MiB.
+uploadFailed: Upload failed
+fileAttached: File attached
+deleteAttachmentTitle: Delete attachment?
+deleteAttachmentMessage: "“{file}” will be permanently deleted."
+attachmentDeleted: Attachment deleted
+bytes:
+  message: "{count, number, integer} B"
+  description: A file size in bytes, with the unit's symbol.
+kilobytes:
+  message: "{size, number, ::.0} KB"
+  description: A file size in kilobytes, with the unit's symbol.
+  placeholders:
+    size: {type: double}
+megabytes:
+  message: "{size, number, ::.0} MB"
+  description: A file size in megabytes, with the unit's symbol.
+  placeholders:
+    size: {type: double}
+gigabytes:
+  message: "{size, number, ::.0} GB"
+  description: A file size in gigabytes, with the unit's symbol.
+  placeholders:
+    size: {type: double}
+terabytes:
+  message: "{size, number, ::.0} TB"
+  description: A file size in terabytes, with the unit's symbol.
+  placeholders:
+    size: {type: double}
+
+# Generator
+
+passwordMode:
+  message: Password
+  description: The generator's tab that makes random passwords.
+passphraseMode:
+  message: Passphrase
+  description: The generator's tab that makes passphrases of words.
+strengthWeak:
+  message: Weak
+  description: How strong a generated password is.
+strengthFair:
+  message: Fair
+  description: How strong a generated password is.
+strengthStrong:
+  message: Strong
+  description: How strong a generated password is.
+strengthVeryStrong:
+  message: Very Strong
+  description: How strong a generated password is.
+entropyBits: "{bits, plural, one {≈ # bit of entropy} other {≈ # bits of entropy}}"
+regenerate: Regenerate
+length:
+  message: Length
+  description: How many characters a generated password has.
+characters:
+  message: Characters
+  description: The generator's section choosing which kinds of characters a password uses.
+uppercase: Uppercase
+lowercase: Lowercase
+numbers: Numbers
+symbols: Symbols
+avoidAmbiguous: Avoid ambiguous characters
+avoidAmbiguousDetail: Excludes l, 1, I, O and 0
+words:
+  message: Words
+  description: How many words a generated passphrase has.
+options: Options
+wordSeparator: Word separator
+wordSeparatorDetail: Placed between each word
+capitalizeWords: Capitalize words
+capitalizeWordsExample:
+  message: Correct-Horse-Battery
+  description: An example of a passphrase with capitalized words.
+includeNumber: Include a number
+includeNumberDetail: Appends a digit to one word
+
+# Vault Health
+
+healthReused:
+  message: Reused
+  description: The Vault Health count of passwords used by more than one item.
+healthWeak:
+  message: Weak
+  description: The Vault Health count of weak passwords.
+healthExpiringCards: Expiring Cards
+healthUnsecured:
+  message: Unsecured HTTP
+  description: The Vault Health count of logins whose website uses http:// rather than https://.
+healthFilterEmpty: No issues in this category.
+healthAllClear: All clear
+healthAllClearDetail: No reused or weak passwords, expiring cards or unsecured websites.
+reusedPasswords: Reused Passwords
+weakPasswords: Weak Passwords
+unsecuredWebsites: Unsecured Websites
+healthLocalOnly: Checked on this device only. Nothing is sent to a server.
+openItem:
+  message: "Open {name}"
+  description: What screen readers say of a Vault Health row that opens the item called name.
+usedInItems: "{count, plural, one {Used in # item} other {Used in # items}}"
+weakCommon: Common password
+weakShort: "{count, plural, one {Shorter than # character} other {Shorter than # characters}}"
+weakPattern: Mostly a sequence or repeated characters
+weakOneClass: Uses only one type of character
+weakGuessable: Easy to guess
+cardExpired:
+  message: "Expired {expiry}"
+  description: A card that expired; expiry is its month and year, such as 04/2026.
+cardExpires:
+  message: "Expires {expiry}"
+  description: A card that expires soon; expiry is its month and year, such as 04/2026.
+
+# Backup and import
+
+backupPasswordTitle: Backup Password
+protectBackupTitle: Protect Your Backup
+backupPasswordPrompt: Enter the password this backup was exported with.
+protectBackupPrompt: Choose a password for the encrypted backup. It cannot be recovered if you forget it.
+backupPassword: Backup password
+confirmPassword: Confirm password
+export:
+  message: Export
+  description: The button that writes the encrypted backup (verb).
+decrypt:
+  message: Decrypt
+  description: The button that opens a password-protected backup (verb).
+backupPasswordTooShort: "{count, plural, one {Use at least # character.} other {Use at least # characters.}}"
+backupPasswordsDiffer: The passwords do not match.
+backupIncomplete: "{count, plural, one {# personal item is in a format GoVault cannot read, so the backup would be incomplete. Export from the Bitwarden web vault instead.} other {# personal items are in a format GoVault cannot read, so the backup would be incomplete. Export from the Bitwarden web vault instead.}}"
+exportFailed: Export failed
+backupSaved: Encrypted backup saved
+backupSavedDetail: Keep the backup password safe; it cannot be recovered.
+importBackupTitle:
+  message: Import Backup
+  description: The title of the file picker that chooses a backup to import.
+importButton:
+  message: Import
+  description: The file picker's button that opens the chosen backup (verb).
+importFailed: Import failed
+backupFileTooLarge: "The file is larger than {size, number, integer} MiB."
+backupPasswordRequired: Enter the backup password.
+incorrectBackupPassword: Incorrect backup password.
+notBitwardenExport: This is not a Bitwarden JSON export.
+backupAccountRestricted: This backup is locked to its account. Export it again as a password-protected file.
+importResult: "Imported: {created, number, integer} created, {updated, number, integer} updated"
+importSomeFailed:
+  message: "{count, plural, one {# item failed: {reason}} other {# items failed: {reason}}}"
+  description: reason says what went wrong.
+importSkipped: "{count, number, integer} skipped"
+importCreate:
+  message: Create
+  description: An import choice that adds the backup item as a new item (verb).
+importCreateCopy:
+  message: Create Copy
+  description: An import choice that adds the backup item beside the item it matches (verb).
+importUpdate:
+  message: Update Existing
+  description: An import choice that overwrites the matching vault item with the backup item (verb).
+importSkip:
+  message: Skip
+  description: An import choice that leaves the backup item out (verb).
+noImport: No Import in Progress
+noImportHint: Choose Import Backup in Settings to review a backup.
+reviewImport: Review Import
+importSummary:
+  message: "{file} · {added, number, integer} new, {changed, number, integer} changed, {identical, number, integer} identical. Nothing changes until you apply."
+  description: file is the backup's file name; the numbers count its items.
+selectAllNew: Select All New
+skipAllConflicts: Skip All Conflicts
+copyAllConflicts: Copy All Conflicts
+updateAllConflicts: Update All Conflicts
+skipAll: Skip All
+importGroupChanged:
+  message: "Changed ({count, number, integer})"
+  description: The import review's section of backup items that differ from the vault items they match.
+importGroupNew:
+  message: "New ({count, number, integer})"
+  description: The import review's section of backup items not in the vault.
+importGroupIdentical:
+  message: "Identical ({count, number, integer})"
+  description: The import review's section of backup items already in the vault as they are.
+importApply: "Apply: {create, number, integer} create, {update, number, integer} update, {skip, number, integer} skipped"
+personalVault: your personal vault
+anOrganization: an organization
+sharedVaultOf:
+  message: "the shared vault of {organization}"
+  description: Where a vault item lives, as in “Already in the shared vault of Acme”.
+organizationCollections:
+  message: "{organization} · {collections}"
+  description: Where a vault item lives; collections lists collection names, separated by commas.
+showIdentical: "{count, plural, one {Show # identical item} other {Show # identical items}}"
+hideIdentical: "{count, plural, one {Hide # identical item} other {Hide # identical items}}"
+importDiffers:
+  message: "Differs: {fields} · in {destination}"
+  description: fields lists the parts of the item that differ, separated by commas; destination is where the vault item lives.
+importCannotUpdateIncomplete: "cannot update: the backup item is incomplete"
+importCannotUpdateUnmatchable: "cannot update: its fields or websites cannot be matched safely"
+importReadOnly: existing item is read-only
+importProtected: "protected: Update asks for your master password"
+importAlreadyIn:
+  message: "Already in {destination}"
+  description: destination is where the vault item lives.
+importUnsupported: GoVault cannot save this type of item yet, so it is skipped.
+importAmbiguous: Several vault items have this name, so it is not matched to any. Choose Create to add it as a new item.
+importArchivedNoPremium: Archived in the backup; it is created in your vault, since Archive needs a premium membership.
+diffName: Name
+diffNotes: Notes
+diffFolder: Folder
+diffFavorite: Favorite
+diffReprompt:
+  message: Reprompt
+  description: Whether the item asks for the master password, as a part of an item that changed.
+diffUsername: Username
+diffPassword: Password
+diffTOTP: Verification Code
+diffWebsites: Websites
+diffPasskey: Passkey
+diffCard: Card
+diffIdentity: Identity
+diffSSHKey: SSH Key
+diffCustomFields: Custom Fields
+
+# Settings
+
+general:
+  message: General
+  description: The settings section with the language.
+language: Language
+languageDetail: The language GoVault shows. System default follows your system’s language.
+systemDefault:
+  message: System default
+  description: The language choice that follows the system's language.
+account: Account
+syncNow:
+  message: Sync Now
+  description: A button that syncs the vault (verb).
+keyDerivation: Key derivation
+kdfArgon2id:
+  message: "Argon2id · {memory, number, integer} MiB · {iterations, plural, one {# iteration} other {# iterations}} · {threads, plural, one {# thread} other {# threads}}"
+  description: The account's key derivation settings. Argon2id is a name; MiB is mebibytes.
+kdfPBKDF2:
+  message: "PBKDF2-SHA256 · {iterations, plural, one {# iteration} other {# iterations}}"
+  description: The account's key derivation settings. PBKDF2-SHA256 is a name.
+lastSync: Last sync
+notYetSynced: Not yet synced
+lastSyncAt: "{date, date, medium} at {date, time, short}"
+logOutHint: Logging out removes the local vault cache.
+security: Security
+autoLock: Auto-lock
+autoLockDetail: Lock the vault after a period of inactivity.
+afterMinutes: "{count, plural, one {After # minute} other {After # minutes}}"
+afterHours: "{count, plural, one {After # hour} other {After # hours}}"
+afterSeconds: "{count, plural, one {After # second} other {After # seconds}}"
+lockOnSleep: Lock on sleep or screen lock
+lockOnSleepDetail: Lock the vault when your Mac sleeps or the screen locks.
+backup:
+  message: Backup
+  description: The settings section for exporting and importing backups (noun).
+exportBackup: Export encrypted backup
+exportBackupDetail: A Bitwarden-compatible JSON file protected by a password you choose.
+exportEllipsis: Export…
+importBackup: Import backup
+importBackupDetail: Bitwarden JSON, encrypted or plain. Review every item before anything changes.
+importEllipsis: Import…
+privacy: Privacy
+showWebsiteIcons: Show website icons
+showWebsiteIconsDetail: Fetch site icons from your Vaultwarden server.
+iconCache: Icon cache
+iconCacheDetail: Remove downloaded site icons from this device.
+clearIconCache: Clear Icon Cache
+iconCacheCleared: Icon cache cleared
+iconCacheClearFailed: Could not clear icon cache
+clipboard: Clipboard
+clearCopiedSecrets: Clear copied secrets
+clearCopiedSecretsDetail: Clears the clipboard if it still holds the copied value.
+concealedClipboard: Concealed clipboard
+concealedClipboardDetail: Marks secrets so clipboard managers skip them.
+concealedActive:
+  message: Active
+  description: A badge saying the concealed clipboard works on this system.
+macOSOnly: macOS only
+menuBar:
+  message: Menu Bar
+  description: The settings section for the macOS menu bar icon and starting at login.
+tray:
+  message: Tray
+  description: The settings section for the Windows and Linux tray icon and starting at login.
+showMenuBarIcon: Show menu bar icon
+showTrayIcon: Show tray icon
+menuBarIconDetail: Open GoVault, sync or lock from the menu bar.
+trayIconDetail: Open GoVault, sync or lock from the tray.
+launchAtLogin: Launch at login
+launchAtLoginDetail: Start GoVault automatically when you sign in.
+hideDockIcon: Hide Dock icon
+hideDockIconDetail: Keep GoVault in the menu bar only.
+hideDockIconNeedsMenuBar: Turn on the menu bar icon first, so GoVault stays reachable.
+about: About
+appVersion:
+  message: "GoVault {version}"
+  description: The app's name and version.
+developmentVersion:
+  message: "{version} (development)"
+  description: A version built for development rather than released.
+development:
+  message: (development)
+  description: The version of a build made for development, which has no version number.
+updatesSigned: Updates are signed and installed automatically.
+checkForUpdates: Check for Updates
+sshAgent: SSH Agent
+enableSSHAgent: Enable SSH agent
+enableSSHAgentDetail: Serve SSH keys from the unlocked vault. Keys with master password reprompt are not served.
+socket:
+  message: Socket
+  description: The SSH agent's socket path.
+copySSHAuthSock: Copy SSH_AUTH_SOCK
+sshAgentUnavailable:
+  message: "Agent unavailable: {reason}"
+  description: reason says what went wrong.
+sshAgentInUse: Another process already serves this socket.
+sshAgentNotSocket: The socket path exists and is not a socket.
+sshAgentUnsupported: Unix sockets are not supported on this system.
+biometricUnavailable: Touch ID unavailable on this Mac — pair a Touch ID keyboard or enroll in System Settings.
+biometricDetail: Keeps a wrapped key in the system keychain for fast unlock.
+biometricHardware: "Hardware-enforced: macOS releases the key only after Touch ID."
+biometricAppGated: "App-gated: the key is in your login keychain and GoVault asks for {method} before reading it."
+promptAutomatically: Prompt automatically
+promptAutomaticallyDetail: "Ask for {method} as soon as the locked window opens."
+
+# Menus
+
+openGoVault: Open GoVault
+checkForUpdatesMenu: Check for Updates…
+syncNowMenu:
+  message: Sync Now
+  description: The tray menu item that syncs the vault (verb).
+lockNow:
+  message: Lock Now
+  description: The tray menu item that locks the vault (verb).
+quitGoVault: Quit GoVault
+editMenu:
+  message: Edit
+  description: The macOS menu bar's Edit menu.
+windowMenu:
+  message: Window
+  description: The macOS menu bar's Window menu.
+
+# Errors from the vault
+
+errorTwoFactorRequired: Two-step login is required for this account.
+errorUnauthorized: Invalid email or master password.
+errorOffline: Server unreachable. Check your connection and server URL.
+errorRedirect: The server redirected to another address, which GoVault does not follow.
+errorNotFound: The server could not find this item. Sync and try again.
+errorRevisionConflict: This item changed on another device. Sync and try again.
+errorAttachmentTooLarge: Attachments are limited to 100 MiB.
+errorArchiveUnsupported: This server does not support Archive. It needs Vaultwarden 1.36 or later.
+errorPremiumRequired: Archive needs a premium membership.
+errorAccountIDUnknown: Could not confirm your account ID with the server. Sync and try again.
+errorArchiveNotConfirmed: The server did not confirm the change. GoVault synced to show where the item is now.
+errorCipherInTrash: Items in Trash cannot be archived. Restore the item first.
+errorLocked: The vault is locked. Unlock it and try again.
+errorLoggedOut: You are not signed in.
+errorCipherNotFound: This item is no longer in your vault.
+errorFolderNotFound: This folder is no longer in your vault.
+errorReadOnly: This item is read-only.
+errorOrganizationKey: GoVault cannot read this organization’s items. Sync and try again.
+errorAttachmentNotFound: This attachment is no longer in the item.
+errorHiddenByOrganization: Your organization hides this item’s secrets.
+errorUnsupportedUpload: The server asked for an attachment upload GoVault does not support.
+errorServerMismatch: The saved sign-in belongs to a different server than this vault copy. Sign in again.
+errorSignInRequired: Sign in again to sync. Your vault is available offline until then.
+errorDifferentAccount: This signs in to a different account than the vault on this device. To use a different account, log out first.
+errorAccountChanged: The account changed since this was confirmed. Try again.
+errorSnapshotNotUpdated: The server has the change, but the copy on this device could not be updated. Sync to refresh it.
+errorSealedField: This item holds encrypted data GoVault cannot copy to a new key.
+errorUnsupportedCipher: This item is in a format GoVault cannot read yet.
+errorChangedSinceReview: The item changed after you reviewed the import. Review it again.
+errorRepromptRequired: Updating this protected item needs your master password.
+errorUnsupportedType: GoVault cannot save this type of item yet.
+errorAmbiguousUpdate: GoVault cannot tell which existing items the backup items are.
+errorUnreadablePasskey: A passkey could not be decrypted.
+errorWrongBackupPassword: The backup password is incorrect.
+errorBackupTooLarge: The encrypted backup would be too large for GoVault to import back.
+errorServer:
+  message: "The server reported an error ({status}): {detail}"
+  description: status is an HTTP status code; detail is the server's own message, untranslated.
+errorWithDetail:
+  message: "Something went wrong: {detail}"
+  description: A fallback for an error GoVault has no message for; detail is its technical description, untranslated.

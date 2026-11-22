@@ -22,8 +22,10 @@ const (
 	AccountID = "demo-account"
 	Email     = "alex.morgan@northwind.dev"
 	ServerURL = "https://vault.northwind.dev"
-	KDF       = "Argon2id · 64 MiB · 3 iterations · 4 threads"
 )
+
+// KDF is the demo account's key derivation settings.
+var KDF = crypto.KDFConfig{Type: crypto.KDFArgon2id, Iterations: 3, MemoryMB: 64, Parallelism: 4}
 
 type Service struct {
 	mu      sync.RWMutex

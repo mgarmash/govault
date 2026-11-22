@@ -141,7 +141,7 @@ func TestPlanClassifiesAndAppliesOnlyApproved(t *testing.T) {
 			t.Fatalf("entry %d (%s) class = %v, want %v", i, e.Item.Name, e.Class, classes[i])
 		}
 	}
-	if d := strings.Join(p.Entries[1].Diff, ","); d != "Notes,Password" {
+	if d := p.Entries[1].Diff; !slices.Equal(d, []DiffField{FieldNotes, FieldPassword}) {
 		t.Fatalf("conflict diff = %q", d)
 	}
 	if c := p.Counts(); c.Create != 1 || c.Update != 0 || c.Skip != 3 {
@@ -230,7 +230,7 @@ func TestImportUpdateKeepsPasskeyAndUnknownFields(t *testing.T) {
 	other := FromCipher(login("c-gh", "GitHub", "alice", "new"))
 	other.Login.Fido2Credentials = []Fido2{{CredentialID: "cred-other", RpID: "github.com", KeyValue: "k"}}
 	e := BuildPlan(&Vault{Items: []Item{other}}, []*state.Cipher{sealedLogin("c-gh")}, nil).Entries[0]
-	if !strings.Contains(strings.Join(e.Diff, ","), "Passkey") {
+	if !slices.Contains(e.Diff, FieldPasskey) {
 		t.Fatalf("diff = %v, want Passkey", e.Diff)
 	}
 	w = &fakeWriter{ciphers: map[string]*state.Cipher{"c-gh": sealedLogin("c-gh")}}
@@ -373,7 +373,7 @@ func TestImportUpdateMatchesDuplicatesExactly(t *testing.T) {
 		it := FromCipher(cur)
 		it.Fields = backup
 		e := BuildPlan(&Vault{Items: []Item{it}}, []*state.Cipher{cur}, nil).Entries[0]
-		if e.CanUpdate || e.UpdateBlocked == "" || !slices.Equal(e.Allowed(), []Action{ActionSkip, ActionCreate}) {
+		if e.CanUpdate || e.UpdateBlocked == UpdateAllowed || !slices.Equal(e.Allowed(), []Action{ActionSkip, ActionCreate}) {
 			t.Fatalf("%s: entry = %+v, want Update refused with a reason", name, e)
 		}
 		w := &fakeWriter{ciphers: map[string]*state.Cipher{"c-gh": cur}}
@@ -576,13 +576,13 @@ func TestDiffSeesMatchModeAndLinkedField(t *testing.T) {
 	cur := login("c-gh", "GitHub", "alice", "pw")
 	it := FromCipher(cur)
 	it.Login.URIs[0].Match = &three
-	if e := BuildPlan(&Vault{Items: []Item{it}}, []*state.Cipher{cur}, nil).Entries[0]; e.Class != ClassConflict || !slices.Contains(e.Diff, "Websites") {
+	if e := BuildPlan(&Vault{Items: []Item{it}}, []*state.Cipher{cur}, nil).Entries[0]; e.Class != ClassConflict || !slices.Contains(e.Diff, FieldWebsites) {
 		t.Fatalf("a changed match mode = %v %v", e.Class, e.Diff)
 	}
 	cur.Fields = []state.CustomField{{Name: "L", Type: 3, LinkedID: &one}}
 	it = FromCipher(cur)
 	it.Fields[0].LinkedID = &two
-	if e := BuildPlan(&Vault{Items: []Item{it}}, []*state.Cipher{cur}, nil).Entries[0]; !slices.Contains(e.Diff, "Custom Fields") {
+	if e := BuildPlan(&Vault{Items: []Item{it}}, []*state.Cipher{cur}, nil).Entries[0]; !slices.Contains(e.Diff, FieldCustomFields) {
 		t.Fatalf("a changed linked field = %v", e.Diff)
 	}
 }

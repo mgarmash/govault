@@ -37,7 +37,7 @@ type Entry struct {
 	// and identical items.
 	Match *state.Cipher
 	// Diff names the fields that differ, never their values.
-	Diff []string
+	Diff []DiffField
 	// MatchRevision is the revision of Match the user reviewed. Update
 	// refuses to write over an item that changed since.
 	MatchRevision *time.Time
@@ -50,11 +50,44 @@ type Entry struct {
 	CanUpdate   bool
 	// UpdateBlocked says why Update is not offered for a backup item that
 	// cannot safely update its match, if that is the reason.
-	UpdateBlocked string
+	UpdateBlocked UpdateBlock
 	Action        Action
 
 	repromptOK *approval
 }
+
+// DiffField names a part of an item that a backup item and its match can
+// differ in. The UI words it.
+type DiffField string
+
+const (
+	FieldName         DiffField = "name"
+	FieldNotes        DiffField = "notes"
+	FieldFolder       DiffField = "folder"
+	FieldFavorite     DiffField = "favorite"
+	FieldReprompt     DiffField = "reprompt"
+	FieldUsername     DiffField = "username"
+	FieldPassword     DiffField = "password"
+	FieldTOTP         DiffField = "totp"
+	FieldWebsites     DiffField = "websites"
+	FieldPasskey      DiffField = "passkey"
+	FieldCard         DiffField = "card"
+	FieldIdentity     DiffField = "identity"
+	FieldSSHKey       DiffField = "sshKey"
+	FieldCustomFields DiffField = "customFields"
+)
+
+// UpdateBlock is why a backup item cannot safely update its match.
+type UpdateBlock int
+
+const (
+	UpdateAllowed UpdateBlock = iota
+	// UpdateBlockedIncomplete: the backup item lacks fields its match has.
+	UpdateBlockedIncomplete
+	// UpdateBlockedUnmatchable: its fields or websites cannot be paired
+	// with the match's safely.
+	UpdateBlockedUnmatchable
+)
 
 // approval is a master-password verification for updating one protected
 // item at one revision.
@@ -256,9 +289,9 @@ func BuildPlan(backup *Vault, current []*state.Cipher, folders []state.Folder) *
 			switch probe := *match; {
 			case !e.CanUpdate:
 			case !it.complete():
-				e.CanUpdate, e.UpdateBlocked = false, "the backup item is incomplete"
+				e.CanUpdate, e.UpdateBlocked = false, UpdateBlockedIncomplete
 			case mergeContent(&probe, it) != nil:
-				e.CanUpdate, e.UpdateBlocked = false, "its fields or websites cannot be matched safely"
+				e.CanUpdate, e.UpdateBlocked = false, UpdateBlockedUnmatchable
 			}
 			e.Class, e.Action = ClassIdentical, ActionSkip
 			if len(e.Diff) > 0 {
@@ -270,19 +303,19 @@ func BuildPlan(backup *Vault, current []*state.Cipher, folders []state.Folder) *
 	return p
 }
 
-func diff(it Item, folderName string, c *state.Cipher, currentFolder string) []string {
+func diff(it Item, folderName string, c *state.Cipher, currentFolder string) []DiffField {
 	want := it.content()
-	var out []string
-	add := func(label string, differ bool) {
+	var out []DiffField
+	add := func(f DiffField, differ bool) {
 		if differ {
-			out = append(out, label)
+			out = append(out, f)
 		}
 	}
-	add("Name", want.Name != c.Name)
-	add("Notes", want.Notes != c.Notes)
-	add("Folder", !strings.EqualFold(folderName, currentFolder))
-	add("Favorite", want.Favorite != c.Favorite)
-	add("Reprompt", want.Reprompt != c.Reprompt)
+	add(FieldName, want.Name != c.Name)
+	add(FieldNotes, want.Notes != c.Notes)
+	add(FieldFolder, !strings.EqualFold(folderName, currentFolder))
+	add(FieldFavorite, want.Favorite != c.Favorite)
+	add(FieldReprompt, want.Reprompt != c.Reprompt)
 	if want.Login != nil || c.Login != nil {
 		a, b := want.Login, c.Login
 		if a == nil {
@@ -291,20 +324,20 @@ func diff(it Item, folderName string, c *state.Cipher, currentFolder string) []s
 		if b == nil {
 			b = &state.Login{}
 		}
-		add("Username", a.Username != b.Username)
-		add("Password", a.Password != b.Password)
-		add("Verification Code", a.TOTP != b.TOTP)
-		add("Websites", !slices.EqualFunc(a.URIs, b.URIs, func(x, y state.LoginURI) bool {
+		add(FieldUsername, a.Username != b.Username)
+		add(FieldPassword, a.Password != b.Password)
+		add(FieldTOTP, a.TOTP != b.TOTP)
+		add(FieldWebsites, !slices.EqualFunc(a.URIs, b.URIs, func(x, y state.LoginURI) bool {
 			return x.URI == y.URI && sameMatch(x.Match, y.Match)
 		}))
 	}
 	if want.Login != nil && c.Login != nil && len(want.Login.Fido2Credentials) > 0 {
-		add("Passkey", !samePasskeys(want.Login.Fido2Credentials, c.Login.Fido2Credentials))
+		add(FieldPasskey, !samePasskeys(want.Login.Fido2Credentials, c.Login.Fido2Credentials))
 	}
-	add("Card", ptrDiff(cardContentOf(want.Card), cardContentOf(c.Card)))
-	add("Identity", ptrDiff(identityContentOf(want.Identity), identityContentOf(c.Identity)))
-	add("SSH Key", ptrDiff(sshKeyContentOf(want.SSHKey), sshKeyContentOf(c.SSHKey)))
-	add("Custom Fields", !slices.EqualFunc(want.Fields, c.Fields, func(x, y state.CustomField) bool {
+	add(FieldCard, ptrDiff(cardContentOf(want.Card), cardContentOf(c.Card)))
+	add(FieldIdentity, ptrDiff(identityContentOf(want.Identity), identityContentOf(c.Identity)))
+	add(FieldSSHKey, ptrDiff(sshKeyContentOf(want.SSHKey), sshKeyContentOf(c.SSHKey)))
+	add(FieldCustomFields, !slices.EqualFunc(want.Fields, c.Fields, func(x, y state.CustomField) bool {
 		return x.Name == y.Name && x.Value == y.Value && x.Type == y.Type && sameMatch(x.LinkedID, y.LinkedID)
 	}))
 	return out

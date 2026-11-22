@@ -6,8 +6,10 @@ import (
 
 	"github.com/nsgo-dev/nsgo/core"
 	"github.com/nsgo-dev/nsgo/desktop"
+	"github.com/nsgo-dev/nsgo/i18n"
 	"github.com/nsgo-dev/nsgo/nsgotest"
 	"github.com/txchen/govault/cmd/govault/demo"
+	"github.com/txchen/govault/cmd/govault/locales"
 	govaultui "github.com/txchen/govault/cmd/govault/ui"
 	"github.com/txchen/govault/internal/vaultcore/state"
 )
@@ -24,7 +26,7 @@ func roles(items []desktop.MenuItem) map[desktop.MenuRole]bool {
 }
 
 func TestApplicationMenuKeepsStandardRoles(t *testing.T) {
-	mac := roles(applicationMenu("darwin", func() {}))
+	mac := roles(applicationMenu(locales.In("en"), "darwin", func() {}))
 	for _, r := range []desktop.MenuRole{
 		desktop.MenuAbout, desktop.MenuHide, desktop.MenuHideOthers, desktop.MenuShowAll, desktop.MenuQuit,
 		desktop.MenuUndo, desktop.MenuRedo, desktop.MenuCut, desktop.MenuCopy, desktop.MenuPaste, desktop.MenuSelectAll,
@@ -35,7 +37,7 @@ func TestApplicationMenuKeepsStandardRoles(t *testing.T) {
 		}
 	}
 	for _, goos := range []string{"linux", "windows"} {
-		menu := applicationMenu(goos, func() {})
+		menu := applicationMenu(locales.In("en"), goos, func() {})
 		if len(menu) != 1 || roles(menu)[desktop.MenuCopy] {
 			t.Fatalf("%s menu = %+v, want only the app items", goos, menu)
 		}
@@ -47,7 +49,7 @@ func TestCheckForUpdatesWhileLoggedOutAndShortcutsKept(t *testing.T) {
 		checks, copies, closings := 0, 0, 0
 		var model *govaultui.AppModel
 		app := nsgotest.StartApp(t, func(cx *core.Scope) {
-			desktop.SetApplicationMenu(cx, applicationMenu("darwin", func() { checks++ }))
+			installApplicationMenu(cx, "darwin", func() { checks++ })
 			cx.SetMainView(func(cx *core.Scope) core.Node {
 				model = govaultui.NewAppModel(cx, demo.NewService(status), govaultui.PlatformHooks{
 					PrefsKey:   "govault.menu-test",
@@ -60,7 +62,7 @@ func TestCheckForUpdatesWhileLoggedOutAndShortcutsKept(t *testing.T) {
 			})
 		}, nsgotest.Environment(core.Environment{OS: core.OSMacOS, Idiom: core.IdiomDesktop}), nsgotest.Size(1100, 720))
 
-		app.ChooseMenu("GoVault", checkForUpdatesLabel)
+		app.ChooseMenu("GoVault", locales.In("en").CheckForUpdatesMenu())
 		if checks != 1 {
 			t.Fatalf("status %v: Check for Updates ran %d times", status, checks)
 		}
@@ -77,5 +79,41 @@ func TestCheckForUpdatesWhileLoggedOutAndShortcutsKept(t *testing.T) {
 		if closings != 1 {
 			t.Fatalf("mod+w ran %d close handlers", closings)
 		}
+	}
+}
+
+func TestMenusFollowTheLanguage(t *testing.T) {
+	checks := 0
+	var shell *DesktopShell
+	app := nsgotest.StartApp(t, func(cx *core.Scope) {
+		installApplicationMenu(cx, "darwin", func() { checks++ })
+		cx.SetMainView(func(cx *core.Scope) core.Node {
+			model := govaultui.NewAppModel(cx, demo.NewService(state.StatusUnlocked), govaultui.PlatformHooks{PrefsKey: "govault.menu-language-test"})
+			shell = &DesktopShell{scope: cx, model: model}
+			return govaultui.MainWindowView(cx, model)
+		})
+	}, nsgotest.Environment(core.Environment{OS: core.OSMacOS, Idiom: core.IdiomDesktop, Locale: "en-US"}), nsgotest.Size(1100, 720))
+
+	trayLabels := func() []string {
+		var labels []string
+		for _, it := range shell.trayMenu() {
+			labels = append(labels, it.Label)
+		}
+		return labels
+	}
+	english, pseudo := locales.In("en"), locales.In(i18n.PseudoAccents)
+	app.ChooseMenu("GoVault", english.CheckForUpdatesMenu())
+	if got := trayLabels(); got[0] != english.OpenGoVault() {
+		t.Fatalf("tray menu = %q", got)
+	}
+
+	app.Post(func() { shell.model.SetLanguage(i18n.PseudoAccents) })
+	app.Settle()
+	app.ChooseMenu("GoVault", pseudo.CheckForUpdatesMenu())
+	if checks != 2 {
+		t.Fatalf("Check for Updates ran %d times, want once in each language", checks)
+	}
+	if got := trayLabels(); got[0] != pseudo.OpenGoVault() || got[len(got)-1] != pseudo.QuitGoVault() {
+		t.Fatalf("tray menu = %q, want it in the pseudo locale", got)
 	}
 }

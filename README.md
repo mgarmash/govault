@@ -141,6 +141,7 @@ GoVault does not replace everything the official app does. It has no Intel Mac b
 - Search from the toolbar (⌘F), scoped to the selected category or folder with one click to search everything.
 - Back and Forward through views and items, including the mouse side buttons on macOS.
 - Optional menu bar icon, launch at login, keyboard shortcuts throughout.
+- Follows your system language, or the one you pick in Settings. Translations are welcome: see [docs/i18n.md](docs/i18n.md).
 - Signed automatic updates.
 
 ## Security

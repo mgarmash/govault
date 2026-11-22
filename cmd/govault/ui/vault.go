@@ -3,13 +3,13 @@ package ui
 import (
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/nsgo-dev/nsgo/base"
 	"github.com/nsgo-dev/nsgo/core"
 	"github.com/nsgo-dev/nsgo/desktop"
 	"github.com/nsgo-dev/nsgo/icons/lucide"
 	"github.com/nsgo-dev/nsgo/ui"
+	"github.com/txchen/govault/cmd/govault/locales"
 	"github.com/txchen/govault/internal/vaultcore/api"
 	"github.com/txchen/govault/internal/vaultcore/state"
 )
@@ -30,7 +30,7 @@ func UnlockedShellView(cx *core.Scope, m *AppModel) core.Node {
 		},
 		Children: []core.Node{
 			sidebarView(cx, m),
-			paneHandle("sidebar-resize", m.SidebarW, func(w float32) (float32, float32) {
+			paneHandle(cx, "sidebar-resize", m.SidebarW, func(w float32) (float32, float32) {
 				sw, _ := ClampPaneWidths(w, m.ListW.Get(), shellW.Get())
 				return sw, DefaultSidebarWidth
 			}, m.PersistPaneWidths),
@@ -51,16 +51,16 @@ func UnlockedShellView(cx *core.Scope, m *AppModel) core.Node {
 										ContentFunc: func() string {
 											switch {
 											case m.LocalOnly.Get():
-												return "Sign in again to sync. Your vault is available offline until then."
+												return locales.SignInAgainToSync(cx)
 											case m.SyncState.Get() == SyncAuthExpired:
-												return "Session expired — your cached vault is still readable. Sign in again to resume syncing."
+												return locales.SessionExpiredBanner(cx)
 											}
-											return "Your sign-in could not be saved. Sign in again so GoVault can still sync after you lock."
+											return locales.SignInNotSaved(cx)
 										},
 									},
 									ui.Button{
 										TestID:  "signin-banner-action",
-										Text:    "Sign In Again",
+										Text:    locales.SignInAgain(cx),
 										Variant: ui.ButtonSecondary,
 										Size:    ui.SizeSmall,
 										OnPress: m.SignInAgain,
@@ -90,37 +90,45 @@ func UnlockedShellView(cx *core.Scope, m *AppModel) core.Node {
 }
 
 func (m *AppModel) filterTitle() string {
+	cx := m.Scope
 	switch m.Route.Get() {
 	case RouteGenerator:
-		return "Generator"
+		return locales.Generator(cx)
 	case RouteSettings:
-		return "Settings"
+		return locales.Settings(cx)
 	case RouteHealth:
-		return "Vault Health"
+		return locales.VaultHealth(cx)
 	case RouteImport:
-		return "Import"
+		return locales.ImportTitle(cx)
 	}
 	if m.SearchIsGlobal() {
-		return "All Items"
+		return locales.AllItems(cx)
 	}
 	return m.sectionTitle()
 }
 
+// typePluralLabel names the sidebar category of an item type.
+func typePluralLabel(cx *core.Scope, t api.CipherType) string {
+	switch t {
+	case api.CipherTypeLogin:
+		return locales.TypeLogins(cx)
+	case api.CipherTypeCard:
+		return locales.TypeCards(cx)
+	case api.CipherTypeIdentity:
+		return locales.TypeIdentities(cx)
+	case api.CipherTypeSecureNote:
+		return locales.TypeSecureNotes(cx)
+	case api.CipherTypeSSHKey:
+		return locales.TypeSSHKeys(cx)
+	}
+	return locales.AllItems(cx)
+}
+
 func (m *AppModel) sectionTitle() string {
+	cx := m.Scope
 	f := m.SidebarFilter.Get()
 	if f.Type != nil {
-		switch *f.Type {
-		case api.CipherTypeLogin:
-			return "Logins"
-		case api.CipherTypeCard:
-			return "Cards"
-		case api.CipherTypeIdentity:
-			return "Identities"
-		case api.CipherTypeSecureNote:
-			return "Secure Notes"
-		case api.CipherTypeSSHKey:
-			return "SSH Keys"
-		}
+		return typePluralLabel(cx, *f.Type)
 	}
 	if f.CollectionID != "" {
 		for _, col := range m.Collections.Get() {
@@ -128,7 +136,7 @@ func (m *AppModel) sectionTitle() string {
 				return col.Name
 			}
 		}
-		return "Collection"
+		return locales.Collection(cx)
 	}
 	if f.FolderID != "" {
 		for _, folder := range m.Folders.Get() {
@@ -136,19 +144,19 @@ func (m *AppModel) sectionTitle() string {
 				return folder.Name
 			}
 		}
-		return "Folder"
+		return locales.Folder(cx)
 	}
 	switch f.Category {
 	case state.FilterFavorites:
-		return "Favorites"
+		return locales.Favorites(cx)
 	case state.FilterTrash:
-		return "Trash"
+		return locales.Trash(cx)
 	case state.FilterArchive:
-		return "Archive"
+		return locales.Archive(cx)
 	case state.FilterNoFolder:
-		return "No Folder"
+		return locales.NoFolder(cx)
 	}
-	return "All Items"
+	return locales.AllItems(cx)
 }
 
 func topToolbar(cx *core.Scope, m *AppModel) core.Node {
@@ -186,8 +194,8 @@ func topToolbar(cx *core.Scope, m *AppModel) core.Node {
 			core.View{
 				Class: "flex-row items-center gap-0.5",
 				Children: []core.Node{
-					navButton("toolbar-back", "Back", lucide.ChevronLeft, m.CanGoBack.Get, func() { m.GoBack(cx) }),
-					navButton("toolbar-forward", "Forward", lucide.ChevronRight, m.CanGoForward.Get, func() { m.GoForward(cx) }),
+					navButton("toolbar-back", locales.Back(cx), lucide.ChevronLeft, m.CanGoBack.Get, func() { m.GoBack(cx) }),
+					navButton("toolbar-forward", locales.Forward(cx), lucide.ChevronRight, m.CanGoForward.Get, func() { m.GoForward(cx) }),
 				},
 			},
 			core.View{
@@ -205,11 +213,7 @@ func topToolbar(cx *core.Scope, m *AppModel) core.Node {
 							if m.Route.Get() != RouteVault {
 								return ""
 							}
-							n := m.FilteredItems.Len()
-							if n == 1 {
-								return "1 item"
-							}
-							return fmt.Sprintf("%d items", n)
+							return locales.ItemCount(cx, m.FilteredItems.Len())
 						},
 					},
 				},
@@ -221,7 +225,7 @@ func topToolbar(cx *core.Scope, m *AppModel) core.Node {
 					searchField(cx, base.Input{
 						TestID:        "vault-search",
 						Ref:           &m.SearchRef,
-						Placeholder:   "Search vault",
+						Placeholder:   locales.SearchVault(cx),
 						NoAutoCorrect: true,
 						Role:          core.RoleSearchField,
 						Value:         m.SearchQuery.Get,
@@ -239,19 +243,19 @@ func topToolbar(cx *core.Scope, m *AppModel) core.Node {
 								Class: "flex-row items-center gap-1.5 h-[22px] px-2 mr-1 rounded-full bg-gv-warn-soft",
 								Children: []core.Node{
 									icon(lucide.CloudOff(), 12, "text-gv-warn"),
-									core.Text{Class: "text-[11.5px] font-medium text-gv-warn", Content: "Offline"},
+									core.Text{Class: "text-[11.5px] font-medium text-gv-warn", Content: locales.Offline(cx)},
 								},
 							}
 						},
 					},
-					toolIcon("toolbar-sync", "Sync now", lucide.RefreshCw,
+					toolIcon("toolbar-sync", locales.SyncNowLabel(cx), lucide.RefreshCw,
 						func() bool { return m.SyncState.Get() == SyncInProgress },
 						func() { m.SyncNow(false) }),
-					toolIcon("toolbar-lock", "Lock vault", lucide.Lock, nil, m.Lock),
+					toolIcon("toolbar-lock", locales.LockVault(cx), lucide.Lock, nil, m.Lock),
 					core.View{Class: "w-px h-[18px] mx-1.5 bg-gv-line"},
 					ui.Button{
 						TestID:   "toolbar-new-item",
-						Text:     "New Item",
+						Text:     locales.NewItem(cx),
 						Icon:     lucide.Plus,
 						Variant:  ui.ButtonPrimary,
 						Disabled: func() bool { return m.SyncState.Get() == SyncOffline },
@@ -308,13 +312,13 @@ func sidebarView(cx *core.Scope, m *AppModel) core.Node {
 				Class: "px-2.5 pb-1.5 gap-px",
 				Children: []core.Node{
 					sidebarRow(sidebarEntry{
-						testID: "sidebar-all", label: "All Items", glyph: lucide.LayoutGrid, tint: 0x2f6fe4,
+						testID: "sidebar-all", label: locales.AllItems(cx), glyph: lucide.LayoutGrid, tint: 0x2f6fe4,
 						count:  func() int { return m.AllCounts.Get().All },
 						active: vaultActive(IsAllItemsFilter),
 						press:  func() { m.SetSidebarFilter(state.SearchFilter{Category: state.FilterAll}) },
 					}),
 					sidebarRow(sidebarEntry{
-						testID: "sidebar-favorites", label: "Favorites", glyph: lucide.Star, tint: 0xf0a20b,
+						testID: "sidebar-favorites", label: locales.Favorites(cx), glyph: lucide.Star, tint: 0xf0a20b,
 						count:  func() int { return m.AllCounts.Get().Favorites },
 						active: vaultActive(func(f state.SearchFilter) bool { return f.Category == state.FilterFavorites }),
 						press:  func() { m.SetSidebarFilter(state.SearchFilter{Category: state.FilterFavorites}) },
@@ -324,16 +328,16 @@ func sidebarView(cx *core.Scope, m *AppModel) core.Node {
 			core.Scroll{
 				Class: "flex-1 px-2.5 pb-3",
 				Children: []core.Node{
-					sidebarHeader("Categories", nil),
-					sidebarRow(typeEntry("sidebar-type-login", "Logins", api.CipherTypeLogin, lucide.Globe, 0x0a84ff, func(c VaultCounts) int { return c.Login })),
-					sidebarRow(typeEntry("sidebar-type-card", "Cards", api.CipherTypeCard, lucide.CreditCard, 0x2fb35a, func(c VaultCounts) int { return c.Card })),
-					sidebarRow(typeEntry("sidebar-type-identity", "Identities", api.CipherTypeIdentity, lucide.IdCard, 0xa25ddc, func(c VaultCounts) int { return c.Identity })),
-					sidebarRow(typeEntry("sidebar-type-note", "Secure Notes", api.CipherTypeSecureNote, lucide.StickyNote, 0xf08a0a, func(c VaultCounts) int { return c.SecureNote })),
-					sidebarRow(typeEntry("sidebar-type-ssh", "SSH Keys", api.CipherTypeSSHKey, lucide.KeyRound, 0x6b7a90, func(c VaultCounts) int { return c.SSHKey })),
+					sidebarHeader(locales.Categories(cx), nil),
+					sidebarRow(typeEntry("sidebar-type-login", typePluralLabel(cx, api.CipherTypeLogin), api.CipherTypeLogin, lucide.Globe, 0x0a84ff, func(c VaultCounts) int { return c.Login })),
+					sidebarRow(typeEntry("sidebar-type-card", typePluralLabel(cx, api.CipherTypeCard), api.CipherTypeCard, lucide.CreditCard, 0x2fb35a, func(c VaultCounts) int { return c.Card })),
+					sidebarRow(typeEntry("sidebar-type-identity", typePluralLabel(cx, api.CipherTypeIdentity), api.CipherTypeIdentity, lucide.IdCard, 0xa25ddc, func(c VaultCounts) int { return c.Identity })),
+					sidebarRow(typeEntry("sidebar-type-note", typePluralLabel(cx, api.CipherTypeSecureNote), api.CipherTypeSecureNote, lucide.StickyNote, 0xf08a0a, func(c VaultCounts) int { return c.SecureNote })),
+					sidebarRow(typeEntry("sidebar-type-ssh", typePluralLabel(cx, api.CipherTypeSSHKey), api.CipherTypeSSHKey, lucide.KeyRound, 0x6b7a90, func(c VaultCounts) int { return c.SSHKey })),
 					foldersHeader(m, ui.Button{
 						TestID:   "sidebar-add-folder",
 						Icon:     lucide.Plus,
-						Label:    "New Folder",
+						Label:    locales.NewFolder(cx),
 						Variant:  ui.ButtonGhost,
 						Side:     20,
 						IconSize: 13,
@@ -351,7 +355,7 @@ func sidebarView(cx *core.Scope, m *AppModel) core.Node {
 						When: func() bool { return len(m.Collections.Get()) > 0 },
 						Then: func(cx *core.Scope) core.Node {
 							return core.View{Children: []core.Node{
-								collapsibleHeader("sidebar-collections-toggle", "Collections",
+								collapsibleHeader("sidebar-collections-toggle", locales.Collections(cx),
 									func() bool { return m.Prefs.Get().CollectionsCollapsed },
 									func() {
 										m.UpdatePrefs(func(p UserPrefs) UserPrefs {
@@ -367,33 +371,33 @@ func sidebarView(cx *core.Scope, m *AppModel) core.Node {
 							}}
 						},
 					},
-					sidebarHeader("Tools", nil),
+					sidebarHeader(locales.Tools(cx), nil),
 					sidebarRow(sidebarEntry{
-						testID: "sidebar-generator", label: "Generator", glyph: lucide.WandSparkles, tint: 0x14a3b8,
+						testID: "sidebar-generator", label: locales.Generator(cx), glyph: lucide.WandSparkles, tint: 0x14a3b8,
 						active: func() bool { return m.Route.Get() == RouteGenerator },
 						press:  route(RouteGenerator),
 					}),
 					sidebarRow(sidebarEntry{
-						testID: "sidebar-health", label: "Vault Health", glyph: lucide.HeartPulse, tint: 0xe5484d,
+						testID: "sidebar-health", label: locales.VaultHealth(cx), glyph: lucide.HeartPulse, tint: 0xe5484d,
 						count:  func() int { return m.Health.Get().TotalIssues() },
 						badge:  true,
 						active: func() bool { return m.Route.Get() == RouteHealth },
 						press:  route(RouteHealth),
 					}),
 					sidebarRow(sidebarEntry{
-						testID: "sidebar-archive", label: "Archive", glyph: lucide.Archive, tint: 0x8e8e93,
+						testID: "sidebar-archive", label: locales.Archive(cx), glyph: lucide.Archive, tint: 0x8e8e93,
 						count:  func() int { return m.AllCounts.Get().Archive },
 						active: vaultActive(func(f state.SearchFilter) bool { return f.Category == state.FilterArchive }),
 						press:  func() { m.SetSidebarFilter(state.SearchFilter{Category: state.FilterArchive}) },
 					}),
 					sidebarRow(sidebarEntry{
-						testID: "sidebar-trash", label: "Trash", glyph: lucide.Trash, tint: 0x8e8e93,
+						testID: "sidebar-trash", label: locales.Trash(cx), glyph: lucide.Trash, tint: 0x8e8e93,
 						count:  func() int { return m.AllCounts.Get().Trash },
 						active: vaultActive(func(f state.SearchFilter) bool { return f.Category == state.FilterTrash }),
 						press:  func() { m.SetSidebarFilter(state.SearchFilter{Category: state.FilterTrash}) },
 					}),
 					sidebarRow(sidebarEntry{
-						testID: "sidebar-settings", label: "Settings", glyph: lucide.Settings, tint: 0x7c7c84,
+						testID: "sidebar-settings", label: locales.Settings(cx), glyph: lucide.Settings, tint: 0x7c7c84,
 						active: func() bool { return m.Route.Get() == RouteSettings },
 						press:  route(RouteSettings),
 					}),
@@ -412,7 +416,7 @@ func foldersList(cx *core.Scope, m *AppModel, vaultActive func(func(state.Search
 			rows = append(rows, folderRow(cx, m, f))
 		}
 		rows = append(rows, sidebarRow(sidebarEntry{
-			testID: "sidebar-no-folder", label: "No Folder", glyph: lucide.Folder,
+			testID: "sidebar-no-folder", label: locales.NoFolder(cx), glyph: lucide.Folder,
 			count:  func() int { return m.AllCounts.Get().NoFolder },
 			active: vaultActive(func(f state.SearchFilter) bool { return f.Category == state.FilterNoFolder }),
 			press:  func() { m.SetSidebarFilter(state.SearchFilter{Category: state.FilterNoFolder}) },
@@ -422,7 +426,7 @@ func foldersList(cx *core.Scope, m *AppModel, vaultActive func(func(state.Search
 }
 
 func foldersHeader(m *AppModel, trailing core.Node) core.Node {
-	return collapsibleHeader("sidebar-folders-toggle", "Folders",
+	return collapsibleHeader("sidebar-folders-toggle", locales.Folders(m.Scope),
 		func() bool { return m.Prefs.Get().FoldersCollapsed },
 		func() {
 			m.UpdatePrefs(func(p UserPrefs) UserPrefs {
@@ -576,9 +580,9 @@ func sidebarRow(e sidebarEntry) core.Node {
 func folderMenu(cx *core.Scope, m *AppModel, folder state.Folder, at core.Point) {
 	offline := func() bool { return m.SyncState.Get() == SyncOffline }
 	desktop.PopupMenu(cx, []desktop.MenuItem{
-		{Label: "Rename Folder…", Disabled: offline(), OnSelect: func() { m.OpenRenameFolderModal(folder) }},
+		{Label: locales.RenameFolderMenu(cx), Disabled: offline(), OnSelect: func() { m.OpenRenameFolderModal(folder) }},
 		{Separator: true},
-		{Label: "Delete Folder", Disabled: offline(), OnSelect: func() { m.DeleteFolder(cx, folder) }},
+		{Label: locales.DeleteFolder(cx), Disabled: offline(), OnSelect: func() { m.DeleteFolder(cx, folder) }},
 	}, at, nil)
 }
 
@@ -618,7 +622,7 @@ func folderRow(cx *core.Scope, m *AppModel, folder state.Folder) core.Node {
 				Then: func(cx *core.Scope) core.Node {
 					return core.View{
 						TestID:  "sidebar-folder-menu",
-						Label:   "Folder actions",
+						Label:   locales.FolderActions(cx),
 						Class:   "w-[20px] h-[20px] items-center justify-center rounded-[5px] active:bg-gv-fill-strong",
 						OnPress: func(ev core.PressEvent) { folderMenu(cx, m, folder, ev.PagePosition) },
 						Children: []core.Node{
@@ -671,21 +675,22 @@ func syncFooter(m *AppModel) core.Node {
 								TestID: "sync-status",
 								Class:  "flex-1 text-[11px] text-gv-fg3",
 								ContentFunc: func() string {
+									cx := m.Scope
 									switch m.SyncState.Get() {
 									case SyncInProgress:
-										return "Syncing…"
+										return locales.Syncing(cx)
 									case SyncPending:
-										return "Sync pending"
+										return locales.SyncPending(cx)
 									case SyncOffline:
-										return "Offline · cached vault"
+										return locales.SyncOfflineCached(cx)
 									case SyncAuthExpired:
-										return "Session expired"
+										return locales.SessionExpired(cx)
 									default:
 										ts := m.LastSync.Get()
 										if ts.IsZero() {
-											return "Synced"
+											return locales.Synced(cx)
 										}
-										return "Synced " + formatRelativeTime(ts)
+										return locales.SyncedWhen(cx, formatRelativeTime(cx, ts))
 									}
 								},
 							},
@@ -697,11 +702,11 @@ func syncFooter(m *AppModel) core.Node {
 	}
 }
 
-func paneHandle(testID string, width *core.Signal[float32], clamp func(float32) (float32, float32), persist func()) core.Node {
+func paneHandle(cx *core.Scope, testID string, width *core.Signal[float32], clamp func(float32) (float32, float32), persist func()) core.Node {
 	var start float32
 	return ui.ResizeHandle{
 		TestID:      testID,
-		Label:       "Resize pane",
+		Label:       locales.ResizePane(cx),
 		OnDragStart: func() { start = width.Get() },
 		OnDragMove: func(offset core.Points) {
 			w, _ := clamp(start + float32(offset))
@@ -722,7 +727,7 @@ func vaultSplitPanes(cx *core.Scope, m *AppModel, shellW *core.Signal[float32]) 
 		Class: "flex-1 flex-row overflow-hidden",
 		Children: []core.Node{
 			itemListPane(cx, m),
-			paneHandle("list-resize", m.ListW, func(w float32) (float32, float32) {
+			paneHandle(cx, "list-resize", m.ListW, func(w float32) (float32, float32) {
 				_, lw := ClampPaneWidths(m.SidebarW.Get(), w, shellW.Get())
 				return lw, DefaultListWidth
 			}, m.PersistPaneWidths),
@@ -766,7 +771,7 @@ func searchField(cx *core.Scope, input base.Input, hint string, onClear func()) 
 				return ui.Button{
 					TestID:   input.TestID + "-clear",
 					Icon:     lucide.CircleX,
-					Label:    "Clear search",
+					Label:    locales.ClearSearch(cx),
 					Variant:  ui.ButtonGhost,
 					Side:     20,
 					IconSize: 13,
@@ -803,16 +808,16 @@ func rowMenu(cx *core.Scope, m *AppModel, id string, at core.Point) {
 	var items []desktop.MenuItem
 	if c.Login != nil {
 		items = append(items,
-			desktop.MenuItem{Label: "Copy Username", Disabled: c.Login.Username == "", OnSelect: func() { m.CopyPlainValue("Username", c.Login.Username) }},
-			desktop.MenuItem{Label: "Copy Password", Disabled: c.Login.Password == "" || m.PasswordHidden(c), OnSelect: func() {
-				m.GateReprompt(cx, c, "copy password", func() { m.CopySecretValue("Password", c.Login.Password) })
+			desktop.MenuItem{Label: locales.CopyUsernameMenu(cx), Disabled: c.Login.Username == "", OnSelect: func() { m.CopyPlainValue(locales.UsernameCopied(cx), c.Login.Username) }},
+			desktop.MenuItem{Label: locales.CopyPasswordMenu(cx), Disabled: c.Login.Password == "" || m.PasswordHidden(c), OnSelect: func() {
+				m.GateReprompt(cx, c, RepromptCopyPassword, func() { m.CopySecretValue(locales.PasswordCopied(cx), c.Login.Password) })
 			}},
 		)
 		if strings.TrimSpace(c.Login.TOTP) != "" {
-			items = append(items, desktop.MenuItem{Label: "Copy Verification Code", OnSelect: func() {
-				m.GateReprompt(cx, c, "copy TOTP code", func() {
+			items = append(items, desktop.MenuItem{Label: locales.CopyVerificationCodeMenu(cx), OnSelect: func() {
+				m.GateReprompt(cx, c, RepromptCopyTOTP, func() {
 					if code := m.TOTPCode.Get(); code != "" {
-						m.CopySecretValue("TOTP code", code)
+						m.CopySecretValue(locales.VerificationCodeCopied(cx), code)
 					}
 				})
 			}})
@@ -821,33 +826,33 @@ func rowMenu(cx *core.Scope, m *AppModel, id string, at core.Point) {
 	}
 	if c.SSHKey != nil {
 		items = append(items,
-			desktop.MenuItem{Label: "Copy Public Key", Disabled: c.SSHKey.PublicKey == "", OnSelect: func() { m.CopyPlainValue("Public key", c.SSHKey.PublicKey) }},
+			desktop.MenuItem{Label: locales.CopyPublicKeyMenu(cx), Disabled: c.SSHKey.PublicKey == "", OnSelect: func() { m.CopyPlainValue(locales.PublicKeyCopied(cx), c.SSHKey.PublicKey) }},
 			desktop.MenuItem{Separator: true},
 		)
 	}
 	if c.DeletedDate != nil {
 		items = append(items,
-			desktop.MenuItem{Label: "Restore", Disabled: offline || m.CipherReadOnly(c), OnSelect: m.RestoreActive},
-			desktop.MenuItem{Label: "Delete Permanently…", Disabled: offline || m.CipherReadOnly(c), OnSelect: func() { m.HardDeleteActive(cx) }},
+			desktop.MenuItem{Label: locales.Restore(cx), Disabled: offline || m.CipherReadOnly(c), OnSelect: m.RestoreActive},
+			desktop.MenuItem{Label: locales.DeletePermanentlyMenu(cx), Disabled: offline || m.CipherReadOnly(c), OnSelect: func() { m.HardDeleteActive(cx) }},
 		)
 	} else {
-		fav := "Add to Favorites"
+		fav := locales.AddToFavorites(cx)
 		if c.Favorite {
-			fav = "Remove from Favorites"
+			fav = locales.RemoveFromFavorites(cx)
 		}
 		readOnly := m.CipherReadOnly(c)
 		items = append(items,
-			desktop.MenuItem{Label: "Edit", Disabled: offline || readOnly || m.PasswordHidden(c), OnSelect: func() { m.StartEditCipher(cx) }},
-			desktop.MenuItem{Label: "Clone", Disabled: !m.CanClone(c), OnSelect: func() { m.CloneActive(cx) }},
+			desktop.MenuItem{Label: locales.Edit(cx), Disabled: offline || readOnly || m.PasswordHidden(c), OnSelect: func() { m.StartEditCipher(cx) }},
+			desktop.MenuItem{Label: locales.Clone(cx), Disabled: !m.CanClone(c), OnSelect: func() { m.CloneActive(cx) }},
 			desktop.MenuItem{Label: fav, Disabled: offline || readOnly || !m.CanFavorite(c), OnSelect: m.ToggleFavorite},
 			desktop.MenuItem{Separator: true},
 		)
 		if c.ArchivedDate != nil {
-			items = append(items, desktop.MenuItem{Label: "Unarchive", Disabled: !m.CanUnarchiveItem(c), OnSelect: func() { m.ArchiveActive(cx, false) }})
+			items = append(items, desktop.MenuItem{Label: locales.UnarchiveAction(cx), Disabled: !m.CanUnarchiveItem(c), OnSelect: func() { m.ArchiveActive(cx, false) }})
 		} else {
-			items = append(items, desktop.MenuItem{Label: "Archive", Disabled: !m.CanArchiveItem(c), OnSelect: func() { m.ArchiveActive(cx, true) }})
+			items = append(items, desktop.MenuItem{Label: locales.ArchiveAction(cx), Disabled: !m.CanArchiveItem(c), OnSelect: func() { m.ArchiveActive(cx, true) }})
 		}
-		items = append(items, desktop.MenuItem{Label: "Move to Trash", Disabled: offline || readOnly, OnSelect: m.SoftDeleteActive})
+		items = append(items, desktop.MenuItem{Label: locales.MoveToTrash(cx), Disabled: offline || readOnly, OnSelect: m.SoftDeleteActive})
 	}
 	desktop.PopupMenu(cx, items, at, nil)
 }
@@ -958,7 +963,7 @@ func itemListPane(cx *core.Scope, m *AppModel) core.Node {
 													if it.Subtitle != "" {
 														return it.Subtitle
 													}
-													return CipherTypeLabel(it.Type)
+													return CipherTypeLabel(cx, it.Type)
 												},
 											},
 										},
@@ -990,12 +995,12 @@ func trashBar(cx *core.Scope, m *AppModel) core.Node {
 		},
 		Then: func(cx *core.Scope) core.Node {
 			return core.View{
-				Class: "flex-row items-center gap-2 mx-3 mt-2.5 pl-2.5 pr-1 h-[30px] rounded-[8px] bg-gv-fill",
+				Class: "flex-row items-center gap-2 mx-3 mt-2.5 pl-2.5 pr-1 py-1 min-h-[30px] rounded-[8px] bg-gv-fill",
 				Children: []core.Node{
-					core.Text{Class: "flex-1 text-[12px] text-gv-fg2", Content: "Items in Trash can be restored."},
+					core.Text{Class: "flex-1 text-[12px] text-gv-fg2", Content: locales.TrashCanRestore(cx)},
 					ui.Button{
 						TestID:   "trash-empty",
-						Text:     "Empty Trash",
+						Text:     locales.EmptyTrash(cx),
 						Variant:  ui.ButtonGhost,
 						Size:     ui.SizeSmall,
 						Busy:     m.TrashBusy.Get,
@@ -1016,7 +1021,7 @@ func searchScope(cx *core.Scope, m *AppModel) core.Node {
 		Then: func(cx *core.Scope) core.Node {
 			return core.View{
 				TestID: "search-scope",
-				Class:  "flex-row items-center gap-2 mx-3 mt-2.5 pl-2.5 pr-1 h-[30px] rounded-[8px] bg-gv-fill",
+				Class:  "flex-row items-center gap-2 mx-3 mt-2.5 pl-2.5 pr-1 py-1 min-h-[30px] rounded-[8px] bg-gv-fill",
 				Children: []core.Node{
 					icon(lucide.Search(), 12, "text-gv-fg3"),
 					core.Text{
@@ -1024,16 +1029,16 @@ func searchScope(cx *core.Scope, m *AppModel) core.Node {
 						Class:    "flex-1 text-[12px] text-gv-fg2",
 						ContentFunc: func() string {
 							if m.SearchIsGlobal() {
-								return "In All Items"
+								return locales.SearchInAllItems(cx)
 							}
-							return "In " + m.sectionTitle()
+							return locales.SearchIn(cx, m.sectionTitle())
 						},
 					},
 					core.Dynamic(func(cx *core.Scope) core.Node {
 						if m.SearchIsGlobal() {
 							return ui.Button{
 								TestID:  "search-scope-section",
-								Text:    "Only " + m.sectionTitle(),
+								Text:    locales.SearchOnlyIn(cx, m.sectionTitle()),
 								Variant: ui.ButtonGhost,
 								Size:    ui.SizeSmall,
 								OnPress: func() { m.SetSearchAll(false) },
@@ -1045,7 +1050,7 @@ func searchScope(cx *core.Scope, m *AppModel) core.Node {
 						}
 						return ui.Button{
 							TestID:  "search-scope-all",
-							Text:    "Search All Items",
+							Text:    locales.SearchAllItems(cx),
 							Variant: variant,
 							Size:    ui.SizeSmall,
 							OnPress: func() { m.SetSearchAll(true) },
@@ -1058,6 +1063,7 @@ func searchScope(cx *core.Scope, m *AppModel) core.Node {
 }
 
 func listEmptyState(m *AppModel) core.Node {
+	cx := m.Scope
 	return core.View{
 		Class: "flex-1 items-center justify-center px-8 py-16 gap-2",
 		Children: []core.Node{
@@ -1079,27 +1085,27 @@ func listEmptyState(m *AppModel) core.Node {
 				Class: "text-[13px] font-semibold text-gv-fg",
 				ContentFunc: func() string {
 					if m.SearchQuery.Get() != "" {
-						return "No Results"
+						return locales.NoResults(cx)
 					}
 					if m.SidebarFilter.Get().Category == state.FilterTrash {
-						return "Trash Is Empty"
+						return locales.TrashIsEmpty(cx)
 					}
-					return "No Items"
+					return locales.NoItems(cx)
 				},
 			},
 			core.Text{
 				Class: "text-[12px] text-gv-fg2 text-center",
 				ContentFunc: func() string {
 					if q := m.SearchQuery.Get(); q != "" && m.SearchScoped() && !m.SearchIsGlobal() {
-						return fmt.Sprintf("Nothing in %s matches “%s”.", m.sectionTitle(), q)
+						return locales.NothingInSectionMatches(cx, m.sectionTitle(), q)
 					}
 					if q := m.SearchQuery.Get(); q != "" {
-						return fmt.Sprintf("Nothing matches “%s”.", q)
+						return locales.NothingMatches(cx, q)
 					}
 					if m.SidebarFilter.Get().Category == state.FilterTrash {
-						return "Items you delete appear here."
+						return locales.TrashEmptyHint(cx)
 					}
-					return "Choose New Item to add your first entry."
+					return locales.NoItemsHint(cx)
 				},
 			},
 			core.Show{
@@ -1109,7 +1115,7 @@ func listEmptyState(m *AppModel) core.Node {
 						Class: "pt-2",
 						Children: []core.Node{ui.Button{
 							TestID:  "search-empty-all",
-							Text:    "Search All Items",
+							Text:    locales.SearchAllItems(cx),
 							Icon:    lucide.Search,
 							Variant: ui.ButtonPrimary,
 							OnPress: func() { m.SetSearchAll(true) },
@@ -1130,14 +1136,14 @@ func detailEmptyState(cx *core.Scope) core.Node {
 				Class:    "opacity-90 mb-1",
 				Children: []core.Node{brandEmblem(56)},
 			},
-			core.Text{Class: "text-[15px] font-semibold text-gv-fg", Content: "No Item Selected"},
-			core.Text{Class: "text-[12.5px] text-gv-fg2", Content: "Choose an item from the list to see its details."},
+			core.Text{Class: "text-[15px] font-semibold text-gv-fg", Content: locales.NoItemSelected(cx)},
+			core.Text{Class: "text-[12.5px] text-gv-fg2", Content: locales.NoItemSelectedHint(cx)},
 			core.View{
 				Class: "flex-row items-center gap-4 mt-2",
 				Children: []core.Node{
-					shortcutHint(cx, "mod+f", "Search"),
-					shortcutHint(cx, "mod+n", "New Item"),
-					shortcutHint(cx, "mod+l", "Lock"),
+					shortcutHint(cx, "mod+f", locales.ShortcutSearch(cx)),
+					shortcutHint(cx, "mod+n", locales.ShortcutNewItem(cx)),
+					shortcutHint(cx, "mod+l", locales.ShortcutLock(cx)),
 				},
 			},
 		},
@@ -1208,11 +1214,13 @@ func fieldRow(label string, o fieldOpts) core.Node {
 
 func staticValue(v string) func() string { return func() string { return v } }
 
-func secretRow(cx *core.Scope, m *AppModel, c *state.Cipher, label, value, testID, action string, mono bool, reveal *core.Signal[bool], copySecret func()) core.Node {
-	return namedSecretRow(cx, m, c, label, strings.ToLower(label), value, testID, action, mono, reveal, copySecret)
+func secretRow(cx *core.Scope, m *AppModel, c *state.Cipher, label, value, testID string, revealAction RepromptAction, mono bool, reveal *core.Signal[bool], copySecret func()) core.Node {
+	return namedSecretRow(cx, m, c, label, label, value, testID, revealAction, mono, reveal, copySecret)
 }
 
-func namedSecretRow(cx *core.Scope, m *AppModel, c *state.Cipher, label, name, value, testID, action string, mono bool, reveal *core.Signal[bool], copySecret func()) core.Node {
+// namedSecretRow is a masked value under label; name is what its reveal
+// and copy buttons say they reveal and copy.
+func namedSecretRow(cx *core.Scope, m *AppModel, c *state.Cipher, label, name, value, testID string, revealAction RepromptAction, mono bool, reveal *core.Signal[bool], copySecret func()) core.Node {
 	if reveal == nil {
 		reveal = core.NewSignal(cx, false)
 	}
@@ -1232,7 +1240,7 @@ func namedSecretRow(cx *core.Scope, m *AppModel, c *state.Cipher, label, name, v
 			ui.Button{
 				TestID:   testID + "-reveal",
 				Icon:     func() *core.SVG { return eyeIcon(reveal.Get()) },
-				Label:    "Reveal " + name,
+				Label:    locales.RevealField(cx, name),
 				Variant:  ui.ButtonGhost,
 				Side:     28,
 				IconSize: 14,
@@ -1242,10 +1250,10 @@ func namedSecretRow(cx *core.Scope, m *AppModel, c *state.Cipher, label, name, v
 						reveal.Set(false)
 						return
 					}
-					m.GateReprompt(cx, c, "reveal "+action, func() { reveal.Set(true) })
+					m.GateReprompt(cx, c, revealAction, func() { reveal.Set(true) })
 				},
 			},
-			actionIcon(cx, testID+"-copy", "Copy "+name, lucide.Copy, copySecret),
+			actionIcon(cx, testID+"-copy", locales.CopyField(cx, name), lucide.Copy, copySecret),
 		},
 	})
 }
@@ -1263,7 +1271,7 @@ func DetailPaneView(cx *core.Scope, m *AppModel) core.Node {
 func detailContent(cx *core.Scope, m *AppModel, c *state.Cipher) core.Node {
 	isTrash := c.DeletedDate != nil
 	offline := func() bool { return m.SyncState.Get() == SyncOffline }
-	copyPlain := func(label, v string) func() { return func() { m.CopyPlainValue(label, v) } }
+	copyPlain := func(copiedTitle, v string) func() { return func() { m.CopyPlainValue(copiedTitle, v) } }
 
 	var blocks []core.Node
 
@@ -1274,18 +1282,18 @@ func detailContent(cx *core.Scope, m *AppModel, c *state.Cipher) core.Node {
 	if c.Login != nil {
 		var rows []core.Node
 		if c.Login.Username != "" {
-			rows = append(rows, fieldRow("Username", fieldOpts{
+			rows = append(rows, fieldRow(locales.Username(cx), fieldOpts{
 				value:   staticValue(c.Login.Username),
-				actions: []core.Node{actionIcon(cx, "detail-copy-user", "Copy username", lucide.Copy, copyPlain("Username", c.Login.Username))},
+				actions: []core.Node{actionIcon(cx, "detail-copy-user", locales.CopyUsername(cx), lucide.Copy, copyPlain(locales.UsernameCopied(cx), c.Login.Username))},
 			}))
 		}
 		if c.Login.Password != "" && m.PasswordHidden(c) {
-			rows = append(rows, fieldRow("Password", fieldOpts{
+			rows = append(rows, fieldRow(locales.Password(cx), fieldOpts{
 				testID: "detail-password-value",
-				value:  staticValue("Hidden by your organization"),
+				value:  staticValue(locales.HiddenByOrganization(cx)),
 			}))
 		} else if c.Login.Password != "" {
-			rows = append(rows, fieldRow("Password", fieldOpts{
+			rows = append(rows, fieldRow(locales.Password(cx), fieldOpts{
 				testID: "detail-password-value",
 				mono:   true,
 				spans: func() []core.Span {
@@ -1298,7 +1306,7 @@ func detailContent(cx *core.Scope, m *AppModel, c *state.Cipher) core.Node {
 					ui.Button{
 						TestID:   "detail-reveal-pw",
 						Icon:     func() *core.SVG { return eyeIcon(m.RevealPW.Get()) },
-						Label:    "Reveal password",
+						Label:    locales.RevealPassword(cx),
 						Variant:  ui.ButtonGhost,
 						Side:     28,
 						IconSize: 14,
@@ -1308,11 +1316,11 @@ func detailContent(cx *core.Scope, m *AppModel, c *state.Cipher) core.Node {
 								m.RevealPW.Set(false)
 								return
 							}
-							m.GateReprompt(cx, c, "reveal password", func() { m.RevealPW.Set(true) })
+							m.GateReprompt(cx, c, RepromptRevealPassword, func() { m.RevealPW.Set(true) })
 						},
 					},
-					actionIcon(cx, "detail-copy-pw", "Copy password", lucide.Copy, func() {
-						m.GateReprompt(cx, c, "copy password", func() { m.CopySecretValue("Password", c.Login.Password) })
+					actionIcon(cx, "detail-copy-pw", locales.CopyPassword(cx), lucide.Copy, func() {
+						m.GateReprompt(cx, c, RepromptCopyPassword, func() { m.CopySecretValue(locales.PasswordCopied(cx), c.Login.Password) })
 					}),
 				},
 			}))
@@ -1320,29 +1328,29 @@ func detailContent(cx *core.Scope, m *AppModel, c *state.Cipher) core.Node {
 		if strings.TrimSpace(c.Login.TOTP) != "" {
 			rows = append(rows, totpRow(cx, m, c))
 		}
-		rows = append(rows, detailPasskeyRows(c)...)
+		rows = append(rows, detailPasskeyRows(cx, c)...)
 		if len(rows) > 0 {
-			blocks = append(blocks, section("Credentials", card(rows...)))
+			blocks = append(blocks, section(locales.Credentials(cx), card(rows...)))
 		}
 
 		if len(c.Login.URIs) > 0 {
 			var uriRows []core.Node
 			for i, u := range c.Login.URIs {
 				uri := u.URI
-				label := "Website"
+				label := locales.Website(cx)
 				if len(c.Login.URIs) > 1 {
-					label = fmt.Sprintf("Website %d", i+1)
+					label = locales.WebsiteNumbered(cx, i+1)
 				}
 				uriRows = append(uriRows, fieldRow(label, fieldOpts{
 					accent: true,
 					value:  staticValue(uri),
 					actions: []core.Node{
-						actionIcon(cx, "", "Open website", lucide.ExternalLink, func() { cx.OpenURL(uri, nil) }),
-						actionIcon(cx, "", "Copy website", lucide.Copy, copyPlain("URL", uri)),
+						actionIcon(cx, "", locales.OpenWebsite(cx), lucide.ExternalLink, func() { cx.OpenURL(uri, nil) }),
+						actionIcon(cx, "", locales.CopyWebsite(cx), lucide.Copy, copyPlain(locales.WebsiteCopied(cx), uri)),
 					},
 				}))
 			}
-			blocks = append(blocks, section("Websites", card(uriRows...)))
+			blocks = append(blocks, section(locales.Websites(cx), card(uriRows...)))
 		}
 	}
 
@@ -1353,13 +1361,13 @@ func detailContent(cx *core.Scope, m *AppModel, c *state.Cipher) core.Node {
 	if c.Card != nil {
 		var rows []core.Node
 		if c.Card.CardholderName != "" {
-			rows = append(rows, fieldRow("Cardholder Name", fieldOpts{
+			rows = append(rows, fieldRow(locales.CardholderName(cx), fieldOpts{
 				value:   staticValue(c.Card.CardholderName),
-				actions: []core.Node{actionIcon(cx, "", "Copy cardholder", lucide.Copy, copyPlain("Cardholder", c.Card.CardholderName))},
+				actions: []core.Node{actionIcon(cx, "", locales.CopyCardholder(cx), lucide.Copy, copyPlain(locales.CardholderNameCopied(cx), c.Card.CardholderName))},
 			}))
 		}
 		if c.Card.Number != "" {
-			rows = append(rows, fieldRow("Card Number", fieldOpts{
+			rows = append(rows, fieldRow(locales.CardNumber(cx), fieldOpts{
 				testID: "detail-card-number",
 				mono:   true,
 				value: func() string {
@@ -1371,7 +1379,7 @@ func detailContent(cx *core.Scope, m *AppModel, c *state.Cipher) core.Node {
 				actions: []core.Node{
 					ui.Button{
 						Icon:     func() *core.SVG { return eyeIcon(m.RevealCard.Get()) },
-						Label:    "Reveal card number",
+						Label:    locales.RevealCardNumber(cx),
 						Variant:  ui.ButtonGhost,
 						Side:     28,
 						IconSize: 14,
@@ -1381,89 +1389,89 @@ func detailContent(cx *core.Scope, m *AppModel, c *state.Cipher) core.Node {
 								m.RevealCard.Set(false)
 								return
 							}
-							m.GateReprompt(cx, c, "reveal card", func() { m.RevealCard.Set(true) })
+							m.GateReprompt(cx, c, RepromptRevealCardNumber, func() { m.RevealCard.Set(true) })
 						},
 					},
-					actionIcon(cx, "", "Copy card number", lucide.Copy, func() {
-						m.GateReprompt(cx, c, "copy card number", func() { m.CopySecretValue("Card number", c.Card.Number) })
+					actionIcon(cx, "", locales.CopyCardNumber(cx), lucide.Copy, func() {
+						m.GateReprompt(cx, c, RepromptCopyCardNumber, func() { m.CopySecretValue(locales.CardNumberCopied(cx), c.Card.Number) })
 					}),
 				},
 			}))
 		}
 		if c.Card.ExpMonth != "" || c.Card.ExpYear != "" {
 			exp := strings.Trim(c.Card.ExpMonth+" / "+c.Card.ExpYear, " /")
-			rows = append(rows, fieldRow("Expiration", fieldOpts{
+			rows = append(rows, fieldRow(locales.Expiration(cx), fieldOpts{
 				mono:    true,
 				value:   staticValue(exp),
-				actions: []core.Node{actionIcon(cx, "", "Copy expiration", lucide.Copy, copyPlain("Expiration", exp))},
+				actions: []core.Node{actionIcon(cx, "", locales.CopyExpiration(cx), lucide.Copy, copyPlain(locales.ExpirationCopied(cx), exp))},
 			}))
 		}
 		if c.Card.Code != "" {
-			rows = append(rows, secretRow(cx, m, c, "Security Code", c.Card.Code, "detail-card-code", "security code", true, nil, func() {
-				m.GateReprompt(cx, c, "copy security code", func() { m.CopySecretValue("Security code", c.Card.Code) })
+			rows = append(rows, secretRow(cx, m, c, locales.SecurityCode(cx), c.Card.Code, "detail-card-code", RepromptRevealSecurityCode, true, nil, func() {
+				m.GateReprompt(cx, c, RepromptCopySecurityCode, func() { m.CopySecretValue(locales.SecurityCodeCopied(cx), c.Card.Code) })
 			}))
 		}
 		if c.Card.Brand != "" {
-			rows = append(rows, fieldRow("Brand", fieldOpts{value: staticValue(c.Card.Brand)}))
+			rows = append(rows, fieldRow(locales.Brand(cx), fieldOpts{value: staticValue(c.Card.Brand)}))
 		}
 		if len(rows) > 0 {
-			blocks = append(blocks, section("Card Details", card(rows...)))
+			blocks = append(blocks, section(locales.CardDetails(cx), card(rows...)))
 		}
 	}
 
 	if id := c.Identity; id != nil {
-		plainRow := func(label, v string) core.Node {
+		plainRow := func(label, copiedTitle, v string) core.Node {
 			if strings.TrimSpace(v) == "" {
 				return nil
 			}
 			return fieldRow(label, fieldOpts{
 				value:   staticValue(v),
-				actions: []core.Node{actionIcon(cx, "", "Copy "+strings.ToLower(label), lucide.Copy, copyPlain(label, v))},
+				actions: []core.Node{actionIcon(cx, "", locales.CopyField(cx, label), lucide.Copy, copyPlain(copiedTitle, v))},
 			})
 		}
 		fullName := strings.Join(strings.Fields(strings.Join([]string{id.Title, id.FirstName, id.MiddleName, id.LastName}, " ")), " ")
 		personal := nonNil(
-			plainRow("Full Name", fullName),
-			plainRow("Company", id.Company),
-			plainRow("Email", id.Email),
-			plainRow("Phone", id.Phone),
-			plainRow("Username", id.Username),
+			plainRow(locales.FullName(cx), locales.FullNameCopied(cx), fullName),
+			plainRow(locales.Company(cx), locales.CompanyCopied(cx), id.Company),
+			plainRow(locales.Email(cx), locales.EmailCopied(cx), id.Email),
+			plainRow(locales.Phone(cx), locales.PhoneCopied(cx), id.Phone),
+			plainRow(locales.Username(cx), locales.UsernameCopied(cx), id.Username),
 		)
 		if len(personal) > 0 {
-			blocks = append(blocks, section("Personal", card(personal...)))
+			blocks = append(blocks, section(locales.Personal(cx), card(personal...)))
 		}
 		street := strings.TrimSpace(id.Address1)
 		cityLine := strings.TrimSpace(strings.Join(strings.Fields(strings.Join([]string{id.City + ",", id.State, id.PostalCode}, " ")), " "))
 		cityLine = strings.Trim(cityLine, ", ")
 		addr := strings.Trim(strings.Join(nonEmpty(street, cityLine, id.Country), "\n"), "\n")
 		if addr != "" {
-			blocks = append(blocks, section("Address", card(fieldRow("Address", fieldOpts{
+			blocks = append(blocks, section(locales.Address(cx), card(fieldRow(locales.Address(cx), fieldOpts{
 				value:   staticValue(addr),
-				actions: []core.Node{actionIcon(cx, "", "Copy address", lucide.Copy, copyPlain("Address", strings.ReplaceAll(addr, "\n", ", ")))},
+				actions: []core.Node{actionIcon(cx, "", locales.CopyAddress(cx), lucide.Copy, copyPlain(locales.AddressCopied(cx), strings.ReplaceAll(addr, "\n", ", ")))},
 			}))))
 		}
 		var docs []core.Node
 		if id.SSN != "" {
-			docs = append(docs, secretRow(cx, m, c, "Social Security Number", id.SSN, "detail-ssn", "SSN", false, nil, func() {
-				m.GateReprompt(cx, c, "copy SSN", func() { m.CopySecretValue("SSN", id.SSN) })
+			docs = append(docs, secretRow(cx, m, c, locales.SocialSecurityNumber(cx), id.SSN, "detail-ssn", RepromptRevealSSN, false, nil, func() {
+				m.GateReprompt(cx, c, RepromptCopySSN, func() { m.CopySecretValue(locales.SsnCopied(cx), id.SSN) })
 			}))
 		}
 		if id.PassportNumber != "" {
-			docs = append(docs, fieldRow("Passport Number", fieldOpts{
+			docs = append(docs, fieldRow(locales.PassportNumber(cx), fieldOpts{
 				mono:    true,
 				value:   staticValue(id.PassportNumber),
-				actions: []core.Node{actionIcon(cx, "", "Copy passport number", lucide.Copy, func() { m.CopySecretValue("Passport", id.PassportNumber) })},
+				actions: []core.Node{actionIcon(cx, "", locales.CopyPassportNumber(cx), lucide.Copy, func() { m.CopySecretValue(locales.PassportNumberCopied(cx), id.PassportNumber) })},
 			}))
 		}
 		if id.LicenseNumber != "" {
-			docs = append(docs, fieldRow("License Number", fieldOpts{
+			docs = append(docs, fieldRow(locales.LicenseNumber(cx), fieldOpts{
 				mono:    true,
 				value:   staticValue(id.LicenseNumber),
-				actions: []core.Node{actionIcon(cx, "", "Copy license number", lucide.Copy, func() { m.CopySecretValue("License", id.LicenseNumber) })},
+				actions: []core.Node{actionIcon(cx, "", locales.CopyLicenseNumber(cx), lucide.Copy, func() { m.CopySecretValue(locales.LicenseNumberCopied(cx), id.LicenseNumber) })},
 			}))
 		}
 		if len(docs) > 0 {
-			blocks = append(blocks, section("Documents", card(docs...)))
+			blocks = append(blocks, section(locales.Documents(cx), card(docs...)))
 		}
 	}
 
@@ -1473,21 +1481,21 @@ func detailContent(cx *core.Scope, m *AppModel, c *state.Cipher) core.Node {
 			field := f
 			testID := fmt.Sprintf("detail-field-%d", i)
 			if field.Type == 1 && m.PasswordHidden(c) {
-				rows = append(rows, fieldRow(field.Name, fieldOpts{testID: testID, value: staticValue("Hidden by your organization")}))
+				rows = append(rows, fieldRow(field.Name, fieldOpts{testID: testID, value: staticValue(locales.HiddenByOrganization(cx))}))
 				continue
 			}
 			if field.Type == 1 {
-				rows = append(rows, secretRow(cx, m, c, field.Name, field.Value, testID, "custom field", true, nil, func() {
-					m.GateReprompt(cx, c, "copy custom field", func() { m.CopySecretValue(field.Name, field.Value) })
+				rows = append(rows, secretRow(cx, m, c, field.Name, field.Value, testID, RepromptRevealField, true, nil, func() {
+					m.GateReprompt(cx, c, RepromptCopyField, func() { m.CopySecretValue(locales.Copied(cx, field.Name), field.Value) })
 				}))
 				continue
 			}
 			rows = append(rows, fieldRow(field.Name, fieldOpts{
 				value:   staticValue(field.Value),
-				actions: []core.Node{actionIcon(cx, "", "Copy "+field.Name, lucide.Copy, copyPlain(field.Name, field.Value))},
+				actions: []core.Node{actionIcon(cx, "", locales.CopyField(cx, field.Name), lucide.Copy, copyPlain(locales.Copied(cx, field.Name), field.Value))},
 			}))
 		}
-		blocks = append(blocks, section("Custom Fields", card(rows...)))
+		blocks = append(blocks, section(locales.CustomFields(cx), card(rows...)))
 	}
 
 	if c.Login != nil && len(c.PasswordHistory) > 0 && !m.PasswordHidden(c) {
@@ -1495,7 +1503,7 @@ func detailContent(cx *core.Scope, m *AppModel, c *state.Cipher) core.Node {
 	}
 
 	if strings.TrimSpace(c.Notes) != "" {
-		blocks = append(blocks, section("Notes", card(core.View{
+		blocks = append(blocks, section(locales.Notes(cx), card(core.View{
 			Class: "px-4 py-3",
 			Children: []core.Node{
 				core.Text{
@@ -1535,38 +1543,38 @@ func detailContent(cx *core.Scope, m *AppModel, c *state.Cipher) core.Node {
 func sshKeySection(cx *core.Scope, m *AppModel, c *state.Cipher, k *state.SSHKey) core.Node {
 	var rows []core.Node
 	if k.KeyFingerprint != "" {
-		rows = append(rows, fieldRow("Fingerprint", fieldOpts{
+		rows = append(rows, fieldRow(locales.Fingerprint(cx), fieldOpts{
 			testID:  "detail-ssh-fingerprint",
 			mono:    true,
 			value:   staticValue(k.KeyFingerprint),
-			actions: []core.Node{actionIcon(cx, "detail-ssh-fingerprint-copy", "Copy fingerprint", lucide.Copy, func() { m.CopyPlainValue("Fingerprint", k.KeyFingerprint) })},
+			actions: []core.Node{actionIcon(cx, "detail-ssh-fingerprint-copy", locales.CopyFingerprint(cx), lucide.Copy, func() { m.CopyPlainValue(locales.FingerprintCopied(cx), k.KeyFingerprint) })},
 		}))
 	}
 	if k.PublicKey != "" {
-		rows = append(rows, fieldRow("Public Key", fieldOpts{
+		rows = append(rows, fieldRow(locales.PublicKey(cx), fieldOpts{
 			testID:  "detail-ssh-public",
 			mono:    true,
 			value:   staticValue(k.PublicKey),
-			actions: []core.Node{actionIcon(cx, "detail-ssh-public-copy", "Copy public key", lucide.Copy, func() { m.CopyPlainValue("Public key", k.PublicKey) })},
+			actions: []core.Node{actionIcon(cx, "detail-ssh-public-copy", locales.CopyPublicKey(cx), lucide.Copy, func() { m.CopyPlainValue(locales.PublicKeyCopied(cx), k.PublicKey) })},
 		}))
 	}
 	if k.PrivateKey != "" && m.PasswordHidden(c) {
-		rows = append(rows, fieldRow("Private Key", fieldOpts{
+		rows = append(rows, fieldRow(locales.PrivateKey(cx), fieldOpts{
 			testID: "detail-ssh-private",
-			value:  staticValue("Hidden by your organization"),
+			value:  staticValue(locales.HiddenByOrganization(cx)),
 		}))
 	} else if k.PrivateKey != "" {
 		priv := strings.TrimSpace(k.PrivateKey)
-		rows = append(rows, secretRow(cx, m, c, "Private Key", priv, "detail-ssh-private", "private key", false, nil, func() {
-			m.GateReprompt(cx, c, "copy private key", func() { m.CopySecretValue("Private key", k.PrivateKey) })
+		rows = append(rows, secretRow(cx, m, c, locales.PrivateKey(cx), priv, "detail-ssh-private", RepromptRevealPrivateKey, false, nil, func() {
+			m.GateReprompt(cx, c, RepromptCopyPrivateKey, func() { m.CopySecretValue(locales.PrivateKeyCopied(cx), k.PrivateKey) })
 		}))
 	}
-	return section("SSH Key", card(rows...))
+	return section(locales.TypeSSHKey(cx), card(rows...))
 }
 
 func passwordHistorySection(cx *core.Scope, m *AppModel, c *state.Cipher) core.Node {
 	open := core.NewSignal(cx, false)
-	title := fmt.Sprintf("Password History (%d)", len(c.PasswordHistory))
+	title := locales.PasswordHistory(cx, len(c.PasswordHistory))
 	return core.View{
 		Class: "gap-1.5",
 		Children: []core.Node{
@@ -1593,9 +1601,9 @@ func passwordHistorySection(cx *core.Scope, m *AppModel, c *state.Cipher) core.N
 					rows := make([]core.Node, 0, len(c.PasswordHistory))
 					for i, h := range c.PasswordHistory {
 						pw := h.Password
-						label := "Used until " + h.LastUsedDate.Local().Format("Jan 2, 2006 at 3:04 PM")
-						rows = append(rows, namedSecretRow(cx, m, c, label, "old password", pw, fmt.Sprintf("detail-history-%d", i), "old password", true, nil, func() {
-							m.GateReprompt(cx, c, "copy old password", func() { m.CopySecretValue("Old password", pw) })
+						label := locales.UsedUntil(cx, h.LastUsedDate.Local())
+						rows = append(rows, namedSecretRow(cx, m, c, label, locales.OldPassword(cx), pw, fmt.Sprintf("detail-history-%d", i), RepromptRevealOldPassword, true, nil, func() {
+							m.GateReprompt(cx, c, RepromptCopyOldPassword, func() { m.CopySecretValue(locales.OldPasswordCopied(cx), pw) })
 						}))
 					}
 					return card(rows...)
@@ -1633,7 +1641,7 @@ func cipherBrand(c *state.Cipher) string {
 }
 
 func detailHeader(cx *core.Scope, m *AppModel, c *state.Cipher, isTrash bool, offline func() bool) core.Node {
-	pills := []core.Node{pill(typeGlyphOrGlobe(c.Type), CipherTypeLabel(c.Type))}
+	pills := []core.Node{pill(typeGlyphOrGlobe(c.Type), CipherTypeLabel(cx, c.Type))}
 	if c.FolderID != nil && *c.FolderID != "" {
 		for _, f := range m.Folders.Get() {
 			if f.ID == *c.FolderID {
@@ -1650,17 +1658,17 @@ func detailHeader(cx *core.Scope, m *AppModel, c *state.Cipher, isTrash bool, of
 	}
 	readOnly := m.CipherReadOnly(c)
 	if readOnly {
-		pills = append(pills, pill(lucide.Eye, "View only"))
+		pills = append(pills, pill(lucide.Eye, locales.ViewOnly(cx)))
 	}
 	if c.Reprompt == 1 {
-		pills = append(pills, pill(lucide.ShieldCheck, "Password reprompt"))
+		pills = append(pills, pill(lucide.ShieldCheck, locales.PasswordReprompt(cx)))
 	}
 	editLocked := func() bool { return offline() || readOnly || m.PasswordHidden(c) }
 	if isTrash {
-		pills = append(pills, pill(lucide.Trash, "In Trash"))
+		pills = append(pills, pill(lucide.Trash, locales.InTrash(cx)))
 	}
 	if c.ArchivedDate != nil {
-		pills = append(pills, pill(lucide.Archive, "Archived"))
+		pills = append(pills, pill(lucide.Archive, locales.Archived(cx)))
 	}
 
 	var actions []core.Node
@@ -1670,14 +1678,14 @@ func detailHeader(cx *core.Scope, m *AppModel, c *state.Cipher, isTrash bool, of
 		actions = []core.Node{
 			ui.Button{
 				TestID:   "detail-hard-delete",
-				Text:     "Delete Permanently",
+				Text:     locales.DeletePermanently(cx),
 				Variant:  ui.ButtonSecondary,
 				Disabled: offline,
 				OnPress:  func() { m.HardDeleteActive(cx) },
 			},
 			ui.Button{
 				TestID:   "detail-restore",
-				Text:     "Restore",
+				Text:     locales.Restore(cx),
 				Icon:     lucide.RotateCcw,
 				Variant:  ui.ButtonPrimary,
 				Disabled: offline,
@@ -1694,7 +1702,7 @@ func detailHeader(cx *core.Scope, m *AppModel, c *state.Cipher, isTrash bool, of
 					}
 					return lucide.Star()
 				},
-				Label:    "Toggle favorite",
+				Label:    locales.ToggleFavorite(cx),
 				Variant:  ui.ButtonGhost,
 				Side:     28,
 				IconSize: 16,
@@ -1711,7 +1719,7 @@ func detailHeader(cx *core.Scope, m *AppModel, c *state.Cipher, isTrash bool, of
 			ui.Button{
 				TestID:   "detail-clone",
 				Icon:     lucide.CopyPlus,
-				Label:    "Clone item",
+				Label:    locales.CloneItem(cx),
 				Variant:  ui.ButtonGhost,
 				Side:     28,
 				IconSize: 15,
@@ -1721,7 +1729,7 @@ func detailHeader(cx *core.Scope, m *AppModel, c *state.Cipher, isTrash bool, of
 			},
 			ui.Button{
 				TestID:   "detail-edit",
-				Text:     "Edit",
+				Text:     locales.Edit(cx),
 				Icon:     lucide.Pencil,
 				Variant:  ui.ButtonSecondary,
 				Disabled: editLocked,
@@ -1760,7 +1768,7 @@ func archiveButton(cx *core.Scope, m *AppModel, c *state.Cipher) core.Node {
 		return ui.Button{
 			TestID:   "detail-unarchive",
 			Icon:     lucide.ArchiveRestore,
-			Label:    "Unarchive",
+			Label:    locales.UnarchiveAction(cx),
 			Variant:  ui.ButtonGhost,
 			Side:     28,
 			IconSize: 15,
@@ -1772,7 +1780,7 @@ func archiveButton(cx *core.Scope, m *AppModel, c *state.Cipher) core.Node {
 	return ui.Button{
 		TestID:   "detail-archive",
 		Icon:     lucide.Archive,
-		Label:    "Archive",
+		Label:    locales.ArchiveAction(cx),
 		Variant:  ui.ButtonGhost,
 		Side:     28,
 		IconSize: 15,
@@ -1801,7 +1809,7 @@ func totpRow(cx *core.Scope, m *AppModel, c *state.Cipher) core.Node {
 			core.View{
 				Class: "flex-1 gap-[3px]",
 				Children: []core.Node{
-					core.Text{Class: "text-[11.5px] font-medium text-gv-fg2", Content: "Verification Code"},
+					core.Text{Class: "text-[11.5px] font-medium text-gv-fg2", Content: locales.VerificationCode(cx)},
 					core.View{
 						Class: "flex-row items-center gap-3",
 						Children: []core.Node{
@@ -1829,7 +1837,7 @@ func totpRow(cx *core.Scope, m *AppModel, c *state.Cipher) core.Node {
 								Children: []core.Node{
 									ui.ProgressRing{
 										Size:  16,
-										Label: "Time remaining",
+										Label: locales.TimeRemaining(cx),
 										Value: func() float32 {
 											period := m.TOTPPeriod.Get()
 											if period <= 0 {
@@ -1851,7 +1859,7 @@ func totpRow(cx *core.Scope, m *AppModel, c *state.Cipher) core.Node {
 											if rem <= 0 {
 												return ""
 											}
-											return fmt.Sprintf("%ds", rem)
+											return locales.SecondsLeft(cx, rem)
 										},
 									},
 								},
@@ -1866,7 +1874,7 @@ func totpRow(cx *core.Scope, m *AppModel, c *state.Cipher) core.Node {
 					return ui.Button{
 						TestID:   "detail-reveal-totp",
 						Icon:     func() *core.SVG { return eyeIcon(m.TOTPRevealedID.Get() == c.ID) },
-						Label:    "Reveal verification code",
+						Label:    locales.RevealVerificationCode(cx),
 						Variant:  ui.ButtonGhost,
 						Side:     28,
 						IconSize: 14,
@@ -1877,7 +1885,7 @@ func totpRow(cx *core.Scope, m *AppModel, c *state.Cipher) core.Node {
 								return
 							}
 							id := c.ID
-							m.GateReprompt(cx, c, "reveal verification code", func() {
+							m.GateReprompt(cx, c, RepromptRevealTOTP, func() {
 								if cur := m.ActiveCipher.Get(); cur != nil && cur.ID == id {
 									m.TOTPRevealedID.Set(id)
 								}
@@ -1886,10 +1894,10 @@ func totpRow(cx *core.Scope, m *AppModel, c *state.Cipher) core.Node {
 					}
 				},
 			},
-			actionIcon(cx, "detail-copy-totp", "Copy verification code", lucide.Copy, func() {
-				m.GateReprompt(cx, c, "copy TOTP code", func() {
+			actionIcon(cx, "detail-copy-totp", locales.CopyVerificationCode(cx), lucide.Copy, func() {
+				m.GateReprompt(cx, c, RepromptCopyTOTP, func() {
 					if code := m.TOTPCode.Get(); code != "" {
-						m.CopySecretValue("TOTP code", code)
+						m.CopySecretValue(locales.VerificationCodeCopied(cx), code)
 					}
 				})
 			}),
@@ -1901,7 +1909,7 @@ func cardVisual(m *AppModel, c *state.Cipher) core.Node {
 	p := paletteFor(c.Name, c.Type, c.Card.Brand)
 	brand := strings.ToUpper(c.Card.Brand)
 	if brand == "" {
-		brand = "CARD"
+		brand = locales.CardPictureBrand(m.Scope)
 	}
 	exp := ""
 	if c.Card.ExpMonth != "" || c.Card.ExpYear != "" {
@@ -1960,11 +1968,11 @@ func cardVisual(m *AppModel, c *state.Cipher) core.Node {
 						Class: "flex-row items-end justify-between",
 						Children: []core.Node{
 							core.View{Class: "gap-0.5", Children: []core.Node{
-								label("CARDHOLDER"),
+								label(locales.CardPictureCardholder(m.Scope)),
 								core.Text{Content: strings.ToUpper(c.Card.CardholderName), Style: core.Style{FontSize: 12.5, FontWeight: core.FontWeightMedium, Color: core.RGB(0xffffff), LetterSpacing: 0.6}},
 							}},
 							core.View{Class: "gap-0.5 items-end", Children: []core.Node{
-								label("EXPIRES"),
+								label(locales.CardPictureExpires(m.Scope)),
 								core.Text{Class: "font-mono", Content: exp, Style: core.Style{FontSize: 12.5, Color: core.RGB(0xffffff)}},
 							}},
 						},
@@ -1978,19 +1986,19 @@ func cardVisual(m *AppModel, c *state.Cipher) core.Node {
 func metadataFooter(cx *core.Scope, m *AppModel, c *state.Cipher, isTrash bool, offline func() bool) core.Node {
 	var lines []core.Node
 	if c.RevisionDate != nil {
-		lines = append(lines, core.Text{Class: "text-[11.5px] text-gv-fg3", Content: "Updated " + c.RevisionDate.Local().Format("Jan 2, 2006 at 3:04 PM")})
+		lines = append(lines, core.Text{Class: "text-[11.5px] text-gv-fg3", Content: locales.UpdatedOn(cx, c.RevisionDate.Local())})
 	}
 	if c.CreationDate != nil {
-		lines = append(lines, core.Text{Class: "text-[11.5px] text-gv-fg3", Content: "Created " + c.CreationDate.Local().Format("Jan 2, 2006")})
+		lines = append(lines, core.Text{Class: "text-[11.5px] text-gv-fg3", Content: locales.CreatedOn(cx, c.CreationDate.Local())})
 	}
 	if isTrash && c.DeletedDate != nil {
-		lines = append(lines, core.Text{Class: "text-[11.5px] text-gv-fg3", Content: "Deleted " + formatRelativeTime(*c.DeletedDate)})
+		lines = append(lines, core.Text{Class: "text-[11.5px] text-gv-fg3", Content: locales.DeletedWhen(cx, formatRelativeTime(cx, *c.DeletedDate))})
 	}
 	children := []core.Node{core.View{Class: "flex-1 gap-0.5", Children: lines}}
 	if !isTrash && !m.CipherReadOnly(c) {
 		children = append(children, core.View{
 			TestID:   "detail-trash",
-			Label:    "Move to Trash",
+			Label:    locales.MoveToTrash(cx),
 			Role:     core.RoleButton,
 			Disabled: offline,
 			Class:    "flex-row items-center gap-1.5 h-[26px] px-2.5 rounded-[6px] active:bg-gv-danger/10 disabled:opacity-40",
@@ -2001,7 +2009,7 @@ func metadataFooter(cx *core.Scope, m *AppModel, c *state.Cipher, isTrash bool, 
 			},
 			Children: []core.Node{
 				icon(lucide.Trash(), 13, "text-gv-danger"),
-				core.Text{Class: "text-[12px] font-medium text-gv-danger", Content: "Move to Trash"},
+				core.Text{Class: "text-[12px] font-medium text-gv-danger", Content: locales.MoveToTrash(cx)},
 			},
 		})
 	}
@@ -2017,21 +2025,6 @@ func maskCardNumber(num string) string {
 		return "••••"
 	}
 	return "•••• •••• •••• " + digits[len(digits)-4:]
-}
-
-func formatRelativeTime(t time.Time) string {
-	d := time.Since(t)
-	switch {
-	case d < time.Minute:
-		return "just now"
-	case d < time.Hour:
-		return fmt.Sprintf("%dm ago", int(d.Minutes()))
-	case d < 24*time.Hour:
-		return fmt.Sprintf("%dh ago", int(d.Hours()))
-	case d < 7*24*time.Hour:
-		return fmt.Sprintf("%dd ago", int(d.Hours()/24))
-	}
-	return t.Local().Format("Jan 2")
 }
 
 func cipherURIs(c *state.Cipher) []string {

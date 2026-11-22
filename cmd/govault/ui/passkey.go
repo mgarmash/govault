@@ -8,29 +8,28 @@ import (
 	"github.com/nsgo-dev/nsgo/core"
 	"github.com/nsgo-dev/nsgo/icons/lucide"
 	"github.com/nsgo-dev/nsgo/ui"
+	"github.com/txchen/govault/cmd/govault/locales"
 	"github.com/txchen/govault/internal/vaultcore/state"
 )
 
 // passkeyText describes a passkey without any of its secret material: its
 // relying party and when it was created.
-func passkeyText(f *state.Fido2Credential) string {
+func passkeyText(cx *core.Scope, f *state.Fido2Credential) string {
 	site := f.RpID
 	if site == "" {
 		site = f.RpName
 	}
-	created := ""
-	if t, err := time.Parse(time.RFC3339Nano, f.CreationDate); err == nil {
-		created = "Created " + t.Local().Format("Jan 2, 2006")
-	}
+	created, err := time.Parse(time.RFC3339Nano, f.CreationDate)
+	dated := err == nil
 	switch {
-	case site != "" && created != "":
-		return site + " · " + created
+	case site != "" && dated:
+		return locales.PasskeySiteCreated(cx, site, created.Local())
 	case site != "":
 		return site
-	case created != "":
-		return created
+	case dated:
+		return locales.PasskeyCreated(cx, created.Local())
 	}
-	return "Stored in this item"
+	return locales.PasskeyStored(cx)
 }
 
 func passkeyTestID(base string, i int) string {
@@ -41,15 +40,15 @@ func passkeyTestID(base string, i int) string {
 }
 
 // detailPasskeyRows shows every passkey of a login, read-only.
-func detailPasskeyRows(c *state.Cipher) []core.Node {
+func detailPasskeyRows(cx *core.Scope, c *state.Cipher) []core.Node {
 	if c.Login == nil {
 		return nil
 	}
 	var rows []core.Node
 	for i := range c.Login.Fido2Credentials {
-		rows = append(rows, fieldRow("Passkey", fieldOpts{
+		rows = append(rows, fieldRow(locales.Passkey(cx), fieldOpts{
 			testID: passkeyTestID("detail-passkey", i),
-			value:  staticValue(passkeyText(&c.Login.Fido2Credentials[i])),
+			value:  staticValue(passkeyText(cx, &c.Login.Fido2Credentials[i])),
 		}))
 	}
 	return rows
@@ -63,11 +62,11 @@ func (m *AppModel) ConfirmRemovePasskey(cx *core.Scope, i int) {
 		return
 	}
 	cx.ShowAlert(core.AlertConfig{
-		Title:   "Remove passkey?",
-		Message: "You will no longer be able to sign in with this passkey.",
+		Title:   locales.RemovePasskeyTitle(cx),
+		Message: locales.RemovePasskeyMessage(cx),
 		Actions: []core.AlertAction{
-			{Label: "Cancel", Role: core.AlertCancel},
-			{Label: "Remove", Role: core.AlertDestructive},
+			{Label: locales.Cancel(cx), Role: core.AlertCancel},
+			{Label: locales.Remove(cx), Role: core.AlertDestructive},
 		},
 		Cancelable: true,
 	}, func(idx int) {
@@ -94,14 +93,14 @@ func editorPasskeyRows(cx *core.Scope, m *AppModel) core.Node {
 		var rows []core.Node
 		for i := range passkeys {
 			if d.PasskeyRemoved(i) {
-				rows = append(rows, formRow("Passkey", core.View{
+				rows = append(rows, formRow(locales.Passkey(cx), core.View{
 					Class: "flex-1 flex-row items-center gap-2",
 					Children: []core.Node{
-						core.Text{TestID: passkeyTestID("editor-passkey-removed", i), Class: "flex-1 text-[13px] text-gv-fg2", Content: "Removed when you save"},
+						core.Text{TestID: passkeyTestID("editor-passkey-removed", i), Class: "flex-1 text-[13px] text-gv-fg2", Content: locales.RemovedWhenSaved(cx)},
 						ui.Button{
 							Disabled: m.EditBusy.Get,
 							TestID:   passkeyTestID("editor-passkey-undo", i),
-							Text:     "Undo",
+							Text:     locales.Undo(cx),
 							Variant:  ui.ButtonGhost,
 							Size:     ui.SizeSmall,
 							OnPress: func() {
@@ -114,15 +113,15 @@ func editorPasskeyRows(cx *core.Scope, m *AppModel) core.Node {
 				}))
 				continue
 			}
-			rows = append(rows, formRow("Passkey", core.View{
+			rows = append(rows, formRow(locales.Passkey(cx), core.View{
 				Class: "flex-1 flex-row items-center gap-2",
 				Children: []core.Node{
-					core.Text{TestID: passkeyTestID("editor-passkey", i), MaxLines: 1, Class: "flex-1 text-[13px] text-gv-fg", Content: passkeyText(&passkeys[i])},
+					core.Text{TestID: passkeyTestID("editor-passkey", i), MaxLines: 1, Class: "flex-1 text-[13px] text-gv-fg", Content: passkeyText(cx, &passkeys[i])},
 					ui.Button{
 						Disabled: m.EditBusy.Get,
 						TestID:   passkeyTestID("editor-passkey-remove", i),
 						Icon:     lucide.Trash,
-						Label:    "Remove passkey",
+						Label:    locales.RemovePasskey(cx),
 						Variant:  ui.ButtonGhost,
 						Side:     24,
 						IconSize: 13,

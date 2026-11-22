@@ -4,7 +4,6 @@ package health
 
 import (
 	"cmp"
-	"fmt"
 	"math"
 	"net"
 	"net/url"
@@ -23,13 +22,33 @@ const (
 	ExpiringWindow    = 60 * 24 * time.Hour
 )
 
-// Issue points at one flagged item. It never carries secret values.
+// Weakness is why a password looks weak; the UI words it.
+type Weakness int
+
+const (
+	NotWeak Weakness = iota
+	WeakCommon
+	WeakShort
+	WeakPattern
+	WeakOneClass
+	WeakGuessable
+)
+
+// Issue points at one flagged item. It never carries secret values. Which
+// of its details are set depends on the list it is in.
 type Issue struct {
 	CipherID string
 	Type     api.CipherType
 	Name     string
 	Subtitle string
-	Detail   string
+	// Weakness is set for weak passwords.
+	Weakness Weakness
+	// ReusedCount is how many items share the password, for reused ones.
+	ReusedCount int
+	// ExpMonth and ExpYear are a card's expiry, its year in full.
+	ExpMonth, ExpYear int
+	// URI is the insecure website of an unsecured login.
+	URI string
 }
 
 type ReusedGroup struct {
@@ -73,14 +92,18 @@ func Analyze(ciphers []*state.Cipher, now time.Time) Report {
 		switch {
 		case c.Login != nil && c.Type == api.CipherTypeLogin:
 			if uri, ok := insecureURI(c.Login.URIs); ok {
-				r.Unsecured = append(r.Unsecured, issue(c, uri))
+				it := issue(c)
+				it.URI = uri
+				r.Unsecured = append(r.Unsecured, it)
 			}
 			if c.HidePassword || c.Login.Password == "" {
 				continue
 			}
 			byPassword[c.Login.Password] = append(byPassword[c.Login.Password], c)
-			if reason := WeakReason(c.Login.Password); reason != "" {
-				r.Weak = append(r.Weak, issue(c, reason))
+			if w := WeaknessOf(c.Login.Password); w != NotWeak {
+				it := issue(c)
+				it.Weakness = w
+				r.Weak = append(r.Weak, it)
 			}
 		case c.Card != nil && c.Type == api.CipherTypeCard:
 			if ci, ok := cardIssue(c, now); ok {
@@ -94,7 +117,9 @@ func Analyze(ciphers []*state.Cipher, now time.Time) Report {
 		}
 		g := ReusedGroup{Count: len(group)}
 		for _, c := range group {
-			g.Items = append(g.Items, issue(c, fmt.Sprintf("Used in %d items", len(group))))
+			it := issue(c)
+			it.ReusedCount = len(group)
+			g.Items = append(g.Items, it)
 		}
 		sortIssues(g.Items)
 		r.Reused = append(r.Reused, g)
@@ -119,7 +144,7 @@ func Analyze(ciphers []*state.Cipher, now time.Time) Report {
 	return r
 }
 
-func issue(c *state.Cipher, detail string) Issue {
+func issue(c *state.Cipher) Issue {
 	sub := ""
 	switch {
 	case c.Login != nil:
@@ -130,7 +155,7 @@ func issue(c *state.Cipher, detail string) Issue {
 			sub = c.Card.CardholderName
 		}
 	}
-	return Issue{CipherID: c.ID, Type: c.Type, Name: c.Name, Subtitle: sub, Detail: detail}
+	return Issue{CipherID: c.ID, Type: c.Type, Name: c.Name, Subtitle: sub}
 }
 
 func compareIssue(a, b Issue) int {
@@ -148,26 +173,26 @@ var commonPasswords = map[string]bool{
 	"summer": true, "winter": true, "spring": true, "autumn": true, "hello": true, "freedom": true,
 }
 
-// WeakReason returns why password is weak, or "" when it looks strong.
-func WeakReason(password string) string {
+// WeaknessOf returns why password is weak, or NotWeak when it looks strong.
+func WeaknessOf(password string) Weakness {
 	runes := []rune(password)
 	if isCommon(password) {
-		return "Common password"
+		return WeakCommon
 	}
 	if len(runes) < MinPasswordLength {
-		return fmt.Sprintf("Shorter than %d characters", MinPasswordLength)
+		return WeakShort
 	}
 	if patternRun(runes)*2 >= len(runes) {
-		return "Mostly a sequence or repeated characters"
+		return WeakPattern
 	}
 	bits := entropyBits(runes)
 	if classes(runes) == 1 && bits < 66 {
-		return "Uses only one type of character"
+		return WeakOneClass
 	}
 	if bits < 50 {
-		return "Easy to guess"
+		return WeakGuessable
 	}
-	return ""
+	return NotWeak
 }
 
 var leet = strings.NewReplacer("@", "a", "4", "a", "0", "o", "1", "i", "3", "e", "$", "s", "5", "s", "7", "t")
@@ -277,12 +302,13 @@ func cardIssue(c *state.Cipher, now time.Time) (CardIssue, bool) {
 		}
 	}
 	end := time.Date(year, time.Month(month)+1, 1, 0, 0, 0, 0, now.Location())
-	label := fmt.Sprintf("%02d/%d", month, year)
+	it := issue(c)
+	it.ExpMonth, it.ExpYear = month, year
 	switch {
 	case !now.Before(end):
-		return CardIssue{Issue: issue(c, "Expired "+label), Expired: true}, true
+		return CardIssue{Issue: it, Expired: true}, true
 	case end.Sub(now) <= ExpiringWindow:
-		return CardIssue{Issue: issue(c, "Expires "+label)}, true
+		return CardIssue{Issue: it}, true
 	}
 	return CardIssue{}, false
 }

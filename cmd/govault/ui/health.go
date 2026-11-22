@@ -5,6 +5,7 @@ import (
 
 	"github.com/nsgo-dev/nsgo/core"
 	"github.com/nsgo-dev/nsgo/icons/lucide"
+	"github.com/txchen/govault/cmd/govault/locales"
 	"github.com/txchen/govault/internal/vaultcore/health"
 )
 
@@ -24,10 +25,10 @@ func HealthView(cx *core.Scope, m *AppModel) core.Node {
 					core.View{
 						Class: "flex-row gap-3",
 						Children: []core.Node{
-							tile(HealthReused, lucide.Repeat, 0xf08a0a, r.ReusedItems(), "Reused"),
-							tile(HealthWeak, lucide.ShieldAlert, 0xe5484d, len(r.Weak), "Weak"),
-							tile(HealthCards, lucide.CalendarClock, 0xa25ddc, len(r.Cards), "Expiring Cards"),
-							tile(HealthUnsecured, lucide.LockOpen, 0x0a84ff, len(r.Unsecured), "Unsecured HTTP"),
+							tile(HealthReused, lucide.Repeat, 0xf08a0a, r.ReusedItems(), locales.HealthReused(cx)),
+							tile(HealthWeak, lucide.ShieldAlert, 0xe5484d, len(r.Weak), locales.HealthWeak(cx)),
+							tile(HealthCards, lucide.CalendarClock, 0xa25ddc, len(r.Cards), locales.HealthExpiringCards(cx)),
+							tile(HealthUnsecured, lucide.LockOpen, 0x0a84ff, len(r.Unsecured), locales.HealthUnsecured(cx)),
 						},
 					},
 				}
@@ -35,7 +36,7 @@ func HealthView(cx *core.Scope, m *AppModel) core.Node {
 					blocks = append(blocks, core.Text{
 						TestID:  "health-filter-empty",
 						Class:   "px-1 text-[12.5px] text-gv-fg2",
-						Content: "No issues in this category.",
+						Content: locales.HealthFilterEmpty(cx),
 					})
 				}
 				if r.TotalIssues() == 0 {
@@ -47,8 +48,8 @@ func HealthView(cx *core.Scope, m *AppModel) core.Node {
 							core.View{
 								Class: "flex-1 gap-[2px]",
 								Children: []core.Node{
-									core.Text{Class: "text-[14px] font-semibold text-gv-fg", Content: "All clear"},
-									core.Text{Class: "text-[12px] text-gv-fg2", Content: "No reused or weak passwords, expiring cards or unsecured websites."},
+									core.Text{Class: "text-[14px] font-semibold text-gv-fg", Content: locales.HealthAllClear(cx)},
+									core.Text{Class: "text-[12px] text-gv-fg2", Content: locales.HealthAllClearDetail(cx)},
 								},
 							},
 						},
@@ -60,26 +61,28 @@ func HealthView(cx *core.Scope, m *AppModel) core.Node {
 					}
 					title := ""
 					if i == 0 {
-						title = "Reused Passwords"
+						title = locales.ReusedPasswords(cx)
 					}
-					blocks = append(blocks, section(title, healthList(cx, m, g.Items)))
+					blocks = append(blocks, section(title, healthList(cx, m, g.Items, func(_ int, it health.Issue) string { return locales.UsedInItems(cx, it.ReusedCount) })))
 				}
 				if len(r.Weak) > 0 && show(HealthWeak) {
-					blocks = append(blocks, section("Weak Passwords", healthList(cx, m, r.Weak)))
+					blocks = append(blocks, section(locales.WeakPasswords(cx), healthList(cx, m, r.Weak, weaknessText(cx))))
 				}
 				if len(r.Cards) > 0 && show(HealthCards) {
 					items := make([]health.Issue, len(r.Cards))
 					for i, c := range r.Cards {
 						items[i] = c.Issue
 					}
-					blocks = append(blocks, section("Expiring Cards", healthList(cx, m, items)))
+					blocks = append(blocks, section(locales.HealthExpiringCards(cx), healthList(cx, m, items, func(i int, it health.Issue) string {
+						return cardExpiryText(cx, it, r.Cards[i].Expired)
+					})))
 				}
 				if len(r.Unsecured) > 0 && show(HealthUnsecured) {
-					blocks = append(blocks, section("Unsecured Websites", healthList(cx, m, r.Unsecured)))
+					blocks = append(blocks, section(locales.UnsecuredWebsites(cx), healthList(cx, m, r.Unsecured, func(_ int, it health.Issue) string { return it.URI })))
 				}
 				blocks = append(blocks, core.Text{
 					Class:   "px-1 text-[11.5px] text-gv-fg3",
-					Content: "Checked on this device only. Nothing is sent to a server.",
+					Content: locales.HealthLocalOnly(cx),
 				})
 				return core.View{
 					Class:    "w-full max-w-[680px] self-center px-7 pt-6 pb-10 gap-5",
@@ -142,20 +145,49 @@ func healthTile(m *AppModel, c HealthCategory, glyph func() *core.SVG, tint uint
 					},
 				},
 				core.Text{Class: countClass, Content: fmt.Sprintf("%d", count)},
-				core.Text{MaxLines: 1, Class: "text-[12px] text-gv-fg2", Content: label},
+				core.Text{MaxLines: 2, Class: "text-[12px] text-gv-fg2", Content: label},
 			},
 		}},
 	}
 }
 
-func healthList(cx *core.Scope, m *AppModel, items []health.Issue) core.Node {
+// weaknessText says why a weak password is weak.
+func weaknessText(cx *core.Scope) func(int, health.Issue) string {
+	return func(_ int, it health.Issue) string {
+		switch it.Weakness {
+		case health.WeakCommon:
+			return locales.WeakCommon(cx)
+		case health.WeakShort:
+			return locales.WeakShort(cx, health.MinPasswordLength)
+		case health.WeakPattern:
+			return locales.WeakPattern(cx)
+		case health.WeakOneClass:
+			return locales.WeakOneClass(cx)
+		case health.WeakGuessable:
+			return locales.WeakGuessable(cx)
+		}
+		return ""
+	}
+}
+
+// cardExpiryText says when a card expired or expires, as MM/YYYY.
+func cardExpiryText(cx *core.Scope, it health.Issue, expired bool) string {
+	expiry := fmt.Sprintf("%02d/%d", it.ExpMonth, it.ExpYear)
+	if expired {
+		return locales.CardExpired(cx, expiry)
+	}
+	return locales.CardExpires(cx, expiry)
+}
+
+// healthList lists flagged items, each with what detail says of it.
+func healthList(cx *core.Scope, m *AppModel, items []health.Issue, detail func(int, health.Issue) string) core.Node {
 	rows := make([]core.Node, 0, len(items))
-	for _, it := range items {
+	for i, it := range items {
 		issue := it
 		rows = append(rows, core.View{
 			TestID:  "health-item",
 			Role:    core.RoleButton,
-			Label:   "Open " + issue.Name,
+			Label:   locales.OpenItem(cx, issue.Name),
 			Class:   "flex-row items-center gap-3 pl-3.5 pr-3 py-2 min-h-[48px] active:bg-gv-fill",
 			OnPress: func(core.PressEvent) { m.OpenHealthItem(cx, issue.CipherID) },
 			Children: []core.Node{
@@ -167,7 +199,7 @@ func healthList(cx *core.Scope, m *AppModel, items []health.Issue) core.Node {
 						core.Text{MaxLines: 1, Class: "text-[11.5px] text-gv-fg3", Content: issue.Subtitle},
 					},
 				},
-				core.Text{MaxLines: 1, Class: "text-[12px] text-gv-fg2 text-right", Content: issue.Detail},
+				core.Text{MaxLines: 1, Class: "text-[12px] text-gv-fg2 text-right", Content: detail(i, issue)},
 				icon(lucide.ChevronRight(), 12, "text-gv-fg3"),
 			},
 		})
