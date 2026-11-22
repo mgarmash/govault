@@ -2,6 +2,7 @@ package state
 
 import (
 	"context"
+	"strings"
 
 	"github.com/txchen/govault/internal/vaultcore/api"
 	"github.com/txchen/govault/internal/vaultcore/crypto"
@@ -263,4 +264,16 @@ func (s *Service) allCollectionsLocked(c *Cipher, pred func(Collection) bool) bo
 		known++
 	}
 	return known > 0
+}
+
+// encryptedFor is the user ID a cipher write names as its owner: the
+// account's server ID. An account known only by its email, which older
+// servers could leave GoVault with, sends none rather than a wrong one,
+// since the server refuses any ID but the user's.
+func (o *op) encryptedFor() *string {
+	if o.accountID == "" || strings.Contains(o.accountID, "@") {
+		return nil
+	}
+	id := o.accountID
+	return &id
 }

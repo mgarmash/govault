@@ -928,6 +928,7 @@ func (s *Service) SaveCipher(ctx context.Context, c *Cipher) (*Cipher, error) {
 	if err != nil {
 		return nil, err
 	}
+	payload.EncryptedFor = o.encryptedFor()
 
 	encResp, err := withAuth(o, func(ctx context.Context, tok string) (*api.EncryptedCipher, error) {
 		if c.ID == "" {

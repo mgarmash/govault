@@ -230,12 +230,17 @@ func (c EncryptedCipher) MarshalJSON() ([]byte, error) {
 }
 
 type CipherPayload struct {
-	Type                  CipherType `json:"type"`
-	FolderID              *string    `json:"folderId"`
-	OrganizationID        *string    `json:"organizationId"`
-	Favorite              bool       `json:"favorite"`
-	Reprompt              int        `json:"reprompt"`
-	Key                   *string    `json:"key,omitempty"`
+	Type           CipherType `json:"type"`
+	FolderID       *string    `json:"folderId"`
+	OrganizationID *string    `json:"organizationId"`
+	Favorite       bool       `json:"favorite"`
+	Reprompt       int        `json:"reprompt"`
+	Key            *string    `json:"key,omitempty"`
+	// EncryptedFor is the ID of the user the item is encrypted for, which
+	// Bitwarden's clients send on every write. Vaultwarden 1.37.4 and
+	// 1.37.5 require it (CipherData.encrypted_for: UserId) and answer
+	// HTTP 422 to a create or update without it.
+	EncryptedFor          *string    `json:"encryptedFor,omitempty"`
 	Name                  string     `json:"name"`
 	Notes                 *string    `json:"notes"`
 	LastKnownRevisionDate *time.Time `json:"lastKnownRevisionDate,omitempty"`
