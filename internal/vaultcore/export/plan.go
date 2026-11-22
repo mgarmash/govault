@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"slices"
 	"strings"
+	"time"
 
 	"github.com/txchen/govault/internal/vaultcore/state"
 )
@@ -36,12 +37,58 @@ type Entry struct {
 	// and identical items.
 	Match *state.Cipher
 	// Diff names the fields that differ, never their values.
-	Diff      []string
+	Diff []string
+	// MatchRevision is the revision of Match the user reviewed. Update
+	// refuses to write over an item that changed since.
+	MatchRevision *time.Time
+	// Ambiguous means several vault items have this item's type, name and
+	// username, so it is matched to none of them.
+	Ambiguous bool
 	CanUpdate bool
 	// UpdateBlocked says why Update is not offered for a backup item that
 	// cannot safely update its match, if that is the reason.
 	UpdateBlocked string
 	Action        Action
+
+	repromptOK *approval
+}
+
+// approval is a master-password verification for updating one protected
+// item at one revision.
+type approval struct {
+	id  string
+	rev *time.Time
+}
+
+// NeedsReprompt reports that Update changes a vault item protected by
+// master-password reprompt, which the user must verify first.
+func (e *Entry) NeedsReprompt() bool {
+	return e.Match != nil && e.Match.Reprompt != 0 && e.repromptOK == nil
+}
+
+// ApproveReprompt records that the user verified the master password to
+// update Match at the reviewed revision.
+func (e *Entry) ApproveReprompt() {
+	if e.Match != nil {
+		e.repromptOK = &approval{id: e.Match.ID, rev: e.MatchRevision}
+	}
+}
+
+func (e *Entry) approvedFor(c *state.Cipher) bool {
+	return c.Reprompt == 0 || (e.repromptOK != nil && e.repromptOK.id == c.ID && sameTime(e.repromptOK.rev, c.RevisionDate))
+}
+
+var (
+	// ErrChangedSinceReview means the vault item changed after the user
+	// reviewed the import; it is not overwritten.
+	ErrChangedSinceReview = errors.New("export: the item changed after you reviewed the import; review it again")
+	// ErrRepromptRequired means the vault item is protected by
+	// master-password reprompt and the update was not verified.
+	ErrRepromptRequired = errors.New("export: updating this protected item needs your master password")
+)
+
+func sameTime(a, b *time.Time) bool {
+	return (a == nil) == (b == nil) && (a == nil || a.Equal(*b))
 }
 
 // Allowed lists the actions the entry may take.
@@ -58,7 +105,7 @@ func (e *Entry) Allowed() []Action {
 
 // SetAction applies a if the entry allows it.
 func (e *Entry) SetAction(a Action) bool {
-	if !slices.Contains(e.Allowed(), a) {
+	if !slices.Contains(e.Allowed(), a) || (a == ActionUpdate && e.NeedsReprompt()) {
 		return false
 	}
 	e.Action = a
@@ -131,33 +178,67 @@ func BuildPlan(backup *Vault, current []*state.Cipher, folders []state.Folder) *
 		k := itemKey(int(c.Type), c.Name, cipherUsername(c))
 		byKey[k] = append(byKey[k], c)
 	}
+	// Exact IDs are matched first, so a name match never takes an item
+	// another backup item names by ID.
+	items := slices.DeleteFunc(slices.Clone(backup.Items), func(it Item) bool { return it.DeletedDate != nil })
+	matches := make([]*state.Cipher, len(items))
 	used := map[string]bool{}
-
-	p := &Plan{}
-	for _, it := range backup.Items {
-		if it.DeletedDate != nil {
+	for i, it := range items {
+		if c := byID[it.ID]; c != nil && !used[c.ID] && c.Type == it.Type {
+			matches[i], used[c.ID] = c, true
+		}
+	}
+	// A name match counts only when it is one to one: one vault item with
+	// that type, name and username left, wanted by one backup item.
+	keyOf := func(it Item) string {
+		username := ""
+		if it.Login != nil {
+			username = val(it.Login.Username)
+		}
+		return itemKey(int(it.Type), it.Name, username)
+	}
+	wanted := map[string]int{}
+	for i, it := range items {
+		if matches[i] == nil {
+			wanted[keyOf(it)]++
+		}
+	}
+	ambiguous := make([]bool, len(items))
+	for i, it := range items {
+		if matches[i] != nil {
 			continue
 		}
-		e := Entry{Item: it, FolderName: backupFolders[val(it.FolderID)]}
-		match := byID[it.ID]
-		if match == nil || used[match.ID] || match.Type != it.Type {
-			match = nil
-			username := ""
-			if it.Login != nil {
-				username = val(it.Login.Username)
-			}
-			for _, c := range byKey[itemKey(int(it.Type), it.Name, username)] {
-				if !used[c.ID] {
-					match = c
-					break
-				}
+		var free []*state.Cipher
+		for _, c := range byKey[keyOf(it)] {
+			if !used[c.ID] {
+				free = append(free, c)
 			}
 		}
-		if match == nil {
+		switch {
+		case len(free) == 1 && wanted[keyOf(it)] == 1:
+			matches[i] = free[0]
+		case len(free) > 0:
+			ambiguous[i] = true
+		}
+	}
+	for i := range matches {
+		if matches[i] != nil {
+			used[matches[i].ID] = true
+		}
+	}
+
+	p := &Plan{}
+	for i, it := range items {
+		e := Entry{Item: it, FolderName: backupFolders[val(it.FolderID)]}
+		match := matches[i]
+		switch {
+		case match == nil && ambiguous[i]:
+			e.Class, e.Action, e.Ambiguous = ClassNew, ActionSkip, true
+		case match == nil:
 			e.Class, e.Action = ClassNew, ActionCreate
-		} else {
-			used[match.ID] = true
+		default:
 			e.Match = match
+			e.MatchRevision = match.RevisionDate
 			e.Diff = diff(it, e.FolderName, match, currentFolders[val(match.FolderID)])
 			e.CanUpdate = !match.ReadOnly && !match.HidePassword
 			switch probe := *match; {
@@ -201,7 +282,9 @@ func diff(it Item, folderName string, c *state.Cipher, currentFolder string) []s
 		add("Username", a.Username != b.Username)
 		add("Password", a.Password != b.Password)
 		add("Verification Code", a.TOTP != b.TOTP)
-		add("Websites", !slices.Equal(uriList(a), uriList(b)))
+		add("Websites", !slices.EqualFunc(a.URIs, b.URIs, func(x, y state.LoginURI) bool {
+			return x.URI == y.URI && sameMatch(x.Match, y.Match)
+		}))
 	}
 	if want.Login != nil && c.Login != nil && len(want.Login.Fido2Credentials) > 0 {
 		add("Passkey", !samePasskeys(want.Login.Fido2Credentials, c.Login.Fido2Credentials))
@@ -210,7 +293,7 @@ func diff(it Item, folderName string, c *state.Cipher, currentFolder string) []s
 	add("Identity", ptrDiff(identityContentOf(want.Identity), identityContentOf(c.Identity)))
 	add("SSH Key", ptrDiff(sshKeyContentOf(want.SSHKey), sshKeyContentOf(c.SSHKey)))
 	add("Custom Fields", !slices.EqualFunc(want.Fields, c.Fields, func(x, y state.CustomField) bool {
-		return x.Name == y.Name && x.Value == y.Value && x.Type == y.Type
+		return x.Name == y.Name && x.Value == y.Value && x.Type == y.Type && sameMatch(x.LinkedID, y.LinkedID)
 	}))
 	return out
 }
@@ -258,14 +341,6 @@ func sshKeyContentOf(t *state.SSHKey) *sshKeyContent {
 		return nil
 	}
 	return &sshKeyContent{t.PrivateKey, t.PublicKey, t.KeyFingerprint}
-}
-
-func uriList(l *state.Login) []string {
-	out := make([]string, len(l.URIs))
-	for i, u := range l.URIs {
-		out[i] = u.URI
-	}
-	return out
 }
 
 func ptrDiff[T comparable](a, b *T) bool {
@@ -341,9 +416,12 @@ func Apply(ctx context.Context, w Writer, p *Plan) Result {
 
 	for i := range p.Entries {
 		e := &p.Entries[i]
-		if ctx.Err() != nil {
-			errs = append(errs, ctx.Err())
-			res.Failed++
+		if ctx.Err() != nil || errors.Is(errors.Join(errs...), state.ErrLocked) {
+			if e.Action != ActionSkip {
+				res.Failed++
+			} else {
+				res.Skipped++
+			}
 			continue
 		}
 		var err error
@@ -395,6 +473,12 @@ func updateItem(ctx context.Context, w Writer, e *Entry, folderFor func(string) 
 	}
 	if cur.ReadOnly || cur.HidePassword || cur.DeletedDate != nil || cur.Type != e.Item.Type || !e.Item.complete() {
 		return state.ErrReadOnlyCipher
+	}
+	if cur.ID != e.Match.ID || !sameTime(cur.RevisionDate, e.MatchRevision) {
+		return ErrChangedSinceReview
+	}
+	if !e.approvedFor(cur) {
+		return ErrRepromptRequired
 	}
 	folder, err := folderFor(e.FolderName)
 	if err != nil {

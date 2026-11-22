@@ -477,3 +477,143 @@ func TestImportFieldMetadataNeedsAOneToOneMatch(t *testing.T) {
 		}
 	}
 }
+
+func TestPlanReservesExactIDsAndRefusesAmbiguousNames(t *testing.T) {
+	personal := login("c-personal", "Mail", "alice", "pw")
+	org := login("c-org", "Mail", "alice", "pw")
+	orgID := "org-1"
+	org.OrganizationID = &orgID
+	for _, current := range [][]*state.Cipher{{personal, org}, {org, personal}} {
+		it := FromCipher(login("other-id", "Mail", "alice", "new"))
+		e := BuildPlan(&Vault{Items: []Item{it}}, current, nil).Entries[0]
+		if e.Match != nil || !e.Ambiguous || e.Action != ActionSkip || e.Class != ClassNew {
+			t.Fatalf("two vault items match by name; entry = %+v", e)
+		}
+	}
+
+	// The vault item one backup item names by ID is not also offered to
+	// another backup item by name.
+	byName := FromCipher(login("unknown", "Mail", "alice", "x"))
+	byID := FromCipher(login("c-personal", "Mail", "alice", "y"))
+	for _, items := range [][]Item{{byName, byID}, {byID, byName}} {
+		p := BuildPlan(&Vault{Items: items}, []*state.Cipher{personal}, nil)
+		for _, e := range p.Entries {
+			switch e.Item.ID {
+			case "c-personal":
+				if e.Match == nil || e.Match.ID != "c-personal" {
+					t.Fatalf("exact ID not matched: %+v", e)
+				}
+			default:
+				if e.Match != nil {
+					t.Fatalf("name match took an item reserved by ID: %+v", e.Match.ID)
+				}
+			}
+		}
+	}
+
+	// Two backup items wanting the one vault item by name match neither.
+	a, b := FromCipher(login("x1", "Mail", "alice", "1")), FromCipher(login("x2", "Mail", "alice", "2"))
+	for _, e := range BuildPlan(&Vault{Items: []Item{a, b}}, []*state.Cipher{personal}, nil).Entries {
+		if e.Match != nil || !e.Ambiguous {
+			t.Fatalf("contested name match: %+v", e)
+		}
+	}
+}
+
+func TestApplyRefusesAnItemChangedAfterReview(t *testing.T) {
+	rev := time.Date(2026, 11, 20, 9, 0, 0, 0, time.UTC)
+	cur := login("c-gh", "GitHub", "alice", "old")
+	cur.RevisionDate = &rev
+	backup := FromCipher(login("c-gh", "GitHub", "alice", "new"))
+	backup.FolderID = opt("f-b")
+	p := BuildPlan(&Vault{Items: []Item{backup}, Folders: []Folder{{ID: "f-b", Name: "Imported"}}}, []*state.Cipher{cur}, nil)
+	if !p.Entries[0].SetAction(ActionUpdate) {
+		t.Fatal("update not allowed")
+	}
+
+	changed := *cur
+	later := rev.Add(time.Minute)
+	changed.RevisionDate = &later
+	changed.Login = &state.Login{Username: "alice", Password: "changed elsewhere"}
+	w := &fakeWriter{ciphers: map[string]*state.Cipher{"c-gh": &changed}}
+	res := Apply(context.Background(), w, p)
+	if res.Updated != 0 || res.Failed != 1 || !errors.Is(res.Err, ErrChangedSinceReview) {
+		t.Fatalf("result = %+v, want ErrChangedSinceReview", res)
+	}
+	if len(w.saves) != 0 || len(w.folders) != 0 {
+		t.Fatalf("wrote after the item changed: saves %v, folders %v", w.saves, w.folders)
+	}
+}
+
+func TestUpdatingAProtectedItemNeedsApproval(t *testing.T) {
+	rev := time.Date(2026, 11, 20, 9, 0, 0, 0, time.UTC)
+	cur := login("c-gh", "GitHub", "alice", "old")
+	cur.Reprompt, cur.RevisionDate = 1, &rev
+	backup := FromCipher(login("c-gh", "GitHub", "alice", "new"))
+	p := BuildPlan(&Vault{Items: []Item{backup}}, []*state.Cipher{cur}, nil)
+	e := &p.Entries[0]
+	if !e.NeedsReprompt() || e.SetAction(ActionUpdate) {
+		t.Fatal("Update of a protected item was allowed without verification")
+	}
+
+	e.Action = ActionUpdate
+	w := &fakeWriter{ciphers: map[string]*state.Cipher{"c-gh": cur}}
+	if res := Apply(context.Background(), w, p); !errors.Is(res.Err, ErrRepromptRequired) || len(w.saves) != 0 {
+		t.Fatalf("forced unverified update = %+v", res)
+	}
+
+	e.ApproveReprompt()
+	if !e.SetAction(ActionUpdate) {
+		t.Fatal("Update refused after verification")
+	}
+	if res := Apply(context.Background(), w, p); res.Updated != 1 || res.Err != nil {
+		t.Fatalf("verified update = %+v", res)
+	}
+}
+
+func TestDiffSeesMatchModeAndLinkedField(t *testing.T) {
+	three, one, two := 3, 1, 2
+	cur := login("c-gh", "GitHub", "alice", "pw")
+	it := FromCipher(cur)
+	it.Login.URIs[0].Match = &three
+	if e := BuildPlan(&Vault{Items: []Item{it}}, []*state.Cipher{cur}, nil).Entries[0]; e.Class != ClassConflict || !slices.Contains(e.Diff, "Websites") {
+		t.Fatalf("a changed match mode = %v %v", e.Class, e.Diff)
+	}
+	cur.Fields = []state.CustomField{{Name: "L", Type: 3, LinkedID: &one}}
+	it = FromCipher(cur)
+	it.Fields[0].LinkedID = &two
+	if e := BuildPlan(&Vault{Items: []Item{it}}, []*state.Cipher{cur}, nil).Entries[0]; !slices.Contains(e.Diff, "Custom Fields") {
+		t.Fatalf("a changed linked field = %v", e.Diff)
+	}
+}
+
+func TestApplyStopsWhenTheSessionEnds(t *testing.T) {
+	items := []Item{FromCipher(login("", "A", "a", "1")), FromCipher(login("", "B", "b", "2")), FromCipher(login("", "C", "c", "3"))}
+	p := BuildPlan(&Vault{Items: items}, nil, nil)
+	w := &lockingWriter{fakeWriter: &fakeWriter{ciphers: map[string]*state.Cipher{}}}
+	res := Apply(context.Background(), w, p)
+	if w.calls != 1 || res.Created != 0 || res.Failed != 3 {
+		t.Fatalf("after the session ended: calls %d, result %+v", w.calls, res)
+	}
+}
+
+type lockingWriter struct {
+	*fakeWriter
+	calls int
+}
+
+func (w *lockingWriter) SaveCipher(context.Context, *state.Cipher) (*state.Cipher, error) {
+	w.calls++
+	return nil, state.ErrLocked
+}
+
+func TestExportRefusesABackupTooLargeToImport(t *testing.T) {
+	big := &state.Cipher{ID: "n", Type: api.CipherTypeSecureNote, Name: "Big", Notes: strings.Repeat("x", MaxFileSize*3/4), SecureNote: &state.SecureNote{}}
+	v, err := Build([]*state.Cipher{big}, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := EncryptWithPassword(v, []byte("backup pass"), crypto.KDFConfig{Type: crypto.KDFPBKDF2, Iterations: 5000}); !errors.Is(err, ErrBackupTooLarge) {
+		t.Fatalf("EncryptWithPassword = %v, want ErrBackupTooLarge", err)
+	}
+}

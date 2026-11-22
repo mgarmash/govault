@@ -62,9 +62,10 @@ type Service struct {
 	// snapshot to edit, through the disk write, to publishing the result
 	// in memory. snapSeq counts publications, so a sync that fetched before
 	// a change was committed can tell it is stale.
-	persistMu sync.Mutex
-	snapSeq   uint64
-	secretMu  sync.Mutex
+	unreadable []string
+	persistMu  sync.Mutex
+	snapSeq    uint64
+	secretMu   sync.Mutex
 }
 
 var _ VaultService = (*Service)(nil)
@@ -1052,6 +1053,9 @@ func (s *Service) notifyUpdated() {
 }
 
 type vaultData struct {
+	// unreadable lists personal items GoVault cannot read, such as ones in
+	// a newer format; a backup without them would be incomplete.
+	unreadable  []string
 	ciphers     map[string]*Cipher
 	folders     map[string]Folder
 	orgs        map[string]Organization
@@ -1076,6 +1080,18 @@ func (s *Service) applyDataLocked(d *vaultData) {
 	s.orgs = d.orgs
 	s.collections = d.collections
 	s.orgKeys = d.orgKeys
+	s.unreadable = d.unreadable
+}
+
+// UnreadableItems lists the IDs of personal items GoVault could not read,
+// which a backup would be missing.
+func (s *Service) UnreadableItems() []string {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	if s.status != StatusUnlocked {
+		return nil
+	}
+	return slices.Clone(s.unreadable)
 }
 
 func (s *Service) clearDataLocked() {
@@ -1087,6 +1103,7 @@ func (s *Service) clearDataLocked() {
 	s.collections = nil
 	s.ciphers = nil
 	s.folders = nil
+	s.unreadable = nil
 }
 
 func (s *Service) Organizations() []Organization {
@@ -1163,7 +1180,11 @@ func decryptSyncResponse(resp *api.SyncResponse, userKey *crypto.SymmetricKey) (
 		}
 		c, err := decryptCipher(enc, key)
 		if err != nil {
-			if isOrg || errors.Is(err, ErrUnsupportedCipherFormat) {
+			if isOrg {
+				continue
+			}
+			if errors.Is(err, ErrUnsupportedCipherFormat) {
+				d.unreadable = append(d.unreadable, enc.ID)
 				continue
 			}
 			d.zero()

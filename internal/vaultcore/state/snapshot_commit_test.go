@@ -248,3 +248,41 @@ func TestService_SyncThatOnlyFetchesStaleDataIsDeferred(t *testing.T) {
 		t.Fatalf("sync without concurrent changes = %v", err)
 	}
 }
+
+func TestService_UnreadablePersonalItemsAreReported(t *testing.T) {
+	env := newVaultTestEnv(t)
+	env.ciphers["c-blob"] = api.EncryptedCipher{ID: "c-blob", Type: api.CipherTypeLogin, Data: []byte(`"2.opaque|blob|mac"`)}
+	svc := loggedInTestService(t, env)
+	if got := svc.UnreadableItems(); len(got) != 1 || got[0] != "c-blob" {
+		t.Fatalf("UnreadableItems = %v", got)
+	}
+	svc.Lock()
+	if got := svc.UnreadableItems(); got != nil {
+		t.Fatalf("UnreadableItems while locked = %v", got)
+	}
+}
+
+func TestService_SessionContextEndsWithTheSession(t *testing.T) {
+	env := newVaultTestEnv(t)
+	svc := loggedInTestService(t, env)
+	ctx, cancel, err := svc.SessionContext(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer cancel()
+	svc.Lock()
+	if ctx.Err() == nil {
+		t.Fatal("the session context outlived the session")
+	}
+	if err := svc.UnlockWithPassword(context.Background(), env.password); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := svc.SaveCipher(ctx, &Cipher{Type: api.CipherTypeSecureNote, Name: "Late", SecureNote: &SecureNote{}}); !errors.Is(err, ErrLocked) {
+		t.Fatalf("a save bound to the old session = %v, want ErrLocked", err)
+	}
+	env.mu.Lock()
+	defer env.mu.Unlock()
+	if _, ok := env.ciphers["c-created"]; ok {
+		t.Fatal("a save bound to the old session reached the server")
+	}
+}

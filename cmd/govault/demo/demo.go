@@ -329,6 +329,13 @@ func (s *Service) HardDeleteCipher(_ context.Context, id string) error {
 	return nil
 }
 
+func (s *Service) UnreadableItems() []string { return nil }
+
+func (s *Service) SessionContext(parent context.Context) (context.Context, context.CancelFunc, error) {
+	ctx, cancel := context.WithCancel(parent)
+	return ctx, cancel, nil
+}
+
 func (s *Service) TrashSelection() state.TrashSelection {
 	s.mu.RLock()
 	defer s.mu.RUnlock()

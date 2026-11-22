@@ -49,6 +49,10 @@ func deriveKey(password []byte, salt string, cfg crypto.KDFConfig) (*crypto.Symm
 }
 
 // EncryptWithPassword returns v as a password-protected Bitwarden export.
+// ErrBackupTooLarge means the encrypted backup would exceed MaxFileSize,
+// which Read refuses, so it is not written.
+var ErrBackupTooLarge = fmt.Errorf("export: the encrypted backup would be larger than %d MiB, which GoVault cannot import back", MaxFileSize>>20)
+
 func EncryptWithPassword(v *Vault, password []byte, cfg crypto.KDFConfig) ([]byte, error) {
 	if len(password) == 0 {
 		return nil, errors.New("export: a backup password is required")
@@ -88,7 +92,12 @@ func EncryptWithPassword(v *Vault, password []byte, cfg crypto.KDFConfig) ([]byt
 		mem, par := cfg.MemoryMB, cfg.Parallelism
 		f.KDFMemory, f.KDFParallelism = &mem, &par
 	}
-	return json.MarshalIndent(f, "", "  ")
+	out, err := json.MarshalIndent(f, "", "  ")
+	if err == nil && len(out) > MaxFileSize {
+		crypto.ZeroBytes(out)
+		return nil, ErrBackupTooLarge
+	}
+	return out, err
 }
 
 // NeedsPassword reports whether data is a password-protected export.

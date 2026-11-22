@@ -41,10 +41,31 @@ func (s *Service) endSessionLocked() {
 	s.accessToken = ""
 }
 
+type sessionGenKey struct{}
+
+// SessionContext returns a context bound to the current session: it ends
+// with the session, and an operation started with it under a later
+// session fails with ErrLocked. A batch of changes uses it so that a lock,
+// logout or account switch stops the batch instead of continuing in the
+// next session.
+func (s *Service) SessionContext(parent context.Context) (context.Context, context.CancelFunc, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	if s.status != StatusUnlocked || s.sessionCtx == nil {
+		return nil, nil, ErrLocked
+	}
+	ctx, cancel := context.WithCancel(context.WithValue(s.sessionCtx, sessionGenKey{}, s.sessionGen))
+	stop := context.AfterFunc(parent, cancel)
+	return ctx, func() { stop(); cancel() }, nil
+}
+
 func (s *Service) beginOp(ctx context.Context) (*op, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	if s.status != StatusUnlocked || s.userKey == nil || s.sessionCtx == nil {
+		return nil, ErrLocked
+	}
+	if gen, ok := ctx.Value(sessionGenKey{}).(uint64); ok && (gen != s.sessionGen || ctx.Err() != nil) {
 		return nil, ErrLocked
 	}
 	if s.apiClient == nil || s.snapshot == nil {

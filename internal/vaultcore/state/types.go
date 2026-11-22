@@ -322,6 +322,8 @@ type VaultService interface {
 	RestoreCipher(ctx context.Context, id string) error
 	HardDeleteCipher(ctx context.Context, id string) error
 	TrashSelection() TrashSelection
+	UnreadableItems() []string
+	SessionContext(parent context.Context) (context.Context, context.CancelFunc, error)
 	EmptyTrash(ctx context.Context, sel TrashSelection) (TrashResult, error)
 	Folders() []Folder
 	SaveFolder(ctx context.Context, f *Folder) (*Folder, error)

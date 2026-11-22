@@ -458,6 +458,9 @@ type AppModel struct {
 	ImportShowIdentical *core.Signal[bool]
 	ImportBusy          *core.Signal[bool]
 	importPending       *importPending
+	// backupOp counts backup dialog operations, so a worker finishing after
+	// Cancel, lock or a newer attempt is ignored.
+	backupOp uint64
 
 	SSHAgentError *core.Signal[string]
 	vaultRev      *core.Signal[int]

@@ -1,11 +1,13 @@
 package ui
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
 	"io"
 	"os"
+	"slices"
 	"strings"
 	"time"
 
@@ -41,6 +43,7 @@ type importPending struct {
 }
 
 func (m *AppModel) clearBackupState() {
+	m.backupOp++
 	m.BackupDialog.Set(BackupNone)
 	m.BackupPW.Set("")
 	m.BackupPW2.Set("")
@@ -78,6 +81,7 @@ func (m *AppModel) openBackupDialog(mode BackupMode) {
 }
 
 func (m *AppModel) CloseBackupDialog() {
+	m.backupOp++
 	if m.BackupDialog.Get() == BackupImport && m.importPending != nil {
 		crypto.ZeroBytes(m.importPending.data)
 		m.importPending = nil
@@ -86,6 +90,7 @@ func (m *AppModel) CloseBackupDialog() {
 	m.BackupPW.Set("")
 	m.BackupPW2.Set("")
 	m.BackupError.Set("")
+	m.BackupBusy.Set(false)
 	m.ReleaseSecureInput()
 }
 
@@ -109,6 +114,10 @@ func (m *AppModel) confirmExport(cx *core.Scope) {
 		return
 	case pw != m.BackupPW2.Get():
 		m.BackupError.Set("The passwords do not match.")
+		return
+	}
+	if n := len(m.Core.UnreadableItems()); n > 0 {
+		m.BackupError.Set(fmt.Sprintf("%d personal item(s) are in a format GoVault cannot read, so the backup would be incomplete. Export from the Bitwarden web vault instead.", n))
 		return
 	}
 	m.ReleaseSecureInput()
@@ -247,12 +256,17 @@ func (m *AppModel) confirmImportPassword() {
 	m.BackupBusy.Set(true)
 	m.BackupError.Set("")
 	gen := m.LockGeneration()
+	m.backupOp++
+	op := m.backupOp
 	pwBytes := []byte(pw)
+	// The worker reads its own copy: Cancel and lock zero pending.data.
+	data := bytes.Clone(pending.data)
 	go func() {
 		defer crypto.ZeroBytes(pwBytes)
-		v, err := export.Read(pending.data, pwBytes)
+		defer crypto.ZeroBytes(data)
+		v, err := export.Read(data, pwBytes)
 		m.Scope.Post(func() {
-			if !m.StillUnlocked(gen) {
+			if !m.StillUnlocked(gen) || op != m.backupOp || m.importPending != pending {
 				return
 			}
 			m.BackupBusy.Set(false)
@@ -304,11 +318,24 @@ func (m *AppModel) mutateImport(fn func(p *export.Plan)) {
 }
 
 func (m *AppModel) SetImportAction(i int, a export.Action) {
-	m.mutateImport(func(p *export.Plan) {
-		if i >= 0 && i < len(p.Entries) {
-			p.Entries[i].SetAction(a)
-		}
-	})
+	sess := m.ImportSession.Get()
+	if sess == nil || i < 0 || i >= len(sess.Plan.Entries) {
+		return
+	}
+	if e := &sess.Plan.Entries[i]; a == export.ActionUpdate && e.NeedsReprompt() && slices.Contains(e.Allowed(), a) {
+		gen := m.LockGeneration()
+		m.openRepromptDialog("update a protected item", func() {
+			if m.StillUnlocked(gen) && m.ImportSession.Get() == sess {
+				m.mutateImport(func(*export.Plan) {
+					e.ApproveReprompt()
+					e.SetAction(a)
+				})
+			}
+		})
+		m.ImportRev.Set(m.ImportRev.GetUntracked() + 1)
+		return
+	}
+	m.mutateImport(func(p *export.Plan) { p.Entries[i].SetAction(a) })
 }
 
 // BatchImport sets action a on every entry of class, where allowed.
@@ -346,10 +373,15 @@ func (m *AppModel) ApplyImport() {
 	if c := sess.Plan.Counts(); c.Create+c.Update == 0 {
 		return
 	}
+	ctx, cancel, err := m.Core.SessionContext(context.Background())
+	if err != nil {
+		return
+	}
 	m.ImportBusy.Set(true)
 	gen := m.LockGeneration()
 	go func() {
-		res := export.Apply(context.Background(), m.Core, sess.Plan)
+		defer cancel()
+		res := export.Apply(ctx, m.Core, sess.Plan)
 		m.Scope.Post(func() {
 			if !m.StillUnlocked(gen) {
 				return
@@ -502,6 +534,30 @@ func importReview(cx *core.Scope, m *AppModel, sess *ImportSession) core.Node {
 	}
 }
 
+// importDestination names where a matched vault item lives: the personal
+// vault, or an organization and its collections.
+func (m *AppModel) importDestination(c *state.Cipher) string {
+	if c == nil || c.OrganizationID == nil || *c.OrganizationID == "" {
+		return "your personal vault"
+	}
+	org := "an organization"
+	for _, o := range m.Core.Organizations() {
+		if o.ID == *c.OrganizationID {
+			org = o.Name
+		}
+	}
+	var cols []string
+	for _, col := range m.Core.Collections() {
+		if slices.Contains(c.CollectionIDs, col.ID) {
+			cols = append(cols, col.Name)
+		}
+	}
+	if len(cols) == 0 {
+		return "the shared vault of " + org
+	}
+	return org + " · " + strings.Join(cols, ", ")
+}
+
 func identicalToggleLabel(shown bool, n int) string {
 	if shown {
 		return fmt.Sprintf("Hide %d identical items", n)
@@ -521,15 +577,21 @@ func importRow(m *AppModel, p *export.Plan, i int) core.Node {
 	var note string
 	switch e.Class {
 	case export.ClassConflict:
-		note = "Differs: " + strings.Join(e.Diff, ", ")
+		note = "Differs: " + strings.Join(e.Diff, ", ") + " · in " + m.importDestination(e.Match)
 		switch {
 		case e.UpdateBlocked != "":
 			note += " · cannot update: " + e.UpdateBlocked
 		case !e.CanUpdate:
 			note += " · existing item is read-only"
+		case e.NeedsReprompt():
+			note += " · protected: Update asks for your master password"
 		}
 	case export.ClassIdentical:
-		note = "Already in your vault"
+		note = "Already in " + m.importDestination(e.Match)
+	case export.ClassNew:
+		if e.Ambiguous {
+			note = "Several vault items have this name, so it is not matched to any. Choose Create to add it as a new item."
+		}
 	}
 	opts := make([]ui.Option[export.Action], 0, 3)
 	for _, a := range e.Allowed() {

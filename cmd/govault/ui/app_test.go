@@ -42,6 +42,8 @@ type mockVaultService struct {
 
 	syncErrs  []error
 	syncCalls int
+
+	unreadable []string
 }
 
 func newMockVaultService(initial state.LockStatus) *mockVaultService {
@@ -283,6 +285,13 @@ func (m *mockVaultService) HardDeleteCipher(_ context.Context, id string) error 
 	defer m.mu.Unlock()
 	delete(m.ciphers, id)
 	return nil
+}
+
+func (m *mockVaultService) UnreadableItems() []string { return m.unreadable }
+
+func (m *mockVaultService) SessionContext(parent context.Context) (context.Context, context.CancelFunc, error) {
+	ctx, cancel := context.WithCancel(parent)
+	return ctx, cancel, nil
 }
 
 func (m *mockVaultService) TrashSelection() state.TrashSelection {
