@@ -188,7 +188,7 @@ deletePermanentlyMenu: 영구 삭제…
 addToFavorites: 즐겨찾기에 추가
 removeFromFavorites: 즐겨찾기에서 제거
 clone: 복제
-archiveAction: 아카이브에 보관
+archiveAction: 보관
 unarchiveAction: 보관 해제
 moveToTrash: 휴지통으로 이동
 

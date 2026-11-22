@@ -141,7 +141,7 @@ GoVault does not replace everything the official app does. It has no Intel Mac b
 - Search from the toolbar (⌘F), scoped to the selected category or folder with one click to search everything.
 - Back and Forward through views and items, including the mouse side buttons on macOS.
 - Optional menu bar icon, launch at login, keyboard shortcuts throughout.
-- Follows your system language, or the one you pick in Settings. Translations are welcome: see [docs/i18n.md](docs/i18n.md).
+- Speaks English, 简体中文, 繁體中文, 日本語, 한국어, Deutsch, Français, Español, Português (Brasil) and Русский, following your system language or the one you pick in Settings. Native speakers: please report translation problems in [GitHub issues](https://github.com/txchen/govault/issues) (see [docs/i18n.md](docs/i18n.md)).
 - Signed automatic updates.
 
 ## Security

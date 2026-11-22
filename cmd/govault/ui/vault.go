@@ -564,7 +564,7 @@ func sidebarRow(e sidebarEntry) core.Node {
 			ContentFunc: func() string { return fmt.Sprintf("%d", e.count()) },
 		})
 	}
-	return core.View{
+	return sidebarTooltip(e.label, core.View{
 		TestID: e.testID,
 		ClassFunc: func() string {
 			if e.active() {
@@ -574,7 +574,13 @@ func sidebarRow(e sidebarEntry) core.Node {
 		},
 		OnPress:  func(core.PressEvent) { e.press() },
 		Children: children,
-	}
+	})
+}
+
+// sidebarTooltip shows a sidebar row's whole label as the pointer rests on
+// it, so a label cut off in a narrow sidebar can still be read.
+func sidebarTooltip(label string, row core.Node) core.Node {
+	return ui.Tooltip{Text: label, Placement: core.PlaceRight, Trigger: row}
 }
 
 func folderMenu(cx *core.Scope, m *AppModel, folder state.Folder, at core.Point) {
@@ -590,7 +596,7 @@ func folderRow(cx *core.Scope, m *AppModel, folder state.Folder) core.Node {
 	active := func() bool {
 		return m.Route.Get() == RouteVault && m.SidebarFilter.Get().FolderID == folder.ID
 	}
-	return core.View{
+	return sidebarTooltip(folder.Name, core.View{
 		TestID: "sidebar-folder",
 		ClassFunc: func() string {
 			if active() {
@@ -640,7 +646,7 @@ func folderRow(cx *core.Scope, m *AppModel, folder state.Folder) core.Node {
 				},
 			},
 		},
-	}
+	})
 }
 
 func syncFooter(m *AppModel) core.Node {
