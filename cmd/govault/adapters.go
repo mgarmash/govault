@@ -42,6 +42,9 @@ type ClipboardAdapter struct {
 
 	mu    sync.Mutex
 	timer *time.Timer
+	// owned is the secret GoVault put on the clipboard and has yet to
+	// clear, so quitting can clear it if the clipboard still holds it.
+	owned string
 }
 
 func NewClipboardAdapter(scope *core.Scope) *ClipboardAdapter {
@@ -70,9 +73,16 @@ func (c *ClipboardAdapter) CopySecret(secret string, clearAfter time.Duration) (
 		c.timer.Stop()
 		c.timer = nil
 	}
+	c.owned = ""
 	if clearAfter > 0 {
 		expected := secret
+		c.owned = secret
 		c.timer = time.AfterFunc(clearAfter, func() {
+			c.mu.Lock()
+			if c.owned == expected {
+				c.owned = ""
+			}
+			c.mu.Unlock()
 			c.scope.Post(func() {
 				c.scope.ReadClipboard(func(current string) {
 					if current == expected {
@@ -91,10 +101,18 @@ func (c *ClipboardAdapter) CopyPlain(text string) {
 	c.scope.SetClipboard(text)
 }
 
-// ClearOnQuit clears a pending concealed secret synchronously and stops the
-// fallback timer.
+// ClearOnQuit clears a secret still waiting to be cleared, synchronously,
+// before the app exits and its timers stop: the concealed copy on macOS,
+// else the clipboard if it still holds the secret GoVault put there.
 func (c *ClipboardAdapter) ClearOnQuit() {
 	c.concealed.ClearPending()
+	c.mu.Lock()
+	owned := c.owned
+	c.owned = ""
+	c.mu.Unlock()
+	if owned != "" {
+		clearClipboardIfOwned(owned)
+	}
 	c.Cancel()
 }
 
@@ -105,6 +123,7 @@ func (c *ClipboardAdapter) Cancel() {
 		c.timer.Stop()
 		c.timer = nil
 	}
+	c.owned = ""
 	c.mu.Unlock()
 }
 

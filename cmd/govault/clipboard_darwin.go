@@ -118,7 +118,14 @@ func newNSString(s string) objc.ID {
 	return id
 }
 
+// testPasteboard, when set, replaces the general pasteboard, so tests
+// never touch what the user copied.
+var testPasteboard objc.ID
+
 func generalPasteboard() objc.ID {
+	if testPasteboard != 0 {
+		return testPasteboard
+	}
 	return objc.ID(clsNSPasteboard).Send(selGeneralPasteboard)
 }
 

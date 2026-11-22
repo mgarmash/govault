@@ -134,16 +134,13 @@ const maxSaveCandidates = 1000
 // temporary file is always removed, and data is zeroed.
 func (m *AppModel) savePrivateFile(gen uint64, target saveTarget, data []byte) (string, bool, error) {
 	defer crypto.ZeroBytes(data)
-	tmp, err := os.CreateTemp(target.dir, "."+target.name+".*")
+	tmp, err := createPrivateTemp(target.dir, "."+target.name+".*")
 	if err != nil {
 		return "", false, err
 	}
 	tmpPath := tmp.Name()
 	defer os.Remove(tmpPath)
-	err = tmp.Chmod(0o600)
-	if err == nil {
-		_, err = tmp.Write(data)
-	}
+	_, err = tmp.Write(data)
 	if err == nil {
 		err = tmp.Sync()
 	}

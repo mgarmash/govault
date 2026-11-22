@@ -3,6 +3,7 @@
 package main
 
 import (
+	"os"
 	"testing"
 	"time"
 	"unsafe"
@@ -76,7 +77,34 @@ func cStringCopy(p *byte) string {
 	return string(unsafe.Slice(p, n))
 }
 
+// usePrivatePasteboard points the clipboard code at a uniquely named
+// pasteboard for the test. Set GOVAULT_PASTEBOARD_PROBE=1 to run against
+// the general pasteboard instead, which replaces what you copied.
+func usePrivatePasteboard(t *testing.T) {
+	t.Helper()
+	if os.Getenv("GOVAULT_PASTEBOARD_PROBE") != "" {
+		return
+	}
+	if err := initPasteboard(); err != nil {
+		t.Skip(err)
+	}
+	selUnique := objc.RegisterName("pasteboardWithUniqueName")
+	selRetain := objc.RegisterName("retain")
+	selReleaseGlobally := objc.RegisterName("releaseGlobally")
+	withAutoreleasePool(func() {
+		testPasteboard = objc.ID(clsNSPasteboard).Send(selUnique).Send(selRetain)
+	})
+	t.Cleanup(func() {
+		withAutoreleasePool(func() {
+			testPasteboard.Send(selReleaseGlobally)
+			testPasteboard.Send(selRelease)
+		})
+		testPasteboard = 0
+	})
+}
+
 func TestConcealedClipboardMarkersAndAutoClear(t *testing.T) {
+	usePrivatePasteboard(t)
 	cb := NewConcealedClipboard()
 	defer cb.Cancel()
 	defer func() {
@@ -117,6 +145,7 @@ func TestConcealedClipboardMarkersAndAutoClear(t *testing.T) {
 }
 
 func TestConcealedClipboardSkipsClearWhenChangeCountChanged(t *testing.T) {
+	usePrivatePasteboard(t)
 	cb := NewConcealedClipboard()
 	defer cb.Cancel()
 	defer func() {
@@ -147,6 +176,7 @@ func TestConcealedClipboardSkipsClearWhenChangeCountChanged(t *testing.T) {
 }
 
 func TestConcealedClipboardClearPendingOnQuit(t *testing.T) {
+	usePrivatePasteboard(t)
 	cb := NewConcealedClipboard()
 	if _, err := cb.Copy("govault-quit-secret", time.Hour); err != nil {
 		t.Fatalf("Copy failed: %v", err)
