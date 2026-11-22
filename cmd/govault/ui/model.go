@@ -963,7 +963,23 @@ func (m *AppModel) VerifyTwoFactor() {
 	if m.LoginBusy.Get() || m.TwoFactor.Get() == nil {
 		return
 	}
+	provider := m.TwoFactorProvider.Get()
 	code := strings.Join(strings.Fields(m.TwoFactorCode.Get()), "")
+	if provider == api.TwoFactorYubiKey {
+		// The key types its OTP and Enter; a malformed one never reaches
+		// the server, and the field is emptied for the next touch.
+		otp, valid := api.NormalizeYubiKeyOTP(code)
+		switch {
+		case otp == "":
+			m.LoginError.Set(locales.TwoFactorYubiKeyRequired(m.Scope))
+			return
+		case !valid:
+			m.TwoFactorCode.Set("")
+			m.LoginError.Set(locales.TwoFactorYubiKeyMalformed(m.Scope))
+			return
+		}
+		code = otp
+	}
 	if code == "" {
 		m.LoginError.Set(locales.TwoFactorCodeRequired(m.Scope))
 		return
@@ -973,17 +989,23 @@ func (m *AppModel) VerifyTwoFactor() {
 		m.CancelTwoFactor()
 		return
 	}
-	req.TwoFactorProvider = m.TwoFactorProvider.Get()
+	req.TwoFactorProvider = provider
 	req.TwoFactorCode = code
 	req.RememberDevice = m.TwoFactorRemember.Get()
 	m.submitLogin(req)
 }
+
+// twoFactorSupported lists the two-step login methods GoVault can sign
+// in with, from the most preferred: the order Bitwarden's clients pick a
+// default in (TwoFactorProviders priority, libs/common two-factor.service.ts).
+var twoFactorSupported = []api.TwoFactorProvider{api.TwoFactorYubiKey, api.TwoFactorAuthenticator, api.TwoFactorEmail}
 
 func (m *AppModel) submitLogin(req state.LoginRequest) {
 	m.ReleaseSecureInput()
 	m.LoginBusy.Set(true)
 	m.LoginError.Set("")
 	verifying := req.TwoFactorCode != ""
+	provider := req.TwoFactorProvider
 	ctx := state.WithAuthAttempt(context.Background(), m.Core.AuthAttempt())
 	gen := m.LockGeneration()
 
@@ -996,7 +1018,7 @@ func (m *AppModel) submitLogin(req state.LoginRequest) {
 			}
 			m.LoginBusy.Set(false)
 			if err != nil {
-				m.loginFailed(err, verifying)
+				m.loginFailed(err, verifying, provider)
 				return
 			}
 			m.finishLogin(req.ServerURL, req.Email)
@@ -1004,13 +1026,13 @@ func (m *AppModel) submitLogin(req state.LoginRequest) {
 	}()
 }
 
-func (m *AppModel) loginFailed(err error, verifying bool) {
+func (m *AppModel) loginFailed(err error, verifying bool, provider api.TwoFactorProvider) {
 	var tfErr *api.TwoFactorRequiredError
 	var apiErr *api.APIError
 	switch {
 	case verifying && (errors.As(err, &tfErr) || errors.As(err, &apiErr) && apiErr.StatusCode == http.StatusBadRequest):
 		m.TwoFactorCode.Set("")
-		m.LoginError.Set(locales.TwoFactorCodeInvalid(m.Scope))
+		m.LoginError.Set(m.twoFactorRejected(provider, apiErr))
 	case errors.As(err, &tfErr):
 		m.enterTwoFactor(tfErr.Challenge)
 	default:
@@ -1018,10 +1040,25 @@ func (m *AppModel) loginFailed(err error, verifying bool) {
 	}
 }
 
+// twoFactorRejected says why the server refused a two-step code.
+// Vaultwarden answers a YubiKey OTP that is not one of the account's keys
+// with "Given Yubikey is not registered", and one YubiCloud refuses, as a
+// replayed OTP, with "Failed to verify Yubikey against OTP server"
+// (src/api/core/two_factor/yubikey.rs, validate_yubikey_login).
+func (m *AppModel) twoFactorRejected(provider api.TwoFactorProvider, apiErr *api.APIError) string {
+	if provider != api.TwoFactorYubiKey {
+		return locales.TwoFactorCodeInvalid(m.Scope)
+	}
+	if apiErr != nil && strings.Contains(strings.ToLower(apiErr.Message), "not registered") {
+		return locales.TwoFactorYubiKeyNotRegistered(m.Scope)
+	}
+	return locales.TwoFactorYubiKeyInvalid(m.Scope)
+}
+
 func (m *AppModel) enterTwoFactor(ch api.TwoFactorChallenge) {
 	prompt := &TwoFactorPrompt{EmailHint: ch.EmailHint()}
 	for _, p := range ch.Providers {
-		if p == api.TwoFactorAuthenticator || p == api.TwoFactorEmail {
+		if slices.Contains(twoFactorSupported, p) {
 			prompt.Providers = append(prompt.Providers, p)
 		}
 	}
@@ -1033,7 +1070,12 @@ func (m *AppModel) enterTwoFactor(ch api.TwoFactorChallenge) {
 		m.LoginError.Set(locales.TwoFactorUnsupported(m.Scope, joinList(names)))
 		return
 	}
-	m.TwoFactorProvider.Set(prompt.Providers[0])
+	for _, p := range twoFactorSupported {
+		if prompt.Has(p) {
+			m.TwoFactorProvider.Set(p)
+			break
+		}
+	}
 	m.TwoFactorCode.Set("")
 	m.TwoFactorRemember.Set(false)
 	m.TwoFactorNotice.Set("")

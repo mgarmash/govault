@@ -88,9 +88,12 @@ twoFactorTitle: Two-step verification
 twoFactorEnterEmailCodeTo: "Enter the code sent to {email}."
 twoFactorEnterEmailCode: Enter the code sent to your email.
 twoFactorEnterAuthenticatorCode: Enter the 6-digit code from your authenticator app.
+twoFactorEnterYubiKey:
+  message: Insert your YubiKey and touch it.
+  description: Shown under the two-step login title when the YubiKey method is chosen. Touching the key's button makes it type a one-time code into the field.
 twoFactorMethod:
   message: Verification method
-  description: What screen readers say of the choice between authenticator app and email codes.
+  description: What screen readers say of the choice between two-step login methods, such as authenticator app, email and YubiKey.
 twoFactorAuthenticator:
   message: Authenticator App
   description: The two-step login method that uses codes from an authenticator app.
@@ -126,8 +129,20 @@ resendCode: Resend Code
 twoFactorFootnote: Two-step login keeps your vault safe even if your password leaks.
 twoFactorCodeRequired: Enter the verification code.
 twoFactorCodeInvalid: Invalid verification code. Check the code and try again.
+twoFactorYubiKeyRequired:
+  message: Touch your YubiKey to enter its code.
+  description: Shown when the user chooses Verify with the YubiKey code field empty.
+twoFactorYubiKeyMalformed:
+  message: That is not a code from a YubiKey. Touch your YubiKey to enter a new one.
+  description: Shown when the YubiKey code field holds text that is not a YubiKey one-time code, such as something typed by hand. Nothing was sent to the server.
+twoFactorYubiKeyInvalid:
+  message: The server did not accept this YubiKey code. Touch your YubiKey again to enter a new one.
+  description: Shown when the server rejects a YubiKey one-time code, for example one already used. Each touch of the key makes a new code.
+twoFactorYubiKeyNotRegistered:
+  message: This YubiKey is not registered with your account. Use a YubiKey you added in your vault web settings.
+  description: Shown when the server says the YubiKey that typed the code is not one of the account's keys.
 twoFactorUnsupported:
-  message: "This account requires two-step login with {methods}, which GoVault does not support yet. Enable Authenticator App or Email two-step login in your vault web settings to sign in here."
+  message: "This account requires two-step login with {methods}, which GoVault does not support yet. Enable Authenticator App, Email or YubiKey two-step login in your vault web settings to sign in here."
   description: methods lists the account's two-step login methods, separated by commas.
 twoFactorEmailFailed:
   message: "Could not send the verification email. {reason}"

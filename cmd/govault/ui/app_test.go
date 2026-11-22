@@ -28,7 +28,14 @@ type mockVaultService struct {
 	folders  []state.Folder
 
 	twoFactorCode string
-	emailSends    int
+	// twoFactorProvider is the method twoFactorCode is for, and
+	// twoFactorOffered the methods the challenge lists; they default to
+	// Email and Authenticator App with Email.
+	twoFactorProvider api.TwoFactorProvider
+	twoFactorOffered  []api.TwoFactorProvider
+	logins            int
+	rejectMessage     string // the error message for a wrong code
+	emailSends        int
 
 	organizations []state.Organization
 	collections   []state.Collection
@@ -110,16 +117,32 @@ func (m *mockVaultService) Login(_ context.Context, req state.LoginRequest) erro
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.lastLogin = req
+	m.logins++
 	if string(req.MasterPassword) != m.password {
 		return api.ErrUnauthorized
 	}
-	if m.twoFactorCode != "" && (req.TwoFactorProvider != api.TwoFactorEmail || req.TwoFactorCode != m.twoFactorCode) {
+	wantProvider := m.twoFactorProvider
+	if wantProvider == 0 {
+		wantProvider = api.TwoFactorEmail
+	}
+	if m.twoFactorCode != "" && (req.TwoFactorProvider != wantProvider || req.TwoFactorCode != m.twoFactorCode) {
 		if req.TwoFactorCode != "" {
-			return &api.APIError{StatusCode: 400, Message: "Invalid TOTP code"}
+			msg := m.rejectMessage
+			if msg == "" {
+				msg = "Invalid TOTP code"
+			}
+			return &api.APIError{StatusCode: 400, Message: msg}
+		}
+		offered := m.twoFactorOffered
+		if offered == nil {
+			offered = []api.TwoFactorProvider{api.TwoFactorAuthenticator, api.TwoFactorEmail}
 		}
 		return &api.TwoFactorRequiredError{Challenge: api.TwoFactorChallenge{
-			Providers:    []api.TwoFactorProvider{api.TwoFactorAuthenticator, api.TwoFactorEmail},
-			ProviderData: map[api.TwoFactorProvider]json.RawMessage{api.TwoFactorEmail: json.RawMessage(`{"Email":"a***@example.com"}`)},
+			Providers: offered,
+			ProviderData: map[api.TwoFactorProvider]json.RawMessage{
+				api.TwoFactorEmail:   json.RawMessage(`{"Email":"a***@example.com"}`),
+				api.TwoFactorYubiKey: json.RawMessage(`{"Nfc":false}`),
+			},
 		}}
 	}
 	m.status = state.StatusUnlocked

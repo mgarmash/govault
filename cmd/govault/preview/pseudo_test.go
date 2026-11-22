@@ -205,6 +205,13 @@ func TestPseudoLocaleShowsNoHardcodedText(t *testing.T) {
 		})
 		m.SelectTwoFactorProvider(api.TwoFactorEmail)
 	})
+	scene("twofactor-yubikey", func() {
+		m.TwoFactor.Set(&TwoFactorPrompt{
+			Providers: []api.TwoFactorProvider{api.TwoFactorAuthenticator, api.TwoFactorEmail, api.TwoFactorYubiKey},
+		})
+		m.SelectTwoFactorProvider(api.TwoFactorYubiKey)
+		m.VerifyTwoFactor()
+	})
 
 	for s, scenes := range found {
 		t.Errorf("not in the catalog: %q (on %s)", s, strings.Join(scenes, ", "))

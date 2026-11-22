@@ -82,6 +82,30 @@ func (c TwoFactorChallenge) EmailHint() string {
 	return ""
 }
 
+// YubiKeyOTPLength is the length of a Yubico OTP: a 12-character public
+// ID and a 32-character encrypted part, all in modhex. Vaultwarden refuses
+// any other length ("Invalid Yubikey OTP length",
+// src/api/core/two_factor/yubikey.rs).
+const YubiKeyOTPLength = 44
+
+const modhexAlphabet = "cbdefghijklnrtuv"
+
+// NormalizeYubiKeyOTP returns the OTP a YubiKey typed without whitespace,
+// in lowercase modhex, and whether it has the shape of a Yubico OTP.
+// Caps Lock types it in capitals, so case is folded.
+func NormalizeYubiKeyOTP(s string) (string, bool) {
+	otp := strings.ToLower(strings.Join(strings.Fields(s), ""))
+	if len(otp) != YubiKeyOTPLength {
+		return otp, false
+	}
+	for i := 0; i < len(otp); i++ {
+		if strings.IndexByte(modhexAlphabet, otp[i]) < 0 {
+			return otp, false
+		}
+	}
+	return otp, true
+}
+
 type TwoFactorRequiredError struct {
 	Challenge TwoFactorChallenge
 	Message   string

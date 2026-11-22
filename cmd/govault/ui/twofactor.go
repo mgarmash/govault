@@ -11,6 +11,7 @@ import (
 
 func TwoFactorView(cx *core.Scope, m *AppModel, prompt *TwoFactorPrompt) core.Node {
 	emailSelected := func() bool { return m.TwoFactorProvider.Get() == api.TwoFactorEmail }
+	yubiKeySelected := func() bool { return m.TwoFactorProvider.Get() == api.TwoFactorYubiKey }
 	busy := m.LoginBusy.Get
 
 	body := []core.Node{
@@ -22,6 +23,9 @@ func TwoFactorView(cx *core.Scope, m *AppModel, prompt *TwoFactorPrompt) core.No
 				core.Text{
 					Class: "text-[12.5px] text-gv-fg2 text-center",
 					ContentFunc: func() string {
+						if yubiKeySelected() {
+							return locales.TwoFactorEnterYubiKey(cx)
+						}
 						if emailSelected() {
 							if prompt.EmailHint != "" {
 								return locales.TwoFactorEnterEmailCodeTo(cx, prompt.EmailHint)
@@ -35,7 +39,18 @@ func TwoFactorView(cx *core.Scope, m *AppModel, prompt *TwoFactorPrompt) core.No
 		},
 	}
 
-	if prompt.Has(api.TwoFactorAuthenticator) && prompt.Has(api.TwoFactorEmail) {
+	if len(prompt.Providers) > 1 {
+		var toggles []core.Node
+		for _, p := range prompt.Providers {
+			switch p {
+			case api.TwoFactorAuthenticator:
+				toggles = append(toggles, providerToggle(m, "twofactor-provider-authenticator", p, lucide.Smartphone))
+			case api.TwoFactorEmail:
+				toggles = append(toggles, providerToggle(m, "twofactor-provider-email", p, lucide.Mail))
+			case api.TwoFactorYubiKey:
+				toggles = append(toggles, providerToggle(m, "twofactor-provider-yubikey", p, lucide.Usb))
+			}
+		}
 		body = append(body, core.View{
 			Class: "items-center",
 			Children: []core.Node{
@@ -43,10 +58,7 @@ func TwoFactorView(cx *core.Scope, m *AppModel, prompt *TwoFactorPrompt) core.No
 					TestID:   "twofactor-providers",
 					Label:    locales.TwoFactorMethod(cx),
 					Disabled: busy,
-					Children: []core.Node{
-						providerToggle(m, "twofactor-provider-authenticator", api.TwoFactorAuthenticator, lucide.Smartphone),
-						providerToggle(m, "twofactor-provider-email", api.TwoFactorEmail, lucide.Mail),
-					},
+					Children: toggles,
 				},
 			},
 		})
@@ -56,19 +68,24 @@ func TwoFactorView(cx *core.Scope, m *AppModel, prompt *TwoFactorPrompt) core.No
 		core.View{
 			Class: "gap-3",
 			Children: []core.Node{
-				formField(locales.VerificationCode(cx), authInput(base.Input{
-					TestID:        "twofactor-code",
-					Class:         "font-mono",
-					Placeholder:   "123456",
-					NoAutoCorrect: true,
-					AutoFocus:     true,
-					MaxLength:     12,
-					Value:         m.TwoFactorCode.Get,
-					OnChange:      m.TwoFactorCode.Set,
-					OnSubmit:      func(string) { m.VerifyTwoFactor() },
-					Disabled:      busy,
-					Style:         core.Style{FontSize: 15, LetterSpacing: 2},
-				})),
+				core.Dynamic(func(cx *core.Scope) core.Node {
+					if yubiKeySelected() {
+						return formField(locales.VerificationCode(cx), yubiKeyInput(m))
+					}
+					return formField(locales.VerificationCode(cx), authInput(base.Input{
+						TestID:        "twofactor-code",
+						Class:         "font-mono",
+						Placeholder:   "123456",
+						NoAutoCorrect: true,
+						AutoFocus:     true,
+						MaxLength:     12,
+						Value:         m.TwoFactorCode.Get,
+						OnChange:      m.TwoFactorCode.Set,
+						OnSubmit:      func(string) { m.VerifyTwoFactor() },
+						Disabled:      busy,
+						Style:         core.Style{FontSize: 15, LetterSpacing: 2},
+					}))
+				}),
 				core.Show{
 					When: emailSelected,
 					Then: func(cx *core.Scope) core.Node { return emailCodeRow(m) },
@@ -110,6 +127,27 @@ func TwoFactorView(cx *core.Scope, m *AppModel, prompt *TwoFactorPrompt) core.No
 		},
 	)
 	return authScreen("twofactor-screen", body, locales.TwoFactorFootnote(cx))
+}
+
+// yubiKeyInput takes the OTP a YubiKey types when touched. The key ends
+// it with Enter, which submits. As in Bitwarden's clients the field is
+// masked, so macOS holds Secure Event Input while it has the focus; it is
+// released on blur, submit and Back to Sign In, as for the master password.
+func yubiKeyInput(m *AppModel) core.Node {
+	return authInput(base.Input{
+		TestID:         "twofactor-code",
+		Class:          "font-mono",
+		Masked:         true,
+		NoAutoCorrect:  true,
+		AutoCapitalize: core.AutoCapitalizeNone,
+		AutoFocus:      true,
+		MaxLength:      64,
+		Value:          m.TwoFactorCode.Get,
+		OnChange:       m.TwoFactorCode.Set,
+		OnSubmit:       func(string) { m.VerifyTwoFactor() },
+		OnBlur:         settleSecureInput,
+		Disabled:       m.LoginBusy.Get,
+	})
 }
 
 func providerToggle(m *AppModel, testID string, p api.TwoFactorProvider, glyph func() *core.SVG) core.Node {

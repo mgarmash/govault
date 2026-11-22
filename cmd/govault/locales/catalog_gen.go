@@ -1781,6 +1781,7 @@ const (
 	textTwoFactorTitle
 	textTwoFactorEnterEmailCode
 	textTwoFactorEnterAuthenticatorCode
+	textTwoFactorEnterYubiKey
 	textTwoFactorMethod
 	textTwoFactorAuthenticator
 	textTwoFactorEmail
@@ -1798,6 +1799,10 @@ const (
 	textTwoFactorFootnote
 	textTwoFactorCodeRequired
 	textTwoFactorCodeInvalid
+	textTwoFactorYubiKeyRequired
+	textTwoFactorYubiKeyMalformed
+	textTwoFactorYubiKeyInvalid
+	textTwoFactorYubiKeyNotRegistered
 	textTwoFactorEmailSent
 	textLockedTitle
 	textUnlock
@@ -2311,6 +2316,7 @@ var keyOfText = [numTexts]string{
 	"twoFactorTitle",
 	"twoFactorEnterEmailCode",
 	"twoFactorEnterAuthenticatorCode",
+	"twoFactorEnterYubiKey",
 	"twoFactorMethod",
 	"twoFactorAuthenticator",
 	"twoFactorEmail",
@@ -2328,6 +2334,10 @@ var keyOfText = [numTexts]string{
 	"twoFactorFootnote",
 	"twoFactorCodeRequired",
 	"twoFactorCodeInvalid",
+	"twoFactorYubiKeyRequired",
+	"twoFactorYubiKeyMalformed",
+	"twoFactorYubiKeyInvalid",
+	"twoFactorYubiKeyNotRegistered",
 	"twoFactorEmailSent",
 	"lockedTitle",
 	"unlock",
@@ -2839,6 +2849,7 @@ var textsEn = i18n.NewTexts(""+
 	"Two-step verification"+
 	"Enter the code sent to your email."+
 	"Enter the 6-digit code from your authenticator app."+
+	"Insert your YubiKey and touch it."+
 	"Verification method"+
 	"Authenticator App"+
 	"Email"+
@@ -2856,6 +2867,10 @@ var textsEn = i18n.NewTexts(""+
 	"Two-step login keeps your vault safe even if your password leaks."+
 	"Enter the verification code."+
 	"Invalid verification code. Check the code and try again."+
+	"Touch your YubiKey to enter its code."+
+	"That is not a code from a YubiKey. Touch your YubiKey to enter a new one."+
+	"The server did not accept this YubiKey code. Touch your YubiKey again to enter a new one."+
+	"This YubiKey is not registered with your account. Use a YubiKey you added in your vault web settings."+
 	"A verification code was sent to your email."+
 	"GoVault is Locked"+
 	"Unlock"+
@@ -3364,6 +3379,7 @@ var textsEn = i18n.NewTexts(""+
 		21,
 		34,
 		51,
+		33,
 		19,
 		17,
 		5,
@@ -3381,6 +3397,10 @@ var textsEn = i18n.NewTexts(""+
 		65,
 		28,
 		56,
+		37,
+		73,
+		89,
+		101,
 		43,
 		17,
 		6,
@@ -3892,6 +3912,7 @@ var textsDe = i18n.NewTexts(""+
 	"Bestätigung in zwei Schritten"+
 	"Gib den Code ein, der an deine E-Mail gesendet wurde."+
 	"Gib den 6-stelligen Code aus deiner Authenticator-App ein."+
+	""+
 	"Bestätigungsmethode"+
 	"Authenticator-App"+
 	"E-Mail"+
@@ -3909,6 +3930,10 @@ var textsDe = i18n.NewTexts(""+
 	"Die Zwei-Faktor-Authentifizierung schützt deinen Tresor selbst bei einem Passwortleck."+
 	"Gib den Verifizierungscode ein."+
 	"Ungültiger Verifizierungscode. Prüfe den Code und versuche es erneut."+
+	""+
+	""+
+	""+
+	""+
 	"Ein Verifizierungscode wurde an deine E-Mail gesendet."+
 	"GoVault ist gesperrt"+
 	"Entsperren"+
@@ -4417,6 +4442,7 @@ var textsDe = i18n.NewTexts(""+
 		30,
 		53,
 		58,
+		0,
 		20,
 		17,
 		6,
@@ -4434,6 +4460,10 @@ var textsDe = i18n.NewTexts(""+
 		87,
 		31,
 		71,
+		0,
+		0,
+		0,
+		0,
 		54,
 		20,
 		10,
@@ -4945,6 +4975,7 @@ var textsEs = i18n.NewTexts(""+
 	"Verificación en dos pasos"+
 	"Introduce el código enviado a tu correo electrónico."+
 	"Introduce el código de 6 dígitos de tu app de autenticación."+
+	""+
 	"Método de verificación"+
 	"App de autenticación"+
 	"Correo electrónico"+
@@ -4962,6 +4993,10 @@ var textsEs = i18n.NewTexts(""+
 	"La autenticación en dos pasos protege tu caja fuerte incluso si se filtra tu contraseña."+
 	"Introduce el código de verificación."+
 	"Código de verificación no válido. Compruébalo e inténtalo de nuevo."+
+	""+
+	""+
+	""+
+	""+
 	"Se envió un código de verificación a tu correo electrónico."+
 	"GoVault está bloqueado"+
 	"Desbloquear"+
@@ -5470,6 +5505,7 @@ var textsEs = i18n.NewTexts(""+
 		26,
 		54,
 		63,
+		0,
 		24,
 		21,
 		19,
@@ -5487,6 +5523,10 @@ var textsEs = i18n.NewTexts(""+
 		90,
 		38,
 		72,
+		0,
+		0,
+		0,
+		0,
 		63,
 		23,
 		11,
@@ -5998,6 +6038,7 @@ var textsFr = i18n.NewTexts(""+
 	"Vérification en deux étapes"+
 	"Saisissez le code envoyé à votre adresse e-mail."+
 	"Saisissez le code à 6 chiffres de votre application d’authentification."+
+	""+
 	"Méthode de vérification"+
 	"Application d’authentification"+
 	"E-mail"+
@@ -6015,6 +6056,10 @@ var textsFr = i18n.NewTexts(""+
 	"L’authentification à deux facteurs protège votre coffre même si votre mot de passe est compromis."+
 	"Saisissez le code de vérification."+
 	"Code de vérification invalide. Vérifiez-le et réessayez."+
+	""+
+	""+
+	""+
+	""+
 	"Un code de vérification a été envoyé à votre adresse e-mail."+
 	"GoVault est verrouillé"+
 	"Déverrouiller"+
@@ -6523,6 +6568,7 @@ var textsFr = i18n.NewTexts(""+
 		29,
 		50,
 		74,
+		0,
 		25,
 		32,
 		6,
@@ -6540,6 +6586,10 @@ var textsFr = i18n.NewTexts(""+
 		102,
 		35,
 		59,
+		0,
+		0,
+		0,
+		0,
 		65,
 		23,
 		14,
@@ -7051,6 +7101,7 @@ var textsJa = i18n.NewTexts(""+
 	"2段階認証"+
 	"メールで送信された認証コードを入力してください。"+
 	"認証アプリの 6 桁のコードを入力してください。"+
+	""+
 	"認証方法"+
 	"認証アプリ"+
 	"メール"+
@@ -7068,6 +7119,10 @@ var textsJa = i18n.NewTexts(""+
 	"パスワードが漏えいしても、2段階認証により保管庫を保護できます。"+
 	"認証コードを入力してください。"+
 	"認証コードが無効です。確認してもう一度お試しください。"+
+	""+
+	""+
+	""+
+	""+
 	"認証コードをメールで送信しました。"+
 	"GoVault はロックされています"+
 	"ロック解除"+
@@ -7576,6 +7631,7 @@ var textsJa = i18n.NewTexts(""+
 		13,
 		72,
 		66,
+		0,
 		12,
 		15,
 		9,
@@ -7593,6 +7649,10 @@ var textsJa = i18n.NewTexts(""+
 		94,
 		45,
 		81,
+		0,
+		0,
+		0,
+		0,
 		51,
 		38,
 		15,
@@ -8104,6 +8164,7 @@ var textsKo = i18n.NewTexts(""+
 	"2단계 인증"+
 	"이메일로 전송된 인증 코드를 입력하세요."+
 	"인증 앱의 6자리 코드를 입력하세요."+
+	""+
 	"인증 방법"+
 	"인증 앱"+
 	"이메일"+
@@ -8121,6 +8182,10 @@ var textsKo = i18n.NewTexts(""+
 	"비밀번호가 유출되더라도 2단계 인증으로 보관함을 안전하게 보호합니다."+
 	"인증 코드를 입력하세요."+
 	"인증 코드가 올바르지 않습니다. 확인 후 다시 시도하세요."+
+	""+
+	""+
+	""+
+	""+
 	"이메일로 인증 코드를 보냈습니다."+
 	"GoVault 잠김"+
 	"잠금 해제"+
@@ -8629,6 +8694,7 @@ var textsKo = i18n.NewTexts(""+
 		14,
 		56,
 		48,
+		0,
 		13,
 		10,
 		9,
@@ -8646,6 +8712,10 @@ var textsKo = i18n.NewTexts(""+
 		98,
 		33,
 		78,
+		0,
+		0,
+		0,
+		0,
 		46,
 		14,
 		13,
@@ -9157,6 +9227,7 @@ var textsPtBR = i18n.NewTexts(""+
 	"Verificação em duas etapas"+
 	"Digite o código enviado para seu e-mail."+
 	"Digite o código de 6 dígitos do seu aplicativo autenticador."+
+	""+
 	"Método de verificação"+
 	"Aplicativo autenticador"+
 	"E-mail"+
@@ -9174,6 +9245,10 @@ var textsPtBR = i18n.NewTexts(""+
 	"A autenticação em duas etapas mantém seu cofre seguro mesmo se sua senha vazar."+
 	"Digite o código de verificação."+
 	"Código de verificação inválido. Verifique e tente novamente."+
+	""+
+	""+
+	""+
+	""+
 	"Um código de verificação foi enviado para seu e-mail."+
 	"O GoVault está bloqueado"+
 	"Desbloquear"+
@@ -9682,6 +9757,7 @@ var textsPtBR = i18n.NewTexts(""+
 		28,
 		41,
 		62,
+		0,
 		24,
 		23,
 		6,
@@ -9699,6 +9775,10 @@ var textsPtBR = i18n.NewTexts(""+
 		82,
 		34,
 		64,
+		0,
+		0,
+		0,
+		0,
 		56,
 		25,
 		11,
@@ -10210,6 +10290,7 @@ var textsRu = i18n.NewTexts(""+
 	"Двухэтапная проверка"+
 	"Введите код, отправленный на вашу эл. почту."+
 	"Введите 6-значный код из приложения-аутентификатора."+
+	""+
 	"Способ проверки"+
 	"Приложение-аутентификатор"+
 	"Эл. почта"+
@@ -10227,6 +10308,10 @@ var textsRu = i18n.NewTexts(""+
 	"Двухэтапная аутентификация защитит хранилище, даже если пароль утечёт."+
 	"Введите код подтверждения."+
 	"Неверный код подтверждения. Проверьте код и повторите попытку."+
+	""+
+	""+
+	""+
+	""+
 	"Код подтверждения отправлен на вашу эл. почту."+
 	"GoVault заблокирован"+
 	"Разблокировать"+
@@ -10735,6 +10820,7 @@ var textsRu = i18n.NewTexts(""+
 		39,
 		79,
 		96,
+		0,
 		29,
 		49,
 		16,
@@ -10752,6 +10838,10 @@ var textsRu = i18n.NewTexts(""+
 		131,
 		49,
 		115,
+		0,
+		0,
+		0,
+		0,
 		84,
 		32,
 		28,
@@ -11263,6 +11353,7 @@ var textsZhHans = i18n.NewTexts(""+
 	"两步验证"+
 	"请输入发送至你电子邮箱的验证码。"+
 	"请输入验证器应用中的 6 位验证码。"+
+	""+
 	"验证方式"+
 	"验证器应用"+
 	"电子邮箱"+
@@ -11280,6 +11371,10 @@ var textsZhHans = i18n.NewTexts(""+
 	"即使密码泄露，两步登录也能保护你的密码库安全。"+
 	"请输入验证码。"+
 	"验证码无效，请检查后重试。"+
+	""+
+	""+
+	""+
+	""+
 	"验证码已发送至你的电子邮箱。"+
 	"GoVault 已锁定"+
 	"解锁"+
@@ -11788,6 +11883,7 @@ var textsZhHans = i18n.NewTexts(""+
 		12,
 		48,
 		48,
+		0,
 		12,
 		15,
 		12,
@@ -11805,6 +11901,10 @@ var textsZhHans = i18n.NewTexts(""+
 		69,
 		21,
 		39,
+		0,
+		0,
+		0,
+		0,
 		42,
 		17,
 		6,
@@ -12316,6 +12416,7 @@ var textsZhHant = i18n.NewTexts(""+
 	"兩步驟驗證"+
 	"請輸入傳送至您電子郵件的驗證碼。"+
 	"請輸入驗證器應用程式中的 6 位數驗證碼。"+
+	""+
 	"驗證方式"+
 	"驗證器應用程式"+
 	"電子郵件"+
@@ -12333,6 +12434,10 @@ var textsZhHant = i18n.NewTexts(""+
 	"即使密碼外洩，兩步驟登入也能保護您的密碼庫安全。"+
 	"請輸入驗證碼。"+
 	"驗證碼無效，請檢查後重試。"+
+	""+
+	""+
+	""+
+	""+
 	"驗證碼已傳送至您的電子郵件。"+
 	"GoVault 已鎖定"+
 	"解鎖"+
@@ -12841,6 +12946,7 @@ var textsZhHant = i18n.NewTexts(""+
 		15,
 		48,
 		57,
+		0,
 		12,
 		21,
 		12,
@@ -12858,6 +12964,10 @@ var textsZhHant = i18n.NewTexts(""+
 		72,
 		21,
 		39,
+		0,
+		0,
+		0,
+		0,
 		42,
 		17,
 		6,
@@ -14044,10 +14154,19 @@ func (msgs Messages) TwoFactorEnterAuthenticatorCode() string {
 	return msgs.text(textTwoFactorEnterAuthenticatorCode)
 }
 
+// TwoFactorEnterYubiKey says "Insert your YubiKey and touch it."
+// in the language the app shows under cx.
+//
+// Shown under the two-step login title when the YubiKey method is chosen. Touching the key's button makes it type a one-time code into the field.
+func TwoFactorEnterYubiKey(cx *core.Scope) string { return For(cx).TwoFactorEnterYubiKey() }
+
+// TwoFactorEnterYubiKey is the package's TwoFactorEnterYubiKey in the language of msgs.
+func (msgs Messages) TwoFactorEnterYubiKey() string { return msgs.text(textTwoFactorEnterYubiKey) }
+
 // TwoFactorMethod says "Verification method"
 // in the language the app shows under cx.
 //
-// What screen readers say of the choice between authenticator app and email codes.
+// What screen readers say of the choice between two-step login methods, such as authenticator app, email and YubiKey.
 func TwoFactorMethod(cx *core.Scope) string { return For(cx).TwoFactorMethod() }
 
 // TwoFactorMethod is the package's TwoFactorMethod in the language of msgs.
@@ -14227,7 +14346,51 @@ func TwoFactorCodeInvalid(cx *core.Scope) string { return For(cx).TwoFactorCodeI
 // TwoFactorCodeInvalid is the package's TwoFactorCodeInvalid in the language of msgs.
 func (msgs Messages) TwoFactorCodeInvalid() string { return msgs.text(textTwoFactorCodeInvalid) }
 
-// TwoFactorUnsupported says "This account requires two-step login with {methods}, which GoVault does not support yet. Enable Authenticator App or Email two-step login in your vault web settings to sign in here."
+// TwoFactorYubiKeyRequired says "Touch your YubiKey to enter its code."
+// in the language the app shows under cx.
+//
+// Shown when the user chooses Verify with the YubiKey code field empty.
+func TwoFactorYubiKeyRequired(cx *core.Scope) string { return For(cx).TwoFactorYubiKeyRequired() }
+
+// TwoFactorYubiKeyRequired is the package's TwoFactorYubiKeyRequired in the language of msgs.
+func (msgs Messages) TwoFactorYubiKeyRequired() string {
+	return msgs.text(textTwoFactorYubiKeyRequired)
+}
+
+// TwoFactorYubiKeyMalformed says "That is not a code from a YubiKey. Touch your YubiKey to enter a new one."
+// in the language the app shows under cx.
+//
+// Shown when the YubiKey code field holds text that is not a YubiKey one-time code, such as something typed by hand. Nothing was sent to the server.
+func TwoFactorYubiKeyMalformed(cx *core.Scope) string { return For(cx).TwoFactorYubiKeyMalformed() }
+
+// TwoFactorYubiKeyMalformed is the package's TwoFactorYubiKeyMalformed in the language of msgs.
+func (msgs Messages) TwoFactorYubiKeyMalformed() string {
+	return msgs.text(textTwoFactorYubiKeyMalformed)
+}
+
+// TwoFactorYubiKeyInvalid says "The server did not accept this YubiKey code. Touch your YubiKey again to enter a new one."
+// in the language the app shows under cx.
+//
+// Shown when the server rejects a YubiKey one-time code, for example one already used. Each touch of the key makes a new code.
+func TwoFactorYubiKeyInvalid(cx *core.Scope) string { return For(cx).TwoFactorYubiKeyInvalid() }
+
+// TwoFactorYubiKeyInvalid is the package's TwoFactorYubiKeyInvalid in the language of msgs.
+func (msgs Messages) TwoFactorYubiKeyInvalid() string { return msgs.text(textTwoFactorYubiKeyInvalid) }
+
+// TwoFactorYubiKeyNotRegistered says "This YubiKey is not registered with your account. Use a YubiKey you added in your vault web settings."
+// in the language the app shows under cx.
+//
+// Shown when the server says the YubiKey that typed the code is not one of the account's keys.
+func TwoFactorYubiKeyNotRegistered(cx *core.Scope) string {
+	return For(cx).TwoFactorYubiKeyNotRegistered()
+}
+
+// TwoFactorYubiKeyNotRegistered is the package's TwoFactorYubiKeyNotRegistered in the language of msgs.
+func (msgs Messages) TwoFactorYubiKeyNotRegistered() string {
+	return msgs.text(textTwoFactorYubiKeyNotRegistered)
+}
+
+// TwoFactorUnsupported says "This account requires two-step login with {methods}, which GoVault does not support yet. Enable Authenticator App, Email or YubiKey two-step login in your vault web settings to sign in here."
 // in the language the app shows under cx.
 //
 // methods lists the account's two-step login methods, separated by commas.
@@ -14246,7 +14409,7 @@ func (msgs Messages) TwoFactorUnsupported(methods string) string {
 		}
 		switch lang {
 		case "", "en":
-			return "This account requires two-step login with " + msgs.arg(methods) + ", which GoVault does not support yet. Enable Authenticator App or Email two-step login in your vault web settings to sign in here."
+			return "This account requires two-step login with " + msgs.arg(methods) + ", which GoVault does not support yet. Enable Authenticator App, Email or YubiKey two-step login in your vault web settings to sign in here."
 		case "de":
 			return "Dieses Konto erfordert Zwei-Faktor-Authentifizierung über " + methods + ", was GoVault noch nicht unterstützt. Aktiviere Authenticator-App oder E-Mail in den Web-Tresor-Einstellungen, um dich hier anzumelden."
 		case "es":
