@@ -167,13 +167,16 @@ version_at_least() {
     function part(v, i,   a) { split(v, a, "."); return a[i] + 0 }
     {
       v = $0
-      sub(/[-+].*/, "", v)
+      sub(/\+.*/, "", v)
+      pre = index(v, "-") > 0
+      sub(/-.*/, "", v)
       if (v !~ /^[0-9]+(\.[0-9]+)*$/) exit 1
       for (i = 1; i <= 3; i++) {
         if (part(v, i) > part(min, i)) exit 0
         if (part(v, i) < part(min, i)) exit 1
       }
-      exit 0
+      # Equal to the floor: a prerelease of it comes before it (SemVer 11).
+      exit pre ? 1 : 0
     }'
 }
 version_at_least "$number" "$min_version" ||

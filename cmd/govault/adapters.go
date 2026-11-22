@@ -45,12 +45,14 @@ type ClipboardAdapter struct {
 	// owned is the secret GoVault put on the clipboard and has yet to
 	// clear. It stays owned until a clipboard read shows it is gone, so
 	// quitting at any point before that still clears it.
-	owned string
+	owned   string
+	retries int
 
 	// The clipboard as the app sees it; tests replace these.
 	post  func(func())
 	read  func(func(string))
 	write func(string)
+	later func(func())
 }
 
 func NewClipboardAdapter(scope *core.Scope) *ClipboardAdapter {
@@ -60,6 +62,7 @@ func NewClipboardAdapter(scope *core.Scope) *ClipboardAdapter {
 		post:      scope.Post,
 		read:      scope.ReadClipboard,
 		write:     scope.SetClipboard,
+		later:     func(f func()) { time.AfterFunc(time.Second, f) },
 	}
 }
 
@@ -82,7 +85,7 @@ func (c *ClipboardAdapter) CopySecret(secret string, clearAfter time.Duration) (
 		c.timer.Stop()
 		c.timer = nil
 	}
-	c.owned = ""
+	c.owned, c.retries = "", 0
 	if clearAfter > 0 {
 		expected := secret
 		c.owned = secret
@@ -96,21 +99,37 @@ func (c *ClipboardAdapter) CopySecret(secret string, clearAfter time.Duration) (
 // expire clears expected if the clipboard still holds it, keeping it owned
 // until a later read confirms it is gone: the clear is only queued when it
 // is asked for.
+//
+// An empty read proves nothing: Windows returns "" when another app holds
+// the clipboard open. Ownership is dropped only for a read that returns
+// something else, and an empty read retries the clear later; quitting
+// still clears an owned secret either way.
 func (c *ClipboardAdapter) expire(expected string) {
 	c.post(func() {
 		c.read(func(current string) {
-			if current != expected {
+			switch current {
+			case expected:
+				c.write("")
+			case "":
+				c.retryExpire(expected)
+			default:
 				c.release(expected)
-				return
 			}
-			c.write("")
-			c.read(func(after string) {
-				if after != expected {
-					c.release(expected)
-				}
-			})
 		})
 	})
+}
+
+const clipboardRetries = 5
+
+func (c *ClipboardAdapter) retryExpire(expected string) {
+	c.mu.Lock()
+	if c.owned != expected || c.retries >= clipboardRetries {
+		c.mu.Unlock()
+		return
+	}
+	c.retries++
+	c.mu.Unlock()
+	c.later(func() { c.expire(expected) })
 }
 
 func (c *ClipboardAdapter) release(secret string) {
