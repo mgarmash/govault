@@ -345,13 +345,12 @@ func TestService_KeyChangeFiltersEncStringsAtTheLeaf(t *testing.T) {
 	seedSealedLogin(t, env)
 	sealed := mustEncString(t, "secret", env.cipherKey)
 	legacy := "1." + b64(16) + "|" + b64(16) + "|" + b64(32)
-	unknownType := "9." + b64(16) + "|" + b64(32)
 	env.mu.Lock()
 	c := env.ciphers["c-1"]
 	login := *c.Login
 	login.Extra = map[string]json.RawMessage{
 		"legacyField":  json.RawMessage(fmt.Sprintf("%q", legacy)),
-		"futureType":   json.RawMessage(fmt.Sprintf("%q", unknownType)),
+		"year":         json.RawMessage(`"1.2024"`),
 		"mixed":        json.RawMessage(fmt.Sprintf(`{"secret":%q,"flag":true,"note":"1.0","deep":{"s":%q,"n":2}}`, sealed, legacy)),
 		"plainVersion": json.RawMessage(`"1.0"`),
 	}
@@ -367,13 +366,38 @@ func TestService_KeyChangeFiltersEncStringsAtTheLeaf(t *testing.T) {
 		t.Fatal(err)
 	}
 	got := obj(t, env.body(t)["login"])
-	for _, k := range []string{"legacyField", "futureType"} {
+	for _, k := range []string{"legacyField"} {
 		if _, ok := got[k]; ok {
 			t.Fatalf("%s (an EncString of a type GoVault cannot decrypt) survived a key change", k)
 		}
 	}
 	sameJSON(t, "mixed", got["mixed"], `{"deep":{"n":2},"flag":true,"note":"1.0"}`)
 	sameJSON(t, "plainVersion", got["plainVersion"], `"1.0"`)
+	sameJSON(t, "year", got["year"], `"1.2024"`)
+}
+
+func TestService_KeyChangeRefusesUnknownEncStringTypes(t *testing.T) {
+	env := newVaultTestEnv(t)
+	seedSealedLogin(t, env)
+	env.mu.Lock()
+	c := env.ciphers["c-1"]
+	login := *c.Login
+	login.Extra = map[string]json.RawMessage{"future": json.RawMessage(fmt.Sprintf(`{"v":%q,"plain":true}`, "7."+b64(48)))}
+	c.Login = &login
+	env.ciphers["c-1"] = c
+	env.mu.Unlock()
+	svc := loggedInTestService(t, env)
+
+	cp, _ := svc.GetCipher("c-1")
+	cp.ID, cp.Key = "", nil
+	if _, err := svc.SaveCipher(context.Background(), cp); !errors.Is(err, ErrSealedField) {
+		t.Fatalf("SaveCipher = %v, want ErrSealedField", err)
+	}
+	env.mu.Lock()
+	defer env.mu.Unlock()
+	if env.lastBody != nil {
+		t.Fatal("a refused save still reached the server")
+	}
 }
 
 func TestService_KeyChangeRefusesEncStringsInArrays(t *testing.T) {
@@ -407,20 +431,40 @@ func TestService_KeyChangeRefusesEncStringsInArrays(t *testing.T) {
 	}
 }
 
-func TestLooksLikeEncString(t *testing.T) {
-	for s, want := range map[string]bool{
-		"2." + b64(16) + "|" + b64(16) + "|" + b64(32): true,
-		"1." + b64(16) + "|" + b64(32):                 true,
-		"4." + b64(256):                                true,
-		"12." + b64(8):                                 true,
-		"1.0":                                          false,
-		"v2.abc":                                       false,
-		"2.":                                           false,
-		"2.not base64!":                                false,
-		"https://example.com":                          false,
+func TestClassifyEncString(t *testing.T) {
+	key, _ := crypto.GenerateSymmetricKey()
+	real, _ := crypto.EncryptString("secret", key)
+	env := func(typ crypto.EncType, iv, ct, mac []byte) string {
+		return (&crypto.EncString{Type: typ, IV: iv, CT: ct, MAC: mac}).String()
+	}
+	iv, ct, mac, rsa := bytes.Repeat([]byte{1}, 16), bytes.Repeat([]byte{2}, 32), bytes.Repeat([]byte{3}, 32), bytes.Repeat([]byte{4}, 256)
+	for s, want := range map[string]crypto.EncStringKind{
+		real:                                     crypto.IsEncString,
+		env(crypto.EncAesCbc256B64, iv, ct, nil): crypto.IsEncString,
+		env(crypto.EncAesCbc256HmacSha256B64, iv, ct, mac):           crypto.IsEncString,
+		env(crypto.EncRsa2048OaepSha256B64, nil, rsa, nil):           crypto.IsEncString,
+		env(crypto.EncRsa2048OaepSha1B64, nil, rsa, nil):             crypto.IsEncString,
+		env(crypto.EncRsa2048OaepSha256HmacSha256B64, nil, rsa, mac): crypto.IsEncString,
+		env(crypto.EncRsa2048OaepSha1HmacSha256B64, nil, rsa, nil):   crypto.IsEncString,
+		"5." + b64(256) + "|":                          crypto.IsEncString,
+		"1." + b64(16) + "|" + b64(32) + "|" + b64(32): crypto.IsEncString,
+		"1.2024":                       crypto.NotEncString,
+		"1.0":                          crypto.NotEncString,
+		"2." + b64(16) + "|" + b64(32): crypto.NotEncString,
+		"2.2024":                       crypto.NotEncString,
+		"v2.abc":                       crypto.NotEncString,
+		"2.":                           crypto.NotEncString,
+		"https://example.com":          crypto.NotEncString,
+		"7." + b64(48):                 crypto.MaybeEncString,
+		"9.2024":                       crypto.MaybeEncString,
+		"9.5":                          crypto.NotEncString,
 	} {
-		if got := crypto.LooksLikeEncString(s); got != want {
-			t.Errorf("LooksLikeEncString(%q) = %v, want %v", s, got, want)
+		if got := crypto.ClassifyEncString(s); got != want {
+			t.Errorf("ClassifyEncString(%q) = %v, want %v", s, got, want)
+		}
+		_, perr := crypto.ParseEncString(s)
+		if typ := s[:2]; typ != "1." && typ != "7." && typ != "9." && (perr == nil) != (want == crypto.IsEncString) {
+			t.Errorf("ClassifyEncString(%q) = %v disagrees with ParseEncString (%v)", s, want, perr)
 		}
 	}
 }
@@ -468,13 +512,24 @@ func TestService_KeepsWirePresenceOfKnownFields(t *testing.T) {
 	if err := json.Unmarshal(snap.RawSyncJSON, &resp); err != nil {
 		t.Fatal(err)
 	}
+	found := false
 	for _, sc := range resp.Ciphers {
 		if string(sc["id"]) == `"c-1"` {
 			check("snapshot", obj(t, sc["login"]))
-			return
+			found = true
 		}
 	}
-	t.Fatal("c-1 missing from snapshot")
+	if !found {
+		t.Fatal("c-1 missing from snapshot")
+	}
+
+	cur, _ = svc.GetCipher("c-1")
+	zero := 0
+	cur.Login.URIs[0].Match = &zero
+	if _, err := svc.SaveCipher(context.Background(), cur); err != nil {
+		t.Fatal(err)
+	}
+	sameJSON(t, "explicit match 0", obj(t, arr(t, obj(t, env.body(t)["login"])["uris"])[0])["match"], `0`)
 }
 
 func TestService_UnreadablePasskeyFieldIsReported(t *testing.T) {

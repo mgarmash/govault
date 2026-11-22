@@ -256,12 +256,13 @@ type EncryptedAttachment struct {
 	Size     FlexInt                    `json:"size"`
 	SizeName string                     `json:"sizeName,omitempty"`
 	Extra    map[string]json.RawMessage `json:"-"`
+	Shape    Shape                      `json:"-"`
 }
 
 func (a *EncryptedAttachment) UnmarshalJSON(data []byte) error {
 	type alias EncryptedAttachment
 	var v alias
-	if err := unmarshalWithExtra(data, &v, &v.Extra); err != nil {
+	if err := unmarshalNested(data, &v, &v.Extra, &v.Shape); err != nil {
 		return err
 	}
 	*a = EncryptedAttachment(v)
@@ -270,7 +271,7 @@ func (a *EncryptedAttachment) UnmarshalJSON(data []byte) error {
 
 func (a EncryptedAttachment) MarshalJSON() ([]byte, error) {
 	type alias EncryptedAttachment
-	return marshalWithExtra(alias(a), a.Extra)
+	return marshalNested(alias(a), a.Extra, a.Shape)
 }
 
 // FlexInt decodes an integer sent either as a JSON number or a string, as

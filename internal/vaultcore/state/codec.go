@@ -778,7 +778,7 @@ func cloneShape(m api.Shape) api.Shape {
 	}
 	out := make(api.Shape, len(m))
 	for k, v := range m {
-		out[k] = append(json.RawMessage{}, v...)
+		out[k] = v.Clone()
 	}
 	return out
 }

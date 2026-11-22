@@ -16,10 +16,23 @@ import (
 // value were sent, so an untouched absent, null or empty field goes back
 // the same way.
 
-// Shape records the known fields that carried no value: an empty
-// RawMessage for a field that was absent, else its empty JSON value
-// (null, "", [] or {}).
-type Shape map[string]json.RawMessage
+// Shape records how the known fields that carried no value were sent.
+type Shape map[string]Presence
+
+// Presence is how one known field without a value was sent: absent, or as
+// Raw (null, "", [] or {}). Zero is the JSON of the Go zero value for a
+// field that is not a pointer, slice or map: such a field cannot tell
+// "unset" from zero, so its zero counts as unchanged. A pointer field set
+// to an explicit zero, such as a URI match of 0, is a change and is sent.
+type Presence struct {
+	Absent bool
+	Raw    json.RawMessage
+	Zero   json.RawMessage
+}
+
+func (p Presence) Clone() Presence {
+	return Presence{Absent: p.Absent, Raw: bytes.Clone(p.Raw), Zero: bytes.Clone(p.Zero)}
+}
 
 func unmarshalNested(data []byte, dst any, extra *map[string]json.RawMessage, shape *Shape) error {
 	if err := unmarshalWithExtra(data, dst, extra); err != nil {
@@ -30,14 +43,29 @@ func unmarshalNested(data []byte, dst any, extra *map[string]json.RawMessage, sh
 		return err
 	}
 	out := Shape{}
-	for _, name := range jsonNames(dst) {
-		v, ok := all[name]
-		switch {
-		case !ok:
-			out[name] = json.RawMessage{}
-		case emptyJSON(v):
-			out[name] = bytes.Clone(v)
+	t := reflect.TypeOf(dst).Elem()
+	for i := range t.NumField() {
+		f := t.Field(i)
+		name, _, _ := strings.Cut(f.Tag.Get("json"), ",")
+		if name == "" || name == "-" {
+			continue
 		}
+		v, ok := all[name]
+		if ok && !emptyJSON(v) {
+			continue
+		}
+		p := Presence{Absent: !ok}
+		if ok {
+			p.Raw = bytes.Clone(v)
+		}
+		switch f.Type.Kind() {
+		case reflect.Pointer, reflect.Slice, reflect.Map, reflect.Interface:
+		default:
+			if z, err := json.Marshal(reflect.Zero(f.Type).Interface()); err == nil {
+				p.Zero = z
+			}
+		}
+		out[name] = p
 	}
 	if len(out) > 0 {
 		*shape = out
@@ -60,13 +88,15 @@ func marshalNested(src any, extra map[string]json.RawMessage, shape Shape) ([]by
 	if merged == nil {
 		merged = map[string]json.RawMessage{}
 	}
-	for name, was := range shape {
+	for name, p := range shape {
 		cur, ok := merged[name]
+		unchanged := !ok || emptyJSON(cur) || (len(p.Zero) > 0 && bytes.Equal(bytes.TrimSpace(cur), p.Zero))
 		switch {
-		case len(was) == 0 && (!ok || emptyJSON(cur) || zeroJSON(cur)):
+		case !unchanged:
+		case p.Absent:
 			delete(merged, name)
-		case len(was) > 0 && (!ok || emptyJSON(cur)):
-			merged[name] = bytes.Clone(was)
+		default:
+			merged[name] = bytes.Clone(p.Raw)
 		}
 	}
 	out := make(map[string]json.RawMessage, len(extra)+len(merged))
@@ -81,29 +111,6 @@ func emptyJSON(v json.RawMessage) bool {
 		return true
 	}
 	return false
-}
-
-func zeroJSON(v json.RawMessage) bool {
-	switch string(bytes.TrimSpace(v)) {
-	case "0", "false":
-		return true
-	}
-	return false
-}
-
-func jsonNames(dst any) []string {
-	t := reflect.TypeOf(dst).Elem()
-	var out []string
-	for i := range t.NumField() {
-		tag := t.Field(i).Tag.Get("json")
-		if tag == "" || tag == "-" {
-			continue
-		}
-		if name, _, _ := strings.Cut(tag, ","); name != "" {
-			out = append(out, name)
-		}
-	}
-	return out
 }
 
 type EncryptedLogin struct {

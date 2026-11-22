@@ -4,9 +4,12 @@
 package export
 
 import (
+	"bytes"
 	"cmp"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"maps"
 	"slices"
 	"strings"
 	"time"
@@ -248,7 +251,8 @@ func (it Item) content() *state.Cipher {
 	for _, h := range it.PasswordHistory {
 		c.PasswordHistory = append(c.PasswordHistory, state.PasswordHistoryEntry{Password: h.Password, LastUsedDate: h.LastUsedDate})
 	}
-	mergeContent(c, it)
+	// A new cipher has no existing entries, so matching cannot fail.
+	_ = mergeContent(c, it)
 	return c
 }
 
@@ -258,26 +262,39 @@ func (it Item) content() *state.Cipher {
 // is never removed; a backup passkey is only taken when c has none. A
 // nested object the backup lacks is kept, never cleared.
 //
-// A backup field or URI takes what GoVault keeps for an existing one only
-// when they match exactly (name and type, or text and match setting) and
-// the match is unambiguous; each existing entry is used at most once.
-func mergeContent(c *state.Cipher, it Item) {
-	var fields []state.CustomField
-	usedFields := make([]bool, len(c.Fields))
+// Each backup field or URI is matched to an existing one (see matchOld) to
+// carry over what GoVault keeps for it. When that cannot be done without
+// guessing, mergeContent returns ErrAmbiguousUpdate and c must not be saved.
+func mergeContent(c *state.Cipher, it Item) error {
+	want := make([]state.CustomField, len(it.Fields))
 	for i, f := range it.Fields {
-		nf := state.CustomField{Name: val(f.Name), Value: val(f.Value), Type: f.Type, LinkedID: f.LinkedID}
-		if j := pickOld(len(c.Fields), i, usedFields, func(j int) bool {
-			return c.Fields[j].Name == nf.Name && c.Fields[j].Type == nf.Type
-		}); j >= 0 {
-			old := c.Fields[j]
-			nf.Extra, nf.Shape = old.Extra, old.Shape
-			if nf.LinkedID == nil {
-				nf.LinkedID = old.LinkedID
-			}
-		}
-		fields = append(fields, nf)
+		want[i] = state.CustomField{Name: val(f.Name), Value: val(f.Value), Type: f.Type, LinkedID: f.LinkedID}
 	}
-	c.Fields = fields
+	old := c.Fields
+	picks, err := matchOld(len(want), len(old),
+		func(i, j int) bool {
+			return old[j].Name == want[i].Name && old[j].Type == want[i].Type && old[j].Value == want[i].Value && sameMatch(old[j].LinkedID, want[i].LinkedID)
+		},
+		func(i, j int) bool { return old[j].Name == want[i].Name && old[j].Type == want[i].Type },
+		func(a, b int) bool {
+			return sameRaw(old[a].Extra, old[b].Extra) && sameShape(old[a].Shape, old[b].Shape) && sameMatch(old[a].LinkedID, old[b].LinkedID)
+		})
+	if err != nil {
+		return fmt.Errorf("%w (custom fields)", err)
+	}
+	for i, j := range picks {
+		if j < 0 {
+			continue
+		}
+		want[i].Extra, want[i].Shape = old[j].Extra, old[j].Shape
+		if want[i].LinkedID == nil {
+			want[i].LinkedID = old[j].LinkedID
+		}
+	}
+	c.Fields = nil
+	if len(want) > 0 {
+		c.Fields = want
+	}
 
 	if l := it.Login; l != nil {
 		out := &state.Login{}
@@ -287,22 +304,26 @@ func mergeContent(c *state.Cipher, it Item) {
 		}
 		out.Username, out.Password, out.TOTP = val(l.Username), val(l.Password), val(l.TOTP)
 		prev := out.URIs
-		used := make([]bool, len(prev))
-		out.URIs = nil
-		for i, u := range l.URIs {
-			text := val(u.URI)
-			if text == "" {
-				continue
+		var next []state.LoginURI
+		for _, u := range l.URIs {
+			if text := val(u.URI); text != "" {
+				next = append(next, state.LoginURI{URI: text, Match: u.Match})
 			}
-			nu := state.LoginURI{URI: text, Match: u.Match}
-			if j := pickOld(len(prev), i, used, func(j int) bool {
-				return prev[j].URI == text && sameMatch(prev[j].Match, u.Match)
-			}); j >= 0 {
-				old := prev[j]
-				nu.Checksum, nu.ChecksumOf, nu.Extra, nu.Shape = old.Checksum, old.ChecksumOf, old.Extra, old.Shape
-			}
-			out.URIs = append(out.URIs, nu)
 		}
+		full := func(i, j int) bool { return prev[j].URI == next[i].URI && sameMatch(prev[j].Match, next[i].Match) }
+		picks, err := matchOld(len(next), len(prev), full, full, func(a, b int) bool {
+			return sameRaw(prev[a].Extra, prev[b].Extra) && sameShape(prev[a].Shape, prev[b].Shape)
+		})
+		if err != nil {
+			return fmt.Errorf("%w (websites)", err)
+		}
+		for i, j := range picks {
+			if j >= 0 {
+				p := prev[j]
+				next[i].Checksum, next[i].ChecksumOf, next[i].Extra, next[i].Shape = p.Checksum, p.ChecksumOf, p.Extra, p.Shape
+			}
+		}
+		out.URIs = next
 		if len(out.Fido2Credentials) == 0 {
 			for _, f := range l.Fido2Credentials {
 				out.Fido2Credentials = append(out.Fido2Credentials, f.toState())
@@ -353,29 +374,76 @@ func mergeContent(c *state.Cipher, it Item) {
 		}
 		c.SSHKey = out
 	}
+	return nil
 }
 
-// pickOld returns the unused old entry that matches entry pos of the
-// backup, or -1. Several candidates are told apart only by position; if
-// position does not decide, none is used rather than guessing.
-func pickOld(n, pos int, used []bool, match func(int) bool) int {
-	var cands []int
-	for j := range n {
-		if !used[j] && match(j) {
-			cands = append(cands, j)
+// ErrAmbiguousUpdate means the backup item cannot be laid over the vault
+// item without guessing which existing entry each backup entry is, and the
+// entries hold different data the backup does not have. Update is not
+// offered; Skip and Create Copy are.
+var ErrAmbiguousUpdate = errors.New("export: cannot tell which existing entries the backup entries are")
+
+// matchOld pairs each of n backup entries with at most one of m existing
+// ones, returning the existing index per backup entry or -1.
+//
+// First every backup entry with exactly one unused full match (the same
+// content) takes it. Then each remaining entry takes its only unused
+// candidate: a full match, else a loose one (same name and type). Several
+// candidates are told apart by position only when they hold identical
+// hidden data (same reports that), since then picking either loses
+// nothing; otherwise matchOld fails with ErrAmbiguousUpdate.
+func matchOld(n, m int, full, loose func(i, j int) bool, same func(a, b int) bool) ([]int, error) {
+	picks := make([]int, n)
+	used := make([]bool, m)
+	unused := func(i int, ok func(i, j int) bool) []int {
+		var out []int
+		for j := range m {
+			if !used[j] && ok(i, j) {
+				out = append(out, j)
+			}
+		}
+		return out
+	}
+	for i := range n {
+		picks[i] = -1
+		if c := unused(i, full); len(c) == 1 {
+			picks[i], used[c[0]] = c[0], true
 		}
 	}
-	pick := -1
-	switch {
-	case len(cands) == 1:
-		pick = cands[0]
-	case slices.Contains(cands, pos):
-		pick = pos
+	for i := range n {
+		if picks[i] >= 0 {
+			continue
+		}
+		cands := unused(i, full)
+		if len(cands) == 0 {
+			cands = unused(i, loose)
+		}
+		switch {
+		case len(cands) == 0:
+			continue
+		case len(cands) > 1:
+			for _, j := range cands[1:] {
+				if !same(cands[0], j) {
+					return nil, ErrAmbiguousUpdate
+				}
+			}
+			if slices.Contains(cands, i) {
+				cands[0] = i
+			}
+		}
+		picks[i], used[cands[0]] = cands[0], true
 	}
-	if pick >= 0 {
-		used[pick] = true
-	}
-	return pick
+	return picks, nil
+}
+
+func sameRaw(a, b map[string]json.RawMessage) bool {
+	return maps.EqualFunc(a, b, func(x, y json.RawMessage) bool { return bytes.Equal(x, y) })
+}
+
+func sameShape(a, b api.Shape) bool {
+	return maps.EqualFunc(a, b, func(x, y api.Presence) bool {
+		return x.Absent == y.Absent && bytes.Equal(x.Raw, y.Raw) && bytes.Equal(x.Zero, y.Zero)
+	})
 }
 
 func sameMatch(a, b *int) bool {

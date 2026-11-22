@@ -91,7 +91,13 @@ type vaultTestEnv struct {
 	syncStarted chan struct{}
 	syncGate    chan struct{}
 	lastBody    []byte
+	// syncStale makes a gated sync answer with the vault as it was when
+	// the request arrived, not when the gate opens.
+	syncStale bool
+	syncResp  func() []byte
 }
+
+func (env *vaultTestEnv) syncBody() []byte { return env.syncResp() }
 
 func (env *vaultTestEnv) hasCipher(id string) bool {
 	env.mu.Lock()
@@ -262,7 +268,12 @@ func newVaultTestEnv(t *testing.T) *vaultTestEnv {
 		case r.Method == http.MethodGet && r.URL.Path == "/api/sync":
 			env.mu.Lock()
 			started, gate := env.syncStarted, env.syncGate
+			stale := env.syncStale
 			env.mu.Unlock()
+			var frozen []byte
+			if gate != nil && stale {
+				frozen = env.syncBody()
+			}
 			if gate != nil {
 				close(started)
 				select {
@@ -271,21 +282,10 @@ func newVaultTestEnv(t *testing.T) *vaultTestEnv {
 					return
 				}
 			}
-			env.mu.Lock()
-			var folders []api.EncryptedFolder
-			for _, f := range env.folders {
-				folders = append(folders, f)
+			if frozen == nil {
+				frozen = env.syncBody()
 			}
-			var ciphers []api.EncryptedCipher
-			for _, c := range env.ciphers {
-				ciphers = append(ciphers, c)
-			}
-			env.mu.Unlock()
-			_ = json.NewEncoder(w).Encode(api.SyncResponse{
-				Profile: api.Profile{ID: env.profileID, Email: email, Key: protectedUserKey.String()},
-				Folders: folders,
-				Ciphers: ciphers,
-			})
+			_, _ = w.Write(frozen)
 
 		case r.Method == http.MethodPost && r.URL.Path == "/api/ciphers":
 			body, _ := io.ReadAll(r.Body)
@@ -409,6 +409,24 @@ func newVaultTestEnv(t *testing.T) *vaultTestEnv {
 			}
 		}
 	}))
+	env.syncResp = func() []byte {
+		env.mu.Lock()
+		defer env.mu.Unlock()
+		var folders []api.EncryptedFolder
+		for _, f := range env.folders {
+			folders = append(folders, f)
+		}
+		var ciphers []api.EncryptedCipher
+		for _, c := range env.ciphers {
+			ciphers = append(ciphers, c)
+		}
+		raw, _ := json.Marshal(api.SyncResponse{
+			Profile: api.Profile{ID: env.profileID, Email: email, Key: protectedUserKey.String()},
+			Folders: folders,
+			Ciphers: ciphers,
+		})
+		return raw
+	}
 	t.Cleanup(env.server.Close)
 	return env
 }

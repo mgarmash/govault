@@ -19,6 +19,7 @@ type op struct {
 	client    *api.Client
 	accountID string
 	snap      *store.Snapshot
+	seq       uint64
 	userKey   *crypto.SymmetricKey
 }
 
@@ -66,6 +67,7 @@ func (s *Service) beginOp(ctx context.Context) (*op, error) {
 		client:    s.apiClient,
 		accountID: s.accountID,
 		snap:      &snapCopy,
+		seq:       s.snapSeq,
 		userKey:   keyCopy,
 	}, nil
 }
@@ -85,18 +87,6 @@ func (o *op) current() bool {
 	o.s.mu.RLock()
 	defer o.s.mu.RUnlock()
 	return o.currentLocked()
-}
-
-// saveSnapshot persists snap only while o's session is current. Snapshot
-// writes and deletes are serialized, so a stale operation can never recreate
-// a snapshot that logout removed.
-func (o *op) saveSnapshot(snap *store.Snapshot) error {
-	o.s.persistMu.Lock()
-	defer o.s.persistMu.Unlock()
-	if !o.current() {
-		return ErrLocked
-	}
-	return o.s.cfg.Store.SaveSnapshot(snap)
 }
 
 func (o *op) accessToken() (string, error) {

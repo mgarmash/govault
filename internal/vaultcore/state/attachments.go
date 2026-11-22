@@ -3,10 +3,10 @@ package state
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 
 	"github.com/txchen/govault/internal/vaultcore/api"
 	"github.com/txchen/govault/internal/vaultcore/crypto"
+	"github.com/txchen/govault/internal/vaultcore/store"
 )
 
 func (s *Service) DownloadAttachment(ctx context.Context, cipherID, attachmentID string) ([]byte, string, error) {
@@ -236,9 +236,9 @@ func (o *op) refreshCipher(prev *Cipher, fallback *api.EncryptedCipher) (*Cipher
 	return o.commitCipher(decrypted, enc)
 }
 
-// storeSnapshotCipher replaces or adds enc in the encrypted snapshot.
-func (o *op) storeSnapshotCipher(enc *api.EncryptedCipher) error {
-	return o.updateSnapshot(func(resp *api.SyncResponse) {
+// replaceSnapshotCipher returns a snapshot edit that replaces or adds enc.
+func replaceSnapshotCipher(enc *api.EncryptedCipher) func(resp *api.SyncResponse) {
+	return func(resp *api.SyncResponse) {
 		for i := range resp.Ciphers {
 			if resp.Ciphers[i].ID == enc.ID {
 				if len(enc.CollectionIDs) == 0 {
@@ -249,46 +249,62 @@ func (o *op) storeSnapshotCipher(enc *api.EncryptedCipher) error {
 			}
 		}
 		resp.Ciphers = append(resp.Ciphers, *enc)
-	})
+	}
 }
 
-// updateSnapshot applies edit to the encrypted snapshot and saves it, so a
-// change the server accepted is also what the next unlock or offline
-// export sees, before the next sync. It runs under persistMu and only while
-// o's session is current, like every snapshot write.
-func (o *op) updateSnapshot(edit func(resp *api.SyncResponse)) error {
-	o.s.persistMu.Lock()
-	defer o.s.persistMu.Unlock()
-	o.s.mu.RLock()
-	snap, ok := o.s.snapshot, o.currentLocked()
-	o.s.mu.RUnlock()
+// updateSnapshot commits a change the server accepted: edit rewrites the
+// encrypted snapshot on disk, then apply (run under s.mu) updates memory.
+// Both happen under persistMu, so no sync or other change interleaves, and
+// the publication marks syncs fetched earlier as stale.
+//
+// Memory is updated even when the disk write fails, since the server has
+// the change; that failure is returned as a *LocalCopyError.
+func (o *op) updateSnapshot(edit func(resp *api.SyncResponse), apply func()) error {
+	s := o.s
+	s.persistMu.Lock()
+	defer s.persistMu.Unlock()
+	s.mu.RLock()
+	snap, ok := s.snapshot, o.currentLocked()
+	s.mu.RUnlock()
 	if !ok {
 		return ErrLocked
 	}
+	updated, diskErr := o.writeSnapshot(snap, edit)
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if !o.currentLocked() {
+		return ErrLocked
+	}
+	if updated != nil {
+		s.snapshot = updated
+	}
+	s.snapSeq++
+	if apply != nil {
+		apply()
+	}
+	if diskErr != nil {
+		return &LocalCopyError{Err: diskErr}
+	}
+	return nil
+}
+
+func (o *op) writeSnapshot(snap *store.Snapshot, edit func(resp *api.SyncResponse)) (*store.Snapshot, error) {
 	if snap == nil {
-		return ErrLoggedOut
+		return nil, ErrLoggedOut
 	}
 	var resp api.SyncResponse
 	if err := json.Unmarshal(snap.RawSyncJSON, &resp); err != nil {
-		return fmt.Errorf("%w: %w", ErrSnapshotNotUpdated, err)
+		return nil, err
 	}
 	edit(&resp)
 	raw, err := json.Marshal(resp)
 	if err != nil {
-		return fmt.Errorf("%w: %w", ErrSnapshotNotUpdated, err)
+		return nil, err
 	}
 	updated := *snap
 	updated.RawSyncJSON = raw
-	if !o.current() {
-		return ErrLocked
-	}
 	if err := o.s.cfg.Store.SaveSnapshot(&updated); err != nil {
-		return fmt.Errorf("%w: %w", ErrSnapshotNotUpdated, err)
+		return nil, err
 	}
-	o.s.mu.Lock()
-	if o.s.snapshot == snap && o.currentLocked() {
-		o.s.snapshot = &updated
-	}
-	o.s.mu.Unlock()
-	return nil
+	return &updated, nil
 }

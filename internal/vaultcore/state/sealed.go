@@ -8,7 +8,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"slices"
 
 	"github.com/txchen/govault/internal/vaultcore/crypto"
 )
@@ -32,9 +31,10 @@ var ErrSealedField = errors.New("state: this item holds encrypted data GoVault c
 // Under the key they were sealed with they are kept byte for byte. Under
 // another key (a clone, an import copy, a move to another key) an encrypted
 // value can no longer be decrypted by anyone, so each EncString is removed
-// where it sits and every plaintext value around it is kept. An EncString
-// inside an array cannot be removed without shifting the rest, so such a
-// save is refused with ErrSealedField.
+// where it sits and every plaintext value around it is kept. The save is
+// refused with ErrSealedField instead when an EncString sits in an array
+// (removing it would shift the rest) or when a value might be an EncString
+// of a type GoVault does not know (see crypto.ClassifyEncString).
 func keepSealed(m map[string]json.RawMessage, sameKey bool) (map[string]json.RawMessage, error) {
 	if len(m) == 0 {
 		return nil, nil
@@ -68,18 +68,21 @@ func stripSealed(raw json.RawMessage) (json.RawMessage, bool, error) {
 	if err := dec.Decode(&v); err != nil {
 		return nil, false, ErrSealedField
 	}
-	if !hasEncString(v) {
+	switch sealedKind(v) {
+	case crypto.NotEncString:
 		return append(json.RawMessage(nil), raw...), true, nil
+	case crypto.MaybeEncString:
+		return nil, false, fmt.Errorf("%w: it may hold encrypted data of an unknown kind", ErrSealedField)
 	}
 	var strip func(v any) (any, bool, error)
 	strip = func(v any) (any, bool, error) {
 		switch t := v.(type) {
 		case string:
-			return t, !crypto.LooksLikeEncString(t), nil
+			return t, crypto.ClassifyEncString(t) == crypto.NotEncString, nil
 		case []any:
 			for _, e := range t {
-				if s, ok := e.(string); ok && crypto.LooksLikeEncString(s) {
-					return nil, false, ErrSealedField
+				if s, ok := e.(string); ok && crypto.ClassifyEncString(s) != crypto.NotEncString {
+					return nil, false, fmt.Errorf("%w: a list holds encrypted data", ErrSealedField)
 				}
 			}
 			for i, e := range t {
@@ -114,20 +117,34 @@ func stripSealed(raw json.RawMessage) (json.RawMessage, bool, error) {
 	return out, err == nil, err
 }
 
-func hasEncString(v any) bool {
-	switch t := v.(type) {
-	case string:
-		return crypto.LooksLikeEncString(t)
-	case []any:
-		return slices.ContainsFunc(t, hasEncString)
-	case map[string]any:
-		for _, e := range t {
-			if hasEncString(e) {
-				return true
+// sealedKind is the strongest kind found anywhere in v: MaybeEncString
+// over IsEncString over NotEncString.
+func sealedKind(v any) crypto.EncStringKind {
+	kind := crypto.NotEncString
+	var walk func(any)
+	walk = func(v any) {
+		switch t := v.(type) {
+		case string:
+			switch crypto.ClassifyEncString(t) {
+			case crypto.MaybeEncString:
+				kind = crypto.MaybeEncString
+			case crypto.IsEncString:
+				if kind == crypto.NotEncString {
+					kind = crypto.IsEncString
+				}
+			}
+		case []any:
+			for _, e := range t {
+				walk(e)
+			}
+		case map[string]any:
+			for _, e := range t {
+				walk(e)
 			}
 		}
 	}
-	return false
+	walk(v)
+	return kind
 }
 
 // uriChecksum is the checksum Bitwarden stores with each login URI: the

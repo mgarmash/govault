@@ -135,27 +135,56 @@ func (e *EncString) String() string {
 	}
 }
 
-// LooksLikeEncString reports whether s has the shape of an EncString of any
-// type, including types this package cannot decrypt: a numeric type, a dot,
-// then one to three non-empty standard base64 parts separated by "|".
-func LooksLikeEncString(s string) bool {
+// EncStringKind classifies a string that may be an EncString.
+type EncStringKind int
+
+const (
+	// NotEncString is plain text.
+	NotEncString EncStringKind = iota
+	// IsEncString is an EncString of a known type with its exact structure.
+	IsEncString
+	// MaybeEncString has a type GoVault does not know and a body that could
+	// be ciphertext; it cannot be told apart from plain text safely.
+	MaybeEncString
+)
+
+// encAesCbc128HmacSha256B64 is the retired type 1 (iv|ct|mac), which
+// GoVault never decrypts but must still recognize.
+const encAesCbc128HmacSha256B64 EncType = 1
+
+// ClassifyEncString tells whether s is an EncString. For every type
+// ParseEncString knows, s is an EncString exactly when ParseEncString
+// accepts it; type 1 uses the same structure as type 2. Any other numeric
+// type with a base64 body is MaybeEncString.
+func ClassifyEncString(s string) EncStringKind {
 	typeStr, body, ok := strings.Cut(s, ".")
-	if !ok || len(typeStr) == 0 || len(typeStr) > 2 || body == "" {
-		return false
+	if !ok || typeStr == "" || len(typeStr) > 3 {
+		return NotEncString
 	}
 	for _, r := range typeStr {
 		if r < '0' || r > '9' {
-			return false
+			return NotEncString
 		}
+	}
+	t, _ := strconv.Atoi(typeStr)
+	switch EncType(t) {
+	case EncAesCbc256B64, EncAesCbc256HmacSha256B64, EncRsa2048OaepSha256B64, EncRsa2048OaepSha1B64,
+		EncRsa2048OaepSha256HmacSha256B64, EncRsa2048OaepSha1HmacSha256B64:
+		if _, err := ParseEncString(s); err == nil {
+			return IsEncString
+		}
+		return NotEncString
+	case encAesCbc128HmacSha256B64:
+		if _, err := ParseEncString("2." + body); err == nil {
+			return IsEncString
+		}
+		return NotEncString
 	}
 	parts := strings.Split(body, "|")
-	if len(parts) > 3 {
-		return false
-	}
 	for _, p := range parts {
 		if b, err := base64.StdEncoding.DecodeString(p); err != nil || len(b) == 0 {
-			return false
+			return NotEncString
 		}
 	}
-	return true
+	return MaybeEncString
 }

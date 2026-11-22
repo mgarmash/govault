@@ -26,7 +26,7 @@ func passkeyLogin(svc *mockVaultService) *state.Cipher {
 	c.SealedKeyID = "key-1"
 	c.Extra = map[string]json.RawMessage{"futureCipherField": json.RawMessage(`"plain"`)}
 	c.Login.Extra = map[string]json.RawMessage{"autofillOnPageLoad": json.RawMessage(`true`)}
-	c.Login.Shape = api.Shape{"totp": json.RawMessage(`null`)}
+	c.Login.Shape = api.Shape{"totp": {Raw: json.RawMessage(`null`)}}
 	c.Login.URIs[0].Match = &match
 	c.Login.URIs[0].Checksum, c.Login.URIs[0].ChecksumOf = &cs, c.Login.URIs[0].URI
 	c.Login.URIs[0].Extra = map[string]json.RawMessage{"futureUriField": json.RawMessage(`7`)}
@@ -50,7 +50,7 @@ func TestEditorKeepsWhatItDoesNotShow(t *testing.T) {
 	if out.Name != "GitHub (work)" || out.Login.Password != "changed" || out.SealedKeyID != "key-1" {
 		t.Fatalf("edit not applied: %+v", out)
 	}
-	if string(out.Extra["futureCipherField"]) != `"plain"` || string(out.Login.Extra["autofillOnPageLoad"]) != `true` || string(out.Login.Shape["totp"]) != `null` {
+	if string(out.Extra["futureCipherField"]) != `"plain"` || string(out.Login.Extra["autofillOnPageLoad"]) != `true` || string(out.Login.Shape["totp"].Raw) != `null` {
 		t.Fatal("unknown fields or wire shape lost")
 	}
 	if len(out.Login.Fido2Credentials) != 2 || string(out.Login.Fido2Credentials[0].Sealed) != sealedPasskeyA {

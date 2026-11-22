@@ -38,7 +38,10 @@ type Entry struct {
 	// Diff names the fields that differ, never their values.
 	Diff      []string
 	CanUpdate bool
-	Action    Action
+	// UpdateBlocked says why Update is not offered for a backup item that
+	// cannot safely update its match, if that is the reason.
+	UpdateBlocked string
+	Action        Action
 }
 
 // Allowed lists the actions the entry may take.
@@ -156,7 +159,14 @@ func BuildPlan(backup *Vault, current []*state.Cipher, folders []state.Folder) *
 			used[match.ID] = true
 			e.Match = match
 			e.Diff = diff(it, e.FolderName, match, currentFolders[val(match.FolderID)])
-			e.CanUpdate = !match.ReadOnly && !match.HidePassword && it.complete()
+			e.CanUpdate = !match.ReadOnly && !match.HidePassword
+			switch probe := *match; {
+			case !e.CanUpdate:
+			case !it.complete():
+				e.CanUpdate, e.UpdateBlocked = false, "the backup item is incomplete"
+			case mergeContent(&probe, it) != nil:
+				e.CanUpdate, e.UpdateBlocked = false, "its fields or websites cannot be matched safely"
+			}
 			e.Class, e.Action = ClassIdentical, ActionSkip
 			if len(e.Diff) > 0 {
 				e.Class = ClassConflict
@@ -283,6 +293,11 @@ type Writer interface {
 type Result struct {
 	Created, Updated, Skipped, Failed int
 	Err                               error
+	// LocalCopyErr reports changes the server accepted (and that are
+	// counted as created or updated) but GoVault could not write to its
+	// encrypted local copy. They must not be retried; a sync refreshes
+	// the local copy.
+	LocalCopyErr error
 }
 
 // Apply carries out exactly the actions chosen in p. Folders the approved
@@ -290,7 +305,17 @@ type Result struct {
 // identity, organization and attachments and replace its content.
 func Apply(ctx context.Context, w Writer, p *Plan) Result {
 	var res Result
-	var errs []error
+	var errs, local []error
+	// done splits err into a committed change, whose local copy may have
+	// failed, and a real failure.
+	done := func(name string, err error) bool {
+		var lc *state.LocalCopyError
+		if errors.As(err, &lc) {
+			local = append(local, fmt.Errorf("%s: %w", name, err))
+			return true
+		}
+		return err == nil
+	}
 	folderIDs := map[string]string{}
 	for _, f := range w.Folders() {
 		key := strings.ToLower(f.Name)
@@ -307,7 +332,7 @@ func Apply(ctx context.Context, w Writer, p *Plan) Result {
 			return &id, nil
 		}
 		f, err := w.SaveFolder(ctx, &state.Folder{Name: name})
-		if err != nil {
+		if !done("folder "+name, err) {
 			return nil, err
 		}
 		folderIDs[key] = f.ID
@@ -324,25 +349,24 @@ func Apply(ctx context.Context, w Writer, p *Plan) Result {
 		var err error
 		switch e.Action {
 		case ActionCreate:
-			err = createItem(ctx, w, e, folderFor)
-			if err == nil {
+			if err = createItem(ctx, w, e, folderFor); done(e.Item.Name, err) {
 				res.Created++
+				continue
 			}
 		case ActionUpdate:
-			err = updateItem(ctx, w, e, folderFor)
-			if err == nil {
+			if err = updateItem(ctx, w, e, folderFor); done(e.Item.Name, err) {
 				res.Updated++
+				continue
 			}
 		default:
 			res.Skipped++
 			continue
 		}
-		if err != nil {
-			res.Failed++
-			errs = append(errs, fmt.Errorf("%s: %w", e.Item.Name, err))
-		}
+		res.Failed++
+		errs = append(errs, fmt.Errorf("%s: %w", e.Item.Name, err))
 	}
 	res.Err = errors.Join(errs...)
+	res.LocalCopyErr = errors.Join(local...)
 	return res
 }
 
@@ -381,7 +405,9 @@ func updateItem(ctx context.Context, w Writer, e *Entry, folderFor func(string) 
 	cur.Favorite = e.Item.Favorite
 	cur.Reprompt = e.Item.Reprompt
 	cur.FolderID = folder
-	mergeContent(cur, e.Item)
+	if err := mergeContent(cur, e.Item); err != nil {
+		return err
+	}
 	_, err = w.SaveCipher(ctx, cur)
 	return err
 }

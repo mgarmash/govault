@@ -304,32 +304,89 @@ func TestImportUpdateNeverErasesANestedObject(t *testing.T) {
 
 func TestImportUpdateMatchesDuplicatesExactly(t *testing.T) {
 	extra := func(v string) map[string]json.RawMessage { return map[string]json.RawMessage{"x": json.RawMessage(v)} }
-	three := 3
+	xs := func(fields []state.CustomField) (out []string) {
+		for _, f := range fields {
+			out = append(out, string(f.Extra["x"]))
+		}
+		return out
+	}
+	one, two, three := 1, 2, 3
+
 	c := login("c-gh", "GitHub", "alice", "pw")
 	u := c.Login.URIs[0].URI
 	c.Login.URIs = []state.LoginURI{{URI: u, Extra: extra(`"nil-match"`)}, {URI: u, Match: &three, Extra: extra(`"match-3"`)}}
-	c.Fields = []state.CustomField{{Name: "PIN", Type: 1, Extra: extra(`"a"`)}, {Name: "PIN", Type: 1, Extra: extra(`"b"`)}, {Name: "Note", Type: 0, Extra: extra(`"n"`)}}
-
 	it := FromCipher(login("c-gh", "GitHub", "alice", "pw"))
 	it.Login.URIs = []URI{{URI: opt(u), Match: &three}, {URI: opt(u)}}
-	it.Fields = []Field{{Name: opt("PIN"), Type: 1}, {Name: opt("PIN"), Type: 1}, {Name: opt("PIN"), Type: 1}, {Name: opt("Note"), Type: 1}}
-	mergeContent(c, it)
-
-	if got := c.Login.URIs; string(got[0].Extra["x"]) != `"match-3"` || string(got[1].Extra["x"]) != `"nil-match"` {
-		t.Fatalf("URI extras matched by position instead of match setting: %s, %s", got[0].Extra["x"], got[1].Extra["x"])
+	if err := mergeContent(c, it); err != nil {
+		t.Fatal(err)
 	}
-	want := []string{`"a"`, `"b"`, ``, ``}
-	for i, f := range c.Fields {
-		if string(f.Extra["x"]) != want[i] {
-			t.Fatalf("field %d extra = %q, want %q", i, f.Extra["x"], want[i])
+	if got := c.Login.URIs; string(got[0].Extra["x"]) != `"match-3"` || string(got[1].Extra["x"]) != `"nil-match"` {
+		t.Fatalf("URI extras followed position, not match setting: %s, %s", got[0].Extra["x"], got[1].Extra["x"])
+	}
+
+	for _, tc := range []struct {
+		name   string
+		old    []state.CustomField
+		backup []Field
+		want   []string
+	}{
+		{"reordered by value",
+			[]state.CustomField{{Name: "PIN", Value: "1", Type: 1, Extra: extra(`"a"`)}, {Name: "PIN", Value: "2", Type: 1, Extra: extra(`"b"`)}},
+			[]Field{{Name: opt("PIN"), Value: opt("2"), Type: 1}, {Name: opt("PIN"), Value: opt("1"), Type: 1}},
+			[]string{`"b"`, `"a"`}},
+		{"reordered by linked id",
+			[]state.CustomField{{Name: "L", Type: 3, LinkedID: &one, Extra: extra(`"a"`)}, {Name: "L", Type: 3, LinkedID: &two, Extra: extra(`"b"`)}},
+			[]Field{{Name: opt("L"), Type: 3, LinkedID: &two}, {Name: opt("L"), Type: 3, LinkedID: &one}},
+			[]string{`"b"`, `"a"`}},
+		{"one value changed, the other reordered",
+			[]state.CustomField{{Name: "PIN", Value: "1", Type: 1, Extra: extra(`"a"`)}, {Name: "PIN", Value: "2", Type: 1, Extra: extra(`"b"`)}},
+			[]Field{{Name: opt("PIN"), Value: opt("3"), Type: 1}, {Name: opt("PIN"), Value: opt("1"), Type: 1}},
+			[]string{`"b"`, `"a"`}},
+		{"identical duplicates by position",
+			[]state.CustomField{{Name: "PIN", Type: 1, Extra: extra(`"same"`)}, {Name: "PIN", Type: 1, Extra: extra(`"same"`)}},
+			[]Field{{Name: opt("PIN"), Type: 1}, {Name: opt("PIN"), Type: 1}, {Name: opt("PIN"), Type: 1}},
+			[]string{`"same"`, `"same"`, ``}},
+	} {
+		c := login("c-gh", "GitHub", "alice", "pw")
+		c.Fields = tc.old
+		if err := mergeContent(c, Item{Type: api.CipherTypeLogin, Login: &Login{}, Fields: tc.backup}); err != nil {
+			t.Fatalf("%s: %v", tc.name, err)
+		}
+		if got := xs(c.Fields); !slices.Equal(got, tc.want) {
+			t.Fatalf("%s: extras = %v, want %v", tc.name, got, tc.want)
 		}
 	}
 
-	c.Fields = []state.CustomField{{Name: "Other", Type: 0}, {Name: "PIN", Type: 1, Extra: extra(`"a"`)}, {Name: "PIN", Type: 1, Extra: extra(`"b"`)}}
-	mergeContent(c, Item{Type: api.CipherTypeLogin, Fields: []Field{{Name: opt("PIN"), Type: 1}}})
-	if len(c.Fields[0].Extra) != 0 {
-		t.Fatalf("an ambiguous match took %s", c.Fields[0].Extra["x"])
+	for name, backup := range map[string][]Field{
+		"same content, different hidden data": {{Name: opt("PIN"), Type: 1}, {Name: opt("PIN"), Type: 1}},
+		"both values changed":                 {{Name: opt("PIN"), Value: opt("8"), Type: 1}, {Name: opt("PIN"), Value: opt("9"), Type: 1}},
+	} {
+		cur := login("c-gh", "GitHub", "alice", "pw")
+		vals := []string{"", ""}
+		if name == "both values changed" {
+			vals = []string{"1", "2"}
+		}
+		cur.Fields = []state.CustomField{{Name: "PIN", Value: vals[0], Type: 1, Extra: extra(`"a"`)}, {Name: "PIN", Value: vals[1], Type: 1, Extra: extra(`"b"`)}}
+		if err := mergeContent(cloneLogin(cur), Item{Type: api.CipherTypeLogin, Login: &Login{}, Fields: backup}); !errors.Is(err, ErrAmbiguousUpdate) {
+			t.Fatalf("%s: mergeContent = %v, want ErrAmbiguousUpdate", name, err)
+		}
+		it := FromCipher(cur)
+		it.Fields = backup
+		e := BuildPlan(&Vault{Items: []Item{it}}, []*state.Cipher{cur}, nil).Entries[0]
+		if e.CanUpdate || e.UpdateBlocked == "" || !slices.Equal(e.Allowed(), []Action{ActionSkip, ActionCreate}) {
+			t.Fatalf("%s: entry = %+v, want Update refused with a reason", name, e)
+		}
+		w := &fakeWriter{ciphers: map[string]*state.Cipher{"c-gh": cur}}
+		e.CanUpdate, e.Action = true, ActionUpdate
+		if res := Apply(context.Background(), w, &Plan{Entries: []Entry{e}}); res.Failed != 1 || len(w.saves) != 0 {
+			t.Fatalf("%s: forced update saved %v", name, w.saves)
+		}
 	}
+}
+
+func cloneLogin(c *state.Cipher) *state.Cipher {
+	cp := *c
+	return &cp
 }
 
 func TestExportRefusesUnreadablePasskey(t *testing.T) {
@@ -338,5 +395,28 @@ func TestExportRefusesUnreadablePasskey(t *testing.T) {
 	v, err := Build([]*state.Cipher{c}, nil)
 	if !errors.Is(err, ErrUnreadablePasskey) || v != nil || !strings.Contains(err.Error(), `"GitHub"`) || !strings.Contains(err.Error(), "keyValue") {
 		t.Fatalf("Build = %v, %v; want ErrUnreadablePasskey naming GitHub and keyValue", v, err)
+	}
+}
+
+type localCopyWriter struct{ *fakeWriter }
+
+func (w localCopyWriter) SaveCipher(ctx context.Context, c *state.Cipher) (*state.Cipher, error) {
+	saved, _ := w.fakeWriter.SaveCipher(ctx, c)
+	return saved, &state.LocalCopyError{Cipher: saved, Err: errors.New("disk full")}
+}
+
+func TestApplyCountsServerAcceptedChangesAsDone(t *testing.T) {
+	cur := login("c-gh", "GitHub", "alice", "old")
+	backup := FromCipher(login("c-gh", "GitHub", "alice", "new"))
+	fresh := FromCipher(login("", "Fresh", "bob", "pw"))
+	p := BuildPlan(&Vault{Items: []Item{backup, fresh}}, []*state.Cipher{cur}, nil)
+	p.Entries[0].SetAction(ActionUpdate)
+	w := localCopyWriter{&fakeWriter{ciphers: map[string]*state.Cipher{"c-gh": cur}}}
+	res := Apply(context.Background(), w, p)
+	if res.Created != 1 || res.Updated != 1 || res.Failed != 0 || res.Err != nil {
+		t.Fatalf("result = %+v, want the accepted changes counted as done", res)
+	}
+	if !errors.Is(res.LocalCopyErr, state.ErrSnapshotNotUpdated) || len(w.saves) != 2 {
+		t.Fatalf("LocalCopyErr = %v, saves = %v", res.LocalCopyErr, w.saves)
 	}
 }

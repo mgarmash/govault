@@ -34,6 +34,11 @@ type mockVaultService struct {
 	collections   []state.Collection
 
 	downloadGate chan struct{}
+
+	// localCopyFails makes saves succeed on the "server" but report a
+	// failed local copy, as state.Service does when the snapshot write fails.
+	localCopyFails bool
+	creates        int
 }
 
 func newMockVaultService(initial state.LockStatus) *mockVaultService {
@@ -227,8 +232,13 @@ func (m *mockVaultService) SaveCipher(_ context.Context, c *state.Cipher) (*stat
 			cp.ID = fmt.Sprintf("c-new-%d", i)
 		}
 		m.order = append(m.order, cp.ID)
+		m.creates++
 	}
 	m.ciphers[cp.ID] = &cp
+	if m.localCopyFails {
+		out := cp
+		return &out, &state.LocalCopyError{Cipher: &out, Err: errors.New("disk full")}
+	}
 	return &cp, nil
 }
 

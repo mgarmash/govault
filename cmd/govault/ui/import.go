@@ -359,6 +359,10 @@ func (m *AppModel) ApplyImport() {
 			m.Route.Set(RouteVault)
 			m.RefreshVaultData()
 			title := fmt.Sprintf("Imported: %d created, %d updated", res.Created, res.Updated)
+			if res.LocalCopyErr != nil && res.Failed == 0 {
+				m.ShowLocalCopyWarning(title)
+				return
+			}
 			if res.Failed > 0 {
 				m.ShowToast(ui.ToastWarning, title, fmt.Sprintf("%d item(s) failed: %s", res.Failed, friendlyError(res.Err)))
 				return
@@ -518,7 +522,10 @@ func importRow(m *AppModel, p *export.Plan, i int) core.Node {
 	switch e.Class {
 	case export.ClassConflict:
 		note = "Differs: " + strings.Join(e.Diff, ", ")
-		if !e.CanUpdate {
+		switch {
+		case e.UpdateBlocked != "":
+			note += " · cannot update: " + e.UpdateBlocked
+		case !e.CanUpdate:
 			note += " · existing item is read-only"
 		}
 	case export.ClassIdentical:

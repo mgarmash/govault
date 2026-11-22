@@ -58,8 +58,13 @@ type Service struct {
 	sessionGen    uint64
 	sessionCtx    context.Context
 	sessionCancel context.CancelFunc
-	persistMu     sync.Mutex
-	secretMu      sync.Mutex
+	// persistMu orders every snapshot writer: it is held from choosing the
+	// snapshot to edit, through the disk write, to publishing the result
+	// in memory. snapSeq counts publications, so a sync that fetched before
+	// a change was committed can tell it is stale.
+	persistMu sync.Mutex
+	snapSeq   uint64
+	secretMu  sync.Mutex
 }
 
 var _ VaultService = (*Service)(nil)
@@ -419,7 +424,24 @@ func (s *Service) forceSync(ctx context.Context) error {
 	return s.sync(ctx, true)
 }
 
+// errSyncStale means a change was committed while a sync was fetching, so
+// its data is older than the snapshot and must not replace it.
+var errSyncStale = errors.New("state: sync result is older than a committed change")
+
 func (s *Service) sync(ctx context.Context, force bool) error {
+	for range 3 {
+		err := s.syncOnce(ctx, force)
+		if !errors.Is(err, errSyncStale) {
+			return err
+		}
+		force = true
+	}
+	// Changes keep landing; what is committed is newer than any fetch, and
+	// the next sync catches up.
+	return nil
+}
+
+func (s *Service) syncOnce(ctx context.Context, force bool) error {
 	o, err := s.beginOp(ctx)
 	if err != nil {
 		return err
@@ -456,30 +478,52 @@ func (s *Service) sync(ctx context.Context, force bool) error {
 		}
 	}()
 
-	updatedSnap := *o.snap
-	if !revDate.IsZero() {
-		updatedSnap.RevisionDate = revDate
-	}
-	if res.resp.Profile.Key != "" {
-		updatedSnap.ProtectedKey = res.resp.Profile.Key
-	}
-	updatedSnap.LastSyncAt = time.Now().UTC()
-	updatedSnap.RawSyncJSON = res.raw
-	if err := o.saveSnapshot(&updatedSnap); err != nil {
+	if err := o.commitSync(res.raw, res.resp.Profile.Key, revDate, data); err != nil {
 		return err
 	}
+	committed = true
+	s.notifyUpdated()
+	return nil
+}
 
+// commitSync replaces the snapshot and memory with a sync result, unless a
+// change was committed since o began; then it returns errSyncStale and
+// leaves both untouched.
+func (o *op) commitSync(raw []byte, protectedKey string, revDate time.Time, data *vaultData) error {
+	s := o.s
+	s.persistMu.Lock()
+	defer s.persistMu.Unlock()
+	s.mu.RLock()
+	cur, seq, ok := s.snapshot, s.snapSeq, o.currentLocked()
+	s.mu.RUnlock()
+	switch {
+	case !ok:
+		return ErrLocked
+	case cur == nil:
+		return ErrLoggedOut
+	case seq != o.seq:
+		return errSyncStale
+	}
+	updated := *cur
+	if !revDate.IsZero() {
+		updated.RevisionDate = revDate
+	}
+	if protectedKey != "" {
+		updated.ProtectedKey = protectedKey
+	}
+	updated.LastSyncAt = time.Now().UTC()
+	updated.RawSyncJSON = raw
+	if err := s.cfg.Store.SaveSnapshot(&updated); err != nil {
+		return err
+	}
 	s.mu.Lock()
+	defer s.mu.Unlock()
 	if !o.currentLocked() {
-		s.mu.Unlock()
 		return ErrLocked
 	}
-	s.snapshot = &updatedSnap
+	s.snapshot = &updated
+	s.snapSeq++
 	s.applyDataLocked(data)
-	committed = true
-	s.mu.Unlock()
-
-	s.notifyUpdated()
 	return nil
 }
 
@@ -663,31 +707,26 @@ func (s *Service) SaveCipher(ctx context.Context, c *Cipher) (*Cipher, error) {
 	return o.commitCipher(decrypted, encResp)
 }
 
-// commitCipher records a cipher the server returned after a change: first
-// in the encrypted snapshot, then in memory. Memory always takes the
-// server's version, even when the snapshot write fails and the error is
-// returned.
+// commitCipher records a cipher the server returned after a change, in the
+// encrypted snapshot and in memory (see updateSnapshot). On a
+// *LocalCopyError the committed item is returned too, and carried in the
+// error.
 func (o *op) commitCipher(decrypted *Cipher, enc *api.EncryptedCipher) (*Cipher, error) {
 	stored := *enc
 	if len(stored.CollectionIDs) == 0 {
 		stored.CollectionIDs = append([]string(nil), decrypted.CollectionIDs...)
 	}
-	snapErr := o.storeSnapshotCipher(&stored)
-	if errors.Is(snapErr, ErrLocked) {
+	err := o.updateSnapshot(replaceSnapshotCipher(&stored), func() { o.s.ciphers[decrypted.ID] = decrypted })
+	if errors.Is(err, ErrLocked) {
 		return nil, ErrLocked
 	}
-	o.s.mu.Lock()
-	if !o.currentLocked() {
-		o.s.mu.Unlock()
-		return nil, ErrLocked
-	}
-	o.s.ciphers[decrypted.ID] = decrypted
-	o.s.mu.Unlock()
 	o.s.notifyUpdated()
-	if snapErr != nil {
-		return nil, snapErr
+	out := cloneCipher(decrypted)
+	if lc := (*LocalCopyError)(nil); errors.As(err, &lc) {
+		lc.Cipher = cloneCipher(decrypted)
+		return out, lc
 	}
-	return cloneCipher(decrypted), nil
+	return out, err
 }
 
 func (s *Service) SoftDeleteCipher(ctx context.Context, id string) error {
@@ -708,21 +747,19 @@ func (s *Service) SoftDeleteCipher(ctx context.Context, id string) error {
 	}
 
 	now := time.Now().UTC()
-	snapErr := o.updateSnapshot(func(resp *api.SyncResponse) {
+	err = o.updateSnapshot(func(resp *api.SyncResponse) {
 		for i := range resp.Ciphers {
 			if resp.Ciphers[i].ID == id {
 				resp.Ciphers[i].DeletedDate = &now
 			}
 		}
+	}, func() {
+		if c, ok := s.ciphers[id]; ok {
+			c.DeletedDate = &now
+		}
 	})
-	s.mu.Lock()
-	if c, ok := s.ciphers[id]; ok && o.currentLocked() {
-		c.DeletedDate = &now
-	}
-	s.mu.Unlock()
-
 	s.notifyUpdated()
-	return snapErr
+	return err
 }
 
 func (s *Service) RestoreCipher(ctx context.Context, id string) error {
@@ -777,21 +814,15 @@ func (s *Service) HardDeleteCipher(ctx context.Context, id string) error {
 		return err
 	}
 
-	snapErr := o.removeSnapshotCiphers(id)
-	s.mu.Lock()
-	if o.currentLocked() {
-		delete(s.ciphers, id)
-	}
-	s.mu.Unlock()
-
+	err = o.removeCipher(id)
 	s.notifyUpdated()
-	return snapErr
+	return err
 }
 
-func (o *op) removeSnapshotCiphers(ids ...string) error {
+func (o *op) removeCipher(id string) error {
 	return o.updateSnapshot(func(resp *api.SyncResponse) {
-		resp.Ciphers = slices.DeleteFunc(resp.Ciphers, func(c api.EncryptedCipher) bool { return slices.Contains(ids, c.ID) })
-	})
+		resp.Ciphers = slices.DeleteFunc(resp.Ciphers, func(c api.EncryptedCipher) bool { return c.ID == id })
+	}, func() { delete(o.s.ciphers, id) })
 }
 
 // EmptyTrash permanently deletes every item in Trash the user may delete and
@@ -820,7 +851,6 @@ func (s *Service) EmptyTrash(ctx context.Context) (TrashResult, error) {
 	slices.Sort(ids)
 
 	var errs []error
-	var deleted []string
 	for _, id := range ids {
 		_, err := withAuth(o, func(ctx context.Context, tok string) (struct{}, error) {
 			return struct{}{}, o.client.HardDeleteCipher(ctx, tok, id)
@@ -833,17 +863,11 @@ func (s *Service) EmptyTrash(ctx context.Context) (TrashResult, error) {
 			continue
 		}
 		res.Deleted++
-		deleted = append(deleted, id)
-		s.mu.Lock()
-		if o.currentLocked() {
-			delete(s.ciphers, id)
-		}
-		s.mu.Unlock()
-	}
-	if res.Deleted > 0 {
-		if err := o.removeSnapshotCiphers(deleted...); err != nil {
+		if err := o.removeCipher(id); err != nil {
 			errs = append(errs, err)
 		}
+	}
+	if res.Deleted > 0 {
 		if err := s.sync(ctx, true); err != nil && !errors.Is(err, ErrLocked) {
 			errs = append(errs, err)
 		}
@@ -903,7 +927,7 @@ func (s *Service) SaveFolder(ctx context.Context, f *Folder) (*Folder, error) {
 		return nil, err
 	}
 
-	snapErr := o.updateSnapshot(func(resp *api.SyncResponse) {
+	err = o.updateSnapshot(func(resp *api.SyncResponse) {
 		for i := range resp.Folders {
 			if resp.Folders[i].ID == encResp.ID {
 				resp.Folders[i] = *encResp
@@ -911,24 +935,13 @@ func (s *Service) SaveFolder(ctx context.Context, f *Folder) (*Folder, error) {
 			}
 		}
 		resp.Folders = append(resp.Folders, *encResp)
-	})
-	if errors.Is(snapErr, ErrLocked) {
+	}, func() { s.folders[decrypted.ID] = decrypted })
+	if errors.Is(err, ErrLocked) {
 		return nil, ErrLocked
 	}
-	s.mu.Lock()
-	if !o.currentLocked() {
-		s.mu.Unlock()
-		return nil, ErrLocked
-	}
-	s.folders[decrypted.ID] = decrypted
-	s.mu.Unlock()
-
 	s.notifyUpdated()
-	if snapErr != nil {
-		return nil, snapErr
-	}
 	cp := decrypted
-	return &cp, nil
+	return &cp, err
 }
 
 func (s *Service) DeleteFolder(ctx context.Context, id string) error {
@@ -945,27 +958,23 @@ func (s *Service) DeleteFolder(ctx context.Context, id string) error {
 		return err
 	}
 
-	snapErr := o.updateSnapshot(func(resp *api.SyncResponse) {
+	err = o.updateSnapshot(func(resp *api.SyncResponse) {
 		resp.Folders = slices.DeleteFunc(resp.Folders, func(f api.EncryptedFolder) bool { return f.ID == id })
 		for i := range resp.Ciphers {
 			if f := resp.Ciphers[i].FolderID; f != nil && *f == id {
 				resp.Ciphers[i].FolderID = nil
 			}
 		}
-	})
-	s.mu.Lock()
-	if o.currentLocked() {
+	}, func() {
 		delete(s.folders, id)
 		for _, c := range s.ciphers {
 			if c.FolderID != nil && *c.FolderID == id {
 				c.FolderID = nil
 			}
 		}
-	}
-	s.mu.Unlock()
-
+	})
 	s.notifyUpdated()
-	return snapErr
+	return err
 }
 
 func (s *Service) loadCurrentSnapshot() (*store.Snapshot, error) {

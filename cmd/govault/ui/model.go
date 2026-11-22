@@ -1761,9 +1761,16 @@ func (m *AppModel) SaveDraft(cx *core.Scope) {
 
 	go func() {
 		saved, err := m.Core.SaveCipher(context.Background(), cipher)
+		// The server has the item even when its local copy failed: finish
+		// the edit with the server item, so Save cannot create it twice.
+		var lc *state.LocalCopyError
+		localCopyFailed := errors.As(err, &lc)
+		if localCopyFailed && saved == nil {
+			saved = lc.Cipher
+		}
 		m.Scope.Post(func() {
 			m.EditBusy.Set(false)
-			if err != nil {
+			if err != nil && !localCopyFailed {
 				if errors.Is(err, api.ErrRevisionConflict) {
 					cx.ShowAlert(core.AlertConfig{
 						Title:   "Item changed on another device",
@@ -1796,9 +1803,30 @@ func (m *AppModel) SaveDraft(cx *core.Scope) {
 				m.ActiveCipher.Set(saved)
 			}
 			m.ReleaseSecureInput()
+			if localCopyFailed {
+				m.ShowLocalCopyWarning("Item saved")
+				return
+			}
 			m.ShowToast(ui.ToastSuccess, "Item saved", "")
 		})
 	}()
+}
+
+// ShowLocalCopyWarning reports a change the server accepted but GoVault
+// could not write to its encrypted local copy. It offers a sync, which
+// refreshes the copy, and never repeats the change.
+func (m *AppModel) ShowLocalCopyWarning(title string) {
+	if m.Toaster == nil {
+		return
+	}
+	m.Toaster.Show(ui.ToastContent{
+		Type:        ui.ToastWarning,
+		Title:       title,
+		Description: "Saved on the server, but the copy on this device could not be updated.",
+		Action:      "Sync now",
+		OnAction:    func() { m.SyncNow(false) },
+		Duration:    10 * time.Second,
+	})
 }
 
 func (m *AppModel) ToggleFavorite() {

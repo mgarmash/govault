@@ -34,6 +34,21 @@ var (
 	ErrSnapshotNotUpdated      = errors.New("state: the server has the change, but the local copy could not be updated; sync to refresh it")
 )
 
+// LocalCopyError reports a change the server accepted and GoVault now
+// shows, but could not write to the encrypted local copy. The change is
+// done: retrying it would repeat it (a second item, for a create). Sync
+// instead. Cipher is the committed item, for changes that have one.
+type LocalCopyError struct {
+	Cipher *Cipher
+	Err    error
+}
+
+func (e *LocalCopyError) Error() string {
+	return ErrSnapshotNotUpdated.Error() + ": " + e.Err.Error()
+}
+
+func (e *LocalCopyError) Unwrap() []error { return []error{ErrSnapshotNotUpdated, e.Err} }
+
 type FilterCategory int
 
 const (
