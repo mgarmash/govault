@@ -1,7 +1,7 @@
 #!/bin/sh
 # Installs GoVault on Linux from a GitHub release.
 #
-#   curl -fsSL https://raw.githubusercontent.com/txchen/govault/v0.3.0/scripts/install-linux.sh | sh
+#   curl -fsSL https://raw.githubusercontent.com/txchen/govault/v0.3.1/scripts/install-linux.sh | sh
 #
 # Arch-based systems get the pacman package, Debian-based systems the .deb,
 # and everything else the AppImage with a desktop entry and icon. Every
