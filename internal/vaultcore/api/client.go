@@ -21,6 +21,21 @@ import (
 
 const defaultUserAgent = "GoVault/0.1"
 
+// ClientVersion is the Bitwarden client release whose protocol GoVault
+// follows. Every API request sends it as Bitwarden-Client-Version, and
+// servers gate features on it: Vaultwarden 1.33 and later send SSH key
+// items only to 2024.12.0 and newer, and Vaultwarden after 1.37.5 refuses
+// logins without the header and V2-encryption accounts below 2026.10.1
+// (2026.10.2 for desktop device types).
+//
+// Bump it when GoVault supports what a newer Bitwarden release added, after
+// checking which server gates the new version opens, since a server trusts
+// it to understand everything that release does.
+const ClientVersion = "2026.11.0"
+
+// clientName is sent as Bitwarden-Client-Name.
+const clientName = "desktop"
+
 type ClientConfig struct {
 	ServerURL  string
 	DeviceID   string
@@ -41,6 +56,8 @@ type Client struct {
 	deviceName string
 	deviceType int
 	userAgent  string
+	// headers name the client on every API request.
+	headers map[string]string
 }
 
 func NewClient(cfg ClientConfig) (*Client, error) {
@@ -81,6 +98,11 @@ func NewClient(cfg ClientConfig) (*Client, error) {
 		deviceName: cfg.DeviceName,
 		deviceType: cfg.DeviceType,
 		userAgent:  defaultUserAgent,
+		headers: map[string]string{
+			"Bitwarden-Client-Name":    clientName,
+			"Bitwarden-Client-Version": ClientVersion,
+			"Device-Type":              strconv.Itoa(cfg.DeviceType),
+		},
 	}, nil
 }
 
@@ -349,6 +371,9 @@ func (c *Client) do(
 	}
 	if accessToken != "" {
 		req.Header.Set("Authorization", "Bearer "+accessToken)
+	}
+	for k, v := range c.headers {
+		req.Header.Set(k, v)
 	}
 	for k, v := range headers {
 		req.Header.Set(k, v)
