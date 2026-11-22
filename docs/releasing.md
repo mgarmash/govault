@@ -9,6 +9,8 @@ scripts/build-release.sh -target linux_x64 -installers -output /tmp/out
 
 The script takes `-target` and passes every other flag to `nsgo build`. For each target it compiles `gv` with `CGO_ENABLED=0` and the version in `nsgo.yaml`, stages it in `cmd/govault/resources/` for that target alone, runs `nsgo build`, and removes the staging directory again. The signing, notarization and update-feed settings work as they do for `nsgo build`. Sign `checksums.txt` afterwards with `scripts/sign-checksums.sh` as before.
 
+Linux targets also get `cmd/govault/linux/dev.txchen.govault.appdata.xml` (AppStream metadata) in `usr/share/metainfo/` and a copy of the desktop entry in `usr/share/applications/`, which AppStream tools and the AppImage catalog read; keep the copy in step with `linux.categories` in `nsgo.yaml` (a test checks it), and add each release to the metadata's `<releases>` when its version is bumped.
+
 Check a build:
 
 ```sh

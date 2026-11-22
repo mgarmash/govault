@@ -14,6 +14,11 @@
 #   Linux    /opt/govault/gv in the .deb and pacman packages, and the
 #            AppImage's root, which scripts/install-linux.sh extracts
 #
+# Linux packages also get the AppStream metadata and a copy of the desktop
+# entry under usr/share, from cmd/govault/linux, where AppStream tools and
+# the AppImage catalog look for them; NSGo writes only the entry at the
+# AppDir root.
+#
 # macOS bundles get no gv yet: NSGo cannot place and sign a helper in
 # GoVault.app/Contents/MacOS before it signs the app (docs/cli-design.md,
 # Packaging status). Flags other than -target go to nsgo unchanged, such as
@@ -80,6 +85,11 @@ for target in $(printf '%s' "$targets" | tr ',' ' '); do
   else
     mkdir -p "$resources"
     install -m 755 "${work}/${target}/${exe}" "${resources}/${exe}"
+  fi
+  if [ "$goos" = "linux" ]; then
+    mkdir -p "${resources}/usr/share/metainfo" "${resources}/usr/share/applications"
+    install -m 644 "${app}/linux/dev.txchen.govault.appdata.xml" "${resources}/usr/share/metainfo/"
+    install -m 644 "${app}/linux/dev.txchen.govault.desktop" "${resources}/usr/share/applications/"
   fi
   (cd "$root" && go tool nsgo build -target "$target" "$@" ./cmd/govault)
 done

@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- AppStream metadata for software centers and the AppImage catalog.
+     scripts/build-release.sh puts it in Linux packages as
+     usr/share/metainfo/dev.txchen.govault.appdata.xml. -->
+<component type="desktop-application">
+  <id>dev.txchen.govault</id>
+  <name>GoVault</name>
+  <summary>Native desktop client for Vaultwarden and Bitwarden servers</summary>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>MIT</project_license>
+  <developer id="dev.txchen">
+    <name>Tianxiang Chen</name>
+  </developer>
+  <description>
+    <p>
+      GoVault is a small, fast, native desktop client for Vaultwarden and
+      Bitwarden-compatible servers. It keeps an encrypted copy of your vault
+      on the device, so it opens and searches instantly, even offline.
+    </p>
+    <ul>
+      <li>Logins with live verification codes, cards, identities, secure notes, SSH keys and attachments</li>
+      <li>Two-step login with an authenticator app or email</li>
+      <li>Organizations and shared collections</li>
+      <li>Vault Health: reused and weak passwords, expiring cards and unsecured websites, checked on your device</li>
+      <li>Password and passphrase generator, encrypted backups and a reviewed import</li>
+      <li>Copied secrets clear themselves from the clipboard, and the vault locks after inactivity</li>
+    </ul>
+    <p>
+      GoVault speaks English, Chinese (Simplified and Traditional), Japanese,
+      Korean, German, French, Spanish, Portuguese (Brazil) and Russian.
+    </p>
+  </description>
+  <launchable type="desktop-id">dev.txchen.govault.desktop</launchable>
+  <url type="homepage">https://github.com/txchen/govault</url>
+  <url type="bugtracker">https://github.com/txchen/govault/issues</url>
+  <url type="vcs-browser">https://github.com/txchen/govault</url>
+  <categories>
+    <category>Utility</category>
+    <category>Security</category>
+  </categories>
+  <keywords>
+    <keyword>password</keyword>
+    <keyword>password manager</keyword>
+    <keyword>Bitwarden</keyword>
+    <keyword>Vaultwarden</keyword>
+  </keywords>
+  <screenshots>
+    <screenshot type="default">
+      <caption>The vault with the sidebar, the item list and an item's details</caption>
+      <image type="source" width="1600" height="1047">https://raw.githubusercontent.com/txchen/govault/v0.3.4/docs/screenshots/vault-light.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>The vault in dark appearance</caption>
+      <image type="source" width="1600" height="1047">https://raw.githubusercontent.com/txchen/govault/v0.3.4/docs/screenshots/vault-dark.png</image>
+    </screenshot>
+  </screenshots>
+  <content_rating type="oars-1.1"/>
+  <supports>
+    <control>pointing</control>
+    <control>keyboard</control>
+  </supports>
+  <requires>
+    <display_length compare="ge">768</display_length>
+  </requires>
+  <releases>
+    <release version="0.3.4" date="2026-11-22">
+      <description>
+        <p>SSH key items sync from Vaultwarden 1.37.5, the menu bar icon setting applies immediately, and screen readers read each sidebar row once.</p>
+      </description>
+    </release>
+    <release version="0.3.3" date="2026-11-22">
+      <description>
+        <p>GoVault speaks 10 languages and follows the system language, with a choice in Settings.</p>
+      </description>
+    </release>
+    <release version="0.3.2" date="2026-11-22"/>
+    <release version="0.3.1" date="2026-11-22"/>
+    <release version="0.3.0" date="2026-11-22"/>
+  </releases>
+</component>
