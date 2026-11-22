@@ -9,8 +9,9 @@ import (
 	"github.com/txchen/govault/internal/cli"
 )
 
-// version is set at build time with -ldflags "-X main.version=...".
-var version = ""
+// version is GoVault's, which NSGo builds gv for; -ldflags
+// "-X main.version=..." replaces it.
+var version = appRelease
 
 func main() {
 	os.Exit(cli.Run(cli.StdEnvironment(appVersion())))
