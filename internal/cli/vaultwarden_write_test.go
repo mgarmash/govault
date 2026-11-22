@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 )
@@ -22,10 +23,13 @@ func (vw *vwRun) checkWrites(t *testing.T) {
 	_, _ = rand.Read(b[:])
 	prefix := "gv-write-test-" + hex.EncodeToString(b[:])
 	before := vw.revisions(t)
+	// Every object is tracked by ID as soon as it exists, so cleanup finds
+	// it in any state: active, in Trash or in the Archive.
+	var createdItems, createdFolders []string
 	// A defer, not t.Cleanup: it runs on t.Fatal too, before the suite
 	// locks and logs out.
 	defer func() {
-		vw.cleanUp(t, prefix)
+		vw.cleanUp(t, prefix, createdItems, createdFolders)
 		after := vw.revisions(t)
 		for id, rev := range before {
 			if after[id] != rev {
@@ -55,8 +59,10 @@ func (vw *vwRun) checkWrites(t *testing.T) {
 	}
 
 	folder := id(vw.must(t, "create", "folder", b64(`{"name":"`+prefix+` folder"}`)))
+	createdFolders = append(createdFolders, folder)
 	item := id(vw.must(t, "create", "item", b64(`{"type":1,"name":"`+prefix+` login","folderId":"`+folder+`",`+
 		`"fields":[{"name":"f","value":"v","type":0}],"login":{"username":"u","password":"p1","uris":[{"uri":"https://`+prefix+`.example.com"}]}}`)))
+	createdItems = append(createdItems, item)
 	if got := vw.must(t, "get", "password", item); got != "p1" {
 		t.Fatal("the created item has the wrong password")
 	}
@@ -108,27 +114,41 @@ func (vw *vwRun) checkWrites(t *testing.T) {
 	t.Log("ok: create/edit/delete folder and item, attachment, trash, restore, permanent delete")
 }
 
-// cleanUp removes every item and folder named with prefix.
-func (vw *vwRun) cleanUp(t *testing.T, prefix string) {
+// cleanUp removes the tracked items and folders, whatever their state,
+// and any other item or folder named with prefix.
+func (vw *vwRun) cleanUp(t *testing.T, prefix string, items, folders []string) {
 	_ = vw.run("sync", "-f")
-	for _, args := range [][]string{{"list", "items", "--search", prefix}, {"list", "items", "--search", prefix, "--trash"}} {
-		var items []struct{ ID, Name string }
-		_ = json.Unmarshal([]byte(vw.run(args...).out), &items)
-		for _, it := range items {
-			if strings.HasPrefix(it.Name, prefix) {
-				if r := vw.run("delete", "item", it.ID, "--permanent"); r.code != 0 {
-					t.Errorf("cleanup of item %s: %s", it.ID, r.err)
-				}
+	for _, args := range [][]string{{"list", "items", "--search", prefix}, {"list", "items", "--search", prefix, "--trash"}, {"list", "items", "--search", prefix, "--archived"}} {
+		var found []struct{ ID, Name string }
+		_ = json.Unmarshal([]byte(vw.run(args...).out), &found)
+		for _, it := range found {
+			if strings.HasPrefix(it.Name, prefix) && !slices.Contains(items, it.ID) {
+				items = append(items, it.ID)
 			}
 		}
 	}
-	var folders []struct{ ID, Name string }
-	_ = json.Unmarshal([]byte(vw.run("list", "folders", "--search", prefix).out), &folders)
-	for _, f := range folders {
-		if strings.HasPrefix(f.Name, prefix) {
-			if r := vw.run("delete", "folder", f.ID); r.code != 0 {
-				t.Errorf("cleanup of folder %s: %s", f.ID, r.err)
-			}
+	for _, id := range items {
+		r := vw.run("get", "item", id)
+		if r.err == "Not found." {
+			continue
+		}
+		if r := vw.run("delete", "item", id, "--permanent"); r.code != 0 {
+			t.Errorf("cleanup of item %s: %s", id, r.err)
+		}
+	}
+	var found []struct{ ID, Name string }
+	_ = json.Unmarshal([]byte(vw.run("list", "folders", "--search", prefix).out), &found)
+	for _, f := range found {
+		if strings.HasPrefix(f.Name, prefix) && !slices.Contains(folders, f.ID) {
+			folders = append(folders, f.ID)
+		}
+	}
+	for _, id := range folders {
+		if r := vw.run("get", "folder", id); r.err == "Not found." {
+			continue
+		}
+		if r := vw.run("delete", "folder", id); r.code != 0 {
+			t.Errorf("cleanup of folder %s: %s", id, r.err)
 		}
 	}
 }
