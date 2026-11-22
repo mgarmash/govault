@@ -334,6 +334,9 @@ func classifyError(status int, body []byte) error {
 	if status == http.StatusConflict {
 		return ErrRevisionConflict
 	}
+	if status == http.StatusNotFound {
+		return ErrNotFound
+	}
 
 	if status == http.StatusBadRequest {
 		if tfErr, ok := parseTwoFactorChallenge(body); ok {
@@ -362,8 +365,16 @@ func classifyError(status int, body []byte) error {
 		msg = parsed.Error
 	}
 
-	if status == http.StatusBadRequest && strings.Contains(strings.ToLower(msg), "revision") {
-		return ErrRevisionConflict
+	// Vaultwarden answers a stale write and a missing cipher with HTTP 400
+	// (src/api/core/ciphers.rs): "The client copy of this cipher is out of
+	// date. Resync the client and try again." and "Cipher doesn't exist".
+	if status == http.StatusBadRequest {
+		switch lower := strings.ToLower(msg); {
+		case strings.Contains(lower, "out of date"), strings.Contains(lower, "revision"):
+			return ErrRevisionConflict
+		case strings.Contains(lower, "doesn't exist"), strings.Contains(lower, "does not exist"):
+			return &notFoundError{APIError{StatusCode: status, Message: msg, Body: string(body)}}
+		}
 	}
 
 	return &APIError{

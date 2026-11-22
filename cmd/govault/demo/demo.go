@@ -329,19 +329,32 @@ func (s *Service) HardDeleteCipher(_ context.Context, id string) error {
 	return nil
 }
 
-func (s *Service) EmptyTrash(context.Context) (state.TrashResult, error) {
+func (s *Service) TrashSelection() state.TrashSelection {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	var sel state.TrashSelection
+	for id, c := range s.ciphers {
+		switch {
+		case c.DeletedDate == nil:
+		case c.ReadOnly:
+			sel.ReadOnly++
+		default:
+			sel.Items = append(sel.Items, state.TrashItem{ID: id, RevisionDate: c.RevisionDate})
+		}
+	}
+	return sel
+}
+
+func (s *Service) EmptyTrash(_ context.Context, sel state.TrashSelection) (state.TrashResult, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	var res state.TrashResult
-	for id, c := range s.ciphers {
-		if c.DeletedDate == nil {
+	res := state.TrashResult{ReadOnly: sel.ReadOnly}
+	for _, it := range sel.Items {
+		if c, ok := s.ciphers[it.ID]; !ok || c.DeletedDate == nil {
+			res.Skipped++
 			continue
 		}
-		if c.ReadOnly {
-			res.ReadOnly++
-			continue
-		}
-		delete(s.ciphers, id)
+		delete(s.ciphers, it.ID)
 		res.Deleted++
 	}
 	return res, nil

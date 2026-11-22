@@ -10,6 +10,7 @@ var (
 	ErrTwoFactorRequired = errors.New("api: two-factor authentication required")
 	ErrRevisionConflict  = errors.New("api: revision conflict")
 	ErrNetworkOffline    = errors.New("api: network offline")
+	ErrNotFound          = errors.New("api: not found")
 )
 
 type APIError struct {
@@ -24,3 +25,10 @@ func (e *APIError) Error() string {
 	}
 	return fmt.Sprintf("api: HTTP %d", e.StatusCode)
 }
+
+// notFoundError is an APIError that also matches ErrNotFound.
+type notFoundError struct{ APIError }
+
+func (e *notFoundError) Error() string { return e.APIError.Error() }
+
+func (e *notFoundError) Is(target error) bool { return target == ErrNotFound }

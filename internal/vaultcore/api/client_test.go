@@ -127,7 +127,9 @@ func TestClient_RevisionDateSyncCRUDAndErrors(t *testing.T) {
 			_, _ = w.Write([]byte(`{"id":"c-new","type":1,"name":"2.n|c|m"}`))
 
 		case r.Method == http.MethodPut && r.URL.Path == "/api/ciphers/c-conflict":
-			w.WriteHeader(http.StatusConflict)
+			// Vaultwarden's stale-write answer, verbatim (src/api/core/ciphers.rs, src/error.rs).
+			w.WriteHeader(http.StatusBadRequest)
+			_, _ = w.Write([]byte(vaultwardenStaleWrite))
 
 		case r.Method == http.MethodPut && r.URL.Path == "/api/ciphers/c1":
 			var body CipherPayload
@@ -273,5 +275,23 @@ func TestEncryptedCipher_LosslessUnknownFieldRoundTrip(t *testing.T) {
 	}
 	if _, ok := roundTripped["data"]; !ok {
 		t.Errorf("lost v2 data field")
+	}
+}
+
+const vaultwardenStaleWrite = `{"message":"The client copy of this cipher is out of date. Resync the client and try again.","validationErrors":{"":["The client copy of this cipher is out of date. Resync the client and try again."]},"errorModel":{"message":"The client copy of this cipher is out of date. Resync the client and try again.","object":"error"},"error":"","error_description":"","exceptionMessage":null,"exceptionStackTrace":null,"innerExceptionMessage":null,"object":"error"}`
+
+func TestClassifyVaultwardenErrors(t *testing.T) {
+	if err := classifyError(400, []byte(vaultwardenStaleWrite)); !errors.Is(err, ErrRevisionConflict) {
+		t.Fatalf("stale write = %v, want ErrRevisionConflict", err)
+	}
+	missing := `{"message":"Cipher doesn't exist","validationErrors":{"":["Cipher doesn't exist"]},"errorModel":{"message":"Cipher doesn't exist","object":"error"},"error":"","error_description":"","exceptionMessage":null,"exceptionStackTrace":null,"innerExceptionMessage":null,"object":"error"}`
+	if err := classifyError(400, []byte(missing)); !errors.Is(err, ErrNotFound) {
+		t.Fatalf("missing cipher = %v, want ErrNotFound", err)
+	}
+	if err := classifyError(404, nil); !errors.Is(err, ErrNotFound) {
+		t.Fatalf("404 = %v, want ErrNotFound", err)
+	}
+	if err := classifyError(400, []byte(`{"message":"Invalid password"}`)); errors.Is(err, ErrNotFound) || errors.Is(err, ErrRevisionConflict) {
+		t.Fatalf("plain 400 = %v", err)
 	}
 }

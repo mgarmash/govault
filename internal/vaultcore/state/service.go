@@ -825,36 +825,61 @@ func (o *op) removeCipher(id string) error {
 	}, func() { delete(o.s.ciphers, id) })
 }
 
-// EmptyTrash permanently deletes every item in Trash the user may delete and
-// leaves read-only ones, then resyncs so memory and the snapshot match.
-func (s *Service) EmptyTrash(ctx context.Context) (TrashResult, error) {
-	var res TrashResult
+// TrashSelection lists the items in Trash the user may delete, with the
+// revisions an Empty Trash confirmation is bound to.
+func (s *Service) TrashSelection() TrashSelection {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	sel := TrashSelection{AccountID: s.accountID}
+	if s.status != StatusUnlocked {
+		return sel
+	}
+	for id, c := range s.ciphers {
+		switch {
+		case c.DeletedDate == nil:
+		case s.effectiveReadOnlyLocked(c):
+			sel.ReadOnly++
+		default:
+			sel.Items = append(sel.Items, TrashItem{ID: id, RevisionDate: cloneTimePtr(c.RevisionDate)})
+		}
+	}
+	slices.SortFunc(sel.Items, func(a, b TrashItem) int { return strings.Compare(a.ID, b.ID) })
+	return sel
+}
+
+// EmptyTrash permanently deletes the items sel lists, which the user
+// confirmed, then resyncs. Each item is fetched first and kept (Skipped)
+// unless the server still has it in Trash at the confirmed revision.
+func (s *Service) EmptyTrash(ctx context.Context, sel TrashSelection) (TrashResult, error) {
+	res := TrashResult{ReadOnly: sel.ReadOnly}
 	o, err := s.beginOp(ctx)
 	if err != nil {
 		return res, err
 	}
 	defer o.end()
-
-	var ids []string
-	s.mu.RLock()
-	for id, c := range s.ciphers {
-		if c.DeletedDate == nil {
-			continue
-		}
-		if s.effectiveReadOnlyLocked(c) {
-			res.ReadOnly++
-			continue
-		}
-		ids = append(ids, id)
+	if o.accountID != sel.AccountID {
+		return res, ErrAccountChanged
 	}
-	s.mu.RUnlock()
-	slices.Sort(ids)
 
 	var errs []error
-	for _, id := range ids {
-		_, err := withAuth(o, func(ctx context.Context, tok string) (struct{}, error) {
-			return struct{}{}, o.client.HardDeleteCipher(ctx, tok, id)
+	for _, item := range sel.Items {
+		cur, err := withAuth(o, func(ctx context.Context, tok string) (*api.EncryptedCipher, error) {
+			return o.client.GetCipher(ctx, tok, item.ID)
 		})
+		if errors.Is(err, api.ErrNotFound) {
+			res.Skipped++
+			continue
+		}
+		if err == nil && (cur.DeletedDate == nil || !sameTime(cur.RevisionDate, item.RevisionDate) || (cur.Edit != nil && !*cur.Edit)) {
+			res.Skipped++
+			continue
+		}
+		if err == nil {
+			// The server deletes unconditionally: a restore between this check and the delete is still lost.
+			_, err = withAuth(o, func(ctx context.Context, tok string) (struct{}, error) {
+				return struct{}{}, o.client.HardDeleteCipher(ctx, tok, item.ID)
+			})
+		}
 		if err != nil {
 			errs = append(errs, err)
 			if errors.Is(err, ErrLocked) || o.ctx.Err() != nil {
@@ -863,17 +888,21 @@ func (s *Service) EmptyTrash(ctx context.Context) (TrashResult, error) {
 			continue
 		}
 		res.Deleted++
-		if err := o.removeCipher(id); err != nil {
+		if err := o.removeCipher(item.ID); err != nil {
 			errs = append(errs, err)
 		}
 	}
-	if res.Deleted > 0 {
-		if err := s.sync(ctx, true); err != nil && !errors.Is(err, ErrLocked) {
+	if res.Deleted > 0 || res.Skipped > 0 {
+		if err := s.sync(ctx, true); err != nil && !errors.Is(err, ErrLocked) && !errors.Is(err, ErrSyncDeferred) {
 			errs = append(errs, err)
 		}
 		s.notifyUpdated()
 	}
 	return res, errors.Join(errs...)
+}
+
+func sameTime(a, b *time.Time) bool {
+	return (a == nil) == (b == nil) && (a == nil || a.Equal(*b))
 }
 
 func (s *Service) Folders() []Folder {

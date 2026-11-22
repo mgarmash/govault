@@ -285,19 +285,32 @@ func (m *mockVaultService) HardDeleteCipher(_ context.Context, id string) error 
 	return nil
 }
 
-func (m *mockVaultService) EmptyTrash(context.Context) (state.TrashResult, error) {
+func (m *mockVaultService) TrashSelection() state.TrashSelection {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	var sel state.TrashSelection
+	for id, c := range m.ciphers {
+		switch {
+		case c.DeletedDate == nil:
+		case c.ReadOnly:
+			sel.ReadOnly++
+		default:
+			sel.Items = append(sel.Items, state.TrashItem{ID: id, RevisionDate: c.RevisionDate})
+		}
+	}
+	return sel
+}
+
+func (m *mockVaultService) EmptyTrash(_ context.Context, sel state.TrashSelection) (state.TrashResult, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	var res state.TrashResult
-	for id, c := range m.ciphers {
-		if c.DeletedDate == nil {
+	res := state.TrashResult{ReadOnly: sel.ReadOnly}
+	for _, it := range sel.Items {
+		if c, ok := m.ciphers[it.ID]; !ok || c.DeletedDate == nil {
+			res.Skipped++
 			continue
 		}
-		if c.ReadOnly {
-			res.ReadOnly++
-			continue
-		}
-		delete(m.ciphers, id)
+		delete(m.ciphers, it.ID)
 		res.Deleted++
 	}
 	return res, nil

@@ -326,6 +326,12 @@ func newVaultTestEnv(t *testing.T) *vaultTestEnv {
 			env.mu.Unlock()
 			_ = json.NewEncoder(w).Encode(created)
 
+		case r.Method == http.MethodGet && strings.HasPrefix(r.URL.Path, "/api/ciphers/") && env.hasCipher(strings.TrimPrefix(r.URL.Path, "/api/ciphers/")):
+			env.mu.Lock()
+			c := env.ciphers[strings.TrimPrefix(r.URL.Path, "/api/ciphers/")]
+			env.mu.Unlock()
+			_ = json.NewEncoder(w).Encode(c)
+
 		case r.Method == http.MethodPut && strings.HasPrefix(r.URL.Path, "/api/ciphers/") && env.hasCipher(strings.TrimPrefix(r.URL.Path, "/api/ciphers/")):
 			id := strings.TrimPrefix(r.URL.Path, "/api/ciphers/")
 			body, _ := io.ReadAll(r.Body)

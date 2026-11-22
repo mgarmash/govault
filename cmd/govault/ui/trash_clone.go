@@ -3,6 +3,7 @@ package ui
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/nsgo-dev/nsgo/core"
 	"github.com/nsgo-dev/nsgo/ui"
@@ -11,20 +12,15 @@ import (
 
 // TrashDeletable counts the items in Trash the user may delete permanently.
 func (m *AppModel) TrashDeletable() int {
-	n := 0
-	for _, s := range m.Core.Search("", state.SearchFilter{Category: state.FilterTrash}) {
-		if c, err := m.Core.GetCipher(s.ID); err == nil && !m.CipherReadOnly(c) {
-			n++
-		}
-	}
-	return n
+	return len(m.Core.TrashSelection().Items)
 }
 
 func (m *AppModel) EmptyTrash(cx *core.Scope) {
 	if m.LockState.Get() != state.StatusUnlocked || m.SyncState.Get() == SyncOffline || m.TrashBusy.Get() {
 		return
 	}
-	n := m.TrashDeletable()
+	sel := m.Core.TrashSelection()
+	n := len(sel.Items)
 	if n == 0 {
 		return
 	}
@@ -47,7 +43,7 @@ func (m *AppModel) EmptyTrash(cx *core.Scope) {
 		m.TrashBusy.Set(true)
 		gen := m.LockGeneration()
 		go func() {
-			res, err := m.Core.EmptyTrash(context.Background())
+			res, err := m.Core.EmptyTrash(context.Background(), sel)
 			m.Scope.Post(func() {
 				m.TrashBusy.Set(false)
 				if !m.StillUnlocked(gen) {
@@ -56,10 +52,14 @@ func (m *AppModel) EmptyTrash(cx *core.Scope) {
 				m.SelectedID.Set("")
 				m.ActiveCipher.Set(nil)
 				m.RefreshVaultData()
-				desc := ""
+				var notes []string
 				if res.ReadOnly > 0 {
-					desc = fmt.Sprintf("%d read-only item(s) stayed in Trash.", res.ReadOnly)
+					notes = append(notes, fmt.Sprintf("%d read-only item(s) stayed in Trash.", res.ReadOnly))
 				}
+				if res.Skipped > 0 {
+					notes = append(notes, fmt.Sprintf("%d item(s) changed on another device and were kept.", res.Skipped))
+				}
+				desc := strings.Join(notes, " ")
 				switch {
 				case err != nil && res.Deleted == 0:
 					m.ShowToast(ui.ToastError, "Empty Trash failed", friendlyError(err))

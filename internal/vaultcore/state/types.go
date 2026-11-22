@@ -32,6 +32,7 @@ var (
 	ErrHiddenByOrganization    = errors.New("state: hidden by your organization")
 	ErrUnsupportedUpload       = errors.New("state: server requested an unsupported attachment upload method")
 	ErrSyncDeferred            = errors.New("state: changes kept landing during sync; nothing was synced yet")
+	ErrAccountChanged          = errors.New("state: the account changed since this was confirmed")
 	ErrSnapshotNotUpdated      = errors.New("state: the server has the change, but the local copy could not be updated; sync to refresh it")
 )
 
@@ -250,6 +251,22 @@ type PasswordHistoryEntry struct {
 type TrashResult struct {
 	Deleted  int
 	ReadOnly int
+	// Skipped counts items that changed since the user confirmed, such as
+	// one restored on another device; they were kept.
+	Skipped int
+}
+
+// TrashItem is an item in Trash as the user saw it when confirming.
+type TrashItem struct {
+	ID           string
+	RevisionDate *time.Time
+}
+
+// TrashSelection is exactly what one Empty Trash confirmation covers.
+type TrashSelection struct {
+	AccountID string
+	Items     []TrashItem
+	ReadOnly  int
 }
 
 type Folder struct {
@@ -304,7 +321,8 @@ type VaultService interface {
 	SoftDeleteCipher(ctx context.Context, id string) error
 	RestoreCipher(ctx context.Context, id string) error
 	HardDeleteCipher(ctx context.Context, id string) error
-	EmptyTrash(ctx context.Context) (TrashResult, error)
+	TrashSelection() TrashSelection
+	EmptyTrash(ctx context.Context, sel TrashSelection) (TrashResult, error)
 	Folders() []Folder
 	SaveFolder(ctx context.Context, f *Folder) (*Folder, error)
 	DeleteFolder(ctx context.Context, id string) error
