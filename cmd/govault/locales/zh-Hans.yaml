@@ -1,0 +1,683 @@
+# GoVault Simplified Chinese (zh-Hans) message catalog.
+
+# Common words
+
+cancel: 取消
+save: 保存
+delete: 删除
+remove: 移除
+edit: 编辑
+restore: 恢复
+verify: 验证
+copy: 复制
+undo: 撤销
+never: 从不
+notAvailable: "—"
+
+# Item types
+
+typeLogin: 登录
+typeSecureNote: 安全笔记
+typeCard: 支付卡
+typeIdentity: 身份
+typeSSHKey: SSH 密钥
+typeItem: 项目
+typeLogins: 登录
+typeCards: 支付卡
+typeIdentities: 身份
+typeSecureNotes: 安全笔记
+typeSSHKeys: SSH 密钥
+
+# Sign in
+
+signInTitle: 登录 GoVault
+signInSubtitle: 连接到你的 Bitwarden 或 Vaultwarden 服务器。
+serverURL: 服务器 URL
+email: 电子邮箱
+masterPassword: 主密码
+masterPasswordPlaceholder: 主密码
+required: 必填
+emailPlaceholder: name@example.com
+insecureServer: 此服务器未使用 HTTPS。你的主密码和密码库数据将以明文发送，请仅在受信任的网络中使用。
+signIn: 登录
+backToUnlock: 返回解锁
+signInFootnote: 端到端加密。你的主密码绝不会离开此设备。
+signInFieldsRequired: 请填写服务器 URL、电子邮箱和主密码。
+togglePasswordVisibility: 切换密码显示
+
+# Two-step login
+
+twoFactorTitle: 两步验证
+twoFactorEnterEmailCodeTo: "请输入发送至 {email} 的验证码。"
+twoFactorEnterEmailCode: 请输入发送至你电子邮箱的验证码。
+twoFactorEnterAuthenticatorCode: 请输入验证器应用中的 6 位验证码。
+twoFactorMethod: 验证方式
+twoFactorAuthenticator: 验证器应用
+twoFactorEmail: 电子邮箱
+twoFactorYubiKey: YubiKey
+twoFactorDuo: Duo
+twoFactorOrganizationDuo: Duo（组织）
+twoFactorU2F: FIDO U2F
+twoFactorWebAuthn: 通行密钥 / WebAuthn
+twoFactorRememberedDevice: 已记住的设备
+twoFactorOtherProvider: "方式 {number, number, integer}"
+verificationCode: 验证码
+rememberDevice: 记住此设备
+backToSignIn: 返回登录
+sendCode: 发送验证码
+resendCode: 重新发送验证码
+twoFactorFootnote: 即使密码泄露，两步登录也能保护你的密码库安全。
+twoFactorCodeRequired: 请输入验证码。
+twoFactorCodeInvalid: 验证码无效，请检查后重试。
+twoFactorUnsupported: "此账户要求使用 {methods} 进行两步登录，GoVault 暂不支持。请在网页端密码库设置中启用验证器应用或电子邮箱两步登录，然后再在此处登录。"
+twoFactorEmailFailed: "无法发送验证邮件。{reason}"
+twoFactorEmailSentTo: "验证码已发送至 {email}。"
+twoFactorEmailSent: 验证码已发送至你的电子邮箱。
+
+# Lock screen
+
+lockedTitle: GoVault 已锁定
+unlock: 解锁
+unlockWith: "使用 {method} 解锁"
+orUseMasterPassword: 或使用主密码
+logOutOrSwitchAccount: 退出登录或切换账户…
+logOutOrSwitchAccountLabel: 退出登录或切换账户
+lockFootnote: 锁定的密码库在此设备上保持静态加密。
+masterPasswordRequired: 请输入主密码。
+biometricGeneric: 生物识别
+biometricUnlockReason: 解锁 GoVault
+biometricEnableReason: "为 GoVault 启用 {method}"
+keychainPromptReason: 解锁 GoVault
+biometricKeyUnavailable: 已保存的生物识别密钥不可用，请使用主密码解锁。
+biometricKeyCorrupt: 生物识别密钥已损坏，请使用主密码解锁。
+biometricKeyInvalid: 生物识别密钥无效，请使用主密码解锁。
+biometricFailed: 生物识别验证失败，请输入主密码。
+keychainUnavailable: 钥匙串不可用
+keychainUnavailableDetail: 无法访问系统钥匙串。
+biometricDisableFailed: 无法关闭生物识别解锁
+biometricEnableFailed: 无法开启生物识别解锁
+biometricDisabled: "已关闭 {method}"
+biometricEnabled: "已开启 {method}"
+biometricEnabledDetail: "你现在可以使用 {method} 解锁 GoVault。"
+vaultLocked: 密码库已锁定
+vaultLockedInactivity: 因长时间无操作已自动锁定。
+
+# Log out
+
+logOutTitle: 要退出登录 GoVault 吗？
+logOutMessage: 此设备上缓存的加密密码库和已保存的生物识别密钥将被移除。
+logOut: 退出登录
+loggedOut: 已退出登录
+logOutSecretsLeft: "部分已保存的密钥无法移除：{reason}"
+
+# Toolbar and sidebar
+
+back: 返回
+forward: 前进
+searchVault: 搜索密码库
+clearSearch: 清除搜索
+offline: 离线
+syncNowLabel: 立即同步
+lockVault: 锁定密码库
+newItem: 新建项目
+allItems: 所有项目
+favorites: 收藏夹
+categories: 类别
+folders: 文件夹
+newFolder: 新建文件夹
+collections: 集合
+tools: 工具
+generator: 生成器
+vaultHealth: 密码库健康
+archive: 归档
+trash: 回收站
+settings: 设置
+importTitle: 导入
+noFolder: 无文件夹
+collection: 集合
+folder: 文件夹
+folderActions: 文件夹操作
+renameFolderMenu: 重命名文件夹…
+deleteFolder: 删除文件夹
+resizePane: 调整面板大小
+syncing: 正在同步…
+syncPending: 等待同步
+syncOfflineCached: 离线 · 缓存的密码库
+sessionExpired: 会话已过期
+synced: 已同步
+syncedWhen: "同步于 {when}"
+justNow: 刚刚
+minutesAgo: "{count, plural, other {# 分钟前}}"
+hoursAgo: "{count, plural, other {# 小时前}}"
+daysAgo: "{count, plural, other {# 天前}}"
+shortDate: "{date, date, ::MMMd}"
+signInAgainToSync: 请重新登录以进行同步。在此之前，你的密码库可离线使用。
+sessionExpiredBanner: 会话已过期——你仍可查看缓存的密码库。请重新登录以恢复同步。
+signInNotSaved: 无法保存登录凭据。请重新登录，以便 GoVault 在锁定后仍能同步。
+signInAgain: 重新登录
+
+# Item list
+
+itemCount: "{count, plural, other {# 个项目}}"
+trashCanRestore: 回收站中的项目可以恢复。
+emptyTrash: 清空回收站
+searchInAllItems: 在所有项目中
+searchIn: "在“{section}”中"
+searchOnlyIn: "仅限“{section}”"
+searchAllItems: 搜索所有项目
+noResults: 无结果
+trashIsEmpty: 回收站为空
+noItems: 没有项目
+nothingInSectionMatches: "“{section}”中没有与“{query}”匹配的项目。"
+nothingMatches: "没有与“{query}”匹配的项目。"
+trashEmptyHint: 你删除的项目会显示在这里。
+noItemsHint: 选择“新建项目”以添加你的第一个项目。
+noItemSelected: 未选择项目
+noItemSelectedHint: 从列表中选择一个项目以查看详情。
+shortcutSearch: 搜索
+shortcutNewItem: 新建项目
+shortcutLock: 锁定
+
+# Item context menu
+
+copyUsernameMenu: 复制用户名
+copyPasswordMenu: 复制密码
+copyVerificationCodeMenu: 复制验证码
+copyPublicKeyMenu: 复制公钥
+deletePermanentlyMenu: 永久删除…
+addToFavorites: 添加到收藏夹
+removeFromFavorites: 从收藏夹移除
+clone: 克隆
+archiveAction: 归档
+unarchiveAction: 取消归档
+moveToTrash: 移到回收站
+
+# Item details
+
+username: 用户名
+password: 密码
+hiddenByOrganization: 已由你的组织隐藏
+revealPassword: 显示密码
+copyPassword: 复制密码
+copyUsername: 复制用户名
+credentials: 凭据
+website: 网站
+websiteNumbered: "网站 {number, number, integer}"
+openWebsite: 打开网站
+copyWebsite: 复制网站
+websites: 网站
+cardholderName: 持卡人姓名
+copyCardholder: 复制持卡人姓名
+cardNumber: 卡号
+revealCardNumber: 显示卡号
+copyCardNumber: 复制卡号
+expiration: 有效期
+copyExpiration: 复制有效期
+securityCode: 安全码
+brand: 品牌
+cardDetails: 支付卡详情
+fullName: 姓名
+company: 公司
+phone: 电话
+personal: 个人信息
+address: 地址
+copyAddress: 复制地址
+socialSecurityNumber: 社会保障号码
+passportNumber: 护照号码
+copyPassportNumber: 复制护照号码
+licenseNumber: 驾驶证号码
+copyLicenseNumber: 复制驾驶证号码
+documents: 证件
+customFields: 自定义字段
+notes: 备注
+fingerprint: 指纹
+copyFingerprint: 复制指纹
+publicKey: 公钥
+copyPublicKey: 复制公钥
+privateKey: 私钥
+revealField: "显示 {field}"
+copyField: "复制 {field}"
+passwordHistory: "密码历史记录（{count, number, integer}）"
+usedUntil: "使用至 {date, date, medium} {date, time, short}"
+oldPassword: 旧密码
+viewOnly: 仅限查看
+passwordReprompt: 主密码二次验证
+inTrash: 在回收站中
+archived: 已归档
+deletePermanently: 永久删除
+toggleFavorite: 切换收藏
+cloneItem: 克隆项目
+timeRemaining: 剩余时间
+secondsLeft: "{seconds, plural, other {# 秒}}"
+revealVerificationCode: 显示验证码
+copyVerificationCode: 复制验证码
+cardPictureBrand: 支付卡
+cardPictureCardholder: 持卡人
+cardPictureExpires: 有效期
+updatedOn: "更新于 {date, date, medium} {date, time, short}"
+createdOn: "创建于 {date, date, medium}"
+deletedWhen: "删除于 {when}"
+
+# Copying
+
+copied: "已复制 {field}"
+passwordCopied: 已复制密码
+usernameCopied: 已复制用户名
+verificationCodeCopied: 已复制验证码
+publicKeyCopied: 已复制公钥
+websiteCopied: 已复制网站
+cardholderNameCopied: 已复制持卡人姓名
+cardNumberCopied: 已复制卡号
+expirationCopied: 已复制有效期
+securityCodeCopied: 已复制安全码
+fullNameCopied: 已复制姓名
+companyCopied: 已复制公司
+emailCopied: 已复制电子邮箱
+phoneCopied: 已复制电话
+addressCopied: 已复制地址
+ssnCopied: 已复制社会保障号码
+passportNumberCopied: 已复制护照号码
+licenseNumberCopied: 已复制驾驶证号码
+fingerprintCopied: 已复制指纹
+privateKeyCopied: 已复制私钥
+oldPasswordCopied: 已复制旧密码
+generatedCopied: 已复制生成的密码
+copyFailed: 复制失败
+clearsInConcealed: "已隐藏 · {seconds, plural, other {# 秒后清除}}"
+clearsIn: "{seconds, plural, other {# 秒后清除}}"
+concealedFromHistory: 已从剪贴板历史中隐藏
+
+# Master password reprompt
+
+repromptTitle: 主密码验证
+repromptPrompt: "{action, select, copyPassword {请输入主密码以复制密码。} copyTOTP {请输入主密码以复制验证码。} revealTOTP {请输入主密码以显示验证码。} revealPassword {请输入主密码以显示密码。} revealCardNumber {请输入主密码以显示卡号。} copyCardNumber {请输入主密码以复制卡号。} revealSecurityCode {请输入主密码以显示安全码。} copySecurityCode {请输入主密码以复制安全码。} revealSSN {请输入主密码以显示社会保障号码。} copySSN {请输入主密码以复制社会保障号码。} revealField {请输入主密码以显示自定义字段。} copyField {请输入主密码以复制自定义字段。} revealPrivateKey {请输入主密码以显示私钥。} copyPrivateKey {请输入主密码以复制私钥。} revealOldPassword {请输入主密码以显示旧密码。} copyOldPassword {请输入主密码以复制旧密码。} editItem {请输入主密码以编辑项目。} cloneItem {请输入主密码以克隆项目。} archiveItem {请输入主密码以归档项目。} unarchiveItem {请输入主密码以取消归档项目。} downloadAttachment {请输入主密码以下载附件。} exportVault {请输入主密码以导出密码库。} updateProtectedItem {请输入主密码以更新受保护的项目。} other {请输入主密码以继续。}}"
+repromptBiometricReason: "{action, select, copyPassword {验证以复制密码} copyTOTP {验证以复制验证码} revealTOTP {验证以显示验证码} revealPassword {验证以显示密码} revealCardNumber {验证以显示卡号} copyCardNumber {验证以复制卡号} revealSecurityCode {验证以显示安全码} copySecurityCode {验证以复制安全码} revealSSN {验证以显示社会保障号码} copySSN {验证以复制社会保障号码} revealField {验证以显示自定义字段} copyField {验证以复制自定义字段} revealPrivateKey {验证以显示私钥} copyPrivateKey {验证以复制私钥} revealOldPassword {验证以显示旧密码} copyOldPassword {验证以复制旧密码} editItem {验证以编辑项目} cloneItem {验证以克隆项目} archiveItem {验证以归档项目} unarchiveItem {验证以取消归档项目} downloadAttachment {验证以下载附件} exportVault {验证以导出密码库} updateProtectedItem {验证以更新受保护的项目} other {验证以继续}}"
+repromptUnavailable: 主密码验证不可用。
+incorrectMasterPassword: 主密码不正确。
+
+# Saving, trash and folders
+
+discardChangesTitle: 要放弃未保存的更改吗？
+discardChangesMessage: 你对此项目的编辑尚未保存。
+keepEditing: 继续编辑
+discard: 放弃
+nameRequired: 名称不能为空。
+cannotSaveOffline: 离线时无法保存。
+itemSaved: 项目已保存
+saveFailed: 保存失败
+itemChangedTitle: 项目已在其他设备上更改
+itemChangedMessage: 自上次同步以来，此项目已在其他位置更新。请重新加载最新版本以避免覆盖更改。
+reloadLatest: 重新加载最新
+localCopyNotUpdated: 已保存到服务器，但无法更新此设备上的副本。
+syncNowAction: 立即同步
+updateFailed: 更新失败
+favoriteUpdated: 收藏已更新
+moveToTrashFailed: 移到回收站失败
+movedToTrash: 已移到回收站
+archiveFailed: 归档失败
+unarchiveFailed: 取消归档失败
+itemArchived: 项目已归档
+itemUnarchived: 项目已取消归档
+restoreFailed: 恢复失败
+itemRestored: 项目已恢复
+deletePermanentlyTitle: 要永久删除吗？
+deletePermanentlyMessage: "“{name}”将被永久删除，且无法恢复。"
+deleteFailed: 删除失败
+permanentlyDeleted: 已永久删除
+emptyTrashTitle: 要清空回收站吗？
+emptyTrashMessage: "{count, plural, other {# 个项目将被永久删除，且无法恢复。}}"
+emptyTrashFailed: 清空回收站失败
+trashEmptied: 回收站已清空
+trashReadOnlyKept: "{count, plural, other {# 个只读项目保留在回收站中。}}"
+trashChangedKept: "{count, plural, other {# 个项目已在其他设备上更改，已予以保留。}}"
+trashPartlyDeleted: "{count, plural, other {已删除 # 个项目}}"
+trashSomeNotDeleted: "部分项目无法删除：{reason}"
+passkeysNotCopied: 通行密钥不会被复制
+passkeysNotCopiedDetail: 副本仅包含登录信息，不包含通行密钥。
+cloneName: "{name}（副本）"
+newFolderTitle: 新建文件夹
+renameFolderTitle: 重命名文件夹
+folderName: 文件夹名称
+folderNameRequired: 文件夹名称不能为空。
+folderSaved: 文件夹已保存
+deleteFolderTitle: 要删除文件夹吗？
+deleteFolderMessage: "“{name}”中的项目将被移至“无文件夹”。"
+deleteFolderFailed: 删除文件夹失败
+folderDeleted: 文件夹已删除
+
+# Sync
+
+sessionExpiredToast: 会话已过期
+sessionExpiredToastDetail: 请重新登录以恢复同步。
+offlineToastDetail: 正在显示缓存的密码库。
+syncFailed: 同步失败
+vaultSynced: 密码库已同步
+
+# Editor
+
+newItemOfType: "{kind, select, login {新建登录} secureNote {新建安全笔记} card {新建支付卡} identity {新建身份} sshKey {新建 SSH 密钥} other {新建项目}}"
+editItemOfType: "{kind, select, login {编辑登录} secureNote {编辑安全笔记} card {编辑支付卡} identity {编辑身份} sshKey {编辑 SSH 密钥} other {编辑项目}}"
+unsavedChanges: 有未保存的更改
+noChanges: 无更改
+itemSection: 项目
+type: 类型
+name: 名称
+favorite: 收藏
+masterPasswordReprompt: 主密码二次验证
+addNote: 添加备注
+generatePassword: 生成密码
+authenticatorKey: 验证器
+authenticatorKeyPlaceholder: otpauth:// URI 或设置密钥
+removeWebsite: 移除网站
+addWebsite: 添加网站
+cardholder: 持卡人
+nameOnCard: 卡面姓名
+brandPlaceholder: Visa、Mastercard、Amex…
+cardNumberLabel: 卡号
+expiryMonthPlaceholder: MM
+expiryYearPlaceholder: YYYY
+securityCodePlaceholder: CVV
+firstName: 名字
+lastName: 姓氏
+phonePlaceholder: "+86 138 0013 8000"
+street: 街道地址
+streetPlaceholder: 长安街 1 号
+city: 城市
+stateZip: 省/州 / 邮编
+stateRegion: 省/州
+postalCode: 邮政编码
+country: 国家/地区
+generateSSHKey: 生成 Ed25519 密钥
+sshKeyGenerateFailed: "无法生成 SSH 密钥：{reason}"
+fieldTypeText: 文本
+fieldTypeHidden: 隐藏
+fieldName: 字段名称
+fieldValue: 值
+removeField: 移除字段
+addField: 添加字段
+passkey: 通行密钥
+removedWhenSaved: 保存时移除
+removePasskey: 移除通行密钥
+removePasskeyTitle: 要移除通行密钥吗？
+removePasskeyMessage: 移除后，你将无法再使用此通行密钥登录。
+passkeySiteCreated: "{site} · 创建于 {date, date, medium}"
+passkeyCreated: "创建于 {date, date, medium}"
+passkeyStored: 存储在此项目中
+
+# Attachments
+
+attachments: 附件
+attachFile: 添加附件
+attachFileTitle: 添加附件
+attachButton: 添加
+downloadFile: "下载 {file}"
+deleteFile: "删除 {file}"
+saveAttachmentTitle: 保存附件
+saveHere: 保存到此处
+downloadFailed: 下载失败
+attachmentSaved: 附件已保存
+couldNotOpenFile: 无法打开文件
+fileTooLarge: 文件过大
+attachmentLimit: 附件大小上限为 100 MiB。
+uploadFailed: 上传失败
+fileAttached: 已添加附件
+deleteAttachmentTitle: 要删除附件吗？
+deleteAttachmentMessage: "“{file}”将被永久删除。"
+attachmentDeleted: 附件已删除
+bytes: "{count, number, integer} B"
+kilobytes: "{size, number, ::.0} KB"
+megabytes: "{size, number, ::.0} MB"
+gigabytes: "{size, number, ::.0} GB"
+terabytes: "{size, number, ::.0} TB"
+
+# Generator
+
+passwordMode: 密码
+passphraseMode: 密码短语
+strengthWeak: 弱
+strengthFair: 一般
+strengthStrong: 强
+strengthVeryStrong: 极强
+entropyBits: "{bits, plural, other {≈ # 位熵}}"
+regenerate: 重新生成
+length: 长度
+characters: 字符
+uppercase: 大写字母
+lowercase: 小写字母
+numbers: 数字
+symbols: 符号
+avoidAmbiguous: 避免易混淆字符
+avoidAmbiguousDetail: 排除 l、1、I、O 和 0
+words: 单词数
+options: 选项
+wordSeparator: 单词分隔符
+wordSeparatorDetail: 放在每个单词之间
+capitalizeWords: 单词首字母大写
+capitalizeWordsExample: Correct-Horse-Battery
+includeNumber: 包含数字
+includeNumberDetail: 在其中一个单词后附加数字
+
+# Vault Health
+
+healthReused: 重复使用
+healthWeak: 弱密码
+healthExpiringCards: 即将过期的支付卡
+healthUnsecured: 不安全的 HTTP
+healthFilterEmpty: 此类别中没有问题。
+healthAllClear: 一切正常
+healthAllClearDetail: 没有重复使用或较弱的密码、即将过期的支付卡或不安全的网站。
+reusedPasswords: 重复使用的密码
+weakPasswords: 弱密码
+unsecuredWebsites: 不安全的网站
+healthLocalOnly: 仅在此设备上检查，不会向服务器发送任何数据。
+openItem: "打开 {name}"
+usedInItems: "{count, plural, other {用于 # 个项目}}"
+weakCommon: 常见密码
+weakShort: "{count, plural, other {少于 # 个字符}}"
+weakPattern: 主要为连续或重复字符
+weakOneClass: 仅使用一种字符类型
+weakGuessable: 容易被猜到
+cardExpired: "已于 {expiry} 过期"
+cardExpires: "将于 {expiry} 过期"
+
+# Backup and import
+
+backupPasswordTitle: 备份密码
+protectBackupTitle: 保护你的备份
+backupPasswordPrompt: 请输入导出此备份时设置的密码。
+protectBackupPrompt: 请为加密备份设置密码。如果忘记，将无法恢复。
+backupPassword: 备份密码
+confirmPassword: 确认密码
+export: 导出
+decrypt: 解密
+backupPasswordTooShort: "{count, plural, other {请至少使用 # 个字符。}}"
+backupPasswordsDiffer: 两次输入的密码不一致。
+backupIncomplete: "{count, plural, other {有 # 个个人项目的格式 GoVault 无法读取，因此备份将不完整。请改用 Bitwarden 网页端密码库导出。}}"
+exportFailed: 导出失败
+backupSaved: 加密备份已保存
+backupSavedDetail: 请妥善保管备份密码，忘记后无法恢复。
+importBackupTitle: 导入备份
+importButton: 导入
+importFailed: 导入失败
+backupFileTooLarge: "文件大小超过 {size, number, integer} MiB。"
+backupPasswordRequired: 请输入备份密码。
+incorrectBackupPassword: 备份密码不正确。
+notBitwardenExport: 这不是 Bitwarden JSON 导出文件。
+backupAccountRestricted: 此备份已绑定到原账户。请将其重新导出为受密码保护的文件。
+importResult: "导入完成：新建 {created, number, integer} 个，更新 {updated, number, integer} 个"
+importSomeFailed: "{count, plural, other {# 个项目失败：{reason}}}"
+importSkipped: "已跳过 {count, number, integer} 个"
+importCreate: 新建
+importCreateCopy: 创建副本
+importUpdate: 更新现有项目
+importSkip: 跳过
+noImport: 当前没有正在进行的导入
+noImportHint: 在“设置”中选择“导入备份”以预览备份内容。
+reviewImport: 预览导入
+importSummary: "{file} · {added, number, integer} 个新增，{changed, number, integer} 个有变更，{identical, number, integer} 个相同。在你应用之前不会更改任何内容。"
+selectAllNew: 全选新增
+skipAllConflicts: 跳过全部冲突
+copyAllConflicts: 全部创建副本
+updateAllConflicts: 更新全部冲突
+skipAll: 全部跳过
+importGroupChanged: "有变更（{count, number, integer}）"
+importGroupNew: "新增（{count, number, integer}）"
+importGroupIdentical: "相同（{count, number, integer}）"
+importApply: "应用：新建 {create, number, integer} 个，更新 {update, number, integer} 个，跳过 {skip, number, integer} 个"
+personalVault: 你的个人密码库
+anOrganization: 某个组织
+sharedVaultOf: "{organization} 的共享密码库"
+organizationCollections: "{organization} · {collections}"
+showIdentical: "{count, plural, other {显示 # 个相同的项目}}"
+hideIdentical: "{count, plural, other {隐藏 # 个相同的项目}}"
+importDiffers: "差异：{fields} · 位于{destination}"
+importCannotUpdateIncomplete: "无法更新：备份项目不完整"
+importCannotUpdateUnmatchable: "无法更新：其字段或网站无法安全匹配"
+importReadOnly: 现有项目为只读
+importProtected: "受保护：更新需要输入主密码"
+importAlreadyIn: "已存在于{destination}"
+importUnsupported: GoVault 暂无法保存此类型的项目，因此已跳过。
+importAmbiguous: 密码库中有多个同名项目，无法自动匹配。请选择“新建”以作为新项目添加。
+importArchivedNoPremium: 备份中为已归档项目；由于归档需要高级会员，将直接创建到你的密码库中。
+diffName: 名称
+diffNotes: 备注
+diffFolder: 文件夹
+diffFavorite: 收藏
+diffReprompt: 二次验证
+diffUsername: 用户名
+diffPassword: 密码
+diffTOTP: 验证码
+diffWebsites: 网站
+diffPasskey: 通行密钥
+diffCard: 支付卡
+diffIdentity: 身份
+diffSSHKey: SSH 密钥
+diffCustomFields: 自定义字段
+
+# Settings
+
+general: 通用
+language: 语言
+languageDetail: GoVault 显示的语言。“跟随系统”将使用系统的语言设置。
+systemDefault: 跟随系统
+account: 账户
+syncNow: 立即同步
+keyDerivation: 密钥派生
+kdfArgon2id: "Argon2id · {memory, number, integer} MiB · {iterations, plural, other {# 次迭代}} · {threads, plural, other {# 线程}}"
+kdfPBKDF2: "PBKDF2-SHA256 · {iterations, plural, other {# 次迭代}}"
+lastSync: 上次同步
+notYetSynced: 尚未同步
+lastSyncAt: "{date, date, medium} {date, time, short}"
+logOutHint: 退出登录会移除本地密码库缓存。
+security: 安全性
+autoLock: 自动锁定
+autoLockDetail: 一段时间无操作后自动锁定密码库。
+afterMinutes: "{count, plural, other {# 分钟后}}"
+afterHours: "{count, plural, other {# 小时后}}"
+afterSeconds: "{count, plural, other {# 秒后}}"
+lockOnSleep: 睡眠或锁屏时锁定
+lockOnSleepDetail: 当 Mac 进入睡眠或锁定屏幕时锁定密码库。
+backup: 备份
+exportBackup: 导出加密备份
+exportBackupDetail: 由你设置密码保护的 Bitwarden 兼容 JSON 文件。
+exportEllipsis: 导出…
+importBackup: 导入备份
+importBackupDetail: Bitwarden JSON 格式，支持加密或明文。在应用更改前可逐项预览。
+importEllipsis: 导入…
+privacy: 隐私
+showWebsiteIcons: 显示网站图标
+showWebsiteIconsDetail: 从你的 Vaultwarden 服务器获取网站图标。
+iconCache: 图标缓存
+iconCacheDetail: 移除此设备上已下载的网站图标。
+clearIconCache: 清除图标缓存
+iconCacheCleared: 图标缓存已清除
+iconCacheClearFailed: 无法清除图标缓存
+clipboard: 剪贴板
+clearCopiedSecrets: 清除已复制的机密信息
+clearCopiedSecretsDetail: 如果剪贴板中仍保留已复制的内容，则在超时后清除。
+concealedClipboard: 隐蔽剪贴板
+concealedClipboardDetail: 标记机密信息，使剪贴板管理器跳过记录。
+concealedActive: 已启用
+macOSOnly: 仅限 macOS
+menuBar: 菜单栏
+tray: 系统托盘
+showMenuBarIcon: 显示菜单栏图标
+showTrayIcon: 显示托盘图标
+menuBarIconDetail: 从菜单栏打开、同步或锁定 GoVault。
+trayIconDetail: 从系统托盘打开、同步或锁定 GoVault。
+launchAtLogin: 登录时启动
+launchAtLoginDetail: 登录系统时自动启动 GoVault。
+hideDockIcon: 隐藏 Dock 图标
+hideDockIconDetail: 仅在菜单栏中保留 GoVault。
+hideDockIconNeedsMenuBar: 请先开启菜单栏图标，以确保可以访问 GoVault。
+about: 关于
+appVersion: "GoVault {version}"
+developmentVersion: "{version} (开发版)"
+development: "(开发版)"
+updatesSigned: 更新经过签名并会自动安装。
+checkForUpdates: 检查更新
+sshAgent: SSH 代理
+enableSSHAgent: 启用 SSH 代理
+enableSSHAgentDetail: 从已解锁的密码库提供 SSH 密钥。启用了主密码二次验证的密钥不会被提供。
+socket: 套接字
+copySSHAuthSock: 复制 SSH_AUTH_SOCK
+sshAgentUnavailable: "代理不可用：{reason}"
+sshAgentInUse: 另一个进程已占用此套接字。
+sshAgentNotSocket: 该路径已存在，且不是套接字文件。
+sshAgentUnsupported: 此系统不支持 Unix 套接字。
+biometricUnavailable: 此 Mac 上 Touch ID 不可用——请配对带有 Touch ID 的键盘或在“系统设置”中注册指纹。
+biometricDetail: 在系统钥匙串中保存封装密钥以实现快速解锁。
+biometricHardware: 硬件强制：macOS 仅在通过 Touch ID 验证后释放密钥。
+biometricAppGated: "应用门控：密钥保存在你的登录钥匙串中，GoVault 在读取前会请求 {method} 验证。"
+promptAutomatically: 自动提示
+promptAutomaticallyDetail: "锁定窗口打开后立即请求 {method}。"
+
+# Menus
+
+openGoVault: 打开 GoVault
+checkForUpdatesMenu: 检查更新…
+syncNowMenu: 立即同步
+lockNow: 立即锁定
+quitGoVault: 退出 GoVault
+editMenu: 编辑
+windowMenu: 窗口
+
+# Errors from the vault
+
+errorTwoFactorRequired: 此账户需要两步登录。
+errorUnauthorized: 电子邮箱或主密码无效。
+errorOffline: 无法连接服务器，请检查网络连接和服务器 URL。
+errorRedirect: 服务器重定向到了其他地址，GoVault 不会跟随重定向。
+errorNotFound: 服务器找不到此项目。请同步后重试。
+errorRevisionConflict: 此项目已在其他设备上更改。请同步后重试。
+errorAttachmentTooLarge: 附件大小上限为 100 MiB。
+errorArchiveUnsupported: 此服务器不支持归档功能，需要 Vaultwarden 1.36 或更高版本。
+errorPremiumRequired: 归档功能需要高级会员。
+errorAccountIDUnknown: 无法向服务器确认你的账户 ID。请同步后重试。
+errorArchiveNotConfirmed: 服务器未确认此更改。GoVault 已重新同步以显示项目的当前位置。
+errorCipherInTrash: 回收站中的项目无法归档，请先恢复该项目。
+errorLocked: 密码库已锁定，请解锁后重试。
+errorLoggedOut: 你尚未登录。
+errorCipherNotFound: 此项目已不在你的密码库中。
+errorFolderNotFound: 此文件夹已不在你的密码库中。
+errorReadOnly: 此项目为只读。
+errorOrganizationKey: GoVault 无法读取此组织的项目。请同步后重试。
+errorAttachmentNotFound: 此附件已不在该项目中。
+errorHiddenByOrganization: 你的组织隐藏了此项目的机密信息。
+errorUnsupportedUpload: 服务器要求使用 GoVault 不支持的附件上传方式。
+errorServerMismatch: 已保存的登录凭据属于与当前密码库副本不同的服务器，请重新登录。
+errorSignInRequired: 请重新登录以进行同步。在此之前，你的密码库可离线使用。
+errorDifferentAccount: 当前登录的账户与此设备上的密码库不匹配。如需切换账户，请先退出登录。
+errorAccountChanged: 自确认以来账户已更改，请重试。
+errorSnapshotNotUpdated: 服务器已保存更改，但无法更新此设备上的副本。请同步以刷新。
+errorSealedField: 此项目包含加密数据，GoVault 无法将其复制到新密钥下。
+errorUnsupportedCipher: 此项目使用了 GoVault 暂无法读取的格式。
+errorChangedSinceReview: 此项目在你预览导入后发生了更改，请重新预览。
+errorRepromptRequired: 更新此受保护的项目需要输入主密码。
+errorUnsupportedType: GoVault 暂无法保存此类型的项目。
+errorAmbiguousUpdate: GoVault 无法确定备份项目对应哪些现有项目。
+errorUnreadablePasskey: 无法解密通行密钥。
+errorWrongBackupPassword: 备份密码不正确。
+errorBackupTooLarge: 加密备份体积过大，GoVault 将无法重新导入。
+errorServer: "服务器返回错误（{status}）：{detail}"
+errorWithDetail: "出现错误：{detail}"

@@ -12,8 +12,8 @@ import (
 // Source is the language the messages are written in.
 const Source = "en"
 
-// Catalog holds the messages' languages: en, the source, and those other packages supply.
-var Catalog = i18n.NewCatalog("en")
+// Catalog holds the messages' languages: en, the source, zh-Hans, and those other packages supply.
+var Catalog = i18n.NewCatalog("en", "zh-Hans")
 
 // The catalog's languages are the app's: those it shows.
 func init() {
@@ -2352,12 +2352,1067 @@ var textsEn = i18n.NewTexts(""+
 		67,
 	})
 
+// textsZhHans are the messages without arguments in zh-Hans.
+var textsZhHans = i18n.NewTexts(""+
+	"取消"+
+	"保存"+
+	"删除"+
+	"移除"+
+	"编辑"+
+	"恢复"+
+	"验证"+
+	"复制"+
+	"撤销"+
+	"从不"+
+	"—"+
+	"登录"+
+	"安全笔记"+
+	"支付卡"+
+	"身份"+
+	"SSH 密钥"+
+	"项目"+
+	"登录"+
+	"支付卡"+
+	"身份"+
+	"安全笔记"+
+	"SSH 密钥"+
+	"登录 GoVault"+
+	"连接到你的 Bitwarden 或 Vaultwarden 服务器。"+
+	"服务器 URL"+
+	"电子邮箱"+
+	"主密码"+
+	"主密码"+
+	"必填"+
+	"name@example.com"+
+	"此服务器未使用 HTTPS。你的主密码和密码库数据将以明文发送，请仅在受信任的网络中使用。"+
+	"登录"+
+	"返回解锁"+
+	"端到端加密。你的主密码绝不会离开此设备。"+
+	"请填写服务器 URL、电子邮箱和主密码。"+
+	"切换密码显示"+
+	"两步验证"+
+	"请输入发送至你电子邮箱的验证码。"+
+	"请输入验证器应用中的 6 位验证码。"+
+	"验证方式"+
+	"验证器应用"+
+	"电子邮箱"+
+	"YubiKey"+
+	"Duo"+
+	"Duo（组织）"+
+	"FIDO U2F"+
+	"通行密钥 / WebAuthn"+
+	"已记住的设备"+
+	"验证码"+
+	"记住此设备"+
+	"返回登录"+
+	"发送验证码"+
+	"重新发送验证码"+
+	"即使密码泄露，两步登录也能保护你的密码库安全。"+
+	"请输入验证码。"+
+	"验证码无效，请检查后重试。"+
+	"验证码已发送至你的电子邮箱。"+
+	"GoVault 已锁定"+
+	"解锁"+
+	"或使用主密码"+
+	"退出登录或切换账户…"+
+	"退出登录或切换账户"+
+	"锁定的密码库在此设备上保持静态加密。"+
+	"请输入主密码。"+
+	"生物识别"+
+	"解锁 GoVault"+
+	"解锁 GoVault"+
+	"已保存的生物识别密钥不可用，请使用主密码解锁。"+
+	"生物识别密钥已损坏，请使用主密码解锁。"+
+	"生物识别密钥无效，请使用主密码解锁。"+
+	"生物识别验证失败，请输入主密码。"+
+	"钥匙串不可用"+
+	"无法访问系统钥匙串。"+
+	"无法关闭生物识别解锁"+
+	"无法开启生物识别解锁"+
+	"密码库已锁定"+
+	"因长时间无操作已自动锁定。"+
+	"要退出登录 GoVault 吗？"+
+	"此设备上缓存的加密密码库和已保存的生物识别密钥将被移除。"+
+	"退出登录"+
+	"已退出登录"+
+	"返回"+
+	"前进"+
+	"搜索密码库"+
+	"清除搜索"+
+	"离线"+
+	"立即同步"+
+	"锁定密码库"+
+	"新建项目"+
+	"所有项目"+
+	"收藏夹"+
+	"类别"+
+	"文件夹"+
+	"新建文件夹"+
+	"集合"+
+	"工具"+
+	"生成器"+
+	"密码库健康"+
+	"归档"+
+	"回收站"+
+	"设置"+
+	"导入"+
+	"无文件夹"+
+	"集合"+
+	"文件夹"+
+	"文件夹操作"+
+	"重命名文件夹…"+
+	"删除文件夹"+
+	"调整面板大小"+
+	"正在同步…"+
+	"等待同步"+
+	"离线 · 缓存的密码库"+
+	"会话已过期"+
+	"已同步"+
+	"刚刚"+
+	"请重新登录以进行同步。在此之前，你的密码库可离线使用。"+
+	"会话已过期——你仍可查看缓存的密码库。请重新登录以恢复同步。"+
+	"无法保存登录凭据。请重新登录，以便 GoVault 在锁定后仍能同步。"+
+	"重新登录"+
+	"回收站中的项目可以恢复。"+
+	"清空回收站"+
+	"在所有项目中"+
+	"搜索所有项目"+
+	"无结果"+
+	"回收站为空"+
+	"没有项目"+
+	"你删除的项目会显示在这里。"+
+	"选择“新建项目”以添加你的第一个项目。"+
+	"未选择项目"+
+	"从列表中选择一个项目以查看详情。"+
+	"搜索"+
+	"新建项目"+
+	"锁定"+
+	"复制用户名"+
+	"复制密码"+
+	"复制验证码"+
+	"复制公钥"+
+	"永久删除…"+
+	"添加到收藏夹"+
+	"从收藏夹移除"+
+	"克隆"+
+	"归档"+
+	"取消归档"+
+	"移到回收站"+
+	"用户名"+
+	"密码"+
+	"已由你的组织隐藏"+
+	"显示密码"+
+	"复制密码"+
+	"复制用户名"+
+	"凭据"+
+	"网站"+
+	"打开网站"+
+	"复制网站"+
+	"网站"+
+	"持卡人姓名"+
+	"复制持卡人姓名"+
+	"卡号"+
+	"显示卡号"+
+	"复制卡号"+
+	"有效期"+
+	"复制有效期"+
+	"安全码"+
+	"品牌"+
+	"支付卡详情"+
+	"姓名"+
+	"公司"+
+	"电话"+
+	"个人信息"+
+	"地址"+
+	"复制地址"+
+	"社会保障号码"+
+	"护照号码"+
+	"复制护照号码"+
+	"驾驶证号码"+
+	"复制驾驶证号码"+
+	"证件"+
+	"自定义字段"+
+	"备注"+
+	"指纹"+
+	"复制指纹"+
+	"公钥"+
+	"复制公钥"+
+	"私钥"+
+	"旧密码"+
+	"仅限查看"+
+	"主密码二次验证"+
+	"在回收站中"+
+	"已归档"+
+	"永久删除"+
+	"切换收藏"+
+	"克隆项目"+
+	"剩余时间"+
+	"显示验证码"+
+	"复制验证码"+
+	"支付卡"+
+	"持卡人"+
+	"有效期"+
+	"已复制密码"+
+	"已复制用户名"+
+	"已复制验证码"+
+	"已复制公钥"+
+	"已复制网站"+
+	"已复制持卡人姓名"+
+	"已复制卡号"+
+	"已复制有效期"+
+	"已复制安全码"+
+	"已复制姓名"+
+	"已复制公司"+
+	"已复制电子邮箱"+
+	"已复制电话"+
+	"已复制地址"+
+	"已复制社会保障号码"+
+	"已复制护照号码"+
+	"已复制驾驶证号码"+
+	"已复制指纹"+
+	"已复制私钥"+
+	"已复制旧密码"+
+	"已复制生成的密码"+
+	"复制失败"+
+	"已从剪贴板历史中隐藏"+
+	"主密码验证"+
+	"主密码验证不可用。"+
+	"主密码不正确。"+
+	"要放弃未保存的更改吗？"+
+	"你对此项目的编辑尚未保存。"+
+	"继续编辑"+
+	"放弃"+
+	"名称不能为空。"+
+	"离线时无法保存。"+
+	"项目已保存"+
+	"保存失败"+
+	"项目已在其他设备上更改"+
+	"自上次同步以来，此项目已在其他位置更新。请重新加载最新版本以避免覆盖更改。"+
+	"重新加载最新"+
+	"已保存到服务器，但无法更新此设备上的副本。"+
+	"立即同步"+
+	"更新失败"+
+	"收藏已更新"+
+	"移到回收站失败"+
+	"已移到回收站"+
+	"归档失败"+
+	"取消归档失败"+
+	"项目已归档"+
+	"项目已取消归档"+
+	"恢复失败"+
+	"项目已恢复"+
+	"要永久删除吗？"+
+	"删除失败"+
+	"已永久删除"+
+	"要清空回收站吗？"+
+	"清空回收站失败"+
+	"回收站已清空"+
+	"通行密钥不会被复制"+
+	"副本仅包含登录信息，不包含通行密钥。"+
+	"新建文件夹"+
+	"重命名文件夹"+
+	"文件夹名称"+
+	"文件夹名称不能为空。"+
+	"文件夹已保存"+
+	"要删除文件夹吗？"+
+	"删除文件夹失败"+
+	"文件夹已删除"+
+	"会话已过期"+
+	"请重新登录以恢复同步。"+
+	"正在显示缓存的密码库。"+
+	"同步失败"+
+	"密码库已同步"+
+	"有未保存的更改"+
+	"无更改"+
+	"项目"+
+	"类型"+
+	"名称"+
+	"收藏"+
+	"主密码二次验证"+
+	"添加备注"+
+	"生成密码"+
+	"验证器"+
+	"otpauth:// URI 或设置密钥"+
+	"移除网站"+
+	"添加网站"+
+	"持卡人"+
+	"卡面姓名"+
+	"Visa、Mastercard、Amex…"+
+	"卡号"+
+	"MM"+
+	"YYYY"+
+	"CVV"+
+	"名字"+
+	"姓氏"+
+	"+86 138 0013 8000"+
+	"街道地址"+
+	"长安街 1 号"+
+	"城市"+
+	"省/州 / 邮编"+
+	"省/州"+
+	"邮政编码"+
+	"国家/地区"+
+	"生成 Ed25519 密钥"+
+	"文本"+
+	"隐藏"+
+	"字段名称"+
+	"值"+
+	"移除字段"+
+	"添加字段"+
+	"通行密钥"+
+	"保存时移除"+
+	"移除通行密钥"+
+	"要移除通行密钥吗？"+
+	"移除后，你将无法再使用此通行密钥登录。"+
+	"存储在此项目中"+
+	"附件"+
+	"添加附件"+
+	"添加附件"+
+	"添加"+
+	"保存附件"+
+	"保存到此处"+
+	"下载失败"+
+	"附件已保存"+
+	"无法打开文件"+
+	"文件过大"+
+	"附件大小上限为 100 MiB。"+
+	"上传失败"+
+	"已添加附件"+
+	"要删除附件吗？"+
+	"附件已删除"+
+	"密码"+
+	"密码短语"+
+	"弱"+
+	"一般"+
+	"强"+
+	"极强"+
+	"重新生成"+
+	"长度"+
+	"字符"+
+	"大写字母"+
+	"小写字母"+
+	"数字"+
+	"符号"+
+	"避免易混淆字符"+
+	"排除 l、1、I、O 和 0"+
+	"单词数"+
+	"选项"+
+	"单词分隔符"+
+	"放在每个单词之间"+
+	"单词首字母大写"+
+	"Correct-Horse-Battery"+
+	"包含数字"+
+	"在其中一个单词后附加数字"+
+	"重复使用"+
+	"弱密码"+
+	"即将过期的支付卡"+
+	"不安全的 HTTP"+
+	"此类别中没有问题。"+
+	"一切正常"+
+	"没有重复使用或较弱的密码、即将过期的支付卡或不安全的网站。"+
+	"重复使用的密码"+
+	"弱密码"+
+	"不安全的网站"+
+	"仅在此设备上检查，不会向服务器发送任何数据。"+
+	"常见密码"+
+	"主要为连续或重复字符"+
+	"仅使用一种字符类型"+
+	"容易被猜到"+
+	"备份密码"+
+	"保护你的备份"+
+	"请输入导出此备份时设置的密码。"+
+	"请为加密备份设置密码。如果忘记，将无法恢复。"+
+	"备份密码"+
+	"确认密码"+
+	"导出"+
+	"解密"+
+	"两次输入的密码不一致。"+
+	"导出失败"+
+	"加密备份已保存"+
+	"请妥善保管备份密码，忘记后无法恢复。"+
+	"导入备份"+
+	"导入"+
+	"导入失败"+
+	"请输入备份密码。"+
+	"备份密码不正确。"+
+	"这不是 Bitwarden JSON 导出文件。"+
+	"此备份已绑定到原账户。请将其重新导出为受密码保护的文件。"+
+	"新建"+
+	"创建副本"+
+	"更新现有项目"+
+	"跳过"+
+	"当前没有正在进行的导入"+
+	"在“设置”中选择“导入备份”以预览备份内容。"+
+	"预览导入"+
+	"全选新增"+
+	"跳过全部冲突"+
+	"全部创建副本"+
+	"更新全部冲突"+
+	"全部跳过"+
+	"你的个人密码库"+
+	"某个组织"+
+	"无法更新：备份项目不完整"+
+	"无法更新：其字段或网站无法安全匹配"+
+	"现有项目为只读"+
+	"受保护：更新需要输入主密码"+
+	"GoVault 暂无法保存此类型的项目，因此已跳过。"+
+	"密码库中有多个同名项目，无法自动匹配。请选择“新建”以作为新项目添加。"+
+	"备份中为已归档项目；由于归档需要高级会员，将直接创建到你的密码库中。"+
+	"名称"+
+	"备注"+
+	"文件夹"+
+	"收藏"+
+	"二次验证"+
+	"用户名"+
+	"密码"+
+	"验证码"+
+	"网站"+
+	"通行密钥"+
+	"支付卡"+
+	"身份"+
+	"SSH 密钥"+
+	"自定义字段"+
+	"通用"+
+	"语言"+
+	"GoVault 显示的语言。“跟随系统”将使用系统的语言设置。"+
+	"跟随系统"+
+	"账户"+
+	"立即同步"+
+	"密钥派生"+
+	"上次同步"+
+	"尚未同步"+
+	"退出登录会移除本地密码库缓存。"+
+	"安全性"+
+	"自动锁定"+
+	"一段时间无操作后自动锁定密码库。"+
+	"睡眠或锁屏时锁定"+
+	"当 Mac 进入睡眠或锁定屏幕时锁定密码库。"+
+	"备份"+
+	"导出加密备份"+
+	"由你设置密码保护的 Bitwarden 兼容 JSON 文件。"+
+	"导出…"+
+	"导入备份"+
+	"Bitwarden JSON 格式，支持加密或明文。在应用更改前可逐项预览。"+
+	"导入…"+
+	"隐私"+
+	"显示网站图标"+
+	"从你的 Vaultwarden 服务器获取网站图标。"+
+	"图标缓存"+
+	"移除此设备上已下载的网站图标。"+
+	"清除图标缓存"+
+	"图标缓存已清除"+
+	"无法清除图标缓存"+
+	"剪贴板"+
+	"清除已复制的机密信息"+
+	"如果剪贴板中仍保留已复制的内容，则在超时后清除。"+
+	"隐蔽剪贴板"+
+	"标记机密信息，使剪贴板管理器跳过记录。"+
+	"已启用"+
+	"仅限 macOS"+
+	"菜单栏"+
+	"系统托盘"+
+	"显示菜单栏图标"+
+	"显示托盘图标"+
+	"从菜单栏打开、同步或锁定 GoVault。"+
+	"从系统托盘打开、同步或锁定 GoVault。"+
+	"登录时启动"+
+	"登录系统时自动启动 GoVault。"+
+	"隐藏 Dock 图标"+
+	"仅在菜单栏中保留 GoVault。"+
+	"请先开启菜单栏图标，以确保可以访问 GoVault。"+
+	"关于"+
+	"(开发版)"+
+	"更新经过签名并会自动安装。"+
+	"检查更新"+
+	"SSH 代理"+
+	"启用 SSH 代理"+
+	"从已解锁的密码库提供 SSH 密钥。启用了主密码二次验证的密钥不会被提供。"+
+	"套接字"+
+	"复制 SSH_AUTH_SOCK"+
+	"另一个进程已占用此套接字。"+
+	"该路径已存在，且不是套接字文件。"+
+	"此系统不支持 Unix 套接字。"+
+	"此 Mac 上 Touch ID 不可用——请配对带有 Touch ID 的键盘或在“系统设置”中注册指纹。"+
+	"在系统钥匙串中保存封装密钥以实现快速解锁。"+
+	"硬件强制：macOS 仅在通过 Touch ID 验证后释放密钥。"+
+	"自动提示"+
+	"打开 GoVault"+
+	"检查更新…"+
+	"立即同步"+
+	"立即锁定"+
+	"退出 GoVault"+
+	"编辑"+
+	"窗口"+
+	"此账户需要两步登录。"+
+	"电子邮箱或主密码无效。"+
+	"无法连接服务器，请检查网络连接和服务器 URL。"+
+	"服务器重定向到了其他地址，GoVault 不会跟随重定向。"+
+	"服务器找不到此项目。请同步后重试。"+
+	"此项目已在其他设备上更改。请同步后重试。"+
+	"附件大小上限为 100 MiB。"+
+	"此服务器不支持归档功能，需要 Vaultwarden 1.36 或更高版本。"+
+	"归档功能需要高级会员。"+
+	"无法向服务器确认你的账户 ID。请同步后重试。"+
+	"服务器未确认此更改。GoVault 已重新同步以显示项目的当前位置。"+
+	"回收站中的项目无法归档，请先恢复该项目。"+
+	"密码库已锁定，请解锁后重试。"+
+	"你尚未登录。"+
+	"此项目已不在你的密码库中。"+
+	"此文件夹已不在你的密码库中。"+
+	"此项目为只读。"+
+	"GoVault 无法读取此组织的项目。请同步后重试。"+
+	"此附件已不在该项目中。"+
+	"你的组织隐藏了此项目的机密信息。"+
+	"服务器要求使用 GoVault 不支持的附件上传方式。"+
+	"已保存的登录凭据属于与当前密码库副本不同的服务器，请重新登录。"+
+	"请重新登录以进行同步。在此之前，你的密码库可离线使用。"+
+	"当前登录的账户与此设备上的密码库不匹配。如需切换账户，请先退出登录。"+
+	"自确认以来账户已更改，请重试。"+
+	"服务器已保存更改，但无法更新此设备上的副本。请同步以刷新。"+
+	"此项目包含加密数据，GoVault 无法将其复制到新密钥下。"+
+	"此项目使用了 GoVault 暂无法读取的格式。"+
+	"此项目在你预览导入后发生了更改，请重新预览。"+
+	"更新此受保护的项目需要输入主密码。"+
+	"GoVault 暂无法保存此类型的项目。"+
+	"GoVault 无法确定备份项目对应哪些现有项目。"+
+	"无法解密通行密钥。"+
+	"备份密码不正确。"+
+	"加密备份体积过大，GoVault 将无法重新导入。",
+	[]uint16{
+		6,
+		6,
+		6,
+		6,
+		6,
+		6,
+		6,
+		6,
+		6,
+		6,
+		3,
+		6,
+		12,
+		9,
+		6,
+		10,
+		6,
+		6,
+		9,
+		6,
+		12,
+		10,
+		14,
+		54,
+		13,
+		12,
+		9,
+		9,
+		6,
+		16,
+		123,
+		6,
+		12,
+		60,
+		52,
+		18,
+		12,
+		48,
+		48,
+		12,
+		15,
+		12,
+		7,
+		3,
+		15,
+		8,
+		23,
+		18,
+		9,
+		15,
+		12,
+		15,
+		21,
+		69,
+		21,
+		39,
+		42,
+		17,
+		6,
+		18,
+		30,
+		27,
+		54,
+		21,
+		12,
+		14,
+		14,
+		69,
+		57,
+		54,
+		48,
+		18,
+		30,
+		30,
+		30,
+		18,
+		39,
+		30,
+		84,
+		12,
+		15,
+		6,
+		6,
+		15,
+		12,
+		6,
+		12,
+		15,
+		12,
+		12,
+		9,
+		6,
+		9,
+		15,
+		6,
+		6,
+		9,
+		15,
+		6,
+		9,
+		6,
+		6,
+		12,
+		6,
+		9,
+		15,
+		21,
+		15,
+		18,
+		15,
+		12,
+		28,
+		15,
+		9,
+		6,
+		81,
+		90,
+		87,
+		12,
+		36,
+		15,
+		18,
+		18,
+		9,
+		15,
+		12,
+		39,
+		57,
+		15,
+		48,
+		6,
+		12,
+		6,
+		15,
+		12,
+		15,
+		12,
+		15,
+		18,
+		18,
+		6,
+		6,
+		12,
+		15,
+		9,
+		6,
+		24,
+		12,
+		12,
+		15,
+		6,
+		6,
+		12,
+		12,
+		6,
+		15,
+		21,
+		6,
+		12,
+		12,
+		9,
+		15,
+		9,
+		6,
+		15,
+		6,
+		6,
+		6,
+		12,
+		6,
+		12,
+		18,
+		12,
+		18,
+		15,
+		21,
+		6,
+		15,
+		6,
+		6,
+		12,
+		6,
+		12,
+		6,
+		9,
+		12,
+		21,
+		15,
+		9,
+		12,
+		12,
+		12,
+		12,
+		15,
+		15,
+		9,
+		9,
+		9,
+		15,
+		18,
+		18,
+		15,
+		15,
+		24,
+		15,
+		18,
+		18,
+		15,
+		15,
+		21,
+		15,
+		15,
+		27,
+		21,
+		24,
+		15,
+		15,
+		18,
+		24,
+		12,
+		30,
+		15,
+		27,
+		21,
+		33,
+		39,
+		12,
+		6,
+		21,
+		24,
+		15,
+		12,
+		33,
+		111,
+		18,
+		63,
+		12,
+		12,
+		15,
+		21,
+		18,
+		12,
+		18,
+		15,
+		21,
+		12,
+		15,
+		21,
+		12,
+		15,
+		24,
+		21,
+		18,
+		27,
+		54,
+		15,
+		18,
+		15,
+		30,
+		18,
+		24,
+		21,
+		18,
+		15,
+		33,
+		33,
+		12,
+		18,
+		21,
+		9,
+		6,
+		6,
+		6,
+		6,
+		21,
+		12,
+		12,
+		9,
+		30,
+		12,
+		12,
+		9,
+		12,
+		27,
+		6,
+		2,
+		4,
+		3,
+		6,
+		6,
+		17,
+		12,
+		15,
+		6,
+		16,
+		7,
+		12,
+		13,
+		21,
+		6,
+		6,
+		12,
+		3,
+		12,
+		12,
+		12,
+		15,
+		18,
+		27,
+		57,
+		21,
+		6,
+		12,
+		12,
+		6,
+		12,
+		15,
+		12,
+		15,
+		18,
+		12,
+		32,
+		12,
+		15,
+		21,
+		15,
+		6,
+		12,
+		3,
+		6,
+		3,
+		6,
+		12,
+		6,
+		6,
+		12,
+		12,
+		6,
+		6,
+		21,
+		26,
+		9,
+		6,
+		15,
+		24,
+		21,
+		21,
+		12,
+		36,
+		12,
+		9,
+		24,
+		17,
+		27,
+		12,
+		87,
+		21,
+		9,
+		18,
+		66,
+		12,
+		30,
+		27,
+		15,
+		12,
+		18,
+		45,
+		66,
+		12,
+		12,
+		6,
+		6,
+		33,
+		12,
+		21,
+		54,
+		12,
+		6,
+		12,
+		24,
+		24,
+		40,
+		84,
+		6,
+		12,
+		18,
+		6,
+		33,
+		66,
+		12,
+		12,
+		18,
+		18,
+		18,
+		12,
+		21,
+		12,
+		36,
+		51,
+		21,
+		39,
+		62,
+		105,
+		102,
+		6,
+		6,
+		9,
+		6,
+		12,
+		9,
+		6,
+		9,
+		6,
+		12,
+		9,
+		6,
+		10,
+		15,
+		6,
+		6,
+		77,
+		12,
+		6,
+		12,
+		12,
+		12,
+		12,
+		45,
+		9,
+		12,
+		48,
+		24,
+		56,
+		6,
+		18,
+		59,
+		9,
+		12,
+		84,
+		9,
+		6,
+		18,
+		52,
+		12,
+		45,
+		18,
+		21,
+		24,
+		9,
+		30,
+		72,
+		15,
+		57,
+		9,
+		12,
+		9,
+		12,
+		21,
+		18,
+		47,
+		50,
+		15,
+		38,
+		18,
+		35,
+		62,
+		6,
+		11,
+		39,
+		12,
+		10,
+		17,
+		101,
+		9,
+		20,
+		39,
+		48,
+		36,
+		112,
+		63,
+		67,
+		12,
+		14,
+		15,
+		12,
+		12,
+		14,
+		6,
+		6,
+		30,
+		33,
+		64,
+		71,
+		51,
+		60,
+		32,
+		78,
+		33,
+		63,
+		86,
+		60,
+		42,
+		18,
+		39,
+		42,
+		21,
+		62,
+		33,
+		48,
+		63,
+		93,
+		81,
+		102,
+		45,
+		87,
+		74,
+		54,
+		66,
+		51,
+		44,
+		59,
+		27,
+		24,
+		59,
+	})
+
 // texts returns the messages without arguments in lang, nil for a
 // language the catalog lacks.
 func texts(lang string) *i18n.Texts {
 	switch lang {
 	case "en":
 		return textsEn
+	case "zh-Hans":
+		return textsZhHans
 	}
 	return nil
 }
@@ -3010,6 +4065,8 @@ func (msgs Messages) TwoFactorEnterEmailCodeTo(email string) string {
 		switch lang {
 		case "", "en":
 			return "Enter the code sent to " + msgs.arg(email) + "."
+		case "zh-Hans":
+			return "请输入发送至 " + email + " 的验证码。"
 		}
 	}
 }
@@ -3137,6 +4194,8 @@ func (msgs Messages) TwoFactorOtherProvider(number int) string {
 		switch lang {
 		case "", "en":
 			return "Method " + msgs.arg(i18n.FormatInteger("en", float64(number)))
+		case "zh-Hans":
+			return "方式 " + i18n.FormatInteger("zh-Hans", float64(number))
 		}
 	}
 }
@@ -3217,6 +4276,8 @@ func (msgs Messages) TwoFactorUnsupported(methods string) string {
 		switch lang {
 		case "", "en":
 			return "This account requires two-step login with " + msgs.arg(methods) + ", which GoVault does not support yet. Enable Authenticator App or Email two-step login in your vault web settings to sign in here."
+		case "zh-Hans":
+			return "此账户要求使用 " + methods + " 进行两步登录，GoVault 暂不支持。请在网页端密码库设置中启用验证器应用或电子邮箱两步登录，然后再在此处登录。"
 		}
 	}
 }
@@ -3241,6 +4302,8 @@ func (msgs Messages) TwoFactorEmailFailed(reason string) string {
 		switch lang {
 		case "", "en":
 			return "Could not send the verification email. " + msgs.arg(reason)
+		case "zh-Hans":
+			return "无法发送验证邮件。" + reason
 		}
 	}
 }
@@ -3263,6 +4326,8 @@ func (msgs Messages) TwoFactorEmailSentTo(email string) string {
 		switch lang {
 		case "", "en":
 			return "A verification code was sent to " + msgs.arg(email) + "."
+		case "zh-Hans":
+			return "验证码已发送至 " + email + "。"
 		}
 	}
 }
@@ -3308,6 +4373,8 @@ func (msgs Messages) UnlockWith(method string) string {
 		switch lang {
 		case "", "en":
 			return "Unlock with " + msgs.arg(method)
+		case "zh-Hans":
+			return "使用 " + method + " 解锁"
 		}
 	}
 }
@@ -3389,6 +4456,8 @@ func (msgs Messages) BiometricEnableReason(method string) string {
 		switch lang {
 		case "", "en":
 			return "Enable " + msgs.arg(method) + " for GoVault"
+		case "zh-Hans":
+			return "为 GoVault 启用 " + method
 		}
 	}
 }
@@ -3480,6 +4549,8 @@ func (msgs Messages) BiometricDisabled(method string) string {
 		switch lang {
 		case "", "en":
 			return msgs.arg(method) + " turned off"
+		case "zh-Hans":
+			return "已关闭 " + method
 		}
 	}
 }
@@ -3502,6 +4573,8 @@ func (msgs Messages) BiometricEnabled(method string) string {
 		switch lang {
 		case "", "en":
 			return msgs.arg(method) + " turned on"
+		case "zh-Hans":
+			return "已开启 " + method
 		}
 	}
 }
@@ -3524,6 +4597,8 @@ func (msgs Messages) BiometricEnabledDetail(method string) string {
 		switch lang {
 		case "", "en":
 			return "You can now unlock GoVault with " + msgs.arg(method) + "."
+		case "zh-Hans":
+			return "你现在可以使用 " + method + " 解锁 GoVault。"
 		}
 	}
 }
@@ -3592,6 +4667,8 @@ func (msgs Messages) LogOutSecretsLeft(reason string) string {
 		switch lang {
 		case "", "en":
 			return "Some saved secrets could not be removed: " + msgs.arg(reason)
+		case "zh-Hans":
+			return "部分已保存的密钥无法移除：" + reason
 		}
 	}
 }
@@ -3873,6 +4950,8 @@ func (msgs Messages) SyncedWhen(when string) string {
 		switch lang {
 		case "", "en":
 			return "Synced " + msgs.arg(when)
+		case "zh-Hans":
+			return "同步于 " + when
 		}
 	}
 }
@@ -3911,6 +4990,14 @@ func (msgs Messages) MinutesAgo(count int) string {
 				b.WriteString(" minutes ago")
 			}
 			return b.String()
+		case "zh-Hans":
+			var b strings.Builder
+			switch i18n.Cardinal("zh-Hans", float64(count)) {
+			default:
+				b.WriteString(i18n.FormatNumber("zh-Hans", float64(count)))
+				b.WriteString(" 分钟前")
+			}
+			return b.String()
 		}
 	}
 }
@@ -3938,6 +5025,14 @@ func (msgs Messages) HoursAgo(count int) string {
 			default:
 				b.WriteString(msgs.arg(i18n.FormatNumber("en", float64(count))))
 				b.WriteString(" hours ago")
+			}
+			return b.String()
+		case "zh-Hans":
+			var b strings.Builder
+			switch i18n.Cardinal("zh-Hans", float64(count)) {
+			default:
+				b.WriteString(i18n.FormatNumber("zh-Hans", float64(count)))
+				b.WriteString(" 小时前")
 			}
 			return b.String()
 		}
@@ -3969,6 +5064,14 @@ func (msgs Messages) DaysAgo(count int) string {
 				b.WriteString(" days ago")
 			}
 			return b.String()
+		case "zh-Hans":
+			var b strings.Builder
+			switch i18n.Cardinal("zh-Hans", float64(count)) {
+			default:
+				b.WriteString(i18n.FormatNumber("zh-Hans", float64(count)))
+				b.WriteString(" 天前")
+			}
+			return b.String()
 		}
 	}
 }
@@ -3991,6 +5094,8 @@ func (msgs Messages) ShortDate(date time.Time) string {
 		switch lang {
 		case "", "en":
 			return msgs.arg(i18n.FormatDate(msgs.dated("en"), date, i18n.DateOptions{Skeleton: "MMMd"}))
+		case "zh-Hans":
+			return i18n.FormatDate(msgs.dated("zh-Hans"), date, i18n.DateOptions{Skeleton: "MMMd"})
 		}
 	}
 }
@@ -4048,6 +5153,14 @@ func (msgs Messages) ItemCount(count int) string {
 				b.WriteString(" items")
 			}
 			return b.String()
+		case "zh-Hans":
+			var b strings.Builder
+			switch i18n.Cardinal("zh-Hans", float64(count)) {
+			default:
+				b.WriteString(i18n.FormatNumber("zh-Hans", float64(count)))
+				b.WriteString(" 个项目")
+			}
+			return b.String()
 		}
 	}
 }
@@ -4091,6 +5204,8 @@ func (msgs Messages) SearchIn(section string) string {
 		switch lang {
 		case "", "en":
 			return "In " + msgs.arg(section)
+		case "zh-Hans":
+			return "在“" + section + "”中"
 		}
 	}
 }
@@ -4113,6 +5228,8 @@ func (msgs Messages) SearchOnlyIn(section string) string {
 		switch lang {
 		case "", "en":
 			return "Only " + msgs.arg(section)
+		case "zh-Hans":
+			return "仅限“" + section + "”"
 		}
 	}
 }
@@ -4165,6 +5282,8 @@ func (msgs Messages) NothingInSectionMatches(section string, query string) strin
 		switch lang {
 		case "", "en":
 			return "Nothing in " + msgs.arg(section) + " matches “" + msgs.arg(query) + "”."
+		case "zh-Hans":
+			return "“" + section + "”中没有与“" + query + "”匹配的项目。"
 		}
 	}
 }
@@ -4185,6 +5304,8 @@ func (msgs Messages) NothingMatches(query string) string {
 		switch lang {
 		case "", "en":
 			return "Nothing matches “" + msgs.arg(query) + "”."
+		case "zh-Hans":
+			return "没有与“" + query + "”匹配的项目。"
 		}
 	}
 }
@@ -4407,6 +5528,8 @@ func (msgs Messages) WebsiteNumbered(number int) string {
 		switch lang {
 		case "", "en":
 			return "Website " + msgs.arg(i18n.FormatInteger("en", float64(number)))
+		case "zh-Hans":
+			return "网站 " + i18n.FormatInteger("zh-Hans", float64(number))
 		}
 	}
 }
@@ -4661,6 +5784,8 @@ func (msgs Messages) RevealField(field string) string {
 		switch lang {
 		case "", "en":
 			return "Reveal " + msgs.arg(field)
+		case "zh-Hans":
+			return "显示 " + field
 		}
 	}
 }
@@ -4683,6 +5808,8 @@ func (msgs Messages) CopyField(field string) string {
 		switch lang {
 		case "", "en":
 			return "Copy " + msgs.arg(field)
+		case "zh-Hans":
+			return "复制 " + field
 		}
 	}
 }
@@ -4703,6 +5830,8 @@ func (msgs Messages) PasswordHistory(count int) string {
 		switch lang {
 		case "", "en":
 			return "Password History (" + msgs.arg(i18n.FormatInteger("en", float64(count))) + ")"
+		case "zh-Hans":
+			return "密码历史记录（" + i18n.FormatInteger("zh-Hans", float64(count)) + "）"
 		}
 	}
 }
@@ -4725,6 +5854,8 @@ func (msgs Messages) UsedUntil(date time.Time) string {
 		switch lang {
 		case "", "en":
 			return "Used until " + msgs.arg(i18n.FormatDate(msgs.dated("en"), date, i18n.DateOptions{Date: i18n.MediumStyle})) + " at " + msgs.arg(i18n.FormatDate(msgs.dated("en"), date, i18n.DateOptions{Time: i18n.ShortStyle}))
+		case "zh-Hans":
+			return "使用至 " + i18n.FormatDate(msgs.dated("zh-Hans"), date, i18n.DateOptions{Date: i18n.MediumStyle}) + " " + i18n.FormatDate(msgs.dated("zh-Hans"), date, i18n.DateOptions{Time: i18n.ShortStyle})
 		}
 	}
 }
@@ -4827,6 +5958,14 @@ func (msgs Messages) SecondsLeft(seconds int) string {
 				b.WriteString("s")
 			}
 			return b.String()
+		case "zh-Hans":
+			var b strings.Builder
+			switch i18n.Cardinal("zh-Hans", float64(seconds)) {
+			default:
+				b.WriteString(i18n.FormatNumber("zh-Hans", float64(seconds)))
+				b.WriteString(" 秒")
+			}
+			return b.String()
 		}
 	}
 }
@@ -4888,6 +6027,8 @@ func (msgs Messages) UpdatedOn(date time.Time) string {
 		switch lang {
 		case "", "en":
 			return "Updated " + msgs.arg(i18n.FormatDate(msgs.dated("en"), date, i18n.DateOptions{Date: i18n.MediumStyle})) + " at " + msgs.arg(i18n.FormatDate(msgs.dated("en"), date, i18n.DateOptions{Time: i18n.ShortStyle}))
+		case "zh-Hans":
+			return "更新于 " + i18n.FormatDate(msgs.dated("zh-Hans"), date, i18n.DateOptions{Date: i18n.MediumStyle}) + " " + i18n.FormatDate(msgs.dated("zh-Hans"), date, i18n.DateOptions{Time: i18n.ShortStyle})
 		}
 	}
 }
@@ -4908,6 +6049,8 @@ func (msgs Messages) CreatedOn(date time.Time) string {
 		switch lang {
 		case "", "en":
 			return "Created " + msgs.arg(i18n.FormatDate(msgs.dated("en"), date, i18n.DateOptions{Date: i18n.MediumStyle}))
+		case "zh-Hans":
+			return "创建于 " + i18n.FormatDate(msgs.dated("zh-Hans"), date, i18n.DateOptions{Date: i18n.MediumStyle})
 		}
 	}
 }
@@ -4930,6 +6073,8 @@ func (msgs Messages) DeletedWhen(when string) string {
 		switch lang {
 		case "", "en":
 			return "Deleted " + msgs.arg(when)
+		case "zh-Hans":
+			return "删除于 " + when
 		}
 	}
 }
@@ -4952,6 +6097,8 @@ func (msgs Messages) Copied(field string) string {
 		switch lang {
 		case "", "en":
 			return msgs.arg(field) + " copied"
+		case "zh-Hans":
+			return "已复制 " + field
 		}
 	}
 }
@@ -5138,6 +6285,15 @@ func (msgs Messages) ClearsInConcealed(seconds int) string {
 				b.WriteString(" seconds")
 			}
 			return b.String()
+		case "zh-Hans":
+			var b strings.Builder
+			b.WriteString("已隐藏 · ")
+			switch i18n.Cardinal("zh-Hans", float64(seconds)) {
+			default:
+				b.WriteString(i18n.FormatNumber("zh-Hans", float64(seconds)))
+				b.WriteString(" 秒后清除")
+			}
+			return b.String()
 		}
 	}
 }
@@ -5166,6 +6322,14 @@ func (msgs Messages) ClearsIn(seconds int) string {
 			default:
 				b.WriteString(msgs.arg(i18n.FormatNumber("en", float64(seconds))))
 				b.WriteString(" seconds")
+			}
+			return b.String()
+		case "zh-Hans":
+			var b strings.Builder
+			switch i18n.Cardinal("zh-Hans", float64(seconds)) {
+			default:
+				b.WriteString(i18n.FormatNumber("zh-Hans", float64(seconds)))
+				b.WriteString(" 秒后清除")
 			}
 			return b.String()
 		}
@@ -5255,6 +6419,59 @@ func (msgs Messages) RepromptPrompt(action string) string {
 				b.WriteString("Enter your master password to continue.")
 			}
 			return b.String()
+		case "zh-Hans":
+			var b strings.Builder
+			switch action {
+			case "copyPassword":
+				b.WriteString("请输入主密码以复制密码。")
+			case "copyTOTP":
+				b.WriteString("请输入主密码以复制验证码。")
+			case "revealTOTP":
+				b.WriteString("请输入主密码以显示验证码。")
+			case "revealPassword":
+				b.WriteString("请输入主密码以显示密码。")
+			case "revealCardNumber":
+				b.WriteString("请输入主密码以显示卡号。")
+			case "copyCardNumber":
+				b.WriteString("请输入主密码以复制卡号。")
+			case "revealSecurityCode":
+				b.WriteString("请输入主密码以显示安全码。")
+			case "copySecurityCode":
+				b.WriteString("请输入主密码以复制安全码。")
+			case "revealSSN":
+				b.WriteString("请输入主密码以显示社会保障号码。")
+			case "copySSN":
+				b.WriteString("请输入主密码以复制社会保障号码。")
+			case "revealField":
+				b.WriteString("请输入主密码以显示自定义字段。")
+			case "copyField":
+				b.WriteString("请输入主密码以复制自定义字段。")
+			case "revealPrivateKey":
+				b.WriteString("请输入主密码以显示私钥。")
+			case "copyPrivateKey":
+				b.WriteString("请输入主密码以复制私钥。")
+			case "revealOldPassword":
+				b.WriteString("请输入主密码以显示旧密码。")
+			case "copyOldPassword":
+				b.WriteString("请输入主密码以复制旧密码。")
+			case "editItem":
+				b.WriteString("请输入主密码以编辑项目。")
+			case "cloneItem":
+				b.WriteString("请输入主密码以克隆项目。")
+			case "archiveItem":
+				b.WriteString("请输入主密码以归档项目。")
+			case "unarchiveItem":
+				b.WriteString("请输入主密码以取消归档项目。")
+			case "downloadAttachment":
+				b.WriteString("请输入主密码以下载附件。")
+			case "exportVault":
+				b.WriteString("请输入主密码以导出密码库。")
+			case "updateProtectedItem":
+				b.WriteString("请输入主密码以更新受保护的项目。")
+			default:
+				b.WriteString("请输入主密码以继续。")
+			}
+			return b.String()
 		}
 	}
 }
@@ -5328,6 +6545,59 @@ func (msgs Messages) RepromptBiometricReason(action string) string {
 				b.WriteString("Verify to update a protected item")
 			default:
 				b.WriteString("Verify to continue")
+			}
+			return b.String()
+		case "zh-Hans":
+			var b strings.Builder
+			switch action {
+			case "copyPassword":
+				b.WriteString("验证以复制密码")
+			case "copyTOTP":
+				b.WriteString("验证以复制验证码")
+			case "revealTOTP":
+				b.WriteString("验证以显示验证码")
+			case "revealPassword":
+				b.WriteString("验证以显示密码")
+			case "revealCardNumber":
+				b.WriteString("验证以显示卡号")
+			case "copyCardNumber":
+				b.WriteString("验证以复制卡号")
+			case "revealSecurityCode":
+				b.WriteString("验证以显示安全码")
+			case "copySecurityCode":
+				b.WriteString("验证以复制安全码")
+			case "revealSSN":
+				b.WriteString("验证以显示社会保障号码")
+			case "copySSN":
+				b.WriteString("验证以复制社会保障号码")
+			case "revealField":
+				b.WriteString("验证以显示自定义字段")
+			case "copyField":
+				b.WriteString("验证以复制自定义字段")
+			case "revealPrivateKey":
+				b.WriteString("验证以显示私钥")
+			case "copyPrivateKey":
+				b.WriteString("验证以复制私钥")
+			case "revealOldPassword":
+				b.WriteString("验证以显示旧密码")
+			case "copyOldPassword":
+				b.WriteString("验证以复制旧密码")
+			case "editItem":
+				b.WriteString("验证以编辑项目")
+			case "cloneItem":
+				b.WriteString("验证以克隆项目")
+			case "archiveItem":
+				b.WriteString("验证以归档项目")
+			case "unarchiveItem":
+				b.WriteString("验证以取消归档项目")
+			case "downloadAttachment":
+				b.WriteString("验证以下载附件")
+			case "exportVault":
+				b.WriteString("验证以导出密码库")
+			case "updateProtectedItem":
+				b.WriteString("验证以更新受保护的项目")
+			default:
+				b.WriteString("验证以继续")
 			}
 			return b.String()
 		}
@@ -5538,6 +6808,8 @@ func (msgs Messages) DeletePermanentlyMessage(name string) string {
 		switch lang {
 		case "", "en":
 			return "“" + msgs.arg(name) + "” will be permanently deleted and cannot be recovered."
+		case "zh-Hans":
+			return "“" + name + "”将被永久删除，且无法恢复。"
 		}
 	}
 }
@@ -5588,6 +6860,14 @@ func (msgs Messages) EmptyTrashMessage(count int) string {
 				b.WriteString(" items will be permanently deleted and cannot be recovered.")
 			}
 			return b.String()
+		case "zh-Hans":
+			var b strings.Builder
+			switch i18n.Cardinal("zh-Hans", float64(count)) {
+			default:
+				b.WriteString(i18n.FormatNumber("zh-Hans", float64(count)))
+				b.WriteString(" 个项目将被永久删除，且无法恢复。")
+			}
+			return b.String()
 		}
 	}
 }
@@ -5631,6 +6911,14 @@ func (msgs Messages) TrashReadOnlyKept(count int) string {
 				b.WriteString(" read-only items stayed in Trash.")
 			}
 			return b.String()
+		case "zh-Hans":
+			var b strings.Builder
+			switch i18n.Cardinal("zh-Hans", float64(count)) {
+			default:
+				b.WriteString(i18n.FormatNumber("zh-Hans", float64(count)))
+				b.WriteString(" 个只读项目保留在回收站中。")
+			}
+			return b.String()
 		}
 	}
 }
@@ -5658,6 +6946,14 @@ func (msgs Messages) TrashChangedKept(count int) string {
 			default:
 				b.WriteString(msgs.arg(i18n.FormatNumber("en", float64(count))))
 				b.WriteString(" items changed on another device and were kept.")
+			}
+			return b.String()
+		case "zh-Hans":
+			var b strings.Builder
+			switch i18n.Cardinal("zh-Hans", float64(count)) {
+			default:
+				b.WriteString(i18n.FormatNumber("zh-Hans", float64(count)))
+				b.WriteString(" 个项目已在其他设备上更改，已予以保留。")
 			}
 			return b.String()
 		}
@@ -5691,6 +6987,15 @@ func (msgs Messages) TrashPartlyDeleted(count int) string {
 				b.WriteString(" items")
 			}
 			return b.String()
+		case "zh-Hans":
+			var b strings.Builder
+			switch i18n.Cardinal("zh-Hans", float64(count)) {
+			default:
+				b.WriteString("已删除 ")
+				b.WriteString(i18n.FormatNumber("zh-Hans", float64(count)))
+				b.WriteString(" 个项目")
+			}
+			return b.String()
 		}
 	}
 }
@@ -5715,6 +7020,8 @@ func (msgs Messages) TrashSomeNotDeleted(reason string) string {
 		switch lang {
 		case "", "en":
 			return "Some items could not be deleted: " + msgs.arg(reason)
+		case "zh-Hans":
+			return "部分项目无法删除：" + reason
 		}
 	}
 }
@@ -5751,6 +7058,8 @@ func (msgs Messages) CloneName(name string) string {
 		switch lang {
 		case "", "en":
 			return msgs.arg(name) + " (Copy)"
+		case "zh-Hans":
+			return name + "（副本）"
 		}
 	}
 }
@@ -5815,6 +7124,8 @@ func (msgs Messages) DeleteFolderMessage(name string) string {
 		switch lang {
 		case "", "en":
 			return "Items inside “" + msgs.arg(name) + "” will be moved to No Folder."
+		case "zh-Hans":
+			return "“" + name + "”中的项目将被移至“无文件夹”。"
 		}
 	}
 }
@@ -5903,6 +7214,23 @@ func (msgs Messages) NewItemOfType(kind string) string {
 				b.WriteString("New Item")
 			}
 			return b.String()
+		case "zh-Hans":
+			var b strings.Builder
+			switch kind {
+			case "login":
+				b.WriteString("新建登录")
+			case "secureNote":
+				b.WriteString("新建安全笔记")
+			case "card":
+				b.WriteString("新建支付卡")
+			case "identity":
+				b.WriteString("新建身份")
+			case "sshKey":
+				b.WriteString("新建 SSH 密钥")
+			default:
+				b.WriteString("新建项目")
+			}
+			return b.String()
 		}
 	}
 }
@@ -5938,6 +7266,23 @@ func (msgs Messages) EditItemOfType(kind string) string {
 				b.WriteString("Edit SSH Key")
 			default:
 				b.WriteString("Edit Item")
+			}
+			return b.String()
+		case "zh-Hans":
+			var b strings.Builder
+			switch kind {
+			case "login":
+				b.WriteString("编辑登录")
+			case "secureNote":
+				b.WriteString("编辑安全笔记")
+			case "card":
+				b.WriteString("编辑支付卡")
+			case "identity":
+				b.WriteString("编辑身份")
+			case "sshKey":
+				b.WriteString("编辑 SSH 密钥")
+			default:
+				b.WriteString("编辑项目")
 			}
 			return b.String()
 		}
@@ -6207,6 +7552,8 @@ func (msgs Messages) SshKeyGenerateFailed(reason string) string {
 		switch lang {
 		case "", "en":
 			return "Could not generate SSH key: " + msgs.arg(reason)
+		case "zh-Hans":
+			return "无法生成 SSH 密钥：" + reason
 		}
 	}
 }
@@ -6312,6 +7659,8 @@ func (msgs Messages) PasskeySiteCreated(site string, date time.Time) string {
 		switch lang {
 		case "", "en":
 			return msgs.arg(site) + " · Created " + msgs.arg(i18n.FormatDate(msgs.dated("en"), date, i18n.DateOptions{Date: i18n.MediumStyle}))
+		case "zh-Hans":
+			return site + " · 创建于 " + i18n.FormatDate(msgs.dated("zh-Hans"), date, i18n.DateOptions{Date: i18n.MediumStyle})
 		}
 	}
 }
@@ -6332,6 +7681,8 @@ func (msgs Messages) PasskeyCreated(date time.Time) string {
 		switch lang {
 		case "", "en":
 			return "Created " + msgs.arg(i18n.FormatDate(msgs.dated("en"), date, i18n.DateOptions{Date: i18n.MediumStyle}))
+		case "zh-Hans":
+			return "创建于 " + i18n.FormatDate(msgs.dated("zh-Hans"), date, i18n.DateOptions{Date: i18n.MediumStyle})
 		}
 	}
 }
@@ -6391,6 +7742,8 @@ func (msgs Messages) DownloadFile(file string) string {
 		switch lang {
 		case "", "en":
 			return "Download " + msgs.arg(file)
+		case "zh-Hans":
+			return "下载 " + file
 		}
 	}
 }
@@ -6413,6 +7766,8 @@ func (msgs Messages) DeleteFile(file string) string {
 		switch lang {
 		case "", "en":
 			return "Delete " + msgs.arg(file)
+		case "zh-Hans":
+			return "删除 " + file
 		}
 	}
 }
@@ -6505,6 +7860,8 @@ func (msgs Messages) DeleteAttachmentMessage(file string) string {
 		switch lang {
 		case "", "en":
 			return "“" + msgs.arg(file) + "” will be permanently deleted."
+		case "zh-Hans":
+			return "“" + file + "”将被永久删除。"
 		}
 	}
 }
@@ -6534,6 +7891,8 @@ func (msgs Messages) Bytes(count int) string {
 		switch lang {
 		case "", "en":
 			return msgs.arg(i18n.FormatInteger("en", float64(count))) + " B"
+		case "zh-Hans":
+			return i18n.FormatInteger("zh-Hans", float64(count)) + " B"
 		}
 	}
 }
@@ -6556,6 +7915,8 @@ func (msgs Messages) Kilobytes(size float64) string {
 		switch lang {
 		case "", "en":
 			return msgs.arg(i18n.FormatNumberSkeleton("en", size, ".0")) + " KB"
+		case "zh-Hans":
+			return i18n.FormatNumberSkeleton("zh-Hans", size, ".0") + " KB"
 		}
 	}
 }
@@ -6578,6 +7939,8 @@ func (msgs Messages) Megabytes(size float64) string {
 		switch lang {
 		case "", "en":
 			return msgs.arg(i18n.FormatNumberSkeleton("en", size, ".0")) + " MB"
+		case "zh-Hans":
+			return i18n.FormatNumberSkeleton("zh-Hans", size, ".0") + " MB"
 		}
 	}
 }
@@ -6600,6 +7963,8 @@ func (msgs Messages) Gigabytes(size float64) string {
 		switch lang {
 		case "", "en":
 			return msgs.arg(i18n.FormatNumberSkeleton("en", size, ".0")) + " GB"
+		case "zh-Hans":
+			return i18n.FormatNumberSkeleton("zh-Hans", size, ".0") + " GB"
 		}
 	}
 }
@@ -6622,6 +7987,8 @@ func (msgs Messages) Terabytes(size float64) string {
 		switch lang {
 		case "", "en":
 			return msgs.arg(i18n.FormatNumberSkeleton("en", size, ".0")) + " TB"
+		case "zh-Hans":
+			return i18n.FormatNumberSkeleton("zh-Hans", size, ".0") + " TB"
 		}
 	}
 }
@@ -6705,6 +8072,15 @@ func (msgs Messages) EntropyBits(bits int) string {
 				b.WriteString("≈ ")
 				b.WriteString(msgs.arg(i18n.FormatNumber("en", float64(bits))))
 				b.WriteString(" bits of entropy")
+			}
+			return b.String()
+		case "zh-Hans":
+			var b strings.Builder
+			switch i18n.Cardinal("zh-Hans", float64(bits)) {
+			default:
+				b.WriteString("≈ ")
+				b.WriteString(i18n.FormatNumber("zh-Hans", float64(bits)))
+				b.WriteString(" 位熵")
 			}
 			return b.String()
 		}
@@ -6939,6 +8315,8 @@ func (msgs Messages) OpenItem(name string) string {
 		switch lang {
 		case "", "en":
 			return "Open " + msgs.arg(name)
+		case "zh-Hans":
+			return "打开 " + name
 		}
 	}
 }
@@ -6968,6 +8346,15 @@ func (msgs Messages) UsedInItems(count int) string {
 				b.WriteString("Used in ")
 				b.WriteString(msgs.arg(i18n.FormatNumber("en", float64(count))))
 				b.WriteString(" items")
+			}
+			return b.String()
+		case "zh-Hans":
+			var b strings.Builder
+			switch i18n.Cardinal("zh-Hans", float64(count)) {
+			default:
+				b.WriteString("用于 ")
+				b.WriteString(i18n.FormatNumber("zh-Hans", float64(count)))
+				b.WriteString(" 个项目")
 			}
 			return b.String()
 		}
@@ -7006,6 +8393,15 @@ func (msgs Messages) WeakShort(count int) string {
 				b.WriteString("Shorter than ")
 				b.WriteString(msgs.arg(i18n.FormatNumber("en", float64(count))))
 				b.WriteString(" characters")
+			}
+			return b.String()
+		case "zh-Hans":
+			var b strings.Builder
+			switch i18n.Cardinal("zh-Hans", float64(count)) {
+			default:
+				b.WriteString("少于 ")
+				b.WriteString(i18n.FormatNumber("zh-Hans", float64(count)))
+				b.WriteString(" 个字符")
 			}
 			return b.String()
 		}
@@ -7051,6 +8447,8 @@ func (msgs Messages) CardExpired(expiry string) string {
 		switch lang {
 		case "", "en":
 			return "Expired " + msgs.arg(expiry)
+		case "zh-Hans":
+			return "已于 " + expiry + " 过期"
 		}
 	}
 }
@@ -7073,6 +8471,8 @@ func (msgs Messages) CardExpires(expiry string) string {
 		switch lang {
 		case "", "en":
 			return "Expires " + msgs.arg(expiry)
+		case "zh-Hans":
+			return "将于 " + expiry + " 过期"
 		}
 	}
 }
@@ -7166,6 +8566,15 @@ func (msgs Messages) BackupPasswordTooShort(count int) string {
 				b.WriteString(" characters.")
 			}
 			return b.String()
+		case "zh-Hans":
+			var b strings.Builder
+			switch i18n.Cardinal("zh-Hans", float64(count)) {
+			default:
+				b.WriteString("请至少使用 ")
+				b.WriteString(i18n.FormatNumber("zh-Hans", float64(count)))
+				b.WriteString(" 个字符。")
+			}
+			return b.String()
 		}
 	}
 }
@@ -7200,6 +8609,15 @@ func (msgs Messages) BackupIncomplete(count int) string {
 			default:
 				b.WriteString(msgs.arg(i18n.FormatNumber("en", float64(count))))
 				b.WriteString(" personal items are in a format GoVault cannot read, so the backup would be incomplete. Export from the Bitwarden web vault instead.")
+			}
+			return b.String()
+		case "zh-Hans":
+			var b strings.Builder
+			switch i18n.Cardinal("zh-Hans", float64(count)) {
+			default:
+				b.WriteString("有 ")
+				b.WriteString(i18n.FormatNumber("zh-Hans", float64(count)))
+				b.WriteString(" 个个人项目的格式 GoVault 无法读取，因此备份将不完整。请改用 Bitwarden 网页端密码库导出。")
 			}
 			return b.String()
 		}
@@ -7268,6 +8686,8 @@ func (msgs Messages) BackupFileTooLarge(size int) string {
 		switch lang {
 		case "", "en":
 			return "The file is larger than " + msgs.arg(i18n.FormatInteger("en", float64(size))) + " MiB."
+		case "zh-Hans":
+			return "文件大小超过 " + i18n.FormatInteger("zh-Hans", float64(size)) + " MiB。"
 		}
 	}
 }
@@ -7318,6 +8738,8 @@ func (msgs Messages) ImportResult(created int, updated int) string {
 		switch lang {
 		case "", "en":
 			return "Imported: " + msgs.arg(i18n.FormatInteger("en", float64(created))) + " created, " + msgs.arg(i18n.FormatInteger("en", float64(updated))) + " updated"
+		case "zh-Hans":
+			return "导入完成：新建 " + i18n.FormatInteger("zh-Hans", float64(created)) + " 个，更新 " + i18n.FormatInteger("zh-Hans", float64(updated)) + " 个"
 		}
 	}
 }
@@ -7353,6 +8775,15 @@ func (msgs Messages) ImportSomeFailed(count int, reason string) string {
 				b.WriteString(msgs.arg(reason))
 			}
 			return b.String()
+		case "zh-Hans":
+			var b strings.Builder
+			switch i18n.Cardinal("zh-Hans", float64(count)) {
+			default:
+				b.WriteString(i18n.FormatNumber("zh-Hans", float64(count)))
+				b.WriteString(" 个项目失败：")
+				b.WriteString(reason)
+			}
+			return b.String()
 		}
 	}
 }
@@ -7373,6 +8804,8 @@ func (msgs Messages) ImportSkipped(count int) string {
 		switch lang {
 		case "", "en":
 			return msgs.arg(i18n.FormatInteger("en", float64(count))) + " skipped"
+		case "zh-Hans":
+			return "已跳过 " + i18n.FormatInteger("zh-Hans", float64(count)) + " 个"
 		}
 	}
 }
@@ -7454,6 +8887,8 @@ func (msgs Messages) ImportSummary(file string, added int, changed int, identica
 		switch lang {
 		case "", "en":
 			return msgs.arg(file) + " · " + msgs.arg(i18n.FormatInteger("en", float64(added))) + " new, " + msgs.arg(i18n.FormatInteger("en", float64(changed))) + " changed, " + msgs.arg(i18n.FormatInteger("en", float64(identical))) + " identical. Nothing changes until you apply."
+		case "zh-Hans":
+			return file + " · " + i18n.FormatInteger("zh-Hans", float64(added)) + " 个新增，" + i18n.FormatInteger("zh-Hans", float64(changed)) + " 个有变更，" + i18n.FormatInteger("zh-Hans", float64(identical)) + " 个相同。在你应用之前不会更改任何内容。"
 		}
 	}
 }
@@ -7511,6 +8946,8 @@ func (msgs Messages) ImportGroupChanged(count int) string {
 		switch lang {
 		case "", "en":
 			return "Changed (" + msgs.arg(i18n.FormatInteger("en", float64(count))) + ")"
+		case "zh-Hans":
+			return "有变更（" + i18n.FormatInteger("zh-Hans", float64(count)) + "）"
 		}
 	}
 }
@@ -7533,6 +8970,8 @@ func (msgs Messages) ImportGroupNew(count int) string {
 		switch lang {
 		case "", "en":
 			return "New (" + msgs.arg(i18n.FormatInteger("en", float64(count))) + ")"
+		case "zh-Hans":
+			return "新增（" + i18n.FormatInteger("zh-Hans", float64(count)) + "）"
 		}
 	}
 }
@@ -7557,6 +8996,8 @@ func (msgs Messages) ImportGroupIdentical(count int) string {
 		switch lang {
 		case "", "en":
 			return "Identical (" + msgs.arg(i18n.FormatInteger("en", float64(count))) + ")"
+		case "zh-Hans":
+			return "相同（" + i18n.FormatInteger("zh-Hans", float64(count)) + "）"
 		}
 	}
 }
@@ -7579,6 +9020,8 @@ func (msgs Messages) ImportApply(create int, update int, skip int) string {
 		switch lang {
 		case "", "en":
 			return "Apply: " + msgs.arg(i18n.FormatInteger("en", float64(create))) + " create, " + msgs.arg(i18n.FormatInteger("en", float64(update))) + " update, " + msgs.arg(i18n.FormatInteger("en", float64(skip))) + " skipped"
+		case "zh-Hans":
+			return "应用：新建 " + i18n.FormatInteger("zh-Hans", float64(create)) + " 个，更新 " + i18n.FormatInteger("zh-Hans", float64(update)) + " 个，跳过 " + i18n.FormatInteger("zh-Hans", float64(skip)) + " 个"
 		}
 	}
 }
@@ -7617,6 +9060,8 @@ func (msgs Messages) SharedVaultOf(organization string) string {
 		switch lang {
 		case "", "en":
 			return "the shared vault of " + msgs.arg(organization)
+		case "zh-Hans":
+			return organization + " 的共享密码库"
 		}
 	}
 }
@@ -7641,6 +9086,8 @@ func (msgs Messages) OrganizationCollections(organization string, collections st
 		switch lang {
 		case "", "en":
 			return msgs.arg(organization) + " · " + msgs.arg(collections)
+		case "zh-Hans":
+			return organization + " · " + collections
 		}
 	}
 }
@@ -7670,6 +9117,15 @@ func (msgs Messages) ShowIdentical(count int) string {
 				b.WriteString("Show ")
 				b.WriteString(msgs.arg(i18n.FormatNumber("en", float64(count))))
 				b.WriteString(" identical items")
+			}
+			return b.String()
+		case "zh-Hans":
+			var b strings.Builder
+			switch i18n.Cardinal("zh-Hans", float64(count)) {
+			default:
+				b.WriteString("显示 ")
+				b.WriteString(i18n.FormatNumber("zh-Hans", float64(count)))
+				b.WriteString(" 个相同的项目")
 			}
 			return b.String()
 		}
@@ -7703,6 +9159,15 @@ func (msgs Messages) HideIdentical(count int) string {
 				b.WriteString(" identical items")
 			}
 			return b.String()
+		case "zh-Hans":
+			var b strings.Builder
+			switch i18n.Cardinal("zh-Hans", float64(count)) {
+			default:
+				b.WriteString("隐藏 ")
+				b.WriteString(i18n.FormatNumber("zh-Hans", float64(count)))
+				b.WriteString(" 个相同的项目")
+			}
+			return b.String()
 		}
 	}
 }
@@ -7727,6 +9192,8 @@ func (msgs Messages) ImportDiffers(fields string, destination string) string {
 		switch lang {
 		case "", "en":
 			return "Differs: " + msgs.arg(fields) + " · in " + msgs.arg(destination)
+		case "zh-Hans":
+			return "差异：" + fields + " · 位于" + destination
 		}
 	}
 }
@@ -7787,6 +9254,8 @@ func (msgs Messages) ImportAlreadyIn(destination string) string {
 		switch lang {
 		case "", "en":
 			return "Already in " + msgs.arg(destination)
+		case "zh-Hans":
+			return "已存在于" + destination
 		}
 	}
 }
@@ -8008,6 +9477,23 @@ func (msgs Messages) KdfArgon2id(memory int, iterations int, threads int) string
 				b.WriteString(" threads")
 			}
 			return b.String()
+		case "zh-Hans":
+			var b strings.Builder
+			b.WriteString("Argon2id · ")
+			b.WriteString(i18n.FormatInteger("zh-Hans", float64(memory)))
+			b.WriteString(" MiB · ")
+			switch i18n.Cardinal("zh-Hans", float64(iterations)) {
+			default:
+				b.WriteString(i18n.FormatNumber("zh-Hans", float64(iterations)))
+				b.WriteString(" 次迭代")
+			}
+			b.WriteString(" · ")
+			switch i18n.Cardinal("zh-Hans", float64(threads)) {
+			default:
+				b.WriteString(i18n.FormatNumber("zh-Hans", float64(threads)))
+				b.WriteString(" 线程")
+			}
+			return b.String()
 		}
 	}
 }
@@ -8038,6 +9524,15 @@ func (msgs Messages) KdfPBKDF2(iterations int) string {
 			default:
 				b.WriteString(msgs.arg(i18n.FormatNumber("en", float64(iterations))))
 				b.WriteString(" iterations")
+			}
+			return b.String()
+		case "zh-Hans":
+			var b strings.Builder
+			b.WriteString("PBKDF2-SHA256 · ")
+			switch i18n.Cardinal("zh-Hans", float64(iterations)) {
+			default:
+				b.WriteString(i18n.FormatNumber("zh-Hans", float64(iterations)))
+				b.WriteString(" 次迭代")
 			}
 			return b.String()
 		}
@@ -8074,6 +9569,8 @@ func (msgs Messages) LastSyncAt(date time.Time) string {
 		switch lang {
 		case "", "en":
 			return msgs.arg(i18n.FormatDate(msgs.dated("en"), date, i18n.DateOptions{Date: i18n.MediumStyle})) + " at " + msgs.arg(i18n.FormatDate(msgs.dated("en"), date, i18n.DateOptions{Time: i18n.ShortStyle}))
+		case "zh-Hans":
+			return i18n.FormatDate(msgs.dated("zh-Hans"), date, i18n.DateOptions{Date: i18n.MediumStyle}) + " " + i18n.FormatDate(msgs.dated("zh-Hans"), date, i18n.DateOptions{Time: i18n.ShortStyle})
 		}
 	}
 }
@@ -8133,6 +9630,14 @@ func (msgs Messages) AfterMinutes(count int) string {
 				b.WriteString(" minutes")
 			}
 			return b.String()
+		case "zh-Hans":
+			var b strings.Builder
+			switch i18n.Cardinal("zh-Hans", float64(count)) {
+			default:
+				b.WriteString(i18n.FormatNumber("zh-Hans", float64(count)))
+				b.WriteString(" 分钟后")
+			}
+			return b.String()
 		}
 	}
 }
@@ -8164,6 +9669,14 @@ func (msgs Messages) AfterHours(count int) string {
 				b.WriteString(" hours")
 			}
 			return b.String()
+		case "zh-Hans":
+			var b strings.Builder
+			switch i18n.Cardinal("zh-Hans", float64(count)) {
+			default:
+				b.WriteString(i18n.FormatNumber("zh-Hans", float64(count)))
+				b.WriteString(" 小时后")
+			}
+			return b.String()
 		}
 	}
 }
@@ -8193,6 +9706,14 @@ func (msgs Messages) AfterSeconds(count int) string {
 				b.WriteString("After ")
 				b.WriteString(msgs.arg(i18n.FormatNumber("en", float64(count))))
 				b.WriteString(" seconds")
+			}
+			return b.String()
+		case "zh-Hans":
+			var b strings.Builder
+			switch i18n.Cardinal("zh-Hans", float64(count)) {
+			default:
+				b.WriteString(i18n.FormatNumber("zh-Hans", float64(count)))
+				b.WriteString(" 秒后")
 			}
 			return b.String()
 		}
@@ -8483,6 +10004,8 @@ func (msgs Messages) AppVersion(version string) string {
 		switch lang {
 		case "", "en":
 			return "GoVault " + msgs.arg(version)
+		case "zh-Hans":
+			return "GoVault " + version
 		}
 	}
 }
@@ -8507,6 +10030,8 @@ func (msgs Messages) DevelopmentVersion(version string) string {
 		switch lang {
 		case "", "en":
 			return msgs.arg(version) + " (development)"
+		case "zh-Hans":
+			return version + " (开发版)"
 		}
 	}
 }
@@ -8591,6 +10116,8 @@ func (msgs Messages) SshAgentUnavailable(reason string) string {
 		switch lang {
 		case "", "en":
 			return "Agent unavailable: " + msgs.arg(reason)
+		case "zh-Hans":
+			return "代理不可用：" + reason
 		}
 	}
 }
@@ -8655,6 +10182,8 @@ func (msgs Messages) BiometricAppGated(method string) string {
 		switch lang {
 		case "", "en":
 			return "App-gated: the key is in your login keychain and GoVault asks for " + msgs.arg(method) + " before reading it."
+		case "zh-Hans":
+			return "应用门控：密钥保存在你的登录钥匙串中，GoVault 在读取前会请求 " + method + " 验证。"
 		}
 	}
 }
@@ -8684,6 +10213,8 @@ func (msgs Messages) PromptAutomaticallyDetail(method string) string {
 		switch lang {
 		case "", "en":
 			return "Ask for " + msgs.arg(method) + " as soon as the locked window opens."
+		case "zh-Hans":
+			return "锁定窗口打开后立即请求 " + method + "。"
 		}
 	}
 }
@@ -9016,6 +10547,8 @@ func (msgs Messages) ErrorServer(status string, detail string) string {
 		switch lang {
 		case "", "en":
 			return "The server reported an error (" + msgs.arg(status) + "): " + msgs.arg(detail)
+		case "zh-Hans":
+			return "服务器返回错误（" + status + "）：" + detail
 		}
 	}
 }
@@ -9038,6 +10571,8 @@ func (msgs Messages) ErrorWithDetail(detail string) string {
 		switch lang {
 		case "", "en":
 			return "Something went wrong: " + msgs.arg(detail)
+		case "zh-Hans":
+			return "出现错误：" + detail
 		}
 	}
 }
