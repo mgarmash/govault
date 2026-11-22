@@ -630,6 +630,22 @@ sshAgentUnavailable: "代理不可用：{reason}"
 sshAgentInUse: 另一个进程已占用此套接字。
 sshAgentNotSocket: 该路径已存在，且不是套接字文件。
 sshAgentUnsupported: 此系统不支持 Unix 套接字。
+commandLine: 命令行
+commandLineTool: gv 命令行工具
+commandLineToolNotInstalled: 在“终端”和脚本中使用 Bitwarden CLI 命令访问密码库。安装后会在 /usr/local/bin/gv 创建链接。
+commandLineToolInstalled: "已安装于 {path}，随 GoVault 一同更新。"
+commandLineToolHomebrew: "由 Homebrew 安装于 {path}，由 Homebrew 随 GoVault 一同更新和移除。"
+commandLineToolBroken: "{path} 处的链接指向已不存在的 GoVault 副本。"
+commandLineToolOtherCopy: "{path} 处的链接指向另一个 GoVault 副本。"
+commandLineToolForeign: "{path} 处已存在另一个名为 gv 的程序，GoVault 不会替换它。"
+commandLineToolUnavailable: 此 GoVault 副本不包含 gv 命令。
+commandLineToolShadowed: "在“终端”中可能会优先运行位于 {path} 的另一个 gv。"
+installCommandLineTool: 安装
+repairCommandLineTool: 修复
+uninstallCommandLineTool: 卸载
+commandLineToolPrompt: GoVault 想要更改 /usr/local/bin 中的 gv 命令。
+commandLineToolChanged: gv 命令在此期间已更改。请检查其状态后重试。
+commandLineToolFailed: 无法更改 gv 命令
 biometricUnavailable: 此 Mac 上 Touch ID 不可用——请配对带有 Touch ID 的键盘或在“系统设置”中注册指纹。
 biometricDetail: 在系统钥匙串中保存封装密钥以实现快速解锁。
 biometricHardware: 硬件级保护：macOS 仅在通过 Touch ID 验证后释放密钥。

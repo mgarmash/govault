@@ -630,6 +630,22 @@ sshAgentUnavailable: "Агент недоступен: {reason}"
 sshAgentInUse: Этот сокет уже используется другим процессом.
 sshAgentNotSocket: Путь существует и не является сокетом.
 sshAgentUnsupported: Unix-сокеты не поддерживаются в этой системе.
+commandLine: Командная строка
+commandLineTool: Утилита командной строки gv
+commandLineToolNotInstalled: Работайте с хранилищем из Терминала и скриптов командами Bitwarden CLI. Установка создаст ссылку /usr/local/bin/gv.
+commandLineToolInstalled: "Установлена в {path}. Обновляется вместе с GoVault."
+commandLineToolHomebrew: "Установлена через Homebrew в {path}. Homebrew обновляет и удаляет её вместе с GoVault."
+commandLineToolBroken: "Ссылка в {path} указывает на копию GoVault, которой больше нет."
+commandLineToolOtherCopy: "Ссылка в {path} указывает на другую копию GoVault."
+commandLineToolForeign: "По пути {path} находится другая программа gv. GoVault не заменяет её."
+commandLineToolUnavailable: Эта копия GoVault не включает команду gv.
+commandLineToolShadowed: "В Терминале вместо неё может запускаться другой gv из {path}."
+installCommandLineTool: Установить
+repairCommandLineTool: Исправить
+uninstallCommandLineTool: Удалить
+commandLineToolPrompt: GoVault хочет изменить команду gv в /usr/local/bin.
+commandLineToolChanged: Команда gv тем временем изменилась. Проверьте её состояние и повторите попытку.
+commandLineToolFailed: Не удалось изменить команду gv
 biometricUnavailable: Touch ID недоступен на этом Mac — подключите клавиатуру с Touch ID или настройте его в Системных настройках.
 biometricDetail: Хранит защищённый ключ в системной связке ключей для быстрой разблокировки.
 biometricHardware: "Аппаратная защита: macOS выдаёт ключ только после проверки Touch ID."

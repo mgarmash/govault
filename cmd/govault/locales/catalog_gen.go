@@ -4408,16 +4408,16 @@ var textsDe = i18n.NewTexts(""+
 	"Ein anderer Prozess verwendet diesen Socket bereits."+
 	"Der Socket-Pfad existiert und ist kein Socket."+
 	"Unix-Sockets werden auf diesem System nicht unterstützt."+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
+	"Befehlszeile"+
+	"Befehlszeilentool gv"+
+	"Nutze deinen Tresor im Terminal und in Skripten mit Bitwarden-CLI-Befehlen. Die Installation legt einen Link unter /usr/local/bin/gv an."+
+	"Diese Kopie von GoVault enthält den Befehl gv nicht."+
+	"Installieren"+
+	"Reparieren"+
+	"Deinstallieren"+
+	"GoVault möchte den Befehl gv in /usr/local/bin ändern."+
+	"Der Befehl gv wurde inzwischen geändert. Prüfe den Status und versuche es erneut."+
+	"Befehl gv konnte nicht geändert werden"+
 	"Touch ID auf diesem Mac nicht verfügbar – kopple eine Touch ID-Tastatur oder richte es in den Systemeinstellungen ein."+
 	"Speichert einen geschützten Schlüssel im System-Schlüsselbund zum schnellen Entsperren."+
 	"Hardware-Schutz: macOS gibt den Schlüssel erst nach Touch ID frei."+
@@ -4948,16 +4948,16 @@ var textsDe = i18n.NewTexts(""+
 		52,
 		46,
 		57,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
+		12,
+		20,
+		136,
+		53,
+		12,
+		10,
+		14,
+		56,
+		83,
+		39,
 		121,
 		90,
 		67,
@@ -5491,16 +5491,16 @@ var textsEs = i18n.NewTexts(""+
 	"Otro proceso ya está usando este socket."+
 	"La ruta del socket existe y no es un socket."+
 	"Los sockets Unix no son compatibles en este sistema."+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
+	"Línea de comandos"+
+	"Herramienta de línea de comandos gv"+
+	"Usa tu caja fuerte desde Terminal y scripts con comandos de Bitwarden CLI. Al instalar se añade un enlace en /usr/local/bin/gv."+
+	"Esta copia de GoVault no incluye el comando gv."+
+	"Instalar"+
+	"Reparar"+
+	"Desinstalar"+
+	"GoVault quiere cambiar el comando gv en /usr/local/bin."+
+	"El comando gv cambió mientras tanto. Revisa su estado e inténtalo de nuevo."+
+	"No se pudo cambiar el comando gv"+
 	"Touch ID no está disponible en este Mac — enlaza un teclado con Touch ID o configúralo en Ajustes del Sistema."+
 	"Guarda una clave envuelta en el llavero del sistema para desbloquear rápido."+
 	"Protección por hardware: macOS solo libera la clave tras Touch ID."+
@@ -6031,16 +6031,16 @@ var textsEs = i18n.NewTexts(""+
 		41,
 		44,
 		52,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
+		18,
+		36,
+		128,
+		47,
+		8,
+		7,
+		11,
+		55,
+		77,
+		32,
 		114,
 		77,
 		67,
@@ -6574,16 +6574,16 @@ var textsFr = i18n.NewTexts(""+
 	"Un autre processus utilise déjà ce socket."+
 	"Ce chemin existe et n’est pas un socket."+
 	"Les sockets Unix ne sont pas pris en charge sur ce système."+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
+	"Ligne de commande"+
+	"Outil en ligne de commande gv"+
+	"Utilisez votre coffre dans Terminal et vos scripts avec des commandes Bitwarden CLI. L’installation crée un lien dans /usr/local/bin/gv."+
+	"Cette copie de GoVault n’inclut pas la commande gv."+
+	"Installer"+
+	"Réparer"+
+	"Désinstaller"+
+	"GoVault souhaite modifier la commande gv dans /usr/local/bin."+
+	"La commande gv a été modifiée entre-temps. Vérifiez son état et réessayez."+
+	"Impossible de modifier la commande gv"+
 	"Touch ID indisponible sur ce Mac — jumelez un clavier Touch ID ou configurez-le dans Réglages Système."+
 	"Conserve une clé chiffrée dans le trousseau système pour un déverrouillage rapide."+
 	"Protection matérielle : macOS ne libère la clé qu’après Touch ID."+
@@ -7114,16 +7114,16 @@ var textsFr = i18n.NewTexts(""+
 		44,
 		42,
 		60,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
+		17,
+		29,
+		139,
+		53,
+		9,
+		8,
+		13,
+		61,
+		80,
+		37,
 		106,
 		86,
 		71,
@@ -7657,16 +7657,16 @@ var textsJa = i18n.NewTexts(""+
 	"別のプロセスがこのソケットを使用中です。"+
 	"このパスは既に存在し、ソケットではありません。"+
 	"このシステムでは Unix ソケットがサポートされていません。"+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
+	"コマンドライン"+
+	"gv コマンドラインツール"+
+	"ターミナルやスクリプトから Bitwarden CLI コマンドで保管庫を利用できます。インストールすると /usr/local/bin/gv にリンクを作成します。"+
+	"この GoVault には gv コマンドが含まれていません。"+
+	"インストール"+
+	"修復"+
+	"アンインストール"+
+	"GoVault が /usr/local/bin の gv コマンドを変更しようとしています。"+
+	"gv コマンドの状態が途中で変更されました。状態を確認してやり直してください。"+
+	"gv コマンドを変更できませんでした"+
 	"この Mac では Touch ID を利用できません。Touch ID 対応キーボードをペアリングするか、「システム設定」で登録してください。"+
 	"すばやくロック解除できるよう、ラップされたキーをシステムキーチェーンに保存します。"+
 	"ハードウェアレベルの保護：macOS は Touch ID 認証後にのみキーを解放します。"+
@@ -8197,16 +8197,16 @@ var textsJa = i18n.NewTexts(""+
 		60,
 		69,
 		81,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
+		21,
+		33,
+		181,
+		67,
+		18,
+		6,
+		24,
+		85,
+		111,
+		48,
 		168,
 		123,
 		103,
@@ -8740,16 +8740,16 @@ var textsKo = i18n.NewTexts(""+
 	"다른 프로세스가 이미 이 소켓을 사용 중입니다."+
 	"해당 경로가 이미 존재하며 소켓이 아닙니다."+
 	"이 시스템에서는 Unix 소켓이 지원되지 않습니다."+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
+	"명령줄"+
+	"gv 명령줄 도구"+
+	"터미널과 스크립트에서 Bitwarden CLI 명령으로 보관함을 사용합니다. 설치하면 /usr/local/bin/gv에 링크가 추가됩니다."+
+	"이 GoVault 사본에는 gv 명령이 포함되어 있지 않습니다."+
+	"설치"+
+	"복구"+
+	"제거"+
+	"GoVault가 /usr/local/bin의 gv 명령을 변경하려고 합니다."+
+	"그 사이에 gv 명령이 변경되었습니다. 상태를 확인한 후 다시 시도하세요."+
+	"gv 명령을 변경할 수 없습니다"+
 	"이 Mac에서 Touch ID를 사용할 수 없습니다. Touch ID 키보드를 페어링하거나 “시스템 설정”에서 등록하세요."+
 	"빠른 잠금 해제를 위해 래핑된 키를 시스템 키체인에 보관합니다."+
 	"하드웨어 수준 보호: macOS는 Touch ID 인증 후에만 키를 해제합니다."+
@@ -9280,16 +9280,16 @@ var textsKo = i18n.NewTexts(""+
 		64,
 		60,
 		64,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
+		9,
+		19,
+		149,
+		71,
+		6,
+		6,
+		6,
+		68,
+		97,
+		39,
 		140,
 		87,
 		86,
@@ -9823,16 +9823,16 @@ var textsPtBR = i18n.NewTexts(""+
 	"Outro processo já está usando este socket."+
 	"O caminho do socket existe e não é um socket."+
 	"Sockets Unix não são suportados neste sistema."+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
+	"Linha de comando"+
+	"Ferramenta de linha de comando gv"+
+	"Use seu cofre no Terminal e em scripts com comandos do Bitwarden CLI. A instalação cria um link em /usr/local/bin/gv."+
+	"Esta cópia do GoVault não inclui o comando gv."+
+	"Instalar"+
+	"Reparar"+
+	"Desinstalar"+
+	"O GoVault deseja alterar o comando gv em /usr/local/bin."+
+	"O comando gv foi alterado nesse meio-tempo. Verifique o status e tente novamente."+
+	"Não foi possível alterar o comando gv"+
 	"Touch ID indisponível neste Mac — emparelhe um teclado com Touch ID ou configure nos Ajustes do Sistema."+
 	"Mantém uma chave protegida nas chaves do sistema para desbloqueio rápido."+
 	"Proteção por hardware: o macOS libera a chave somente após Touch ID."+
@@ -10363,16 +10363,16 @@ var textsPtBR = i18n.NewTexts(""+
 		44,
 		47,
 		48,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
+		16,
+		33,
+		119,
+		48,
+		8,
+		7,
+		11,
+		56,
+		81,
+		39,
 		107,
 		75,
 		71,
@@ -10906,16 +10906,16 @@ var textsRu = i18n.NewTexts(""+
 	"Этот сокет уже используется другим процессом."+
 	"Путь существует и не является сокетом."+
 	"Unix-сокеты не поддерживаются в этой системе."+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
+	"Командная строка"+
+	"Утилита командной строки gv"+
+	"Работайте с хранилищем из Терминала и скриптов командами Bitwarden CLI. Установка создаст ссылку /usr/local/bin/gv."+
+	"Эта копия GoVault не включает команду gv."+
+	"Установить"+
+	"Исправить"+
+	"Удалить"+
+	"GoVault хочет изменить команду gv в /usr/local/bin."+
+	"Команда gv тем временем изменилась. Проверьте её состояние и повторите попытку."+
+	"Не удалось изменить команду gv"+
 	"Touch ID недоступен на этом Mac — подключите клавиатуру с Touch ID или настройте его в Системных настройках."+
 	"Хранит защищённый ключ в системной связке ключей для быстрой разблокировки."+
 	"Аппаратная защита: macOS выдаёт ключ только после проверки Touch ID."+
@@ -11446,16 +11446,16 @@ var textsRu = i18n.NewTexts(""+
 		84,
 		70,
 		79,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
+		31,
+		49,
+		186,
+		66,
+		20,
+		18,
+		14,
+		72,
+		144,
+		54,
 		182,
 		140,
 		113,
@@ -11989,16 +11989,16 @@ var textsZhHans = i18n.NewTexts(""+
 	"另一个进程已占用此套接字。"+
 	"该路径已存在，且不是套接字文件。"+
 	"此系统不支持 Unix 套接字。"+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
+	"命令行"+
+	"gv 命令行工具"+
+	"在“终端”和脚本中使用 Bitwarden CLI 命令访问密码库。安装后会在 /usr/local/bin/gv 创建链接。"+
+	"此 GoVault 副本不包含 gv 命令。"+
+	"安装"+
+	"修复"+
+	"卸载"+
+	"GoVault 想要更改 /usr/local/bin 中的 gv 命令。"+
+	"gv 命令在此期间已更改。请检查其状态后重试。"+
+	"无法更改 gv 命令"+
 	"此 Mac 上 Touch ID 不可用——请配对带有 Touch ID 的键盘或在“系统设置”中注册指纹。"+
 	"在系统钥匙串中保存封装密钥以实现快速解锁。"+
 	"硬件级保护：macOS 仅在通过 Touch ID 验证后释放密钥。"+
@@ -12529,16 +12529,16 @@ var textsZhHans = i18n.NewTexts(""+
 		39,
 		48,
 		36,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
+		9,
+		18,
+		121,
+		40,
+		6,
+		6,
+		6,
+		55,
+		63,
+		22,
 		112,
 		63,
 		70,
@@ -13072,16 +13072,16 @@ var textsZhHant = i18n.NewTexts(""+
 	"另一個程序已使用此通訊端。"+
 	"該路徑已存在，且不是通訊端檔案。"+
 	"此系統不支援 Unix 通訊端。"+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
+	"命令列"+
+	"gv 命令列工具"+
+	"在「終端機」與指令碼中使用 Bitwarden CLI 指令存取密碼庫。安裝會在 /usr/local/bin/gv 建立連結。"+
+	"此 GoVault 副本不包含 gv 指令。"+
+	"安裝"+
+	"修復"+
+	"解除安裝"+
+	"GoVault 想要變更 /usr/local/bin 中的 gv 指令。"+
+	"gv 指令在此期間已變更。請檢視其狀態後重試。"+
+	"無法變更 gv 指令"+
 	"此 Mac 上無法使用 Touch ID——請配對具備 Touch ID 的鍵盤或在「系統設定」中註冊指紋。"+
 	"在系統鑰匙圈中保存封裝金鑰以快速解鎖。"+
 	"硬體級保護：macOS 僅在通過 Touch ID 驗證後釋放金鑰。"+
@@ -13612,16 +13612,16 @@ var textsZhHant = i18n.NewTexts(""+
 		39,
 		48,
 		36,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
+		9,
+		18,
+		124,
+		40,
+		6,
+		6,
+		12,
+		55,
+		63,
+		22,
 		114,
 		57,
 		70,
@@ -24949,6 +24949,24 @@ func (msgs Messages) CommandLineToolInstalled(path string) string {
 		switch lang {
 		case "", "en":
 			return "Installed at " + msgs.arg(path) + ". It updates with GoVault."
+		case "de":
+			return "Installiert unter " + path + ". Wird mit GoVault aktualisiert."
+		case "es":
+			return "Instalada en " + path + ". Se actualiza junto con GoVault."
+		case "fr":
+			return "Installé dans " + path + ". Mis à jour avec GoVault."
+		case "ja":
+			return path + " にインストール済みです。GoVault と一緒にアップデートされます。"
+		case "ko":
+			return path + "에 설치되었습니다. GoVault와 함께 업데이트됩니다."
+		case "pt-BR":
+			return "Instalada em " + path + ". Atualiza junto com o GoVault."
+		case "ru":
+			return "Установлена в " + path + ". Обновляется вместе с GoVault."
+		case "zh-Hans":
+			return "已安装于 " + path + "，随 GoVault 一同更新。"
+		case "zh-Hant":
+			return "已安裝於 " + path + "，會隨 GoVault 一併更新。"
 		}
 	}
 }
@@ -24973,6 +24991,24 @@ func (msgs Messages) CommandLineToolHomebrew(path string) string {
 		switch lang {
 		case "", "en":
 			return "Installed by Homebrew at " + msgs.arg(path) + ". Homebrew updates and removes it with GoVault."
+		case "de":
+			return "Von Homebrew unter " + path + " installiert. Homebrew aktualisiert und entfernt es mit GoVault."
+		case "es":
+			return "Instalada por Homebrew en " + path + ". Homebrew la actualiza y elimina junto con GoVault."
+		case "fr":
+			return "Installé par Homebrew dans " + path + ". Homebrew le met à jour et le supprime avec GoVault."
+		case "ja":
+			return "Homebrew により " + path + " にインストール済みです。GoVault と一緒に Homebrew が更新・削除します。"
+		case "ko":
+			return "Homebrew를 통해 " + path + "에 설치되었습니다. Homebrew가 GoVault와 함께 업데이트 및 제거합니다."
+		case "pt-BR":
+			return "Instalada pelo Homebrew em " + path + ". O Homebrew atualiza e remove junto com o GoVault."
+		case "ru":
+			return "Установлена через Homebrew в " + path + ". Homebrew обновляет и удаляет её вместе с GoVault."
+		case "zh-Hans":
+			return "由 Homebrew 安装于 " + path + "，由 Homebrew 随 GoVault 一同更新和移除。"
+		case "zh-Hant":
+			return "由 Homebrew 安裝於 " + path + "，由 Homebrew 隨 GoVault 一併更新與移除。"
 		}
 	}
 }
@@ -24997,6 +25033,24 @@ func (msgs Messages) CommandLineToolBroken(path string) string {
 		switch lang {
 		case "", "en":
 			return "The link at " + msgs.arg(path) + " points to a copy of GoVault that is no longer there."
+		case "de":
+			return "Der Link unter " + path + " verweist auf eine nicht mehr vorhandene Kopie von GoVault."
+		case "es":
+			return "El enlace en " + path + " apunta a una copia de GoVault que ya no existe."
+		case "fr":
+			return "Le lien dans " + path + " pointe vers une copie de GoVault qui n’existe plus."
+		case "ja":
+			return path + " のリンク先にある GoVault が見つかりません。"
+		case "ko":
+			return path + "의 링크가 더 이상 존재하지 않는 GoVault 사본을 가리킵니다."
+		case "pt-BR":
+			return "O link em " + path + " aponta para uma cópia do GoVault que não existe mais."
+		case "ru":
+			return "Ссылка в " + path + " указывает на копию GoVault, которой больше нет."
+		case "zh-Hans":
+			return path + " 处的链接指向已不存在的 GoVault 副本。"
+		case "zh-Hant":
+			return path + " 的連結指向已不存在的 GoVault 副本。"
 		}
 	}
 }
@@ -25021,6 +25075,24 @@ func (msgs Messages) CommandLineToolOtherCopy(path string) string {
 		switch lang {
 		case "", "en":
 			return "The link at " + msgs.arg(path) + " points to another copy of GoVault."
+		case "de":
+			return "Der Link unter " + path + " verweist auf eine andere Kopie von GoVault."
+		case "es":
+			return "El enlace en " + path + " apunta a otra copia de GoVault."
+		case "fr":
+			return "Le lien dans " + path + " pointe vers une autre copie de GoVault."
+		case "ja":
+			return path + " のリンクは別の GoVault を指しています。"
+		case "ko":
+			return path + "의 링크가 다른 GoVault 사본을 가리킵니다."
+		case "pt-BR":
+			return "O link em " + path + " aponta para outra cópia do GoVault."
+		case "ru":
+			return "Ссылка в " + path + " указывает на другую копию GoVault."
+		case "zh-Hans":
+			return path + " 处的链接指向另一个 GoVault 副本。"
+		case "zh-Hant":
+			return path + " 的連結指向另一個 GoVault 副本。"
 		}
 	}
 }
@@ -25045,6 +25117,24 @@ func (msgs Messages) CommandLineToolForeign(path string) string {
 		switch lang {
 		case "", "en":
 			return "Another program named gv is at " + msgs.arg(path) + ". GoVault does not replace it."
+		case "de":
+			return "Unter " + path + " befindet sich ein anderes Programm namens gv. GoVault ersetzt es nicht."
+		case "es":
+			return "Otro programa llamado gv ya está en " + path + ". GoVault no lo reemplaza."
+		case "fr":
+			return "Un autre programme nommé gv se trouve dans " + path + ". GoVault ne le remplace pas."
+		case "ja":
+			return path + " に別の gv プログラムが存在します。GoVault は上書きしません。"
+		case "ko":
+			return path + "에 gv라는 다른 프로그램이 있습니다. GoVault는 이를 덮어쓰지 않습니다."
+		case "pt-BR":
+			return "Outro programa chamado gv está em " + path + ". O GoVault não o substitui."
+		case "ru":
+			return "По пути " + path + " находится другая программа gv. GoVault не заменяет её."
+		case "zh-Hans":
+			return path + " 处已存在另一个名为 gv 的程序，GoVault 不会替换它。"
+		case "zh-Hant":
+			return path + " 已存在另一個名為 gv 的程式，GoVault 不會取代它。"
 		}
 	}
 }
@@ -25078,6 +25168,24 @@ func (msgs Messages) CommandLineToolShadowed(path string) string {
 		switch lang {
 		case "", "en":
 			return "Another gv at " + msgs.arg(path) + " may run instead in Terminal."
+		case "de":
+			return "Im Terminal wird möglicherweise stattdessen ein anderes gv unter " + path + " ausgeführt."
+		case "es":
+			return "Otro gv en " + path + " podría ejecutarse en su lugar en Terminal."
+		case "fr":
+			return "Un autre gv dans " + path + " risque d’être exécuté à la place dans Terminal."
+		case "ja":
+			return "ターミナルでは " + path + " の別の gv が代わりに実行される場合があります。"
+		case "ko":
+			return "터미널에서는 " + path + "에 있는 다른 gv가 대신 실행될 수 있습니다."
+		case "pt-BR":
+			return "Outro gv em " + path + " pode ser executado no lugar no Terminal."
+		case "ru":
+			return "В Терминале вместо неё может запускаться другой gv из " + path + "."
+		case "zh-Hans":
+			return "在“终端”中可能会优先运行位于 " + path + " 的另一个 gv。"
+		case "zh-Hant":
+			return "在「終端機」中可能會改為執行位於 " + path + " 的另一個 gv。"
 		}
 	}
 }

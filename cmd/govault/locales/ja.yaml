@@ -630,6 +630,22 @@ sshAgentUnavailable: "エージェントを利用できません：{reason}"
 sshAgentInUse: 別のプロセスがこのソケットを使用中です。
 sshAgentNotSocket: このパスは既に存在し、ソケットではありません。
 sshAgentUnsupported: このシステムでは Unix ソケットがサポートされていません。
+commandLine: コマンドライン
+commandLineTool: gv コマンドラインツール
+commandLineToolNotInstalled: ターミナルやスクリプトから Bitwarden CLI コマンドで保管庫を利用できます。インストールすると /usr/local/bin/gv にリンクを作成します。
+commandLineToolInstalled: "{path} にインストール済みです。GoVault と一緒にアップデートされます。"
+commandLineToolHomebrew: "Homebrew により {path} にインストール済みです。GoVault と一緒に Homebrew が更新・削除します。"
+commandLineToolBroken: "{path} のリンク先にある GoVault が見つかりません。"
+commandLineToolOtherCopy: "{path} のリンクは別の GoVault を指しています。"
+commandLineToolForeign: "{path} に別の gv プログラムが存在します。GoVault は上書きしません。"
+commandLineToolUnavailable: この GoVault には gv コマンドが含まれていません。
+commandLineToolShadowed: "ターミナルでは {path} の別の gv が代わりに実行される場合があります。"
+installCommandLineTool: インストール
+repairCommandLineTool: 修復
+uninstallCommandLineTool: アンインストール
+commandLineToolPrompt: GoVault が /usr/local/bin の gv コマンドを変更しようとしています。
+commandLineToolChanged: gv コマンドの状態が途中で変更されました。状態を確認してやり直してください。
+commandLineToolFailed: gv コマンドを変更できませんでした
 biometricUnavailable: この Mac では Touch ID を利用できません。Touch ID 対応キーボードをペアリングするか、「システム設定」で登録してください。
 biometricDetail: すばやくロック解除できるよう、ラップされたキーをシステムキーチェーンに保存します。
 biometricHardware: ハードウェアレベルの保護：macOS は Touch ID 認証後にのみキーを解放します。

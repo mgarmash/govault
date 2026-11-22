@@ -630,6 +630,22 @@ sshAgentUnavailable: "에이전트를 사용할 수 없음: {reason}"
 sshAgentInUse: 다른 프로세스가 이미 이 소켓을 사용 중입니다.
 sshAgentNotSocket: 해당 경로가 이미 존재하며 소켓이 아닙니다.
 sshAgentUnsupported: 이 시스템에서는 Unix 소켓이 지원되지 않습니다.
+commandLine: 명령줄
+commandLineTool: gv 명령줄 도구
+commandLineToolNotInstalled: 터미널과 스크립트에서 Bitwarden CLI 명령으로 보관함을 사용합니다. 설치하면 /usr/local/bin/gv에 링크가 추가됩니다.
+commandLineToolInstalled: "{path}에 설치되었습니다. GoVault와 함께 업데이트됩니다."
+commandLineToolHomebrew: "Homebrew를 통해 {path}에 설치되었습니다. Homebrew가 GoVault와 함께 업데이트 및 제거합니다."
+commandLineToolBroken: "{path}의 링크가 더 이상 존재하지 않는 GoVault 사본을 가리킵니다."
+commandLineToolOtherCopy: "{path}의 링크가 다른 GoVault 사본을 가리킵니다."
+commandLineToolForeign: "{path}에 gv라는 다른 프로그램이 있습니다. GoVault는 이를 덮어쓰지 않습니다."
+commandLineToolUnavailable: 이 GoVault 사본에는 gv 명령이 포함되어 있지 않습니다.
+commandLineToolShadowed: "터미널에서는 {path}에 있는 다른 gv가 대신 실행될 수 있습니다."
+installCommandLineTool: 설치
+repairCommandLineTool: 복구
+uninstallCommandLineTool: 제거
+commandLineToolPrompt: GoVault가 /usr/local/bin의 gv 명령을 변경하려고 합니다.
+commandLineToolChanged: 그 사이에 gv 명령이 변경되었습니다. 상태를 확인한 후 다시 시도하세요.
+commandLineToolFailed: gv 명령을 변경할 수 없습니다
 biometricUnavailable: 이 Mac에서 Touch ID를 사용할 수 없습니다. Touch ID 키보드를 페어링하거나 “시스템 설정”에서 등록하세요.
 biometricDetail: 빠른 잠금 해제를 위해 래핑된 키를 시스템 키체인에 보관합니다.
 biometricHardware: "하드웨어 수준 보호: macOS는 Touch ID 인증 후에만 키를 해제합니다."

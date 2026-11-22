@@ -630,6 +630,22 @@ sshAgentUnavailable: "Agent nicht verfügbar: {reason}"
 sshAgentInUse: Ein anderer Prozess verwendet diesen Socket bereits.
 sshAgentNotSocket: Der Socket-Pfad existiert und ist kein Socket.
 sshAgentUnsupported: Unix-Sockets werden auf diesem System nicht unterstützt.
+commandLine: Befehlszeile
+commandLineTool: Befehlszeilentool gv
+commandLineToolNotInstalled: Nutze deinen Tresor im Terminal und in Skripten mit Bitwarden-CLI-Befehlen. Die Installation legt einen Link unter /usr/local/bin/gv an.
+commandLineToolInstalled: "Installiert unter {path}. Wird mit GoVault aktualisiert."
+commandLineToolHomebrew: "Von Homebrew unter {path} installiert. Homebrew aktualisiert und entfernt es mit GoVault."
+commandLineToolBroken: "Der Link unter {path} verweist auf eine nicht mehr vorhandene Kopie von GoVault."
+commandLineToolOtherCopy: "Der Link unter {path} verweist auf eine andere Kopie von GoVault."
+commandLineToolForeign: "Unter {path} befindet sich ein anderes Programm namens gv. GoVault ersetzt es nicht."
+commandLineToolUnavailable: Diese Kopie von GoVault enthält den Befehl gv nicht.
+commandLineToolShadowed: "Im Terminal wird möglicherweise stattdessen ein anderes gv unter {path} ausgeführt."
+installCommandLineTool: Installieren
+repairCommandLineTool: Reparieren
+uninstallCommandLineTool: Deinstallieren
+commandLineToolPrompt: GoVault möchte den Befehl gv in /usr/local/bin ändern.
+commandLineToolChanged: Der Befehl gv wurde inzwischen geändert. Prüfe den Status und versuche es erneut.
+commandLineToolFailed: Befehl gv konnte nicht geändert werden
 biometricUnavailable: Touch ID auf diesem Mac nicht verfügbar – kopple eine Touch ID-Tastatur oder richte es in den Systemeinstellungen ein.
 biometricDetail: Speichert einen geschützten Schlüssel im System-Schlüsselbund zum schnellen Entsperren.
 biometricHardware: "Hardware-Schutz: macOS gibt den Schlüssel erst nach Touch ID frei."
