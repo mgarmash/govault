@@ -30,6 +30,9 @@ type Snapshot struct {
 	RevisionDate  time.Time        `json:"revisionDate"`
 	LastSyncAt    time.Time        `json:"lastSyncAt"`
 	RawSyncJSON   json.RawMessage  `json:"rawSyncJson"`
+	// Sequence counts the snapshots a profile store saved, so a writer can
+	// tell whether another one committed since it loaded.
+	Sequence uint64 `json:"sequence,omitempty"`
 }
 
 type Store interface {

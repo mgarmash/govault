@@ -251,9 +251,30 @@ type SyncRequest struct {
 	APIKey     *APIKey
 }
 
+// syncAttempts bounds how often Sync fetches again because a commit landed
+// while it fetched.
+const syncAttempts = 3
+
+// ErrSyncRaced means other changes kept landing while Sync fetched.
+var ErrSyncRaced = errors.New("profile: the local copy kept changing during the sync; try again")
+
 // Sync fetches the encrypted vault and replaces the local copy, unless the
-// account changed meanwhile. The vault may stay locked.
+// account changed meanwhile. A result fetched while another write or sync
+// committed is discarded and fetched again, so an older copy never
+// replaces a newer one. The vault may stay locked.
 func (p *Profile) Sync(ctx context.Context, req SyncRequest) error {
+	for range syncAttempts {
+		if err := p.syncOnce(ctx, req); !errors.Is(err, errSnapshotMoved) {
+			return err
+		}
+		req.Force = true
+	}
+	return ErrSyncRaced
+}
+
+var errSnapshotMoved = errors.New("profile: the snapshot changed during the sync")
+
+func (p *Profile) syncOnce(ctx context.Context, req SyncRequest) error {
 	var o *online
 	var snap *store.Snapshot
 	var userKey *crypto.SymmetricKey
@@ -317,6 +338,13 @@ func (p *Profile) Sync(ctx context.Context, req SyncRequest) error {
 		}
 		if cur.LoginID != o.acct.LoginID {
 			return ErrStale
+		}
+		seq, err := p.store.sequence(o.acct.AccountID)
+		if err != nil {
+			return err
+		}
+		if seq != snap.Sequence {
+			return errSnapshotMoved
 		}
 		return p.store.SaveSnapshot(&updated)
 	})

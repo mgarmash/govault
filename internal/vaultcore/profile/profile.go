@@ -82,7 +82,7 @@ type Options struct {
 type Profile struct {
 	dir   string
 	opts  Options
-	store *store.FileStore
+	store sequencedStore
 }
 
 // profileState survives logout: the profile's identity, the configured
@@ -130,7 +130,7 @@ func Open(dir string, opts Options) (*Profile, error) {
 	if err := privatefile.MkdirAll(dir); err != nil {
 		return nil, err
 	}
-	p := &Profile{dir: dir, opts: opts, store: store.NewFileStore(dir)}
+	p := &Profile{dir: dir, opts: opts, store: sequencedStore{store.NewFileStore(dir)}}
 	if err := p.exclusive(func() error {
 		if _, err := p.loadProfile(); err != nil {
 			return err
