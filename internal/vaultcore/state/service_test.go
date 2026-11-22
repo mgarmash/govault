@@ -111,8 +111,13 @@ type vaultTestEnv struct {
 	noPremium    bool
 	oldServer    bool
 	archiveCalls []string
-	refreshes    int
-	refreshSpent map[string]bool
+	// archiveApplyThen404 applies an archive change and answers 404, as
+	// Bitwarden can for an item it will not send back; onArchive runs
+	// after the change is applied, before the answer.
+	archiveApplyThen404 bool
+	onArchive           func()
+	refreshes           int
+	refreshSpent        map[string]bool
 }
 
 func (env *vaultTestEnv) syncBody() []byte { return env.syncResp() }
@@ -407,12 +412,13 @@ func newVaultTestEnv(t *testing.T) *vaultTestEnv {
 			env.mu.Unlock()
 			_ = json.NewEncoder(w).Encode(updated)
 
-		case r.Method == http.MethodPut && r.URL.Path == "/api/ciphers/c-created/delete":
+		case r.Method == http.MethodPut && strings.HasSuffix(r.URL.Path, "/delete") && env.hasCipher(strings.TrimSuffix(strings.TrimPrefix(r.URL.Path, "/api/ciphers/"), "/delete")):
+			id := strings.TrimSuffix(strings.TrimPrefix(r.URL.Path, "/api/ciphers/"), "/delete")
 			now := time.Now().UTC()
 			env.mu.Lock()
-			c := env.ciphers["c-created"]
+			c := env.ciphers[id]
 			c.DeletedDate = &now
-			env.ciphers["c-created"] = c
+			env.ciphers[id] = c
 			env.mu.Unlock()
 			w.WriteHeader(http.StatusOK)
 
@@ -422,9 +428,9 @@ func newVaultTestEnv(t *testing.T) *vaultTestEnv {
 			body, _ := io.ReadAll(r.Body)
 			env.mu.Lock()
 			env.archiveCalls = append(env.archiveCalls, r.Method+" "+r.URL.Path+" body="+string(body))
-			old := env.oldServer
+			old, applyThen404, hook := env.oldServer, env.archiveApplyThen404, env.onArchive
 			c, ok := env.ciphers[id]
-			if ok && !old {
+			if ok && (!old || applyThen404) {
 				now := env.revDate.Add(time.Minute)
 				env.revDate = now
 				c.RevisionDate = &now
@@ -436,8 +442,11 @@ func newVaultTestEnv(t *testing.T) *vaultTestEnv {
 				env.ciphers[id] = c
 			}
 			env.mu.Unlock()
+			if hook != nil {
+				hook()
+			}
 			switch {
-			case old:
+			case old || applyThen404:
 				w.WriteHeader(http.StatusNotFound)
 			case !ok:
 				w.WriteHeader(http.StatusBadRequest)

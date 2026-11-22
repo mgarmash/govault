@@ -590,8 +590,11 @@ func importRow(m *AppModel, p *export.Plan, i int) core.Node {
 	case export.ClassIdentical:
 		note = "Already in " + m.importDestination(e.Match)
 	case export.ClassNew:
-		if e.Ambiguous {
+		switch {
+		case e.Ambiguous:
 			note = "Several vault items have this name, so it is not matched to any. Choose Create to add it as a new item."
+		case e.Item.ArchivedDate != nil && !m.Core.CanArchive():
+			note = "Archived in the backup; it is created in your vault, since Archive needs a premium membership."
 		}
 	}
 	opts := make([]ui.Option[export.Action], 0, 3)

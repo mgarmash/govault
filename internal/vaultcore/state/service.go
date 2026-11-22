@@ -60,6 +60,7 @@ type Service struct {
 	sessionCancel context.CancelFunc
 	unreadable    []string
 	premium       bool
+	archiveKnown  bool
 	credsUnsaved  bool
 	// localOnly marks an unlocked session whose saved sign-in could not be
 	// validated: the vault is readable, but nothing goes to the server
@@ -875,12 +876,34 @@ func (s *Service) SaveCipher(ctx context.Context, c *Cipher) (*Cipher, error) {
 	defer o.end()
 
 	c = cloneCipher(c)
+	s.mu.RLock()
+	premium := s.premium
+	s.mu.RUnlock()
+	if c.ID == "" && c.ArchivedDate != nil && !premium {
+		// Creating an archived item, as an import can, needs premium like
+		// archiving does; without it the item is created in the vault.
+		c.ArchivedDate = nil
+	}
 	if c.ID != "" {
 		existing, err := o.editableCipher(c.ID)
 		if err != nil && !errors.Is(err, ErrCipherNotFound) {
 			return nil, err
 		}
 		if existing != nil {
+			if existing.ArchivedDate != nil && !premium && existing.Favorite != c.Favorite {
+				return nil, ErrPremiumRequired
+			}
+			// The archive is per user and changes without touching the
+			// item's revision, so a draft may carry a stale archive date.
+			// Take the server's current one; the draft's revision still
+			// guards the content.
+			cur, err := withAuth(o, func(ctx context.Context, tok string) (*api.EncryptedCipher, error) {
+				return o.client.GetCipher(ctx, tok, c.ID)
+			})
+			if err != nil {
+				return nil, err
+			}
+			c.ArchivedDate = cloneTimePtr(cur.ArchivedDate)
 			recordPasswordChange(existing, c, time.Now().UTC())
 			if c.OrganizationID == nil {
 				c.OrganizationID = cloneStringPtr(existing.OrganizationID)
@@ -926,6 +949,26 @@ func (s *Service) SaveCipher(ctx context.Context, c *Cipher) (*Cipher, error) {
 		decrypted.CollectionIDs = append([]string(nil), c.CollectionIDs...)
 	}
 	return o.commitCipher(decrypted, encResp)
+}
+
+// commitCipherIfUnchanged is commitCipher for a response that must not
+// land on a vault that changed during the request (errSnapshotMoved).
+func (o *op) commitCipherIfUnchanged(decrypted *Cipher, enc *api.EncryptedCipher) (*Cipher, error) {
+	stored := *enc
+	if len(stored.CollectionIDs) == 0 {
+		stored.CollectionIDs = append([]string(nil), decrypted.CollectionIDs...)
+	}
+	err := o.updateSnapshotFrom(true, replaceSnapshotCipher(&stored), func() { o.s.ciphers[decrypted.ID] = decrypted })
+	if errors.Is(err, ErrLocked) || errors.Is(err, errSnapshotMoved) {
+		return nil, err
+	}
+	o.s.notifyUpdated()
+	out := cloneCipher(decrypted)
+	if lc := (*LocalCopyError)(nil); errors.As(err, &lc) {
+		lc.Cipher = cloneCipher(decrypted)
+		return out, lc
+	}
+	return out, err
 }
 
 // commitCipher records a cipher the server returned after a change, in the
@@ -1275,13 +1318,15 @@ func (s *Service) notifyUpdated() {
 type vaultData struct {
 	// unreadable lists personal items GoVault cannot read, such as ones in
 	// a newer format; a backup without them would be incomplete.
-	unreadable  []string
-	premium     bool
-	ciphers     map[string]*Cipher
-	folders     map[string]Folder
-	orgs        map[string]Organization
-	collections map[string]Collection
-	orgKeys     map[string]*crypto.SymmetricKey
+	unreadable []string
+	premium    bool
+	// archiveKnown: the server reported archivedDate on its ciphers.
+	archiveKnown bool
+	ciphers      map[string]*Cipher
+	folders      map[string]Folder
+	orgs         map[string]Organization
+	collections  map[string]Collection
+	orgKeys      map[string]*crypto.SymmetricKey
 }
 
 func (d *vaultData) zero() {
@@ -1303,6 +1348,7 @@ func (s *Service) applyDataLocked(d *vaultData) {
 	s.orgKeys = d.orgKeys
 	s.unreadable = d.unreadable
 	s.premium = d.premium
+	s.archiveKnown = d.archiveKnown
 }
 
 func profileFlag(extra map[string]json.RawMessage, name string) bool {
@@ -1338,19 +1384,23 @@ func (s *Service) setArchived(ctx context.Context, id string, archive bool) erro
 		return err
 	}
 	defer o.end()
+	// Copied under the lock: a trash or sync may change the cipher once
+	// it is released.
 	s.mu.RLock()
-	c, premium := s.ciphers[id], s.premium
+	c, premium, known := s.ciphers[id], s.premium, s.archiveKnown
+	var exists, deleted, archived bool
 	var prevCollections []string
 	if c != nil {
+		exists, deleted, archived = true, c.DeletedDate != nil, c.ArchivedDate != nil
 		prevCollections = slices.Clone(c.CollectionIDs)
 	}
 	s.mu.RUnlock()
 	switch {
-	case c == nil:
+	case !exists:
 		return ErrCipherNotFound
-	case c.DeletedDate != nil:
+	case deleted:
 		return ErrCipherInTrash
-	case (c.ArchivedDate != nil) == archive:
+	case archived == archive:
 		return nil
 	case archive && !premium:
 		return ErrPremiumRequired
@@ -1363,9 +1413,22 @@ func (s *Service) setArchived(ctx context.Context, id string, archive bool) erro
 		return o.client.UnarchiveCipher(ctx, tok, id)
 	})
 	if err == api.ErrNotFound {
-		// A plain 404 is a server without the archive endpoints; a missing
-		// item is a 400 on Vaultwarden.
-		return ErrArchiveUnsupported
+		// A plain 404 is ambiguous: a server without Archive, or one that
+		// applied the change but will not send this item back. A sync shows
+		// which.
+		if serr := s.sync(o.ctx, true); serr != nil && !errors.Is(serr, ErrSyncDeferred) {
+			return serr
+		}
+		s.mu.RLock()
+		now, known := s.ciphers[id], s.archiveKnown || known
+		s.mu.RUnlock()
+		switch {
+		case now != nil && (now.ArchivedDate != nil) == archive:
+			return nil
+		case !known:
+			return ErrArchiveUnsupported
+		}
+		return ErrArchiveNotConfirmed
 	}
 	if err != nil {
 		return err
@@ -1382,8 +1445,18 @@ func (s *Service) setArchived(ctx context.Context, id string, archive bool) erro
 	if len(decrypted.CollectionIDs) == 0 {
 		decrypted.CollectionIDs = prevCollections
 	}
-	_, err = o.commitCipher(decrypted, encResp)
-	return err
+	// Commit only over the vault the request started from. Anything that
+	// changed it meanwhile, such as a sync that removed the item, wins:
+	// the response is dropped and a sync shows the result.
+	if _, err := o.commitCipherIfUnchanged(decrypted, encResp); errors.Is(err, errSnapshotMoved) {
+		if serr := s.sync(o.ctx, true); serr != nil && !errors.Is(serr, ErrSyncDeferred) {
+			return serr
+		}
+		return nil
+	} else if err != nil {
+		return err
+	}
+	return nil
 }
 
 // UnreadableItems lists the IDs of personal items GoVault could not read,
@@ -1408,6 +1481,7 @@ func (s *Service) clearDataLocked() {
 	s.folders = nil
 	s.unreadable = nil
 	s.premium = false
+	s.archiveKnown = false
 }
 
 func (s *Service) Organizations() []Organization {
@@ -1476,6 +1550,7 @@ func decryptSyncResponse(resp *api.SyncResponse, userKey *crypto.SymmetricKey) (
 
 	for i := range resp.Ciphers {
 		enc := &resp.Ciphers[i]
+		d.archiveKnown = d.archiveKnown || enc.ReportsArchive()
 		key := userKey
 		isOrg := enc.OrganizationID != nil && *enc.OrganizationID != ""
 		if isOrg {

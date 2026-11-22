@@ -101,6 +101,11 @@ func TestService_OrganizationCollectionsAndOrgCiphers(t *testing.T) {
 			}
 			mu.Unlock()
 			_ = json.NewEncoder(w).Encode(resp)
+		case r.Method == http.MethodGet && r.URL.Path == "/api/ciphers/c-org":
+			mu.Lock()
+			out := orgCipher
+			mu.Unlock()
+			_ = json.NewEncoder(w).Encode(out)
 		case r.Method == http.MethodPut && r.URL.Path == "/api/ciphers/c-org":
 			var p api.CipherPayload
 			_ = json.NewDecoder(r.Body).Decode(&p)

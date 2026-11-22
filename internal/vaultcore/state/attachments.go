@@ -3,6 +3,7 @@ package state
 import (
 	"context"
 	"encoding/json"
+	"errors"
 
 	"github.com/txchen/govault/internal/vaultcore/api"
 	"github.com/txchen/govault/internal/vaultcore/crypto"
@@ -260,14 +261,28 @@ func replaceSnapshotCipher(enc *api.EncryptedCipher) func(resp *api.SyncResponse
 // Memory is updated even when the disk write fails, since the server has
 // the change; that failure is returned as a *LocalCopyError.
 func (o *op) updateSnapshot(edit func(resp *api.SyncResponse), apply func()) error {
+	return o.updateSnapshotFrom(false, edit, apply)
+}
+
+// errSnapshotMoved means the vault changed since the operation began, so
+// its result was not committed.
+var errSnapshotMoved = errors.New("state: the vault changed during the request")
+
+// updateSnapshotFrom is updateSnapshot; with ifUnchanged it commits only if
+// no other change was published since o began, and else returns
+// errSnapshotMoved and changes nothing.
+func (o *op) updateSnapshotFrom(ifUnchanged bool, edit func(resp *api.SyncResponse), apply func()) error {
 	s := o.s
 	s.persistMu.Lock()
 	defer s.persistMu.Unlock()
 	s.mu.RLock()
-	snap, ok := s.snapshot, o.currentLocked()
+	snap, ok, seq := s.snapshot, o.currentLocked(), s.snapSeq
 	s.mu.RUnlock()
 	if !ok {
 		return ErrLocked
+	}
+	if ifUnchanged && seq != o.seq {
+		return errSnapshotMoved
 	}
 	updated, diskErr := o.writeSnapshot(snap, edit)
 	s.mu.Lock()

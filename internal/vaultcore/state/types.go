@@ -36,6 +36,7 @@ var (
 	ErrSignInRequired          = errors.New("state: sign in again to sync; the vault is available offline until then")
 	ErrDifferentAccount        = errors.New("state: this signs in to a different account than the vault on this device; to use a different account, log out first")
 	ErrArchiveUnsupported      = errors.New("state: this server does not support Archive; it needs Vaultwarden 1.36 or later")
+	ErrArchiveNotConfirmed     = errors.New("state: the server did not confirm the change; GoVault synced to show where the item is now")
 	ErrPremiumRequired         = errors.New("state: archiving items needs a premium membership")
 	ErrCipherInTrash           = errors.New("state: the item is in Trash")
 	ErrAccountChanged          = errors.New("state: the account changed since this was confirmed")

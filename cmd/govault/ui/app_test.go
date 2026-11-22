@@ -43,14 +43,18 @@ type mockVaultService struct {
 	syncErrs  []error
 	syncCalls int
 
-	unreadable   []string
-	noPremium    bool
-	uploads      int
-	attempt      uint64
-	revokes      int
-	localOnly    bool
-	credsUnsaved bool
-	lastLogin    state.LoginRequest
+	unreadable []string
+	noPremium  bool
+	// session names the mock's current session; archiveSessions records
+	// the session each archive request was bound to.
+	session         int
+	archiveSessions []any
+	uploads         int
+	attempt         uint64
+	revokes         int
+	localOnly       bool
+	credsUnsaved    bool
+	lastLogin       state.LoginRequest
 	// trustedServer is the server the trusted sign-in record names.
 	trustedServer string
 	// emailGate, when set, holds SendEmailTwoFactorCode until closed.
@@ -358,14 +362,22 @@ func (m *mockVaultService) BackupData() state.BackupData {
 
 func (m *mockVaultService) UnreadableItems() []string { return m.unreadable }
 
+type mockSessionKey struct{}
+
 func (m *mockVaultService) SessionContext(parent context.Context) (context.Context, context.CancelFunc, error) {
-	ctx, cancel := context.WithCancel(parent)
+	m.mu.RLock()
+	session := m.session
+	m.mu.RUnlock()
+	ctx, cancel := context.WithCancel(context.WithValue(parent, mockSessionKey{}, session))
 	return ctx, cancel, nil
 }
 
 func (m *mockVaultService) CanArchive() bool { return !m.noPremium }
 
-func (m *mockVaultService) ArchiveCipher(_ context.Context, id string) error {
+func (m *mockVaultService) ArchiveCipher(ctx context.Context, id string) error {
+	m.mu.Lock()
+	m.archiveSessions = append(m.archiveSessions, ctx.Value(mockSessionKey{}))
+	m.mu.Unlock()
 	return m.setArchived(id, true)
 }
 

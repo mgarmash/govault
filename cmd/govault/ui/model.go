@@ -2089,7 +2089,7 @@ func (m *AppModel) SoftDeleteActive() {
 // CanFavorite reports whether c may change its favorite: Bitwarden hides
 // it on archived items once the account can no longer archive.
 func (m *AppModel) CanFavorite(c *state.Cipher) bool {
-	return c != nil && (c.ArchivedDate == nil || m.Core.CanArchive())
+	return c == nil || c.ArchivedDate == nil || m.Core.CanArchive()
 }
 
 // CanArchiveItem reports whether c can go to the Archive now: an item not in
@@ -2107,19 +2107,41 @@ func (m *AppModel) CanUnarchiveItem(c *state.Cipher) bool {
 
 // ArchiveActive moves the selected item to the Archive, or back with
 // archive false.
-func (m *AppModel) ArchiveActive(archive bool) {
+//
+// A protected item asks for the master password first, as Bitwarden does
+// for both, and the change applies only to the item it was asked for, in
+// the session it was asked in.
+func (m *AppModel) ArchiveActive(cx *core.Scope, archive bool) {
 	c := m.ActiveCipher.Get()
 	if (archive && !m.CanArchiveItem(c)) || (!archive && !m.CanUnarchiveItem(c)) {
 		return
 	}
 	id := c.ID
+	label := "archive item"
+	if !archive {
+		label = "unarchive item"
+	}
+	m.GateReprompt(cx, c, label, func() {
+		if cur := m.ActiveCipher.Get(); cur == nil || cur.ID != id {
+			return
+		}
+		m.setArchived(id, archive)
+	})
+}
+
+func (m *AppModel) setArchived(id string, archive bool) {
+	ctx, cancel, err := m.Core.SessionContext(context.Background())
+	if err != nil {
+		return
+	}
 	gen := m.LockGeneration()
 	go func() {
+		defer cancel()
 		var err error
 		if archive {
-			err = m.Core.ArchiveCipher(context.Background(), id)
+			err = m.Core.ArchiveCipher(ctx, id)
 		} else {
-			err = m.Core.UnarchiveCipher(context.Background(), id)
+			err = m.Core.UnarchiveCipher(ctx, id)
 		}
 		m.Scope.Post(func() {
 			if !m.StillUnlocked(gen) {
@@ -2660,6 +2682,8 @@ func friendlyError(err error) string {
 		return "This server does not support Archive. It needs Vaultwarden 1.36 or later."
 	case errors.Is(err, state.ErrPremiumRequired):
 		return "Archive needs a premium membership."
+	case errors.Is(err, state.ErrArchiveNotConfirmed):
+		return "The server did not confirm the change. GoVault synced to show where the item is now."
 	case errors.Is(err, state.ErrCipherInTrash):
 		return "Items in Trash cannot be archived. Restore the item first."
 	default:

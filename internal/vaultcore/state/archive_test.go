@@ -156,3 +156,141 @@ func TestService_ArchiveOnAnOlderServerIsReported(t *testing.T) {
 		t.Fatal("the item looks archived after the server refused")
 	}
 }
+
+func TestService_ArchiveResponseNeverRestoresARemovedItem(t *testing.T) {
+	env := newVaultTestEnv(t)
+	svc := loggedInTestService(t, env)
+	env.mu.Lock()
+	// While the archive request is in flight, access to the item is
+	// revoked and a sync removes it.
+	env.onArchive = func() {
+		env.mu.Lock()
+		env.onArchive = nil
+		delete(env.ciphers, "c-1")
+		env.mu.Unlock()
+		if err := svc.forceSync(context.Background()); err != nil {
+			t.Errorf("sync: %v", err)
+		}
+	}
+	env.mu.Unlock()
+
+	// The server still answers with the item, which the user can no
+	// longer see.
+	if err := svc.ArchiveCipher(context.Background(), "c-1"); err != nil {
+		t.Fatalf("archive = %v", err)
+	}
+	if _, err := svc.GetCipher("c-1"); err == nil {
+		t.Fatal("a late archive response put back an item the sync removed")
+	}
+	relockOffline(t, svc, env)
+	if _, err := svc.GetCipher("c-1"); err == nil {
+		t.Fatal("the removed item is back in the snapshot")
+	}
+}
+
+func TestService_SavingAStaleDraftKeepsTheServersArchiveState(t *testing.T) {
+	env := newVaultTestEnv(t)
+	svc := loggedInTestService(t, env)
+	draft, _ := svc.GetCipher("c-1")
+
+	// Another device archives the item; the open draft still says it is not.
+	when := time.Date(2026, 11, 21, 8, 0, 0, 0, time.UTC)
+	env.mu.Lock()
+	c := env.ciphers["c-1"]
+	c.ArchivedDate = &when
+	env.ciphers["c-1"] = c
+	env.mu.Unlock()
+
+	draft.Name = "Renamed in an old draft"
+	if _, err := svc.SaveCipher(context.Background(), draft); err != nil {
+		t.Fatal(err)
+	}
+	var sent struct {
+		ArchivedDate          *time.Time `json:"archivedDate"`
+		LastKnownRevisionDate *time.Time `json:"lastKnownRevisionDate"`
+	}
+	env.mu.Lock()
+	_ = json.Unmarshal(env.lastBody, &sent)
+	env.mu.Unlock()
+	if sent.ArchivedDate == nil || !sent.ArchivedDate.Equal(when) {
+		t.Fatalf("the save sent archivedDate %v, want the server's %v", sent.ArchivedDate, when)
+	}
+	if sent.LastKnownRevisionDate == nil || draft.RevisionDate == nil || !sent.LastKnownRevisionDate.Equal(*draft.RevisionDate) {
+		t.Fatal("the save did not keep the draft's revision for conflict detection")
+	}
+}
+
+func TestService_PremiumRulesOnEveryWritePath(t *testing.T) {
+	env := newVaultTestEnv(t)
+	env.noPremium = true
+	when := time.Date(2026, 11, 1, 9, 0, 0, 0, time.UTC)
+	c := env.ciphers["c-1"]
+	c.ArchivedDate = &when
+	env.ciphers["c-1"] = c
+	svc := loggedInTestService(t, env)
+	ctx := context.Background()
+
+	// An import cannot create an archived item without premium.
+	if _, err := svc.SaveCipher(ctx, &Cipher{Type: api.CipherTypeSecureNote, Name: "From backup", ArchivedDate: &when, SecureNote: &SecureNote{}}); err != nil {
+		t.Fatal(err)
+	}
+	if got, _ := svc.GetCipher("c-created"); got == nil || got.ArchivedDate != nil {
+		t.Fatalf("created %+v, want it in the vault, not the Archive", got)
+	}
+
+	// An archived item can still be edited, but not have its favorite changed.
+	cur, _ := svc.GetCipher("c-1")
+	cur.Name = "Edited after premium ended"
+	if _, err := svc.SaveCipher(ctx, cur); err != nil {
+		t.Fatalf("an ordinary edit of an archived item = %v", err)
+	}
+	if got, _ := svc.GetCipher("c-1"); got.ArchivedDate == nil {
+		t.Fatal("the edit unarchived the item")
+	}
+	cur, _ = svc.GetCipher("c-1")
+	cur.Favorite = !cur.Favorite
+	if _, err := svc.SaveCipher(ctx, cur); !errors.Is(err, ErrPremiumRequired) {
+		t.Fatalf("changing the favorite of an archived item without premium = %v", err)
+	}
+}
+
+func TestService_Ambiguous404IsResolvedBySync(t *testing.T) {
+	env := newVaultTestEnv(t)
+	env.archiveApplyThen404 = true
+	svc := loggedInTestService(t, env)
+	if err := svc.ArchiveCipher(context.Background(), "c-1"); err != nil {
+		t.Fatalf("archive the server applied but answered 404 = %v", err)
+	}
+	if c, _ := svc.GetCipher("c-1"); c.ArchivedDate == nil {
+		t.Fatal("the archive the server applied is not shown")
+	}
+}
+
+func TestService_ArchiveCopiesItsFlagsUnderTheLock(t *testing.T) {
+	env := newVaultTestEnv(t)
+	svc := loggedInTestService(t, env)
+	ctx := context.Background()
+	done := make(chan error, 2)
+	go func() { done <- svc.SoftDeleteCipher(ctx, "c-1") }()
+	go func() { done <- svc.ArchiveCipher(ctx, "c-1") }()
+	for range 2 {
+		if err := <-done; err != nil && !errors.Is(err, ErrCipherInTrash) {
+			t.Fatalf("concurrent op: %v", err)
+		}
+	}
+	if c, _ := svc.GetCipher("c-1"); c.DeletedDate == nil {
+		t.Fatal("the item is not in Trash")
+	}
+}
+
+func TestService_404FromAServerWithArchiveIsNotBlamedOnItsVersion(t *testing.T) {
+	env := newVaultTestEnv(t)
+	env.oldServer = true
+	c := env.ciphers["c-1"]
+	c.Extra = map[string]json.RawMessage{"archivedDate": json.RawMessage("null")}
+	env.ciphers["c-1"] = c
+	svc := loggedInTestService(t, env)
+	if err := svc.ArchiveCipher(context.Background(), "c-1"); !errors.Is(err, ErrArchiveNotConfirmed) {
+		t.Fatalf("a 404 from a server that reports archivedDate = %v, want ErrArchiveNotConfirmed", err)
+	}
+}

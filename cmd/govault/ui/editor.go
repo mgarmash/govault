@@ -132,7 +132,7 @@ func EditorPaneView(cx *core.Scope, m *AppModel) core.Node {
 											OnChange: func(v string) { m.MutateDraft(func(d *EditDraft) { d.FolderID = v }) },
 										}
 									})),
-									switchRow("Favorite", "editor-favorite", func(d *EditDraft) bool { return d.Favorite }, func(d *EditDraft, v bool) { d.Favorite = v }, m),
+									favoriteRow(m),
 									switchRow("Master password reprompt", "editor-reprompt", func(d *EditDraft) bool { return d.Reprompt }, func(d *EditDraft, v bool) { d.Reprompt = v }, m),
 								)
 								return card(rows...)
@@ -185,6 +185,30 @@ func formRow(label string, control core.Node) core.Node {
 		Children: []core.Node{
 			core.Text{Class: "w-[112px] text-[12.5px] text-gv-fg2", Content: label},
 			core.View{Class: "flex-1 flex-row items-center gap-2", Children: []core.Node{control}},
+		},
+	}
+}
+
+// favoriteRow is the editor's Favorite switch. An archived item keeps its
+// favorite once the account can no longer archive, as Bitwarden does.
+func favoriteRow(m *AppModel) core.Node {
+	return core.View{
+		Class: "flex-row items-center gap-3 px-4 py-2 min-h-[44px]",
+		Children: []core.Node{
+			core.Text{Class: "flex-1 text-[13px] text-gv-fg", Content: "Favorite"},
+			ui.Switch{
+				Disabled: func() bool {
+					d := m.EditDraft.Get()
+					return m.EditBusy.Get() || d == nil || !m.CanFavorite(d.Source)
+				},
+				TestID: "editor-favorite",
+				Label:  "Favorite",
+				Checked: func() bool {
+					d := m.EditDraft.Get()
+					return d != nil && d.Favorite
+				},
+				OnChange: func(v bool) { m.MutateDraft(func(d *EditDraft) { d.Favorite = v }) },
+			},
 		},
 	}
 }

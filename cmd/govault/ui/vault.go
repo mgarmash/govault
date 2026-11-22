@@ -843,9 +843,9 @@ func rowMenu(cx *core.Scope, m *AppModel, id string, at core.Point) {
 			desktop.MenuItem{Separator: true},
 		)
 		if c.ArchivedDate != nil {
-			items = append(items, desktop.MenuItem{Label: "Unarchive", Disabled: !m.CanUnarchiveItem(c), OnSelect: func() { m.ArchiveActive(false) }})
+			items = append(items, desktop.MenuItem{Label: "Unarchive", Disabled: !m.CanUnarchiveItem(c), OnSelect: func() { m.ArchiveActive(cx, false) }})
 		} else {
-			items = append(items, desktop.MenuItem{Label: "Archive", Disabled: !m.CanArchiveItem(c), OnSelect: func() { m.ArchiveActive(true) }})
+			items = append(items, desktop.MenuItem{Label: "Archive", Disabled: !m.CanArchiveItem(c), OnSelect: func() { m.ArchiveActive(cx, true) }})
 		}
 		items = append(items, desktop.MenuItem{Label: "Move to Trash", Disabled: offline || readOnly, OnSelect: m.SoftDeleteActive})
 	}
@@ -1766,7 +1766,7 @@ func archiveButton(cx *core.Scope, m *AppModel, c *state.Cipher) core.Node {
 			IconSize: 15,
 			Tint:     func() core.Color { return themeColor(cx, "gv-fg2") },
 			Disabled: func() bool { return !m.CanUnarchiveItem(c) },
-			OnPress:  func() { m.ArchiveActive(false) },
+			OnPress:  func() { m.ArchiveActive(cx, false) },
 		}
 	}
 	return ui.Button{
@@ -1778,7 +1778,7 @@ func archiveButton(cx *core.Scope, m *AppModel, c *state.Cipher) core.Node {
 		IconSize: 15,
 		Tint:     func() core.Color { return themeColor(cx, "gv-fg2") },
 		Disabled: func() bool { return !m.CanArchiveItem(c) },
-		OnPress:  func() { m.ArchiveActive(true) },
+		OnPress:  func() { m.ArchiveActive(cx, true) },
 	}
 }
 

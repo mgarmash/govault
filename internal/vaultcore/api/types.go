@@ -1,6 +1,7 @@
 package api
 
 import (
+	"bytes"
 	"encoding/json"
 	"maps"
 	"reflect"
@@ -203,8 +204,24 @@ func (c *EncryptedCipher) UnmarshalJSON(data []byte) error {
 	if err := unmarshalWithExtra(data, &a, &a.Extra); err != nil {
 		return err
 	}
+	// A server with Archive sends archivedDate on every cipher, null when
+	// not archived. Keeping that null lets a rewritten snapshot still show
+	// the server supports it.
+	if a.ArchivedDate == nil && bytes.Contains(data, []byte(`"archivedDate"`)) {
+		if a.Extra == nil {
+			a.Extra = map[string]json.RawMessage{}
+		}
+		a.Extra["archivedDate"] = json.RawMessage("null")
+	}
 	*c = EncryptedCipher(a)
 	return nil
+}
+
+// ReportsArchive tells whether the server sent this cipher's archivedDate,
+// which servers with Archive (Vaultwarden 1.36 or later) always do.
+func (c *EncryptedCipher) ReportsArchive() bool {
+	_, sent := c.Extra["archivedDate"]
+	return c.ArchivedDate != nil || sent
 }
 
 func (c EncryptedCipher) MarshalJSON() ([]byte, error) {
