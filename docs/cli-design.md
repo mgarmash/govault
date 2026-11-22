@@ -67,7 +67,7 @@ Build `cmd/gv` separately with `CGO_ENABLED=0` for each desktop artifact's OS an
 
 | Distribution | Installation and upgrade |
 | --- | --- |
-| macOS DMG | Stage executable `GoVault.app/Contents/MacOS/gv`, sign the helper with Developer ID, hardened runtime and timestamp, then sign the enclosing app. Verify nested signatures before notarizing and stapling final deliverables. Dragging an app cannot install a PATH entry. Supply a signed and notarized installer package inside the same DMG that installs the app and a managed `/usr/local/bin/gv` link. Make that the documented install path. Drag-only users get the bundled executable. |
+| macOS DMG | Stage executable `GoVault.app/Contents/MacOS/gv`, sign the helper with Developer ID, hardened runtime and timestamp, then sign the enclosing app. Verify nested signatures before notarizing and stapling final deliverables. Dragging an app cannot install a PATH entry, so Settings offers **Install command-line tool**: one administrator authorization creates `/usr/local/bin/gv -> <app bundle>/Contents/MacOS/gv`. Settings shows the state (installed, installed by Homebrew, broken link, another `gv` on PATH) with Install, Repair and Uninstall, and never replaces a foreign `gv`. The link points into the bundle, so in-app updates and Homebrew upgrades update `gv` with the app. |
 | Homebrew cask | Install the same app and declare `binary "#{appdir}/GoVault.app/Contents/MacOS/gv"`. Homebrew owns the link under its prefix. [Cask binary stanza](https://docs.brew.sh/Cask-Cookbook#stanza-binary) |
 | Debian and Arch | Stage the helper beside the app under `/opt` and add a package-owned `/usr/bin/gv` link in both manifests. Package manager upgrade and removal cover both. |
 | AppImage | Include executable `gv` in the AppDir. Extend `scripts/install-linux.sh` to extract it from the verified image and install it in the chosen bin directory alongside the image. This allows headless use without GTK or FUSE. Use a PATH directory for the advertised install, or show the exact PATH addition for a custom prefix. Standalone image downloads need this integration step. Replace both during updates, including updates initiated by the GUI. |
@@ -97,11 +97,11 @@ Use desktop HTTP origin checks, normal TLS verification and its non-loopback HTT
 - Install, upgrade and uninstall every packaged format on its target OS. Invoke `gv --version` and a supported command by name in a new shell; inspect signed macOS artifacts and the actual installed PATH entry. Exercise in-app updates as well as package-manager upgrades. Check unrelated PATH entries and existing commands survive removal.
 - Accept v1 when supported contract fixtures pass, a real server completes both sign-in flows, offline reads work with a valid session, old sessions fail after lock/rotation/logout, and each advertised installer passes the PATH test. Track untested servers, hardware providers and package formats explicitly.
 
-## Open questions for the user
+## Decisions
 
-1. Is the installer package inside the macOS DMG acceptable as the default direct-install experience? Drag-only installation cannot establish the system PATH link.
-2. On a keyring-free host, is unlocking or resupplying credentials before online sync acceptable? This preserves encrypted credential storage across invocations.
-3. Keep independent desktop and CLI profiles for v1 as decided. Is there a concrete future workflow that would justify revisiting shared sign-in?
+1. **macOS PATH:** no installer package in the DMG. Settings installs, repairs and uninstalls the `/usr/local/bin/gv` link into the app bundle, as described under Packaging, and Homebrew's cask links it with the `binary` stanza. The README documents both installs and their removal.
+2. **Keyring-free hosts:** credentials are sealed under a key derived from the vault user key. Online sync while locked therefore needs an unlock (`BW_SESSION`) or re-supplied API credentials (`BW_CLIENTID`, `BW_CLIENTSECRET`); `sync --last` and all cached reads stay local.
+3. **Independent clients:** the desktop app and `gv` keep separate sign-in and data in v1.
 
 [program]: https://github.com/bitwarden/clients/blob/ad5a8f316667f875737c01ec77b6632ab4884430/apps/cli/src/program.ts#L29-L490
 [vault]: https://github.com/bitwarden/clients/blob/ad5a8f316667f875737c01ec77b6632ab4884430/apps/cli/src/vault.program.ts#L80-L209
