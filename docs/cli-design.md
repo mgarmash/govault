@@ -2,7 +2,7 @@
 
 ## Goals and non-goals
 
-Install GoVault once and run `gv` from a terminal, including on a Linux host without a display, desktop session or keyring. A script using the supported subset of `bw` should need only a binary-name change and a fresh login. V1 reads vault data. It may authenticate, request an email code, update its own cache, generate a password, and save a requested attachment. It has no vault mutation commands.
+Install GoVault once and run `gv` from a terminal, including on a Linux host without a display, desktop session or keyring. A script using the supported subset of `bw` should need only a binary-name change and a fresh login. V1 reads vault data. It may authenticate, request an email code, update its own cache, generate a password, and save a requested attachment. V1.1 adds the write, import and export commands GoVault already supports (see [v1.1 write commands](#v11-write-commands)).
 
 **Decision:** The CLI has its own sign-in, session keys, device ID, credentials and cache. Logging out of either GoVault client leaves the other signed in. The user can revisit this decision. The on-disk format and session keys are private to each client, including official `bw`.
 
@@ -28,10 +28,53 @@ The reference is Bitwarden clients revision `ad5a8f316667`, using its collection
 | `generate` | Local password or passphrase. Support `-u/--uppercase`, `-l/--lowercase`, `-n/--number`, `-s/--special`, `--length`, `--minNumber`, `--minSpecial`, `--ambiguous`, `-p/--passphrase`, `--words`, `--separator`, `-c/--capitalize`, `--includeNumber`. Match defaults, count limits and ambiguous-character semantics. |
 | `encode` | Base64 of piped UTF-8 text including its final newline, if present. No sign-in. |
 | Global | `--session KEY`, `--raw`, `--response`, `--pretty`, `--quiet`, `--nointeraction`, `--cleanexit`, help and version. Report the GoVault version. |
-| Deferred reads | `get exposed` involves an external breach service. `get template` primarily supports writes. Defer `get org-collection`, member administration, shared-folder aliases, reports, completion and update commands. |
-| Excluded | Create, edit, delete, restore, archive, move, share, import and other writes. Defer bulk export even though it is read-only. Exclude Send and the long-running `serve` HTTP API. Updates come with the desktop package. |
+| V1.1 writes | `create item\|folder\|attachment`, `edit item\|item-collections\|folder`, `delete item\|attachment\|folder` (`-p`/`--permanent` for items), `restore item`, `archive item`, `get template`, `import`, `export`, `completion`, `config server` endpoint options. See [v1.1 write commands](#v11-write-commands). |
+| Deferred | `move`/`share` (needs re-encryption GoVault does not have), `get exposed` (third-party breach service), organization administration (`list org-members`, `confirm org-member`, `get\|create\|edit\|delete org-collection`), organization import and export, Send (`send`, `receive`), `serve`, `update`, `sdk-version`, shared-folder aliases. Each fails with an explicit message. |
 
 Use upstream environment names only. Explicit `--session` takes precedence over `BW_SESSION`. Honor `BW_CLIENTID`, `BW_CLIENTSECRET` and the output/interaction variables set by the global flags in [program.ts][program]. `BW_PASSWORD` is an example name for `--passwordenv BW_PASSWORD`; setting it alone does not select it. Honor `BITWARDENCLI_APPDATA_DIR` as a profile root, with gv-owned filenames in a dedicated subdirectory. This lets both programs use the override safely.
+
+## v1.1 write commands
+
+V1.1 lets `gv` change the vault wherever GoVault already can, with bw's arguments, input and output. Writes reuse `internal/vaultcore/state.Service`, the desktop's write path, so they keep its invariants; the CLI only parses input and prints results.
+
+### Scope
+
+| Command | Behavior and limits | GoVault path |
+| --- | --- | --- |
+| `create item [json]` | The template JSON (`gv get template item`) as base64 from `gv encode`, an argument or stdin. `organizationId` with `collectionIds` creates an organization item. Prints the created item as `get item` does. | `export` item mapping, `Service.SaveCipher` |
+| `create folder [json]` | `{"name": …}`. Prints the folder. | `Service.SaveFolder` |
+| `create attachment --file PATH --itemid ID` | Encrypts and uploads; premium or an organization item, as bw requires. Prints the item. | `Service.UploadAttachment` |
+| `edit item ID [json]` | Replaces the item's content with the JSON, as bw does, while fields GoVault does not model, passkeys and sealed blobs survive. Keeps the archive date, refuses read-only items. | `export` merge, `Service.SaveCipher` |
+| `edit item-collections ID [json]` | A JSON array of collection IDs for an organization item. | new `PUT /api/ciphers/{id}/collections_v2` in `api`, through `Service` |
+| `edit folder ID [json]` | Renames. | `Service.SaveFolder` |
+| `delete item ID` | Moves to Trash. With `-p`/`--permanent`, deletes for good after rechecking the item's revision on the server, as Empty Trash does. | `Service.SoftDeleteCipher`, a single-item form of `Service.EmptyTrash` |
+| `delete attachment ID --itemid ID`, `delete folder ID` | As bw. | `Service.DeleteAttachment`, `Service.DeleteFolder` |
+| `restore item ID` | From Trash, or from the Archive when the item is archived and not in Trash, as bw decides. | `Service.RestoreCipher`, `Service.UnarchiveCipher` |
+| `archive item ID` | Premium only, as bw requires. | `Service.ArchiveCipher` |
+| `get template OBJECT` | bw's static templates: `item`, `item.field`, `item.login`, `item.login.uri`, `item.card`, `item.identity`, `item.securenote`, `folder`, `collection`, `item-collections`, `org-collection`. Byte-compatible with bw. | CLI only |
+| `export` | `--format csv` (default), `json`, `encrypted_json` (with the account key, or with `--password` as a password-protected export), `zip` (JSON plus attachments). `--output` and `--raw` as `get attachment`. Personal vault only, without items in Trash, as bw. | `export.Build`, `export.EncryptWithPassword`, a new account-key form and CSV writer in `export` |
+| `import FORMAT FILE` | `bitwardenjson` (plain, account-key encrypted or password-protected, with `--passwordenv`/`--passwordfile`) and `bitwardencsv`. Like bw, every entry is created as a new item; folders are matched by name or created. `--formats` lists what gv reads. Other formats and `--organizationid` fail explicitly. | `export.Read`, a new CSV reader, `export.Apply` with create actions |
+| `completion --shell zsh` | A zsh completion script for gv's commands. | CLI only |
+| `config server [url] --api URL --identity URL --web-vault URL --icons URL --notifications URL --events URL` | Stores the overrides with the base URL while logged out; gv uses the API and identity URLs and binds credentials to them. `--key-connector` fails: Key Connector is unsupported. | `api.Endpoints` |
+
+### Rules
+
+- **Session and server.** A write needs an unlocked session and works only online with valid credentials; there is no local-only write. It holds the profile's state lock exclusively from loading the vault to committing the result, so no lock, logout, unlock or other write lands in between, and the session generation cannot change under it.
+- **Credentials.** The profile gives `Service` its access tokens through a token source, so API-key accounts renew with the client credentials grant and password accounts with their refresh token, both under `credentials.lock` with the subject check.
+- **Invariants from `Service`.** Lossless unknown and nested fields, passkeys and sealed blobs; `encryptedFor`; the archive date sent on every update; read-only and hidden-password permissions; 422-safe payloads; revision conflicts reported, not overwritten; snapshot commit with `LocalCopyError` when the server has a change the local copy could not record.
+- **Errors.** bw's messages where bw has one (`Not found.`, `You do not have permission to edit this item`, `Cipher is not in trash.`, `Premium status is required to use this feature.`, …); GoVault's own message otherwise.
+- **No silent fallbacks.** An input field gv cannot map, such as a cipher type GoVault has no model for, fails the command instead of being dropped.
+
+### Not in v1.1, and why
+
+- `move` (and its alias `share`): moving a personal item to an organization re-encrypts the item, its per-item key, passkeys, sealed fields and attachment keys with the organization key, and attachments without their own key must be uploaded again. The desktop has no such path; it needs new crypto and protocol work and its own review.
+- `get exposed`: it sends password hashes to a third-party breach service, while GoVault talks only to the user's own server.
+- Organization administration and organization import and export: they use admin endpoints and permissions GoVault does not model.
+- `send`, `receive`: GoVault has no Send. `serve`: a local HTTP API exposing an unlocked vault needs its own security review. `update`: gv updates with the app.
+
+### Testing
+
+Contract fixtures from the official bw binary, recorded with private profile directories against the fake server, cover each write command's input forms and output, including errors. The fake server stores what it is sent, so a fixture also checks what bw and gv change. Failure-mode tests cover conflicts, permissions, local-only sessions, stale sessions, and a write interrupted by a lock. The real-server harnesses gain an opt-in write suite (`GV_WRITE_TESTS=1`) that creates, edits and deletes only uniquely named items of its own and removes them even when a step fails.
 
 ## Session and storage model
 
