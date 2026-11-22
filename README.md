@@ -42,7 +42,7 @@ Or download `govault-<version>-macos-arm64.dmg` from [Releases](https://github.c
 ### Linux (x86_64 and arm64)
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/txchen/govault/v0.3.3/scripts/install-linux.sh | sh
+curl -fsSL https://raw.githubusercontent.com/txchen/govault/v0.3.4/scripts/install-linux.sh | sh
 ```
 
 The script detects your distribution and installs:
@@ -60,7 +60,7 @@ Before anything is installed, the script verifies the signature on the release's
 | `--system` | Install the AppImage for all users under `/usr/local` |
 | `--uninstall` | Remove GoVault (your vault cache and settings are kept) |
 
-For example: `curl -fsSL https://raw.githubusercontent.com/txchen/govault/v0.3.3/scripts/install-linux.sh | sh -s -- --appimage`
+For example: `curl -fsSL https://raw.githubusercontent.com/txchen/govault/v0.3.4/scripts/install-linux.sh | sh -s -- --appimage`
 
 GoVault needs GTK 4 on Linux; the AppImage also needs FUSE 2.
 
