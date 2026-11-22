@@ -51,6 +51,7 @@ twoFactorTitle: 2段階認証
 twoFactorEnterEmailCodeTo: "{email} に送信された認証コードを入力してください。"
 twoFactorEnterEmailCode: メールで送信された認証コードを入力してください。
 twoFactorEnterAuthenticatorCode: 認証アプリの 6 桁のコードを入力してください。
+twoFactorEnterYubiKey: YubiKey を挿入してタッチしてください。
 twoFactorMethod: 認証方法
 twoFactorAuthenticator: 認証アプリ
 twoFactorEmail: メール
@@ -69,7 +70,11 @@ resendCode: コードを再送信
 twoFactorFootnote: パスワードが漏えいしても、2段階認証により保管庫を保護できます。
 twoFactorCodeRequired: 認証コードを入力してください。
 twoFactorCodeInvalid: 認証コードが無効です。確認してもう一度お試しください。
-twoFactorUnsupported: "このアカウントは {methods} による2段階認証が必要ですが、GoVault はまだ対応していません。ここでログインするには、ウェブ保管庫の設定で認証アプリまたはメールによる2段階認証を有効にしてください。"
+twoFactorYubiKeyRequired: YubiKey にタッチしてコードを入力してください。
+twoFactorYubiKeyMalformed: YubiKey のコードではありません。YubiKey にタッチして新しいコードを入力してください。
+twoFactorYubiKeyInvalid: サーバーがこの YubiKey コードを受け入れませんでした。もう一度 YubiKey にタッチして新しいコードを入力してください。
+twoFactorYubiKeyNotRegistered: この YubiKey はアカウントに登録されていません。ウェブ保管庫の設定で追加した YubiKey を使用してください。
+twoFactorUnsupported: "このアカウントは {methods} による2段階認証が必要ですが、GoVault はまだ対応していません。ここでログインするには、ウェブ保管庫の設定で認証アプリ、メール、または YubiKey による2段階認証を有効にしてください。"
 twoFactorEmailFailed: "認証メールを送信できませんでした。{reason}"
 twoFactorEmailSentTo: "認証コードを {email} に送信しました。"
 twoFactorEmailSent: 認証コードをメールで送信しました。

@@ -51,6 +51,7 @@ twoFactorTitle: Verificação em duas etapas
 twoFactorEnterEmailCodeTo: "Digite o código enviado para {email}."
 twoFactorEnterEmailCode: Digite o código enviado para seu e-mail.
 twoFactorEnterAuthenticatorCode: Digite o código de 6 dígitos do seu aplicativo autenticador.
+twoFactorEnterYubiKey: Insira sua YubiKey e toque nela.
 twoFactorMethod: Método de verificação
 twoFactorAuthenticator: Aplicativo autenticador
 twoFactorEmail: E-mail
@@ -69,7 +70,11 @@ resendCode: Reenviar código
 twoFactorFootnote: A autenticação em duas etapas mantém seu cofre seguro mesmo se sua senha vazar.
 twoFactorCodeRequired: Digite o código de verificação.
 twoFactorCodeInvalid: Código de verificação inválido. Verifique e tente novamente.
-twoFactorUnsupported: "Esta conta exige autenticação em duas etapas com {methods}, ainda não suportada pelo GoVault. Ative Aplicativo autenticador ou E-mail nas configurações web do seu cofre para entrar aqui."
+twoFactorYubiKeyRequired: Toque na sua YubiKey para inserir o código.
+twoFactorYubiKeyMalformed: Esse código não é de uma YubiKey. Toque na sua YubiKey para inserir um novo.
+twoFactorYubiKeyInvalid: O servidor não aceitou este código da YubiKey. Toque novamente na sua YubiKey para inserir um novo.
+twoFactorYubiKeyNotRegistered: Esta YubiKey não está registrada na sua conta. Use uma YubiKey adicionada nas configurações web do seu cofre.
+twoFactorUnsupported: "Esta conta exige autenticação em duas etapas com {methods}, ainda não suportada pelo GoVault. Ative Aplicativo autenticador, E-mail ou YubiKey nas configurações web do seu cofre para entrar aqui."
 twoFactorEmailFailed: "Não foi possível enviar o e-mail de verificação. {reason}"
 twoFactorEmailSentTo: "Um código de verificação foi enviado para {email}."
 twoFactorEmailSent: Um código de verificação foi enviado para seu e-mail.

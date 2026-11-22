@@ -51,6 +51,7 @@ twoFactorTitle: Двухэтапная проверка
 twoFactorEnterEmailCodeTo: "Введите код, отправленный на {email}."
 twoFactorEnterEmailCode: Введите код, отправленный на вашу эл. почту.
 twoFactorEnterAuthenticatorCode: Введите 6-значный код из приложения-аутентификатора.
+twoFactorEnterYubiKey: Вставьте YubiKey и прикоснитесь к нему.
 twoFactorMethod: Способ проверки
 twoFactorAuthenticator: Приложение-аутентификатор
 twoFactorEmail: Эл. почта
@@ -69,7 +70,11 @@ resendCode: Отправить повторно
 twoFactorFootnote: Двухэтапная аутентификация защитит хранилище, даже если пароль утечёт.
 twoFactorCodeRequired: Введите код подтверждения.
 twoFactorCodeInvalid: Неверный код подтверждения. Проверьте код и повторите попытку.
-twoFactorUnsupported: "Для этого аккаунта требуется двухэтапная аутентификация ({methods}), которую GoVault пока не поддерживает. Включите приложение-аутентификатор или эл. почту в веб-настройках хранилища, чтобы войти здесь."
+twoFactorYubiKeyRequired: Прикоснитесь к YubiKey, чтобы ввести код.
+twoFactorYubiKeyMalformed: Это не код YubiKey. Прикоснитесь к YubiKey, чтобы ввести новый код.
+twoFactorYubiKeyInvalid: Сервер не принял этот код YubiKey. Прикоснитесь к YubiKey ещё раз, чтобы ввести новый код.
+twoFactorYubiKeyNotRegistered: Этот YubiKey не зарегистрирован в вашем аккаунте. Используйте YubiKey, добавленный в веб-настройках хранилища.
+twoFactorUnsupported: "Для этого аккаунта требуется двухэтапная аутентификация ({methods}), которую GoVault пока не поддерживает. Включите приложение-аутентификатор, эл. почту или YubiKey в веб-настройках хранилища, чтобы войти здесь."
 twoFactorEmailFailed: "Не удалось отправить письмо с кодом. {reason}"
 twoFactorEmailSentTo: "Код подтверждения отправлен на {email}."
 twoFactorEmailSent: Код подтверждения отправлен на вашу эл. почту.

@@ -51,6 +51,7 @@ twoFactorTitle: Bestätigung in zwei Schritten
 twoFactorEnterEmailCodeTo: "Gib den Code ein, der an {email} gesendet wurde."
 twoFactorEnterEmailCode: Gib den Code ein, der an deine E-Mail gesendet wurde.
 twoFactorEnterAuthenticatorCode: Gib den 6-stelligen Code aus deiner Authenticator-App ein.
+twoFactorEnterYubiKey: Stecke deinen YubiKey ein und berühre ihn.
 twoFactorMethod: Bestätigungsmethode
 twoFactorAuthenticator: Authenticator-App
 twoFactorEmail: E-Mail
@@ -69,7 +70,11 @@ resendCode: Code erneut senden
 twoFactorFootnote: Die Zwei-Faktor-Authentifizierung schützt deinen Tresor selbst bei einem Passwortleck.
 twoFactorCodeRequired: Gib den Verifizierungscode ein.
 twoFactorCodeInvalid: Ungültiger Verifizierungscode. Prüfe den Code und versuche es erneut.
-twoFactorUnsupported: "Dieses Konto erfordert Zwei-Faktor-Authentifizierung über {methods}, was GoVault noch nicht unterstützt. Aktiviere Authenticator-App oder E-Mail in den Web-Tresor-Einstellungen, um dich hier anzumelden."
+twoFactorYubiKeyRequired: Berühre deinen YubiKey, um den Code einzugeben.
+twoFactorYubiKeyMalformed: Das ist kein Code von einem YubiKey. Berühre deinen YubiKey für einen neuen Code.
+twoFactorYubiKeyInvalid: Der Server hat diesen YubiKey-Code nicht akzeptiert. Berühre deinen YubiKey erneut für einen neuen Code.
+twoFactorYubiKeyNotRegistered: Dieser YubiKey ist nicht für dein Konto registriert. Verwende einen YubiKey aus deinen Web-Tresor-Einstellungen.
+twoFactorUnsupported: "Dieses Konto erfordert Zwei-Faktor-Authentifizierung über {methods}, was GoVault noch nicht unterstützt. Aktiviere Authenticator-App, E-Mail oder YubiKey in den Web-Tresor-Einstellungen, um dich hier anzumelden."
 twoFactorEmailFailed: "Verifizierungs-E-Mail konnte nicht gesendet werden. {reason}"
 twoFactorEmailSentTo: "Ein Verifizierungscode wurde an {email} gesendet."
 twoFactorEmailSent: Ein Verifizierungscode wurde an deine E-Mail gesendet.

@@ -3912,7 +3912,7 @@ var textsDe = i18n.NewTexts(""+
 	"Bestätigung in zwei Schritten"+
 	"Gib den Code ein, der an deine E-Mail gesendet wurde."+
 	"Gib den 6-stelligen Code aus deiner Authenticator-App ein."+
-	""+
+	"Stecke deinen YubiKey ein und berühre ihn."+
 	"Bestätigungsmethode"+
 	"Authenticator-App"+
 	"E-Mail"+
@@ -3930,10 +3930,10 @@ var textsDe = i18n.NewTexts(""+
 	"Die Zwei-Faktor-Authentifizierung schützt deinen Tresor selbst bei einem Passwortleck."+
 	"Gib den Verifizierungscode ein."+
 	"Ungültiger Verifizierungscode. Prüfe den Code und versuche es erneut."+
-	""+
-	""+
-	""+
-	""+
+	"Berühre deinen YubiKey, um den Code einzugeben."+
+	"Das ist kein Code von einem YubiKey. Berühre deinen YubiKey für einen neuen Code."+
+	"Der Server hat diesen YubiKey-Code nicht akzeptiert. Berühre deinen YubiKey erneut für einen neuen Code."+
+	"Dieser YubiKey ist nicht für dein Konto registriert. Verwende einen YubiKey aus deinen Web-Tresor-Einstellungen."+
 	"Ein Verifizierungscode wurde an deine E-Mail gesendet."+
 	"GoVault ist gesperrt"+
 	"Entsperren"+
@@ -4442,7 +4442,7 @@ var textsDe = i18n.NewTexts(""+
 		30,
 		53,
 		58,
-		0,
+		43,
 		20,
 		17,
 		6,
@@ -4460,10 +4460,10 @@ var textsDe = i18n.NewTexts(""+
 		87,
 		31,
 		71,
-		0,
-		0,
-		0,
-		0,
+		48,
+		83,
+		106,
+		113,
 		54,
 		20,
 		10,
@@ -4975,7 +4975,7 @@ var textsEs = i18n.NewTexts(""+
 	"Verificación en dos pasos"+
 	"Introduce el código enviado a tu correo electrónico."+
 	"Introduce el código de 6 dígitos de tu app de autenticación."+
-	""+
+	"Inserta tu YubiKey y tócala."+
 	"Método de verificación"+
 	"App de autenticación"+
 	"Correo electrónico"+
@@ -4993,10 +4993,10 @@ var textsEs = i18n.NewTexts(""+
 	"La autenticación en dos pasos protege tu caja fuerte incluso si se filtra tu contraseña."+
 	"Introduce el código de verificación."+
 	"Código de verificación no válido. Compruébalo e inténtalo de nuevo."+
-	""+
-	""+
-	""+
-	""+
+	"Toca tu YubiKey para introducir su código."+
+	"Ese no es un código de una YubiKey. Toca tu YubiKey para introducir uno nuevo."+
+	"El servidor no aceptó este código de YubiKey. Toca tu YubiKey de nuevo para introducir uno nuevo."+
+	"Esta YubiKey no está registrada en tu cuenta. Usa una YubiKey que hayas añadido en los ajustes web de tu caja fuerte."+
 	"Se envió un código de verificación a tu correo electrónico."+
 	"GoVault está bloqueado"+
 	"Desbloquear"+
@@ -5505,7 +5505,7 @@ var textsEs = i18n.NewTexts(""+
 		26,
 		54,
 		63,
-		0,
+		29,
 		24,
 		21,
 		19,
@@ -5523,10 +5523,10 @@ var textsEs = i18n.NewTexts(""+
 		90,
 		38,
 		72,
-		0,
-		0,
-		0,
-		0,
+		43,
+		79,
+		99,
+		119,
 		63,
 		23,
 		11,
@@ -6038,7 +6038,7 @@ var textsFr = i18n.NewTexts(""+
 	"Vérification en deux étapes"+
 	"Saisissez le code envoyé à votre adresse e-mail."+
 	"Saisissez le code à 6 chiffres de votre application d’authentification."+
-	""+
+	"Insérez votre YubiKey et touchez-la."+
 	"Méthode de vérification"+
 	"Application d’authentification"+
 	"E-mail"+
@@ -6056,10 +6056,10 @@ var textsFr = i18n.NewTexts(""+
 	"L’authentification à deux facteurs protège votre coffre même si votre mot de passe est compromis."+
 	"Saisissez le code de vérification."+
 	"Code de vérification invalide. Vérifiez-le et réessayez."+
-	""+
-	""+
-	""+
-	""+
+	"Touchez votre YubiKey pour saisir son code."+
+	"Ce code ne provient pas d’une YubiKey. Touchez votre YubiKey pour en saisir un nouveau."+
+	"Le serveur n’a pas accepté ce code YubiKey. Touchez à nouveau votre YubiKey pour en saisir un nouveau."+
+	"Cette YubiKey n’est pas enregistrée sur votre compte. Utilisez une YubiKey ajoutée dans les paramètres web de votre coffre."+
 	"Un code de vérification a été envoyé à votre adresse e-mail."+
 	"GoVault est verrouillé"+
 	"Déverrouiller"+
@@ -6568,7 +6568,7 @@ var textsFr = i18n.NewTexts(""+
 		29,
 		50,
 		74,
-		0,
+		37,
 		25,
 		32,
 		6,
@@ -6586,10 +6586,10 @@ var textsFr = i18n.NewTexts(""+
 		102,
 		35,
 		59,
-		0,
-		0,
-		0,
-		0,
+		43,
+		89,
+		106,
+		128,
 		65,
 		23,
 		14,
@@ -7101,7 +7101,7 @@ var textsJa = i18n.NewTexts(""+
 	"2段階認証"+
 	"メールで送信された認証コードを入力してください。"+
 	"認証アプリの 6 桁のコードを入力してください。"+
-	""+
+	"YubiKey を挿入してタッチしてください。"+
 	"認証方法"+
 	"認証アプリ"+
 	"メール"+
@@ -7119,10 +7119,10 @@ var textsJa = i18n.NewTexts(""+
 	"パスワードが漏えいしても、2段階認証により保管庫を保護できます。"+
 	"認証コードを入力してください。"+
 	"認証コードが無効です。確認してもう一度お試しください。"+
-	""+
-	""+
-	""+
-	""+
+	"YubiKey にタッチしてコードを入力してください。"+
+	"YubiKey のコードではありません。YubiKey にタッチして新しいコードを入力してください。"+
+	"サーバーがこの YubiKey コードを受け入れませんでした。もう一度 YubiKey にタッチして新しいコードを入力してください。"+
+	"この YubiKey はアカウントに登録されていません。ウェブ保管庫の設定で追加した YubiKey を使用してください。"+
 	"認証コードをメールで送信しました。"+
 	"GoVault はロックされています"+
 	"ロック解除"+
@@ -7631,7 +7631,7 @@ var textsJa = i18n.NewTexts(""+
 		13,
 		72,
 		66,
-		0,
+		53,
 		12,
 		15,
 		9,
@@ -7649,10 +7649,10 @@ var textsJa = i18n.NewTexts(""+
 		94,
 		45,
 		81,
-		0,
-		0,
-		0,
-		0,
+		65,
+		118,
+		162,
+		147,
 		51,
 		38,
 		15,
@@ -8164,7 +8164,7 @@ var textsKo = i18n.NewTexts(""+
 	"2단계 인증"+
 	"이메일로 전송된 인증 코드를 입력하세요."+
 	"인증 앱의 6자리 코드를 입력하세요."+
-	""+
+	"YubiKey를 삽입하고 터치하세요."+
 	"인증 방법"+
 	"인증 앱"+
 	"이메일"+
@@ -8182,10 +8182,10 @@ var textsKo = i18n.NewTexts(""+
 	"비밀번호가 유출되더라도 2단계 인증으로 보관함을 안전하게 보호합니다."+
 	"인증 코드를 입력하세요."+
 	"인증 코드가 올바르지 않습니다. 확인 후 다시 시도하세요."+
-	""+
-	""+
-	""+
-	""+
+	"YubiKey를 터치하여 코드를 입력하세요."+
+	"YubiKey 코드가 아닙니다. YubiKey를 터치하여 새 코드를 입력하세요."+
+	"서버가 이 YubiKey 코드를 거부했습니다. YubiKey를 다시 터치하여 새 코드를 입력하세요."+
+	"이 YubiKey는 계정에 등록되어 있지 않습니다. 웹 보관함 설정에서 추가한 YubiKey를 사용하세요."+
 	"이메일로 인증 코드를 보냈습니다."+
 	"GoVault 잠김"+
 	"잠금 해제"+
@@ -8694,7 +8694,7 @@ var textsKo = i18n.NewTexts(""+
 		14,
 		56,
 		48,
-		0,
+		40,
 		13,
 		10,
 		9,
@@ -8712,10 +8712,10 @@ var textsKo = i18n.NewTexts(""+
 		98,
 		33,
 		78,
-		0,
-		0,
-		0,
-		0,
+		50,
+		86,
+		113,
+		123,
 		46,
 		14,
 		13,
@@ -9227,7 +9227,7 @@ var textsPtBR = i18n.NewTexts(""+
 	"Verificação em duas etapas"+
 	"Digite o código enviado para seu e-mail."+
 	"Digite o código de 6 dígitos do seu aplicativo autenticador."+
-	""+
+	"Insira sua YubiKey e toque nela."+
 	"Método de verificação"+
 	"Aplicativo autenticador"+
 	"E-mail"+
@@ -9245,10 +9245,10 @@ var textsPtBR = i18n.NewTexts(""+
 	"A autenticação em duas etapas mantém seu cofre seguro mesmo se sua senha vazar."+
 	"Digite o código de verificação."+
 	"Código de verificação inválido. Verifique e tente novamente."+
-	""+
-	""+
-	""+
-	""+
+	"Toque na sua YubiKey para inserir o código."+
+	"Esse código não é de uma YubiKey. Toque na sua YubiKey para inserir um novo."+
+	"O servidor não aceitou este código da YubiKey. Toque novamente na sua YubiKey para inserir um novo."+
+	"Esta YubiKey não está registrada na sua conta. Use uma YubiKey adicionada nas configurações web do seu cofre."+
 	"Um código de verificação foi enviado para seu e-mail."+
 	"O GoVault está bloqueado"+
 	"Desbloquear"+
@@ -9757,7 +9757,7 @@ var textsPtBR = i18n.NewTexts(""+
 		28,
 		41,
 		62,
-		0,
+		32,
 		24,
 		23,
 		6,
@@ -9775,10 +9775,10 @@ var textsPtBR = i18n.NewTexts(""+
 		82,
 		34,
 		64,
-		0,
-		0,
-		0,
-		0,
+		44,
+		79,
+		101,
+		113,
 		56,
 		25,
 		11,
@@ -10290,7 +10290,7 @@ var textsRu = i18n.NewTexts(""+
 	"Двухэтапная проверка"+
 	"Введите код, отправленный на вашу эл. почту."+
 	"Введите 6-значный код из приложения-аутентификатора."+
-	""+
+	"Вставьте YubiKey и прикоснитесь к нему."+
 	"Способ проверки"+
 	"Приложение-аутентификатор"+
 	"Эл. почта"+
@@ -10308,10 +10308,10 @@ var textsRu = i18n.NewTexts(""+
 	"Двухэтапная аутентификация защитит хранилище, даже если пароль утечёт."+
 	"Введите код подтверждения."+
 	"Неверный код подтверждения. Проверьте код и повторите попытку."+
-	""+
-	""+
-	""+
-	""+
+	"Прикоснитесь к YubiKey, чтобы ввести код."+
+	"Это не код YubiKey. Прикоснитесь к YubiKey, чтобы ввести новый код."+
+	"Сервер не принял этот код YubiKey. Прикоснитесь к YubiKey ещё раз, чтобы ввести новый код."+
+	"Этот YubiKey не зарегистрирован в вашем аккаунте. Используйте YubiKey, добавленный в веб-настройках хранилища."+
 	"Код подтверждения отправлен на вашу эл. почту."+
 	"GoVault заблокирован"+
 	"Разблокировать"+
@@ -10820,7 +10820,7 @@ var textsRu = i18n.NewTexts(""+
 		39,
 		79,
 		96,
-		0,
+		65,
 		29,
 		49,
 		16,
@@ -10838,10 +10838,10 @@ var textsRu = i18n.NewTexts(""+
 		131,
 		49,
 		115,
-		0,
-		0,
-		0,
-		0,
+		68,
+		107,
+		149,
+		190,
 		84,
 		32,
 		28,
@@ -11353,7 +11353,7 @@ var textsZhHans = i18n.NewTexts(""+
 	"两步验证"+
 	"请输入发送至你电子邮箱的验证码。"+
 	"请输入验证器应用中的 6 位验证码。"+
-	""+
+	"插入你的 YubiKey 并轻触。"+
 	"验证方式"+
 	"验证器应用"+
 	"电子邮箱"+
@@ -11371,10 +11371,10 @@ var textsZhHans = i18n.NewTexts(""+
 	"即使密码泄露，两步登录也能保护你的密码库安全。"+
 	"请输入验证码。"+
 	"验证码无效，请检查后重试。"+
-	""+
-	""+
-	""+
-	""+
+	"请轻触你的 YubiKey 以输入验证码。"+
+	"这不是来自 YubiKey 的验证码。请轻触你的 YubiKey 以输入新的验证码。"+
+	"服务器未接受此 YubiKey 验证码。请再次轻触你的 YubiKey 以输入新的验证码。"+
+	"此 YubiKey 未注册到你的账户。请使用你在网页端密码库设置中添加的 YubiKey。"+
 	"验证码已发送至你的电子邮箱。"+
 	"GoVault 已锁定"+
 	"解锁"+
@@ -11883,7 +11883,7 @@ var textsZhHans = i18n.NewTexts(""+
 		12,
 		48,
 		48,
-		0,
+		33,
 		12,
 		15,
 		12,
@@ -11901,10 +11901,10 @@ var textsZhHans = i18n.NewTexts(""+
 		69,
 		21,
 		39,
-		0,
-		0,
-		0,
-		0,
+		45,
+		90,
+		99,
+		101,
 		42,
 		17,
 		6,
@@ -12416,7 +12416,7 @@ var textsZhHant = i18n.NewTexts(""+
 	"兩步驟驗證"+
 	"請輸入傳送至您電子郵件的驗證碼。"+
 	"請輸入驗證器應用程式中的 6 位數驗證碼。"+
-	""+
+	"插入您的 YubiKey 並輕觸。"+
 	"驗證方式"+
 	"驗證器應用程式"+
 	"電子郵件"+
@@ -12434,10 +12434,10 @@ var textsZhHant = i18n.NewTexts(""+
 	"即使密碼外洩，兩步驟登入也能保護您的密碼庫安全。"+
 	"請輸入驗證碼。"+
 	"驗證碼無效，請檢查後重試。"+
-	""+
-	""+
-	""+
-	""+
+	"請輕觸您的 YubiKey 以輸入驗證碼。"+
+	"這不是來自 YubiKey 的驗證碼。請輕觸您的 YubiKey 以輸入新的驗證碼。"+
+	"伺服器未接受此 YubiKey 驗證碼。請再次輕觸您的 YubiKey 以輸入新的驗證碼。"+
+	"此 YubiKey 未註冊至您的帳戶。請使用您在網頁版密碼庫設定中新增的 YubiKey。"+
 	"驗證碼已傳送至您的電子郵件。"+
 	"GoVault 已鎖定"+
 	"解鎖"+
@@ -12946,7 +12946,7 @@ var textsZhHant = i18n.NewTexts(""+
 		15,
 		48,
 		57,
-		0,
+		33,
 		12,
 		21,
 		12,
@@ -12964,10 +12964,10 @@ var textsZhHant = i18n.NewTexts(""+
 		72,
 		21,
 		39,
-		0,
-		0,
-		0,
-		0,
+		45,
+		90,
+		99,
+		101,
 		42,
 		17,
 		6,
@@ -14411,23 +14411,23 @@ func (msgs Messages) TwoFactorUnsupported(methods string) string {
 		case "", "en":
 			return "This account requires two-step login with " + msgs.arg(methods) + ", which GoVault does not support yet. Enable Authenticator App, Email or YubiKey two-step login in your vault web settings to sign in here."
 		case "de":
-			return "Dieses Konto erfordert Zwei-Faktor-Authentifizierung über " + methods + ", was GoVault noch nicht unterstützt. Aktiviere Authenticator-App oder E-Mail in den Web-Tresor-Einstellungen, um dich hier anzumelden."
+			return "Dieses Konto erfordert Zwei-Faktor-Authentifizierung über " + methods + ", was GoVault noch nicht unterstützt. Aktiviere Authenticator-App, E-Mail oder YubiKey in den Web-Tresor-Einstellungen, um dich hier anzumelden."
 		case "es":
-			return "Esta cuenta requiere autenticación en dos pasos con " + methods + ", que GoVault aún no admite. Activa App de autenticación o Correo electrónico en los ajustes web de tu caja fuerte para iniciar sesión aquí."
+			return "Esta cuenta requiere autenticación en dos pasos con " + methods + ", que GoVault aún no admite. Activa App de autenticación, Correo electrónico o YubiKey en los ajustes web de tu caja fuerte para iniciar sesión aquí."
 		case "fr":
-			return "Ce compte nécessite une connexion en deux étapes via " + methods + ", que GoVault ne prend pas encore en charge. Activez l’application d’authentification ou l’e-mail dans les paramètres web de votre coffre pour vous connecter ici."
+			return "Ce compte nécessite une connexion en deux étapes via " + methods + ", que GoVault ne prend pas encore en charge. Activez l’application d’authentification, l’e-mail ou YubiKey dans les paramètres web de votre coffre pour vous connecter ici."
 		case "ja":
-			return "このアカウントは " + methods + " による2段階認証が必要ですが、GoVault はまだ対応していません。ここでログインするには、ウェブ保管庫の設定で認証アプリまたはメールによる2段階認証を有効にしてください。"
+			return "このアカウントは " + methods + " による2段階認証が必要ですが、GoVault はまだ対応していません。ここでログインするには、ウェブ保管庫の設定で認証アプリ、メール、または YubiKey による2段階認証を有効にしてください。"
 		case "ko":
-			return "이 계정은 " + methods + " 2단계 인증이 필요하지만 GoVault에서 아직 지원하지 않습니다. 여기서 로그인하려면 웹 보관함 설정에서 인증 앱 또는 이메일 2단계 인증을 활성화하세요."
+			return "이 계정은 " + methods + " 2단계 인증이 필요하지만 GoVault에서 아직 지원하지 않습니다. 여기서 로그인하려면 웹 보관함 설정에서 인증 앱, 이메일 또는 YubiKey 2단계 인증을 활성화하세요."
 		case "pt-BR":
-			return "Esta conta exige autenticação em duas etapas com " + methods + ", ainda não suportada pelo GoVault. Ative Aplicativo autenticador ou E-mail nas configurações web do seu cofre para entrar aqui."
+			return "Esta conta exige autenticação em duas etapas com " + methods + ", ainda não suportada pelo GoVault. Ative Aplicativo autenticador, E-mail ou YubiKey nas configurações web do seu cofre para entrar aqui."
 		case "ru":
-			return "Для этого аккаунта требуется двухэтапная аутентификация (" + methods + "), которую GoVault пока не поддерживает. Включите приложение-аутентификатор или эл. почту в веб-настройках хранилища, чтобы войти здесь."
+			return "Для этого аккаунта требуется двухэтапная аутентификация (" + methods + "), которую GoVault пока не поддерживает. Включите приложение-аутентификатор, эл. почту или YubiKey в веб-настройках хранилища, чтобы войти здесь."
 		case "zh-Hans":
-			return "此账户要求使用 " + methods + " 进行两步登录，GoVault 暂不支持。请在网页端密码库设置中启用验证器应用或电子邮箱两步登录，然后再在此处登录。"
+			return "此账户要求使用 " + methods + " 进行两步登录，GoVault 暂不支持。请在网页端密码库设置中启用验证器应用、电子邮箱或 YubiKey 两步登录，然后再在此处登录。"
 		case "zh-Hant":
-			return "此帳戶需要使用 " + methods + " 進行兩步驟登入，GoVault 目前尚未支援。請在網頁版密碼庫設定中啟用驗證器應用程式或電子郵件兩步驟登入，再於此處登入。"
+			return "此帳戶需要使用 " + methods + " 進行兩步驟登入，GoVault 目前尚未支援。請在網頁版密碼庫設定中啟用驗證器應用程式、電子郵件或 YubiKey 兩步驟登入，再於此處登入。"
 		}
 	}
 }

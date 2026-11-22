@@ -51,6 +51,7 @@ twoFactorTitle: Verificación en dos pasos
 twoFactorEnterEmailCodeTo: "Introduce el código enviado a {email}."
 twoFactorEnterEmailCode: Introduce el código enviado a tu correo electrónico.
 twoFactorEnterAuthenticatorCode: Introduce el código de 6 dígitos de tu app de autenticación.
+twoFactorEnterYubiKey: Inserta tu YubiKey y tócala.
 twoFactorMethod: Método de verificación
 twoFactorAuthenticator: App de autenticación
 twoFactorEmail: Correo electrónico
@@ -69,7 +70,11 @@ resendCode: Reenviar código
 twoFactorFootnote: La autenticación en dos pasos protege tu caja fuerte incluso si se filtra tu contraseña.
 twoFactorCodeRequired: Introduce el código de verificación.
 twoFactorCodeInvalid: Código de verificación no válido. Compruébalo e inténtalo de nuevo.
-twoFactorUnsupported: "Esta cuenta requiere autenticación en dos pasos con {methods}, que GoVault aún no admite. Activa App de autenticación o Correo electrónico en los ajustes web de tu caja fuerte para iniciar sesión aquí."
+twoFactorYubiKeyRequired: Toca tu YubiKey para introducir su código.
+twoFactorYubiKeyMalformed: Ese no es un código de una YubiKey. Toca tu YubiKey para introducir uno nuevo.
+twoFactorYubiKeyInvalid: El servidor no aceptó este código de YubiKey. Toca tu YubiKey de nuevo para introducir uno nuevo.
+twoFactorYubiKeyNotRegistered: Esta YubiKey no está registrada en tu cuenta. Usa una YubiKey que hayas añadido en los ajustes web de tu caja fuerte.
+twoFactorUnsupported: "Esta cuenta requiere autenticación en dos pasos con {methods}, que GoVault aún no admite. Activa App de autenticación, Correo electrónico o YubiKey en los ajustes web de tu caja fuerte para iniciar sesión aquí."
 twoFactorEmailFailed: "No se pudo enviar el correo de verificación. {reason}"
 twoFactorEmailSentTo: "Se envió un código de verificación a {email}."
 twoFactorEmailSent: Se envió un código de verificación a tu correo electrónico.

@@ -51,6 +51,7 @@ twoFactorTitle: 两步验证
 twoFactorEnterEmailCodeTo: "请输入发送至 {email} 的验证码。"
 twoFactorEnterEmailCode: 请输入发送至你电子邮箱的验证码。
 twoFactorEnterAuthenticatorCode: 请输入验证器应用中的 6 位验证码。
+twoFactorEnterYubiKey: 插入你的 YubiKey 并轻触。
 twoFactorMethod: 验证方式
 twoFactorAuthenticator: 验证器应用
 twoFactorEmail: 电子邮箱
@@ -69,7 +70,11 @@ resendCode: 重新发送验证码
 twoFactorFootnote: 即使密码泄露，两步登录也能保护你的密码库安全。
 twoFactorCodeRequired: 请输入验证码。
 twoFactorCodeInvalid: 验证码无效，请检查后重试。
-twoFactorUnsupported: "此账户要求使用 {methods} 进行两步登录，GoVault 暂不支持。请在网页端密码库设置中启用验证器应用或电子邮箱两步登录，然后再在此处登录。"
+twoFactorYubiKeyRequired: 请轻触你的 YubiKey 以输入验证码。
+twoFactorYubiKeyMalformed: 这不是来自 YubiKey 的验证码。请轻触你的 YubiKey 以输入新的验证码。
+twoFactorYubiKeyInvalid: 服务器未接受此 YubiKey 验证码。请再次轻触你的 YubiKey 以输入新的验证码。
+twoFactorYubiKeyNotRegistered: 此 YubiKey 未注册到你的账户。请使用你在网页端密码库设置中添加的 YubiKey。
+twoFactorUnsupported: "此账户要求使用 {methods} 进行两步登录，GoVault 暂不支持。请在网页端密码库设置中启用验证器应用、电子邮箱或 YubiKey 两步登录，然后再在此处登录。"
 twoFactorEmailFailed: "无法发送验证邮件。{reason}"
 twoFactorEmailSentTo: "验证码已发送至 {email}。"
 twoFactorEmailSent: 验证码已发送至你的电子邮箱。

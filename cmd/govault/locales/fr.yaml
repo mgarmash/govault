@@ -51,6 +51,7 @@ twoFactorTitle: Vérification en deux étapes
 twoFactorEnterEmailCodeTo: "Saisissez le code envoyé à {email}."
 twoFactorEnterEmailCode: Saisissez le code envoyé à votre adresse e-mail.
 twoFactorEnterAuthenticatorCode: Saisissez le code à 6 chiffres de votre application d’authentification.
+twoFactorEnterYubiKey: Insérez votre YubiKey et touchez-la.
 twoFactorMethod: Méthode de vérification
 twoFactorAuthenticator: Application d’authentification
 twoFactorEmail: E-mail
@@ -69,7 +70,11 @@ resendCode: Renvoyer le code
 twoFactorFootnote: L’authentification à deux facteurs protège votre coffre même si votre mot de passe est compromis.
 twoFactorCodeRequired: Saisissez le code de vérification.
 twoFactorCodeInvalid: Code de vérification invalide. Vérifiez-le et réessayez.
-twoFactorUnsupported: "Ce compte nécessite une connexion en deux étapes via {methods}, que GoVault ne prend pas encore en charge. Activez l’application d’authentification ou l’e-mail dans les paramètres web de votre coffre pour vous connecter ici."
+twoFactorYubiKeyRequired: Touchez votre YubiKey pour saisir son code.
+twoFactorYubiKeyMalformed: Ce code ne provient pas d’une YubiKey. Touchez votre YubiKey pour en saisir un nouveau.
+twoFactorYubiKeyInvalid: Le serveur n’a pas accepté ce code YubiKey. Touchez à nouveau votre YubiKey pour en saisir un nouveau.
+twoFactorYubiKeyNotRegistered: Cette YubiKey n’est pas enregistrée sur votre compte. Utilisez une YubiKey ajoutée dans les paramètres web de votre coffre.
+twoFactorUnsupported: "Ce compte nécessite une connexion en deux étapes via {methods}, que GoVault ne prend pas encore en charge. Activez l’application d’authentification, l’e-mail ou YubiKey dans les paramètres web de votre coffre pour vous connecter ici."
 twoFactorEmailFailed: "Impossible d’envoyer l’e-mail de vérification. {reason}"
 twoFactorEmailSentTo: "Un code de vérification a été envoyé à {email}."
 twoFactorEmailSent: Un code de vérification a été envoyé à votre adresse e-mail.

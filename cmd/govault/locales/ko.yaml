@@ -51,6 +51,7 @@ twoFactorTitle: 2단계 인증
 twoFactorEnterEmailCodeTo: "{email}(으)로 전송된 인증 코드를 입력하세요."
 twoFactorEnterEmailCode: 이메일로 전송된 인증 코드를 입력하세요.
 twoFactorEnterAuthenticatorCode: 인증 앱의 6자리 코드를 입력하세요.
+twoFactorEnterYubiKey: YubiKey를 삽입하고 터치하세요.
 twoFactorMethod: 인증 방법
 twoFactorAuthenticator: 인증 앱
 twoFactorEmail: 이메일
@@ -69,7 +70,11 @@ resendCode: 코드 재전송
 twoFactorFootnote: 비밀번호가 유출되더라도 2단계 인증으로 보관함을 안전하게 보호합니다.
 twoFactorCodeRequired: 인증 코드를 입력하세요.
 twoFactorCodeInvalid: 인증 코드가 올바르지 않습니다. 확인 후 다시 시도하세요.
-twoFactorUnsupported: "이 계정은 {methods} 2단계 인증이 필요하지만 GoVault에서 아직 지원하지 않습니다. 여기서 로그인하려면 웹 보관함 설정에서 인증 앱 또는 이메일 2단계 인증을 활성화하세요."
+twoFactorYubiKeyRequired: YubiKey를 터치하여 코드를 입력하세요.
+twoFactorYubiKeyMalformed: YubiKey 코드가 아닙니다. YubiKey를 터치하여 새 코드를 입력하세요.
+twoFactorYubiKeyInvalid: 서버가 이 YubiKey 코드를 거부했습니다. YubiKey를 다시 터치하여 새 코드를 입력하세요.
+twoFactorYubiKeyNotRegistered: 이 YubiKey는 계정에 등록되어 있지 않습니다. 웹 보관함 설정에서 추가한 YubiKey를 사용하세요.
+twoFactorUnsupported: "이 계정은 {methods} 2단계 인증이 필요하지만 GoVault에서 아직 지원하지 않습니다. 여기서 로그인하려면 웹 보관함 설정에서 인증 앱, 이메일 또는 YubiKey 2단계 인증을 활성화하세요."
 twoFactorEmailFailed: "인증 이메일을 보낼 수 없습니다. {reason}"
 twoFactorEmailSentTo: "{email}(으)로 인증 코드를 보냈습니다."
 twoFactorEmailSent: 이메일로 인증 코드를 보냈습니다.
