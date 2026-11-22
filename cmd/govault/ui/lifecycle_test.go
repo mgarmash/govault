@@ -65,3 +65,68 @@ func TestDeviceIDExistsBeforeTheServiceStarts(t *testing.T) {
 		t.Fatalf("device id changed: %q then %q", first, again)
 	}
 }
+
+func TestSleepDuringSignInRevokesTheAttempt(t *testing.T) {
+	svc := newMockVaultService(state.StatusLoggedOut)
+	app, m, _ := startSecurityApp(t, svc, PlatformHooks{})
+	app.Post(func() {
+		m.UpdatePrefs(func(p UserPrefs) UserPrefs { p.LockOnSleep = true; return p })
+		m.LoginBusy.Set(true)
+		m.LockOnSystemEvent()
+	})
+	app.WaitUntil(2*time.Second, func() bool { return !m.LoginBusy.Get() })
+	svc.mu.Lock()
+	defer svc.mu.Unlock()
+	if svc.revokes != 1 {
+		t.Fatalf("revokes = %d, want the sign-in revoked", svc.revokes)
+	}
+}
+
+func TestLocalOnlyVaultAsksToSignInAgainAndKeepsTheCache(t *testing.T) {
+	svc := newMockVaultService(state.StatusUnlocked)
+	svc.localOnly = true
+	app, m, _ := startSecurityApp(t, svc, PlatformHooks{})
+	app.Post(m.RefreshVaultData)
+	app.Post(func() { m.SyncState.Set(SyncAuthExpired) })
+	app.WaitFor("id:signin-banner", 2*time.Second)
+	app.Find("text:Sign in again to sync. Your vault is available offline until then.")
+	app.Press("id:signin-banner-action")
+	app.WaitFor("id:login-server", 2*time.Second)
+	if !m.ReSignIn.Get() || svc.Status() != state.StatusLocked {
+		t.Fatalf("sign in again: resignin %v, status %v", m.ReSignIn.Get(), svc.Status())
+	}
+	if _, err := svc.GetCipher("c-github"); err == nil {
+		t.Fatal("locked vault still readable")
+	}
+	svc.mu.RLock()
+	n := len(svc.ciphers)
+	svc.mu.RUnlock()
+	if n == 0 {
+		t.Fatal("signing in again removed the local vault")
+	}
+}
+
+func TestUnsavedCredentialsShowABanner(t *testing.T) {
+	svc := newMockVaultService(state.StatusUnlocked)
+	svc.credsUnsaved = true
+	app, m, _ := startSecurityApp(t, svc, PlatformHooks{})
+	app.Post(m.RefreshVaultData)
+	app.WaitFor("id:signin-banner", 2*time.Second)
+	app.Find("text:Your sign-in could not be saved. Sign in again so GoVault can still sync after you lock.")
+}
+
+func TestSnapshotMetadataNeverSetsTheServer(t *testing.T) {
+	svc := newMockVaultService(state.StatusLocked)
+	hooks := PlatformHooks{DiscoverSnapshot: func(string) *AccountSnapshotMeta {
+		return &AccountSnapshotMeta{AccountID: "acct-1", ServerURL: "https://attacker.example", Email: "a@b.c"}
+	}}
+	app, m, _ := startSecurityApp(t, svc, hooks)
+	app.Post(func() {
+		m.UpdatePrefs(func(p UserPrefs) UserPrefs { p.ServerURL = "https://vault.example"; return p })
+		m.SyncAccountMetaFromSnapshot()
+	})
+	app.WaitUntil(2*time.Second, func() bool { return m.Prefs.Get().AccountID == "acct-1" })
+	if got := m.Prefs.Get().ServerURL; got != "https://vault.example" {
+		t.Fatalf("server in settings = %q, want the one the user signed in to", got)
+	}
+}

@@ -39,21 +39,31 @@ func UnlockedShellView(cx *core.Scope, m *AppModel) core.Node {
 				Children: []core.Node{
 					topToolbar(cx, m),
 					core.Show{
-						When: func() bool { return m.SyncState.Get() == SyncAuthExpired },
+						When: func() bool { return m.SyncState.Get() == SyncAuthExpired || m.CredentialsNotSaved.Get() },
 						Then: func(cx *core.Scope) core.Node {
 							return core.View{
 								Class: "flex-row items-center gap-3 px-4 py-2 bg-gv-warn-soft border-b border-gv-line",
 								Children: []core.Node{
 									icon(lucide.TriangleAlert(), 14, "text-gv-warn"),
 									core.Text{
-										Class:   "flex-1 text-[12px] text-gv-fg",
-										Content: "Session expired — your cached vault is still readable. Sign in again to resume syncing.",
+										TestID: "signin-banner",
+										Class:  "flex-1 text-[12px] text-gv-fg",
+										ContentFunc: func() string {
+											switch {
+											case m.LocalOnly.Get():
+												return "Sign in again to sync. Your vault is available offline until then."
+											case m.SyncState.Get() == SyncAuthExpired:
+												return "Session expired — your cached vault is still readable. Sign in again to resume syncing."
+											}
+											return "Your sign-in could not be saved. Sign in again so GoVault can still sync after you lock."
+										},
 									},
 									ui.Button{
+										TestID:  "signin-banner-action",
 										Text:    "Sign In Again",
 										Variant: ui.ButtonSecondary,
 										Size:    ui.SizeSmall,
-										OnPress: func() { m.Logout(cx) },
+										OnPress: m.SignInAgain,
 									},
 								},
 							}

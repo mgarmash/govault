@@ -372,8 +372,15 @@ type AppModel struct {
 
 	LockState *core.Signal[state.LockStatus]
 	SyncState *core.Signal[SyncStatus]
-	LastSync  *core.Signal[time.Time]
-	Route     *core.Signal[MainRoute]
+	// LocalOnly: the vault is open but its saved sign-in could not be
+	// validated, so it does not sync until the user signs in again.
+	LocalOnly *core.Signal[bool]
+	// CredentialsNotSaved: a new sign-in this session could not be saved.
+	CredentialsNotSaved *core.Signal[bool]
+	// ReSignIn shows the sign-in form over a locked vault.
+	ReSignIn *core.Signal[bool]
+	LastSync *core.Signal[time.Time]
+	Route    *core.Signal[MainRoute]
 
 	BiometricKind     *core.Signal[core.BiometricKind]
 	BiometricHardware *core.Signal[bool]
@@ -554,6 +561,9 @@ func NewAppModel(app *core.Scope, coreSvc state.VaultService, hooks PlatformHook
 		Prefs:               prefs,
 		LockState:           core.NewSignal(app, coreSvc.Status()),
 		SyncState:           core.NewSignal(app, SyncIdle),
+		LocalOnly:           core.NewSignal(app, false),
+		CredentialsNotSaved: core.NewSignal(app, false),
+		ReSignIn:            core.NewSignal(app, false),
 		LastSync:            core.NewSignal(app, time.Time{}),
 		Route:               core.NewSignal(app, RouteVault),
 		BiometricKind:       core.NewSignal(app, core.BiometricNone),
@@ -878,9 +888,6 @@ func (m *AppModel) SyncAccountMetaFromSnapshot() {
 	}
 	m.UpdatePrefs(func(p UserPrefs) UserPrefs {
 		p.AccountID = meta.AccountID
-		if meta.ServerURL != "" {
-			p.ServerURL = meta.ServerURL
-		}
 		if meta.Email != "" {
 			p.Email = meta.Email
 		}
@@ -953,11 +960,16 @@ func (m *AppModel) submitLogin(req state.LoginRequest) {
 	m.LoginBusy.Set(true)
 	m.LoginError.Set("")
 	verifying := req.TwoFactorCode != ""
+	ctx := state.WithAuthAttempt(context.Background(), m.Core.AuthAttempt())
+	gen := m.LockGeneration()
 
 	go func() {
 		defer crypto.ZeroBytes(req.MasterPassword)
-		err := m.Core.Login(context.Background(), req)
+		err := m.Core.Login(ctx, req)
 		m.Scope.Post(func() {
+			if gen != m.LockGeneration() {
+				return
+			}
 			m.LoginBusy.Set(false)
 			if err != nil {
 				m.loginFailed(err, verifying)
@@ -1062,7 +1074,15 @@ func emailSentNotice(hint string) string {
 	return "A verification code was sent to " + hint + "."
 }
 
+// SignInAgain shows the sign-in form over a locked vault without removing
+// the local copy; signing in replaces the saved sign-in.
+func (m *AppModel) SignInAgain() {
+	m.ReSignIn.Set(true)
+	m.Lock()
+}
+
 func (m *AppModel) finishLogin(serverURL, email string) {
+	m.ReSignIn.Set(false)
 	m.LoginPassword.Set("")
 	m.TwoFactor.Set(nil)
 	m.TwoFactorCode.Set("")
@@ -1096,10 +1116,11 @@ func (m *AppModel) UnlockWithPassword() {
 	m.LockError.Set("")
 	pwBytes := []byte(password)
 	gen := m.LockGeneration()
+	ctx := state.WithAuthAttempt(context.Background(), m.Core.AuthAttempt())
 
 	go func() {
 		defer crypto.ZeroBytes(pwBytes)
-		err := m.Core.UnlockWithPassword(context.Background(), pwBytes)
+		err := m.Core.UnlockWithPassword(ctx, pwBytes)
 		m.Scope.Post(func() {
 			if gen != m.LockGeneration() {
 				return
@@ -1145,6 +1166,7 @@ func (m *AppModel) UnlockWithBiometric(cx *core.Scope) {
 
 	secrets := m.Hooks.Secrets
 	gen := m.LockGeneration()
+	ctx := state.WithAuthAttempt(context.Background(), m.Core.AuthAttempt())
 	readKey := func() {
 		go func() {
 			encoded, ok, err := secrets.Get("userkey:" + accountID)
@@ -1169,7 +1191,7 @@ func (m *AppModel) UnlockWithBiometric(cx *core.Scope) {
 			}
 			defer key.Zero()
 
-			err = m.Core.UnlockWithUserKey(context.Background(), key)
+			err = m.Core.UnlockWithUserKey(ctx, key)
 			m.Scope.Post(func() {
 				if gen != m.LockGeneration() {
 					return
@@ -1329,12 +1351,12 @@ func (m *AppModel) LockOnSystemEvent() bool {
 		return false
 	}
 	if m.LockState.Get() != state.StatusUnlocked {
-		// An unlock still running must not finish after the sleep.
-		if m.LockBusy.Get() {
-			m.RevokePending()
-			m.Core.Lock()
-			m.LockBusy.Set(false)
-		}
+		// A sign-in or unlock still running must not finish after the
+		// sleep, including a biometric prompt answered later.
+		m.Core.RevokeAuthAttempts()
+		m.RevokePending()
+		m.LockBusy.Set(false)
+		m.LoginBusy.Set(false)
 		return false
 	}
 	m.Lock()
@@ -1404,6 +1426,9 @@ func (m *AppModel) syncNow(silent, retryDeferred bool) {
 							})
 						})
 					}
+				case errors.Is(err, state.ErrSignInRequired):
+					m.SyncState.Set(SyncAuthExpired)
+					m.LocalOnly.Set(true)
 				case errors.Is(err, api.ErrUnauthorized):
 					m.SyncState.Set(SyncAuthExpired)
 					if !silent {
@@ -1436,6 +1461,8 @@ func (m *AppModel) RefreshVaultData() {
 	if m.LockState.Get() != state.StatusUnlocked {
 		return
 	}
+	m.LocalOnly.Set(m.Core.LocalOnly())
+	m.CredentialsNotSaved.Set(m.Core.CredentialsNotSaved())
 	folders := m.Core.Folders()
 	m.Folders.Set(folders)
 	m.Organizations.Set(m.Core.Organizations())

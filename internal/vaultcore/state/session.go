@@ -2,7 +2,6 @@ package state
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/txchen/govault/internal/vaultcore/api"
 	"github.com/txchen/govault/internal/vaultcore/crypto"
@@ -41,6 +40,7 @@ func (s *Service) endSessionLocked() {
 	s.sessionCtx, s.sessionCancel = nil, nil
 	s.accessToken = ""
 	s.unsavedRefresh = ""
+	s.credsUnsaved = false
 }
 
 type sessionGenKey struct{}
@@ -66,6 +66,9 @@ func (s *Service) beginOp(ctx context.Context) (*op, error) {
 	defer s.mu.RUnlock()
 	if s.status != StatusUnlocked || s.userKey == nil || s.sessionCtx == nil {
 		return nil, ErrLocked
+	}
+	if s.localOnly {
+		return nil, ErrSignInRequired
 	}
 	if gen, ok := ctx.Value(sessionGenKey{}).(uint64); ok && (gen != s.sessionGen || ctx.Err() != nil) {
 		return nil, ErrLocked
@@ -169,9 +172,12 @@ func (o *op) refreshAfter(ctx context.Context, stale string) (string, error) {
 	}
 	o.s.accessToken = resp.AccessToken
 	o.s.unsavedRefresh = ""
+	o.s.credsUnsaved = saveErr != nil
 	if saveErr != nil {
+		// The request goes on with the new token; the session remembers
+		// that the next unlock needs a fresh sign-in, for the UI to show.
 		o.s.unsavedRefresh = resp.RefreshToken
-		return "", fmt.Errorf("%w: %w", ErrSignInNotSaved, saveErr)
+		go o.s.notifyUpdated()
 	}
 	return resp.AccessToken, nil
 }

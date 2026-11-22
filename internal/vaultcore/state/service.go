@@ -26,10 +26,6 @@ const (
 )
 
 type ServiceConfig struct {
-	// TrustedServerURL is the server the user signed in to, from settings
-	// the snapshot cannot change. A refresh token stored before tokens
-	// were bound to their server is bound to it on first use.
-	TrustedServerURL  string
 	Store             store.Store
 	Secrets           store.SecretStore
 	AccountID         string
@@ -62,14 +58,19 @@ type Service struct {
 	sessionGen    uint64
 	sessionCtx    context.Context
 	sessionCancel context.CancelFunc
+	unreadable    []string
+	credsUnsaved  bool
+	// localOnly marks an unlocked session whose saved sign-in could not be
+	// validated: the vault is readable, but nothing goes to the server
+	// until the user signs in again.
+	localOnly bool
 	// persistMu orders every snapshot writer: it is held from choosing the
 	// snapshot to edit, through the disk write, to publishing the result
 	// in memory. snapSeq counts publications, so a sync that fetched before
 	// a change was committed can tell it is stale.
-	unreadable []string
-	persistMu  sync.Mutex
-	snapSeq    uint64
-	secretMu   sync.Mutex
+	persistMu sync.Mutex
+	snapSeq   uint64
+	secretMu  sync.Mutex
 	// refreshMu makes one token refresh at a time, so concurrent callers
 	// never send the same rotating refresh token twice.
 	refreshMu sync.Mutex
@@ -105,7 +106,7 @@ func (s *Service) Status() LockStatus {
 }
 
 func (s *Service) Login(ctx context.Context, req LoginRequest) error {
-	gen := s.attemptGen()
+	gen := s.attemptFrom(ctx)
 	serverURL, email := req.ServerURL, req.Email
 	client, kdfCfg, masterKey, pwHash, err := s.prepareLogin(ctx, req)
 	if err != nil {
@@ -183,7 +184,17 @@ func (s *Service) Login(ctx context.Context, req LoginRequest) error {
 		return err
 	}
 	if s.cfg.Secrets != nil && tok.RefreshToken != "" {
-		if err := s.saveRefreshToken(accountID, snap.ServerURL, tok.RefreshToken); err != nil {
+		// secretMu orders this write with logout's deletion: a logout that
+		// began first wins, and one that comes later deletes the token.
+		s.secretMu.Lock()
+		if s.attemptGen() != gen {
+			s.secretMu.Unlock()
+			userKey.Zero()
+			return ErrLocked
+		}
+		err := s.saveRefreshToken(accountID, snap.ServerURL, tok.RefreshToken)
+		s.secretMu.Unlock()
+		if err != nil {
 			userKey.Zero()
 			return err
 		}
@@ -207,6 +218,8 @@ func (s *Service) Login(ctx context.Context, req LoginRequest) error {
 	s.snapshot = snap
 	s.apiClient = client
 	s.accessToken = tok.AccessToken
+	s.localOnly = false
+	s.credsUnsaved = false
 	s.userKey = userKey
 	s.applyDataLocked(data)
 	committed = true
@@ -256,8 +269,55 @@ func (s *Service) attemptGen() uint64 {
 	return s.sessionGen
 }
 
+// AuthAttempt names a sign-in or unlock about to start. Passed in its
+// context (WithAuthAttempt), it lets the service refuse to publish an
+// attempt that a sleep, lock or logout revoked before it finished.
+func (s *Service) AuthAttempt() uint64 { return s.attemptGen() }
+
+// RevokeAuthAttempts ends every sign-in and unlock in progress. An unlocked
+// session is left alone; locking it revokes attempts too.
+func (s *Service) RevokeAuthAttempts() {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.status != StatusUnlocked {
+		s.endSessionLocked()
+	}
+}
+
+type authAttemptKey struct{}
+
+// WithAuthAttempt binds a sign-in or unlock to the attempt captured when
+// the user started it.
+func WithAuthAttempt(ctx context.Context, attempt uint64) context.Context {
+	return context.WithValue(ctx, authAttemptKey{}, attempt)
+}
+
+func (s *Service) attemptFrom(ctx context.Context) uint64 {
+	if a, ok := ctx.Value(authAttemptKey{}).(uint64); ok {
+		return a
+	}
+	return s.attemptGen()
+}
+
+// LocalOnly reports an unlocked vault whose saved sign-in could not be
+// validated, so it does not sync until the user signs in again.
+func (s *Service) LocalOnly() bool {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return s.status == StatusUnlocked && s.localOnly
+}
+
+// CredentialsNotSaved reports that the server issued a new sign-in this
+// session that could not be saved, so after locking the user must sign in
+// again. It stays set until a later save succeeds or the user signs in.
+func (s *Service) CredentialsNotSaved() bool {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return s.status == StatusUnlocked && s.credsUnsaved
+}
+
 func (s *Service) UnlockWithPassword(ctx context.Context, masterPassword []byte) error {
-	gen := s.attemptGen()
+	gen := s.attemptFrom(ctx)
 	snap, err := s.loadCurrentSnapshot()
 	if err != nil {
 		return err
@@ -279,7 +339,7 @@ func (s *Service) UnlockWithPassword(ctx context.Context, masterPassword []byte)
 }
 
 func (s *Service) UnlockWithUserKey(ctx context.Context, userKey *crypto.SymmetricKey) error {
-	return s.unlock(ctx, userKey, s.attemptGen())
+	return s.unlock(ctx, userKey, s.attemptFrom(ctx))
 }
 
 func (s *Service) unlock(ctx context.Context, userKey *crypto.SymmetricKey, gen uint64) error {
@@ -309,13 +369,12 @@ func (s *Service) unlock(ctx context.Context, userKey *crypto.SymmetricKey, gen 
 		return err
 	}
 
+	// The vault decrypted, so it opens even when the saved sign-in cannot
+	// be trusted or read; it is then local only.
+	_, credErr := s.loadRefreshToken(snap.AccountID, snap.ServerURL)
+	localOnly := credErr != nil || snap.ServerURL == ""
 	var client *api.Client
 	if snap.ServerURL != "" {
-		if _, err := s.loadRefreshToken(snap.AccountID, snap.ServerURL); err != nil && !errors.Is(err, api.ErrUnauthorized) {
-			ownedKey.Zero()
-			data.zero()
-			return err
-		}
 		client, err = s.newAPIClient(snap.ServerURL)
 		if err != nil {
 			ownedKey.Zero()
@@ -339,6 +398,8 @@ func (s *Service) unlock(ctx context.Context, userKey *crypto.SymmetricKey, gen 
 	s.accountID = snap.AccountID
 	s.snapshot = snap
 	s.apiClient = client
+	s.localOnly = localOnly
+	s.credsUnsaved = false
 	s.userKey = ownedKey
 	s.applyDataLocked(data)
 	s.status = StatusUnlocked
@@ -499,9 +560,6 @@ func (s *Service) syncOnce(ctx context.Context, force bool) error {
 	revDate, revErr := withAuth(o, func(ctx context.Context, tok string) (time.Time, error) {
 		return o.client.RevisionDate(ctx, tok)
 	})
-	if errors.Is(revErr, ErrSignInNotSaved) {
-		return revErr
-	}
 	if !force && revErr == nil && !o.snap.RevisionDate.IsZero() && revDate.Equal(o.snap.RevisionDate) {
 		return nil
 	}

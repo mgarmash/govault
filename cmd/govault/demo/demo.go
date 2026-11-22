@@ -329,6 +329,14 @@ func (s *Service) HardDeleteCipher(_ context.Context, id string) error {
 	return nil
 }
 
+func (s *Service) AuthAttempt() uint64 { return 0 }
+
+func (s *Service) RevokeAuthAttempts() {}
+
+func (s *Service) LocalOnly() bool { return false }
+
+func (s *Service) CredentialsNotSaved() bool { return false }
+
 func (s *Service) UnreadableItems() []string { return nil }
 
 func (s *Service) SessionContext(parent context.Context) (context.Context, context.CancelFunc, error) {

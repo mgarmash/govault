@@ -33,7 +33,7 @@ var (
 	ErrUnsupportedUpload       = errors.New("state: server requested an unsupported attachment upload method")
 	ErrSyncDeferred            = errors.New("state: changes kept landing during sync; nothing was synced yet")
 	ErrServerMismatch          = errors.New("state: the saved sign-in belongs to a different server than this vault copy; sign in again")
-	ErrSignInNotSaved          = errors.New("state: your sign-in could not be saved, so you will need to sign in again after locking")
+	ErrSignInRequired          = errors.New("state: sign in again to sync; the vault is available offline until then")
 	ErrAccountChanged          = errors.New("state: the account changed since this was confirmed")
 	ErrSnapshotNotUpdated      = errors.New("state: the server has the change, but the local copy could not be updated; sync to refresh it")
 )
@@ -325,6 +325,10 @@ type VaultService interface {
 	HardDeleteCipher(ctx context.Context, id string) error
 	TrashSelection() TrashSelection
 	UnreadableItems() []string
+	AuthAttempt() uint64
+	RevokeAuthAttempts()
+	LocalOnly() bool
+	CredentialsNotSaved() bool
 	SessionContext(parent context.Context) (context.Context, context.CancelFunc, error)
 	EmptyTrash(ctx context.Context, sel TrashSelection) (TrashResult, error)
 	Folders() []Folder

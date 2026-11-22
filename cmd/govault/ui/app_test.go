@@ -43,8 +43,12 @@ type mockVaultService struct {
 	syncErrs  []error
 	syncCalls int
 
-	unreadable []string
-	uploads    int
+	unreadable   []string
+	uploads      int
+	attempt      uint64
+	revokes      int
+	localOnly    bool
+	credsUnsaved bool
 	// saveGate, when set, holds SaveCipher until it is closed.
 	saveGate chan struct{}
 }
@@ -295,6 +299,23 @@ func (m *mockVaultService) HardDeleteCipher(_ context.Context, id string) error 
 	delete(m.ciphers, id)
 	return nil
 }
+
+func (m *mockVaultService) AuthAttempt() uint64 {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	return m.attempt
+}
+
+func (m *mockVaultService) RevokeAuthAttempts() {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.attempt++
+	m.revokes++
+}
+
+func (m *mockVaultService) LocalOnly() bool { return m.localOnly }
+
+func (m *mockVaultService) CredentialsNotSaved() bool { return m.credsUnsaved }
 
 func (m *mockVaultService) UnreadableItems() []string { return m.unreadable }
 

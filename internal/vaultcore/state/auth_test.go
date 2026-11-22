@@ -13,75 +13,13 @@ import (
 	"github.com/txchen/govault/internal/vaultcore/store"
 )
 
-func newServiceWith(t *testing.T, env *vaultTestEnv, st store.Store, secrets store.SecretStore, trusted string) *Service {
+func newServiceWith(t *testing.T, env *vaultTestEnv, st store.Store, secrets store.SecretStore) *Service {
 	t.Helper()
-	svc, err := NewService(ServiceConfig{Store: st, Secrets: secrets, TrustedServerURL: trusted, AccountID: env.profileID, HTTPClient: env.server.Client()})
+	svc, err := NewService(ServiceConfig{Store: st, Secrets: secrets, AccountID: env.profileID, HTTPClient: env.server.Client()})
 	if err != nil {
 		t.Fatal(err)
 	}
 	return svc
-}
-
-func TestService_RefreshTokenIsBoundToItsServer(t *testing.T) {
-	env := newVaultTestEnv(t)
-	st := store.NewFileStore(t.TempDir())
-	secrets := newMemSecretStore()
-	svc := newServiceWith(t, env, st, secrets, "")
-	if err := svc.Login(context.Background(), LoginRequest{ServerURL: env.server.URL, Email: env.email, MasterPassword: env.password}); err != nil {
-		t.Fatal(err)
-	}
-	raw, _, _ := secrets.Get(refreshTokenKeyPrefix + env.profileID)
-	var bound boundRefreshToken
-	if json.Unmarshal([]byte(raw), &bound) != nil || bound.Origin != serverOrigin(env.server.URL) || bound.Token != "ref-1" {
-		t.Fatalf("stored refresh token = %q, want it bound to the server", raw)
-	}
-
-	// A replaced snapshot keeps the vault and account but points elsewhere.
-	svc.Lock()
-	snap, _ := st.LoadSnapshot(env.profileID)
-	snap.ServerURL = "https://attacker.example"
-	if err := st.SaveSnapshot(snap); err != nil {
-		t.Fatal(err)
-	}
-	other := newServiceWith(t, env, st, secrets, env.server.URL)
-	if err := other.UnlockWithPassword(context.Background(), env.password); !errors.Is(err, ErrServerMismatch) {
-		t.Fatalf("unlock with a snapshot for another server = %v, want ErrServerMismatch", err)
-	}
-}
-
-func TestService_LegacyRefreshTokenIsBoundOnFirstUse(t *testing.T) {
-	for _, tc := range []struct {
-		name    string
-		trusted func(env *vaultTestEnv) string
-		wantErr error
-	}{
-		{"same server", func(env *vaultTestEnv) string { return env.server.URL + "/" }, nil},
-		{"other server", func(*vaultTestEnv) string { return "https://elsewhere.example" }, ErrServerMismatch},
-	} {
-		t.Run(tc.name, func(t *testing.T) {
-			env := newVaultTestEnv(t)
-			st := store.NewFileStore(t.TempDir())
-			secrets := newMemSecretStore()
-			first := newServiceWith(t, env, st, secrets, "")
-			if err := first.Login(context.Background(), LoginRequest{ServerURL: env.server.URL, Email: env.email, MasterPassword: env.password}); err != nil {
-				t.Fatal(err)
-			}
-			first.Lock()
-			_ = secrets.Set(refreshTokenKeyPrefix+env.profileID, "legacy-token")
-
-			svc := newServiceWith(t, env, st, secrets, tc.trusted(env))
-			err := svc.UnlockWithPassword(context.Background(), env.password)
-			if !errors.Is(err, tc.wantErr) && !(tc.wantErr == nil && err == nil) {
-				t.Fatalf("unlock = %v, want %v", err, tc.wantErr)
-			}
-			raw, _, _ := secrets.Get(refreshTokenKeyPrefix + env.profileID)
-			var bound boundRefreshToken
-			migrated := json.Unmarshal([]byte(raw), &bound) == nil && bound.Token == "legacy-token" && bound.Origin == serverOrigin(env.server.URL)
-			if migrated != (tc.wantErr == nil) {
-				t.Fatalf("stored token after unlock = %q", raw)
-			}
-		})
-	}
 }
 
 func TestService_ConcurrentRefreshesUseTheRotatingTokenOnce(t *testing.T) {
@@ -127,41 +65,6 @@ func (f *failingSecrets) Set(account, value string) error {
 		return errors.New("keychain locked")
 	}
 	return f.memSecretStore.Set(account, value)
-}
-
-func TestService_UnsavedRotatedTokenIsReportedAndKept(t *testing.T) {
-	env := newVaultTestEnv(t)
-	secrets := &failingSecrets{memSecretStore: newMemSecretStore()}
-	svc := newServiceWith(t, env, store.NewFileStore(t.TempDir()), secrets, "")
-	if err := svc.Login(context.Background(), LoginRequest{ServerURL: env.server.URL, Email: env.email, MasterPassword: env.password}); err != nil {
-		t.Fatal(err)
-	}
-	env.mu.Lock()
-	env.rotateRefresh = true
-	env.mu.Unlock()
-	secrets.fail = true
-	svc.mu.Lock()
-	svc.accessToken = ""
-	svc.mu.Unlock()
-
-	if err := svc.forceSync(context.Background()); !errors.Is(err, ErrSignInNotSaved) {
-		t.Fatalf("sync after an unsaved refresh = %v, want ErrSignInNotSaved", err)
-	}
-	if err := svc.forceSync(context.Background()); err != nil {
-		t.Fatalf("the session stopped working: %v", err)
-	}
-	// The next refresh uses the token the server issued, not the spent one.
-	svc.mu.Lock()
-	svc.accessToken = ""
-	svc.mu.Unlock()
-	if err := svc.forceSync(context.Background()); !errors.Is(err, ErrSignInNotSaved) {
-		t.Fatalf("second refresh = %v, want the unsaved token reported again", err)
-	}
-	env.mu.Lock()
-	defer env.mu.Unlock()
-	if env.refreshes != 2 {
-		t.Fatalf("refreshes = %d", env.refreshes)
-	}
 }
 
 func TestService_LoginSnapshotIsNeverNewerThanItsData(t *testing.T) {
@@ -247,5 +150,221 @@ func TestService_RealtimeConnectCatchesUpOnMissedChanges(t *testing.T) {
 			t.Fatal("reconnecting did not fetch the change made while disconnected")
 		}
 		runtime.Gosched()
+	}
+}
+
+// loginThenReopen signs in with a fresh service, locks, lets edit change
+// the stored state, and opens a new service on the same stores.
+func loginThenReopen(t *testing.T, env *vaultTestEnv, secrets store.SecretStore, edit func(st store.Store)) *Service {
+	t.Helper()
+	st := store.NewFileStore(t.TempDir())
+	first := newServiceWith(t, env, st, secrets)
+	if err := first.Login(context.Background(), LoginRequest{ServerURL: env.server.URL, Email: env.email, MasterPassword: env.password}); err != nil {
+		t.Fatal(err)
+	}
+	first.Lock()
+	if edit != nil {
+		edit(st)
+	}
+	return newServiceWith(t, env, st, secrets)
+}
+
+// assertLocalOnly checks an unlocked vault that is readable but sends
+// nothing to the server.
+func assertLocalOnly(t *testing.T, env *vaultTestEnv, svc *Service) {
+	t.Helper()
+	if !svc.LocalOnly() || svc.Status() != StatusUnlocked {
+		t.Fatalf("status %v, local only %v; want an unlocked local-only vault", svc.Status(), svc.LocalOnly())
+	}
+	if c, err := svc.GetCipher("c-1"); err != nil || c.Name != "GitHub" {
+		t.Fatalf("vault not readable offline: %+v, %v", c, err)
+	}
+	env.mu.Lock()
+	seen := len(env.authSeen)
+	env.mu.Unlock()
+	if err := svc.SyncNow(context.Background()); !errors.Is(err, ErrSignInRequired) {
+		t.Fatalf("sync = %v, want ErrSignInRequired", err)
+	}
+	if _, err := svc.SaveCipher(context.Background(), &Cipher{Type: 2, Name: "x", SecureNote: &SecureNote{}}); !errors.Is(err, ErrSignInRequired) {
+		t.Fatalf("save = %v, want ErrSignInRequired", err)
+	}
+	env.mu.Lock()
+	defer env.mu.Unlock()
+	if len(env.authSeen) != seen {
+		t.Fatal("a local-only session sent an authenticated request")
+	}
+}
+
+func TestService_BoundTokenIsStoredWithItsServer(t *testing.T) {
+	env := newVaultTestEnv(t)
+	secrets := newMemSecretStore()
+	loginThenReopen(t, env, secrets, nil)
+	raw, _, _ := secrets.Get(refreshTokenKeyPrefix + env.profileID)
+	var bound boundRefreshToken
+	if json.Unmarshal([]byte(raw), &bound) != nil || bound.Origin != serverOrigin(env.server.URL) || bound.Token != "ref-1" {
+		t.Fatalf("stored refresh token = %q, want it bound to the server", raw)
+	}
+}
+
+func TestService_UnvalidatedCredentialsUnlockLocalOnly(t *testing.T) {
+	for _, tc := range []struct {
+		name  string
+		setup func(t *testing.T, env *vaultTestEnv, secrets *flakySecrets, st store.Store)
+	}{
+		{"snapshot points at another server", func(t *testing.T, env *vaultTestEnv, _ *flakySecrets, st store.Store) {
+			snap, _ := st.LoadSnapshot(env.profileID)
+			snap.ServerURL = "https://attacker.example"
+			if err := st.SaveSnapshot(snap); err != nil {
+				t.Fatal(err)
+			}
+		}},
+		{"token from an older version", func(t *testing.T, env *vaultTestEnv, secrets *flakySecrets, _ store.Store) {
+			_ = secrets.memSecretStore.Set(refreshTokenKeyPrefix+env.profileID, "legacy-token")
+		}},
+		{"key store unavailable", func(_ *testing.T, _ *vaultTestEnv, secrets *flakySecrets, _ store.Store) {
+			secrets.getFails = true
+		}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			env := newVaultTestEnv(t)
+			secrets := &flakySecrets{memSecretStore: newMemSecretStore()}
+			svc := loginThenReopen(t, env, secrets, func(st store.Store) { tc.setup(t, env, secrets, st) })
+			if err := svc.UnlockWithPassword(context.Background(), env.password); err != nil {
+				t.Fatalf("unlock with the right master password = %v", err)
+			}
+			assertLocalOnly(t, env, svc)
+			if raw, _, _ := secrets.memSecretStore.Get(refreshTokenKeyPrefix + env.profileID); tc.name == "token from an older version" && raw != "legacy-token" {
+				t.Fatalf("a legacy token was rewritten from snapshot data: %q", raw)
+			}
+
+			// One fresh sign-in replaces it with a token bound to the
+			// server the user typed.
+			if err := svc.Login(context.Background(), LoginRequest{ServerURL: env.server.URL, Email: env.email, MasterPassword: env.password}); err != nil {
+				t.Fatal(err)
+			}
+			if svc.LocalOnly() {
+				t.Fatal("still local only after signing in")
+			}
+		})
+	}
+}
+
+type flakySecrets struct {
+	*memSecretStore
+	getFails, setFails bool
+	setStarted         chan struct{}
+	setGate            chan struct{}
+}
+
+func (f *flakySecrets) Get(account string) (string, bool, error) {
+	if f.getFails {
+		return "", false, errors.New("keychain unavailable")
+	}
+	return f.memSecretStore.Get(account)
+}
+
+func (f *flakySecrets) Set(account, value string) error {
+	if f.setStarted != nil {
+		close(f.setStarted)
+		f.setStarted = nil
+		<-f.setGate
+	}
+	if f.setFails {
+		return errors.New("keychain locked")
+	}
+	return f.memSecretStore.Set(account, value)
+}
+
+func TestService_LogoutDuringLoginLeavesNoToken(t *testing.T) {
+	env := newVaultTestEnv(t)
+	secrets := &flakySecrets{memSecretStore: newMemSecretStore(), setStarted: make(chan struct{}), setGate: make(chan struct{})}
+	started := secrets.setStarted
+	svc := newServiceWith(t, env, store.NewFileStore(t.TempDir()), secrets)
+	loginDone := make(chan error, 1)
+	go func() {
+		loginDone <- svc.Login(context.Background(), LoginRequest{ServerURL: env.server.URL, Email: env.email, MasterPassword: env.password})
+	}()
+	<-started
+	logoutDone := make(chan error, 1)
+	go func() { logoutDone <- svc.Logout(context.Background(), newMemSecretStore()) }()
+	close(secrets.setGate)
+	<-loginDone
+	if err := <-logoutDone; err != nil {
+		t.Fatal(err)
+	}
+	if raw, ok, _ := secrets.memSecretStore.Get(refreshTokenKeyPrefix + env.profileID); ok {
+		t.Fatalf("a refresh token is on disk after logout: %q", raw)
+	}
+}
+
+func TestService_RevokedAttemptsNeverPublish(t *testing.T) {
+	env := newVaultTestEnv(t)
+	svc := newServiceWith(t, env, store.NewFileStore(t.TempDir()), newMemSecretStore())
+	attempt := svc.AuthAttempt()
+	svc.RevokeAuthAttempts() // the system sleeps while signing in
+	err := svc.Login(WithAuthAttempt(context.Background(), attempt), LoginRequest{ServerURL: env.server.URL, Email: env.email, MasterPassword: env.password})
+	if !errors.Is(err, ErrLocked) || svc.Status() == StatusUnlocked {
+		t.Fatalf("login after sleep = %v, status %v", err, svc.Status())
+	}
+
+	if err := svc.Login(context.Background(), LoginRequest{ServerURL: env.server.URL, Email: env.email, MasterPassword: env.password}); err != nil {
+		t.Fatal(err)
+	}
+	svc.Lock()
+	attempt = svc.AuthAttempt() // a biometric prompt opens
+	svc.RevokeAuthAttempts()
+	if err := svc.UnlockWithUserKey(WithAuthAttempt(context.Background(), attempt), env.userKey); !errors.Is(err, ErrLocked) {
+		t.Fatalf("biometric unlock after sleep = %v, want ErrLocked", err)
+	}
+	if svc.Status() != StatusLocked {
+		t.Fatalf("status = %v", svc.Status())
+	}
+
+	// Revoking never ends an unlocked session.
+	if err := svc.UnlockWithPassword(context.Background(), env.password); err != nil {
+		t.Fatal(err)
+	}
+	svc.RevokeAuthAttempts()
+	if err := svc.SyncNow(context.Background()); err != nil {
+		t.Fatalf("sync after a revoke while unlocked = %v", err)
+	}
+}
+
+func TestService_UnsavedRotatedTokenIsKeptAndFlagged(t *testing.T) {
+	env := newVaultTestEnv(t)
+	secrets := &flakySecrets{memSecretStore: newMemSecretStore()}
+	svc := newServiceWith(t, env, store.NewFileStore(t.TempDir()), secrets)
+	if err := svc.Login(context.Background(), LoginRequest{ServerURL: env.server.URL, Email: env.email, MasterPassword: env.password}); err != nil {
+		t.Fatal(err)
+	}
+	env.mu.Lock()
+	env.rotateRefresh = true
+	env.mu.Unlock()
+	secrets.setFails = true
+	svc.mu.Lock()
+	svc.accessToken = ""
+	svc.mu.Unlock()
+
+	if err := svc.forceSync(context.Background()); err != nil {
+		t.Fatalf("sync after an unsaved refresh = %v", err)
+	}
+	if !svc.CredentialsNotSaved() {
+		t.Fatal("an unsaved sign-in was not reported")
+	}
+	// It stays reported across later successful requests, and the next
+	// refresh uses the token the server issued, not the spent one.
+	svc.mu.Lock()
+	svc.accessToken = ""
+	svc.mu.Unlock()
+	if err := svc.forceSync(context.Background()); err != nil || !svc.CredentialsNotSaved() {
+		t.Fatalf("second refresh = %v, still reported %v", err, svc.CredentialsNotSaved())
+	}
+	// Once a save works, the warning goes.
+	secrets.setFails = false
+	svc.mu.Lock()
+	svc.accessToken = ""
+	svc.mu.Unlock()
+	if err := svc.forceSync(context.Background()); err != nil || svc.CredentialsNotSaved() {
+		t.Fatalf("after a saved refresh: %v, still reported %v", err, svc.CredentialsNotSaved())
 	}
 }

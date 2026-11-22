@@ -202,9 +202,10 @@ func serverOrigin(serverURL string) string {
 }
 
 // loadRefreshToken returns the refresh token for accountID if it was issued
-// by serverURL's origin. A token stored without its origin, by an older
-// GoVault, is bound to cfg.TrustedServerURL when that is the same origin,
-// and refused otherwise. No token gives api.ErrUnauthorized.
+// by serverURL's origin. A token from an older GoVault, stored without its
+// origin, is never trusted: nothing outside the editable snapshot says which
+// server it belongs to, so it takes one fresh sign-in (ErrSignInRequired).
+// No token gives api.ErrUnauthorized.
 func (s *Service) loadRefreshToken(accountID, serverURL string) (string, error) {
 	s.mu.RLock()
 	unsaved := s.unsavedRefresh
@@ -222,23 +223,14 @@ func (s *Service) loadRefreshToken(accountID, serverURL string) (string, error) 
 	if !ok || raw == "" {
 		return "", api.ErrUnauthorized
 	}
-	want := serverOrigin(serverURL)
 	var bound boundRefreshToken
-	if json.Unmarshal([]byte(raw), &bound) == nil && bound.Token != "" {
-		if bound.Origin == "" || bound.Origin != want {
-			return "", ErrServerMismatch
-		}
-		return bound.Token, nil
+	if json.Unmarshal([]byte(raw), &bound) != nil || bound.Token == "" {
+		return "", ErrSignInRequired
 	}
-	if want == "" || serverOrigin(s.cfg.TrustedServerURL) != want {
+	if bound.Origin == "" || bound.Origin != serverOrigin(serverURL) {
 		return "", ErrServerMismatch
 	}
-	s.secretMu.Lock()
-	defer s.secretMu.Unlock()
-	if err := s.saveRefreshToken(accountID, serverURL, raw); err != nil {
-		return "", err
-	}
-	return raw, nil
+	return bound.Token, nil
 }
 
 func (s *Service) saveRefreshToken(accountID, serverURL, token string) error {

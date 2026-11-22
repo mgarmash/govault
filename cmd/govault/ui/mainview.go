@@ -32,6 +32,9 @@ func MainWindowView(cx *core.Scope, m *AppModel) core.Node {
 				case state.StatusUnlocked:
 					return UnlockedShellView(cx, m)
 				case state.StatusLocked:
+					if m.ReSignIn.Get() {
+						return LoginView(cx, m)
+					}
 					return LockView(cx, m)
 				default:
 					return LoginView(cx, m)

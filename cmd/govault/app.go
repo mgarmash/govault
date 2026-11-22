@@ -75,13 +75,12 @@ func NewDesktopShell(app *core.Scope, demoMode bool) *DesktopShell {
 	}
 
 	svc, err := state.NewService(state.ServiceConfig{
-		TrustedServerURL: initialPrefs.ServerURL,
-		Store:            store.NewFileStore(dataDir),
-		Secrets:          secrets,
-		AccountID:        accountID,
-		DeviceID:         initialPrefs.DeviceID,
-		DeviceName:       "GoVault Desktop",
-		DeviceType:       deviceTypeForOS(),
+		Store:      store.NewFileStore(dataDir),
+		Secrets:    secrets,
+		AccountID:  accountID,
+		DeviceID:   initialPrefs.DeviceID,
+		DeviceName: "GoVault Desktop",
+		DeviceType: deviceTypeForOS(),
 		OnStatusChange: func(st state.LockStatus) {
 			if st != state.StatusUnlocked {
 				shell.sshAgent.Clear()
