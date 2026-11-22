@@ -72,7 +72,13 @@ func itemJSON(c *state.Cipher, typeData map[string]any) obj {
 		}
 	case api.CipherTypeSSHKey:
 		if k := c.SSHKey; k != nil {
-			o = o.set("sshKey", obj{}.set("privateKey", k.PrivateKey).set("publicKey", k.PublicKey).set("keyFingerprint", k.KeyFingerprint))
+			// A hidden item's private key stays hidden, as the desktop
+			// hides it.
+			var private any = k.PrivateKey
+			if hide {
+				private = nil
+			}
+			o = o.set("sshKey", obj{}.set("privateKey", private).set("publicKey", k.PublicKey).set("keyFingerprint", k.KeyFingerprint))
 		}
 	case api.CipherTypeBankAccount:
 		o = o.set("bankAccount", typeData)
@@ -122,8 +128,12 @@ func loginJSON(l *state.Login, hide bool) obj {
 		if discoverable == "" {
 			discoverable = "false"
 		}
+		var key any = f.KeyValue
+		if hide {
+			key = nil
+		}
 		passkeys = append(passkeys, obj{}.set("credentialId", f.CredentialID).set("keyType", f.KeyType).
-			set("keyAlgorithm", f.KeyAlgorithm).set("keyCurve", f.KeyCurve).set("keyValue", f.KeyValue).set("rpId", f.RpID).
+			set("keyAlgorithm", f.KeyAlgorithm).set("keyCurve", f.KeyCurve).set("keyValue", key).set("rpId", f.RpID).
 			opt("userHandle", f.UserHandle).opt("userName", f.UserName).set("counter", f.Counter).opt("rpName", f.RpName).
 			opt("userDisplayName", f.UserDisplayName).set("discoverable", discoverable).set("creationDate", f.CreationDate))
 	}

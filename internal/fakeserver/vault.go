@@ -369,7 +369,7 @@ func (s *Server) syncBody() []byte {
 		},
 	}
 	collections := []obj{
-		{"id": CollectionEng, "organizationId": OrgID, "name": enc("Engineering", k.orgKey), "externalId": nil, "object": "collectionDetails", "readOnly": false, "hidePasswords": false, "manage": false},
+		{"id": CollectionEng, "organizationId": OrgID, "name": enc("Engineering", k.orgKey), "externalId": nil, "object": "collectionDetails", "readOnly": false, "hidePasswords": cfg.EngHidesPasswords, "manage": false},
 		{"id": CollectionSec, "organizationId": OrgID, "name": enc("Secrets", k.orgKey), "externalId": nil, "object": "collectionDetails", "readOnly": true, "hidePasswords": true, "manage": false},
 	}
 	ciphers := s.items

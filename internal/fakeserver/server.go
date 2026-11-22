@@ -47,6 +47,8 @@ type Config struct {
 	// OnWrite runs inside each request that changes the vault, before it
 	// is applied.
 	OnWrite func()
+	// EngHidesPasswords makes the Engineering collection hide passwords.
+	EngHidesPasswords bool
 }
 
 // Server is a running fake server.
@@ -314,7 +316,7 @@ func (s *Server) api(w http.ResponseWriter, r *http.Request, path string) {
 
 func (s *Server) orgCollections() []obj {
 	return []obj{
-		{"id": CollectionEng, "organizationId": OrgID, "name": enc("Engineering", s.keys.orgKey), "externalId": nil, "object": "collectionDetails", "readOnly": false, "hidePasswords": false, "manage": false},
+		{"id": CollectionEng, "organizationId": OrgID, "name": enc("Engineering", s.keys.orgKey), "externalId": nil, "object": "collectionDetails", "readOnly": false, "hidePasswords": s.config().EngHidesPasswords, "manage": false},
 		{"id": CollectionSec, "organizationId": OrgID, "name": enc("Secrets", s.keys.orgKey), "externalId": nil, "object": "collectionDetails", "readOnly": true, "hidePasswords": true, "manage": false},
 	}
 }

@@ -59,7 +59,7 @@ func decryptCipher(enc *api.EncryptedCipher, userKey *crypto.SymmetricKey) (*Cip
 		EncryptedByKeyID: cloneStringPtr(enc.EncryptedByKeyID),
 		CollectionIDs:    append([]string(nil), enc.CollectionIDs...),
 		ReadOnly:         enc.Edit != nil && !*enc.Edit,
-		HidePassword:     enc.ViewPassword != nil && !*enc.ViewPassword,
+		HidePassword:     hidesPassword(enc),
 		Extra:            cloneExtra(enc.Extra),
 		SealedKeyID:      sealedKeyID(activeKey),
 	}

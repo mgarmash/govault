@@ -409,3 +409,15 @@ func (s *Server) Item(id string) map[string]any {
 	}
 	return nil
 }
+
+// Mutate changes a stored item as another client would. org encrypts a
+// value with the organization key, personal with the user key.
+func (s *Server) Mutate(id string, fn func(it map[string]any, org, personal func(string) any)) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if _, it := s.findItem(id); it != nil {
+		fn(it, func(v string) any { return enc(v, s.keys.orgKey) }, func(v string) any { return enc(v, s.keys.userKey) })
+		it["revisionDate"] = now()
+		s.bump()
+	}
+}

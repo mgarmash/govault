@@ -76,8 +76,8 @@ const (
 
 // OpenVault decrypts a raw sync response with userKey, keeping the
 // server's order. Items that do not decrypt are left out, as Bitwarden's
-// clients do. An organization item whose permissions the server did not
-// state hides its passwords.
+// clients do, and personal ones are named in Unreadable. ReadOnly and
+// HidePassword are each item's effective access (EffectiveAccess).
 func OpenVault(rawSync []byte, userKey *crypto.SymmetricKey) (*VaultView, error) {
 	if userKey == nil {
 		return nil, crypto.ErrInvalidKeyLength
@@ -120,9 +120,6 @@ func OpenVault(rawSync []byte, userKey *crypto.SymmetricKey) (*VaultView, error)
 		if c == nil {
 			continue
 		}
-		if c.OrganizationID != nil && *c.OrganizationID != "" && enc.ViewPassword == nil {
-			c.HidePassword = true
-		}
 		if field := typeDataField(enc.Type); field != "" {
 			if obj, err := v.decryptTypeData(c, enc.Extra[field]); err == nil && obj != nil {
 				v.typeData[c.ID] = obj
@@ -136,6 +133,16 @@ func OpenVault(rawSync []byte, userKey *crypto.SymmetricKey) (*VaultView, error)
 		}
 	}
 	v.Collections = v.DecryptCollections(resp.Collections)
+	cols := map[string]Collection{}
+	for _, col := range v.Collections {
+		cols[col.ID] = col.Collection
+	}
+	for _, c := range v.Ciphers {
+		c.ReadOnly, c.HidePassword = EffectiveAccess(c, func(id string) (Collection, bool) {
+			col, ok := cols[id]
+			return col, ok
+		})
+	}
 	for _, o := range resp.Profile.Organizations {
 		v.Organizations = append(v.Organizations, viewOrganization(o, data.orgKeys[o.ID] != nil))
 	}

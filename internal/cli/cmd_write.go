@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"slices"
 	"strings"
+	"time"
 
 	"github.com/txchen/govault/internal/vaultcore/api"
 	"github.com/txchen/govault/internal/vaultcore/export"
@@ -123,7 +124,7 @@ func (a *app) writeFailure(err error, permission string) response {
 
 // written prints a changed item, or reports that the server has it but
 // the local copy does not.
-func (a *app) written(c *state.Cipher, err error, permission string) response {
+func (a *app) written(w *profile.Writer, c *state.Cipher, err error, permission string) response {
 	var local *state.LocalCopyError
 	if errors.As(err, &local) && c != nil {
 		a.warn("Warning: the server has the change, but gv could not record it in its local copy; run `gv sync`.")
@@ -132,7 +133,15 @@ func (a *app) written(c *state.Cipher, err error, permission string) response {
 	if err != nil {
 		return a.writeFailure(err, permission)
 	}
-	return success(itemJSON(c, nil))
+	// The response shows what a read would: the item's effective access,
+	// or, without a local copy, hidden values for an organization item.
+	shown := *c
+	if cur, err := w.CipherForWrite(c.ID); err == nil {
+		shown.ReadOnly, shown.HidePassword = cur.ReadOnly, cur.HidePassword
+	} else if c.OrganizationID != nil && *c.OrganizationID != "" {
+		shown.HidePassword = true
+	}
+	return success(itemJSON(&shown, nil))
 }
 
 func restrictedFor(w *profile.Writer, c *state.Cipher) bool {
@@ -171,7 +180,7 @@ func (a *app) create(p *parsed) response {
 				return failure("Creating this item type is restricted by organizational policy.")
 			}
 			saved, err := w.SaveCipher(a.ctx, c)
-			return a.written(saved, err, noEditPermission)
+			return a.written(w, saved, err, noEditPermission)
 		})
 	}
 	var folder struct {
@@ -211,7 +220,7 @@ func (a *app) createAttachment(p *parsed) response {
 		return failure("The file is larger than the 100 MiB attachment limit.")
 	}
 	return a.writing(func(w *profile.Writer) response {
-		c, err := w.GetCipher(itemID)
+		c, err := w.CipherForWrite(itemID)
 		if err != nil {
 			return notFound()
 		}
@@ -219,7 +228,7 @@ func (a *app) createAttachment(p *parsed) response {
 			return failure(premiumRequired)
 		}
 		saved, err := w.UploadAttachment(a.ctx, c.ID, name, data)
-		return a.written(saved, err, noEditPermission)
+		return a.written(w, saved, err, noEditPermission)
 	})
 }
 
@@ -256,7 +265,7 @@ func (a *app) edit(p *parsed) response {
 			case err == nil && c == nil:
 				return success(nil)
 			}
-			return a.written(c, err, noEditPermission)
+			return a.written(w, c, err, noEditPermission)
 		})
 	}
 	var folder struct {
@@ -278,7 +287,7 @@ func (a *app) edit(p *parsed) response {
 }
 
 func (a *app) editItem(w *profile.Writer, id string, it export.Item) response {
-	cur, err := w.GetCipher(id)
+	cur, err := w.CipherForWrite(id)
 	if err != nil {
 		return notFound()
 	}
@@ -294,6 +303,15 @@ func (a *app) editItem(w *profile.Writer, id string, it export.Item) response {
 	if !export.IsSavableType(it.Type) {
 		return failure(fmt.Sprintf("Item type %d is not available.", it.Type))
 	}
+	if it.ID != "" && it.ID != cur.ID {
+		return failure(fmt.Sprintf("The item in the input is %s, not %s.", it.ID, cur.ID))
+	}
+	// An item read before another change carries the revision it was read
+	// at, which gv prints in milliseconds.
+	if it.RevisionDate != nil && (cur.RevisionDate == nil || jsTime(*it.RevisionDate) != jsTime(*cur.RevisionDate)) {
+		return failure(fmt.Sprintf("The item changed after the input was read (revision %s, now %s). Get it again and repeat the edit.", jsTime(*it.RevisionDate), jsTimePtrString(cur.RevisionDate)))
+	}
+	original := *cur
 	hiddenPassword, hiddenTOTP := "", ""
 	hiddenFields := map[string][]string{}
 	if cur.HidePassword {
@@ -328,12 +346,13 @@ func (a *app) editItem(w *profile.Writer, id string, it export.Item) response {
 				cur.Fields[i].Value, hiddenFields[f.Name] = vals[0], vals[1:]
 			}
 		}
+		keepHiddenKeys(cur, &original)
 	}
 	if restrictedFor(w, cur) {
 		return failure("Editing this item type is restricted by organizational policy.")
 	}
 	saved, err := w.SaveCipher(a.ctx, cur)
-	return a.written(saved, err, noEditPermission)
+	return a.written(w, saved, err, noEditPermission)
 }
 
 func (a *app) delete(p *parsed) response {
@@ -348,7 +367,7 @@ func (a *app) delete(p *parsed) response {
 	switch object {
 	case "item":
 		return a.writing(func(w *profile.Writer) response {
-			c, err := w.GetCipher(id)
+			c, err := w.CipherForWrite(id)
 			if err != nil {
 				return notFound()
 			}
@@ -374,7 +393,7 @@ func (a *app) delete(p *parsed) response {
 			return failure("`itemid` option is required.")
 		}
 		return a.writing(func(w *profile.Writer) response {
-			c, err := w.GetCipher(itemID)
+			c, err := w.CipherForWrite(itemID)
 			if err != nil {
 				return notFound()
 			}
@@ -418,7 +437,7 @@ func (a *app) restore(p *parsed) response {
 	}
 	id := strings.ToLower(p.arg(1))
 	return a.writing(func(w *profile.Writer) response {
-		c, err := w.GetCipher(id)
+		c, err := w.CipherForWrite(id)
 		if err != nil {
 			return notFound()
 		}
@@ -445,7 +464,7 @@ func (a *app) archive(p *parsed) response {
 	}
 	id := strings.ToLower(p.arg(1))
 	return a.writing(func(w *profile.Writer) response {
-		c, err := w.GetCipher(id)
+		c, err := w.CipherForWrite(id)
 		if err != nil {
 			return notFound()
 		}
@@ -462,4 +481,34 @@ func (a *app) archive(p *parsed) response {
 		}
 		return success(nil)
 	})
+}
+
+// keepHiddenKeys puts back the private key material a read of a hidden
+// item leaves out: an SSH private key and each passkey sent back without
+// its key, which keeps the passkey as it was.
+func keepHiddenKeys(c, orig *state.Cipher) {
+	if c.SSHKey != nil && orig.SSHKey != nil && c.SSHKey.PrivateKey == "" {
+		c.SSHKey.PrivateKey = orig.SSHKey.PrivateKey
+	}
+	if c.Login == nil || orig.Login == nil {
+		return
+	}
+	for i, f := range c.Login.Fido2Credentials {
+		if f.KeyValue != "" {
+			continue
+		}
+		for _, o := range orig.Login.Fido2Credentials {
+			if o.CredentialID == f.CredentialID {
+				c.Login.Fido2Credentials[i] = o
+				break
+			}
+		}
+	}
+}
+
+func jsTimePtrString(t *time.Time) string {
+	if t == nil {
+		return "none"
+	}
+	return jsTime(*t)
 }

@@ -256,27 +256,14 @@ func (o *op) editableCipher(id string) (*Cipher, error) {
 // effectiveReadOnlyLocked reports whether c is read-only for the item itself
 // or through every known collection it belongs to. The caller holds s.mu.
 func (s *Service) effectiveReadOnlyLocked(c *Cipher) bool {
-	return c.ReadOnly || s.allCollectionsLocked(c, func(col Collection) bool { return col.ReadOnly })
+	ro, _ := s.effectiveAccessLocked(c)
+	return ro
 }
 
 // effectiveHidePasswordLocked is effectiveReadOnlyLocked for hidePasswords.
 func (s *Service) effectiveHidePasswordLocked(c *Cipher) bool {
-	return c.HidePassword || s.allCollectionsLocked(c, func(col Collection) bool { return col.HidePasswords })
-}
-
-func (s *Service) allCollectionsLocked(c *Cipher, pred func(Collection) bool) bool {
-	known := 0
-	for _, id := range c.CollectionIDs {
-		col, ok := s.collections[id]
-		if !ok {
-			continue
-		}
-		if !pred(col) {
-			return false
-		}
-		known++
-	}
-	return known > 0
+	_, hide := s.effectiveAccessLocked(c)
+	return hide
 }
 
 // serverUserID is the user ID a cipher write names as its owner
