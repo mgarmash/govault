@@ -961,6 +961,9 @@ func (s *Service) SaveCipher(ctx context.Context, c *Cipher) (*Cipher, error) {
 // land on a vault that changed during the request (errSnapshotMoved).
 func (o *op) commitCipherIfUnchanged(decrypted *Cipher, enc *api.EncryptedCipher) (*Cipher, error) {
 	o.s.noteArchiveEvidence(enc)
+	// The copies are taken before decrypted is published: once it is in
+	// s.ciphers, other operations change it under s.mu.
+	out := cloneCipher(decrypted)
 	stored := *enc
 	if len(stored.CollectionIDs) == 0 {
 		stored.CollectionIDs = append([]string(nil), decrypted.CollectionIDs...)
@@ -970,9 +973,8 @@ func (o *op) commitCipherIfUnchanged(decrypted *Cipher, enc *api.EncryptedCipher
 		return nil, err
 	}
 	o.s.notifyUpdated()
-	out := cloneCipher(decrypted)
 	if lc := (*LocalCopyError)(nil); errors.As(err, &lc) {
-		lc.Cipher = cloneCipher(decrypted)
+		lc.Cipher = cloneCipher(out)
 		return out, lc
 	}
 	return out, err
@@ -984,6 +986,9 @@ func (o *op) commitCipherIfUnchanged(decrypted *Cipher, enc *api.EncryptedCipher
 // error.
 func (o *op) commitCipher(decrypted *Cipher, enc *api.EncryptedCipher) (*Cipher, error) {
 	o.s.noteArchiveEvidence(enc)
+	// The copies are taken before decrypted is published: once it is in
+	// s.ciphers, other operations change it under s.mu.
+	out := cloneCipher(decrypted)
 	stored := *enc
 	if len(stored.CollectionIDs) == 0 {
 		stored.CollectionIDs = append([]string(nil), decrypted.CollectionIDs...)
@@ -993,9 +998,8 @@ func (o *op) commitCipher(decrypted *Cipher, enc *api.EncryptedCipher) (*Cipher,
 		return nil, ErrLocked
 	}
 	o.s.notifyUpdated()
-	out := cloneCipher(decrypted)
 	if lc := (*LocalCopyError)(nil); errors.As(err, &lc) {
-		lc.Cipher = cloneCipher(decrypted)
+		lc.Cipher = cloneCipher(out)
 		return out, lc
 	}
 	return out, err
