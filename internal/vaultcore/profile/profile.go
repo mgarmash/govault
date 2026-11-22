@@ -69,14 +69,13 @@ const (
 type Options struct {
 	// Keyring is the OS credential store; nil means the system has none,
 	// so credentials are sealed under the vault's user key in a file.
-	Keyring       keyring.Store
-	HTTPClient    *http.Client
-	DeviceName    string
-	DeviceType    int
-	ClientName    string
-	ClientVersion string
-	UserAgent     string
-	Now           func() time.Time
+	Keyring    keyring.Store
+	HTTPClient *http.Client
+	DeviceName string
+	DeviceType int
+	ClientName string
+	UserAgent  string
+	Now        func() time.Time
 }
 
 // Profile is an open profile directory.
@@ -279,16 +278,15 @@ func (p *Profile) checkEndpoints(ps *profileState, acct *accountState) error {
 
 func (p *Profile) newClient(e api.Endpoints, deviceID string) (*api.Client, error) {
 	c, err := api.NewClient(api.ClientConfig{
-		ServerURL:     e.Base,
-		APIURL:        e.API,
-		IdentityURL:   e.Identity,
-		DeviceID:      deviceID,
-		DeviceName:    p.opts.DeviceName,
-		DeviceType:    p.opts.DeviceType,
-		ClientID:      "cli",
-		ClientName:    p.opts.ClientName,
-		ClientVersion: p.opts.ClientVersion,
-		HTTPClient:    p.opts.HTTPClient,
+		ServerURL:   e.Base,
+		APIURL:      e.API,
+		IdentityURL: e.Identity,
+		DeviceID:    deviceID,
+		DeviceName:  p.opts.DeviceName,
+		DeviceType:  p.opts.DeviceType,
+		ClientID:    "cli",
+		ClientName:  p.opts.ClientName,
+		HTTPClient:  p.opts.HTTPClient,
 	})
 	if err != nil {
 		return nil, err

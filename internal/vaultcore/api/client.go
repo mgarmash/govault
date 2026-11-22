@@ -21,6 +21,19 @@ import (
 
 const defaultUserAgent = "GoVault/0.1"
 
+// ClientVersion is the Bitwarden client release whose protocol GoVault
+// follows. Every API request sends it as Bitwarden-Client-Version, and
+// servers gate features on it: Vaultwarden 1.33 and later send SSH key
+// items only to 2024.12.0 and newer, and Vaultwarden after 1.37.5 refuses
+// logins without the header and V2-encryption accounts below 2026.10.1
+// (2026.10.2 for desktop device types).
+//
+// Bump it when GoVault supports what a newer Bitwarden release added, after
+// checking which server gates the new version opens, since a server trusts
+// it to understand everything that release does. The gv contract fixtures
+// in internal/cli/testdata/bw are recorded from the same bw release.
+const ClientVersion = "2026.11.0"
+
 type ClientConfig struct {
 	ServerURL string
 	// APIURL and IdentityURL override the API and identity services, which
@@ -33,12 +46,9 @@ type ClientConfig struct {
 	// ClientID is the OAuth client the tokens are issued to; "desktop"
 	// when empty.
 	ClientID string
-	// ClientName and ClientVersion, when set, are sent as the
-	// Bitwarden-Client-Name and Bitwarden-Client-Version headers, by which
-	// servers decide which item types a client understands.
-	ClientName    string
-	ClientVersion string
-	HTTPClient    *http.Client
+	// ClientName is sent as Bitwarden-Client-Name; "desktop" when empty.
+	ClientName string
+	HTTPClient *http.Client
 }
 
 type Client struct {
@@ -106,15 +116,14 @@ func NewClient(cfg ClientConfig) (*Client, error) {
 	if clientID == "" {
 		clientID = "desktop"
 	}
-	headers := map[string]string{}
-	if cfg.ClientName != "" {
-		headers["Bitwarden-Client-Name"] = cfg.ClientName
+	clientName := cfg.ClientName
+	if clientName == "" {
+		clientName = "desktop"
 	}
-	if cfg.ClientVersion != "" {
-		headers["Bitwarden-Client-Version"] = cfg.ClientVersion
-	}
-	if cfg.ClientName != "" || cfg.ClientVersion != "" {
-		headers["Device-Type"] = strconv.Itoa(cfg.DeviceType)
+	headers := map[string]string{
+		"Bitwarden-Client-Name":    clientName,
+		"Bitwarden-Client-Version": ClientVersion,
+		"Device-Type":              strconv.Itoa(cfg.DeviceType),
 	}
 	return &Client{
 		baseURL:     base,

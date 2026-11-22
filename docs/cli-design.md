@@ -122,7 +122,7 @@ Use desktop HTTP origin checks, normal TLS verification and its non-loopback HTT
 
 The profile directory is `GoVault CLI` under the OS parent, or under `BITWARDENCLI_APPDATA_DIR`. It holds `profile.json` (profile and device IDs, server, session generation), `account.json`, the encrypted snapshot `vault_<id>.enc.json`, `session.json`, and `credentials.json` on keyring-free hosts, plus `state.lock` and `credentials.lock`. A session key is 64 random bytes in base64, like bw's; `session.json` holds the user key sealed with AES-256-GCM under a key HKDF-derived from it, with the profile, account, login, endpoints and generation as associated data. Every unlock, lock and logout advances the generation. Token renewal runs under `credentials.lock`, so concurrent processes renew a rotating refresh token once.
 
-gv sends `Bitwarden-Client-Name: cli` and `Bitwarden-Client-Version: 2026.11.0`, the bw release it follows; Vaultwarden withholds SSH keys from clients that send no version.
+Every API request of both GoVault clients sends `Bitwarden-Client-Name` (`desktop` or `cli`), `Device-Type` and `Bitwarden-Client-Version: 2026.11.0` (`api.ClientVersion`), the bw release gv follows. Vaultwarden withholds SSH key items from clients below 2024.12.0 or without the header, and its development branch after 1.37.5 refuses logins without it.
 
 ### Contract fixtures
 

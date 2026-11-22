@@ -52,10 +52,6 @@ type Terminal interface {
 	ReadSecret(prompt string) (string, error)
 }
 
-// ClientCompatVersion is the Bitwarden CLI release gv's output and
-// protocol follow. Servers learn from it which item types gv understands.
-const ClientCompatVersion = "2026.11.0"
-
 // flags are the global options, and the BW_* variables they set.
 type flags struct {
 	pretty, raw, response, quiet, noInteraction, cleanExit bool
@@ -169,14 +165,13 @@ func (a *app) openProfile() (*profile.Profile, error) {
 		}
 	}
 	p, err := profile.Open(dir, profile.Options{
-		Keyring:       store,
-		HTTPClient:    a.env.HTTPClient,
-		DeviceName:    "GoVault CLI",
-		DeviceType:    a.deviceType(),
-		ClientName:    "cli",
-		ClientVersion: ClientCompatVersion,
-		UserAgent:     "GoVault-CLI/" + a.env.Version,
-		Now:           a.env.Now,
+		Keyring:    store,
+		HTTPClient: a.env.HTTPClient,
+		DeviceName: "GoVault CLI",
+		DeviceType: a.deviceType(),
+		ClientName: "cli",
+		UserAgent:  "GoVault-CLI/" + a.env.Version,
+		Now:        a.env.Now,
 	})
 	if err != nil {
 		return nil, err
