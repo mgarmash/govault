@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/txchen/govault/internal/fakeserver"
+	"github.com/txchen/govault/internal/vaultcore/crypto"
 	"github.com/txchen/govault/internal/vaultcore/keyring"
 	"github.com/txchen/govault/internal/vaultcore/totp"
 )
@@ -327,22 +328,40 @@ func (vw *vwRun) revisions(t *testing.T) map[string]string {
 }
 
 func (vw *vwRun) spoilAccessToken(t *testing.T, ring *keyring.Memory) {
-	dir := vw.env["BITWARDENCLI_APPDATA_DIR"]
-	raw, err := os.ReadFile(filepath.Join(dir, "GoVault CLI", "profile.json"))
+	dir := filepath.Join(vw.env["BITWARDENCLI_APPDATA_DIR"], "GoVault CLI")
+	var ps struct{ ProfileID string }
+	var acct struct{ AccountID, LoginID string }
+	for name, v := range map[string]any{"profile.json": &ps, "account.json": &acct} {
+		raw, err := os.ReadFile(filepath.Join(dir, name))
+		if err != nil {
+			t.Fatal(err)
+		}
+		_ = json.Unmarshal(raw, v)
+	}
+	// The credential store keeps the key that seals credentials.json.
+	k, err := ring.Get("GoVault CLI", ps.ProfileID)
+	if err != nil || len(k) != 32 {
+		t.Fatalf("credential store key: %v", err)
+	}
+	var key [32]byte
+	copy(key[:], k)
+	ad, _ := json.Marshal(struct{ ProfileID, AccountID, LoginID string }{ps.ProfileID, acct.AccountID, acct.LoginID})
+	sealed, err := os.ReadFile(filepath.Join(dir, "credentials.json"))
 	if err != nil {
 		t.Fatal(err)
 	}
-	var ps struct{ ProfileID string }
-	_ = json.Unmarshal(raw, &ps)
-	creds, err := ring.Get("GoVault CLI", ps.ProfileID)
+	plain, err := crypto.Open(key, sealed, ad)
 	if err != nil {
 		t.Fatal(err)
 	}
 	var c map[string]any
-	_ = json.Unmarshal(creds, &c)
+	_ = json.Unmarshal(plain, &c)
 	c["accessToken"] = "eyJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJ4In0.invalid"
 	spoiled, _ := json.Marshal(c)
-	if err := ring.Set("GoVault CLI", ps.ProfileID, spoiled); err != nil {
+	if sealed, err = crypto.Seal(key, spoiled, ad); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "credentials.json"), sealed, 0o600); err != nil {
 		t.Fatal(err)
 	}
 }

@@ -39,8 +39,12 @@ var (
 	ErrSignInRequired   = errors.New("profile: the saved sign-in was rejected; log in again")
 	ErrNoCredentials    = errors.New("profile: no sign-in credentials are available while the vault is locked on a system without a credential store; unlock first or provide the API key")
 	ErrDifferentAccount = errors.New("profile: the credentials belong to a different account")
-	ErrStale            = errors.New("profile: the profile changed while the request was running")
-	ErrLogoutRequired   = errors.New("profile: log out before changing the server")
+	// ErrUntrustedServer means an API key from the environment was not
+	// the one this account signed in to its server with, so it is not
+	// sent there.
+	ErrUntrustedServer = errors.New("profile: the API key was not used to sign in to this account's server; log in with it again")
+	ErrStale           = errors.New("profile: the profile changed while the request was running")
+	ErrLogoutRequired  = errors.New("profile: log out before changing the server")
 )
 
 // AlreadyLoggedInError reports an attempt to log in over an account.
@@ -119,7 +123,17 @@ type accountState struct {
 	Endpoints   api.Endpoints `json:"endpoints"`
 	Credentials string        `json:"credentials"`
 	LoggingOut  bool          `json:"loggingOut,omitempty"`
+	// Pending marks a login that has not finished saving: Open rolls it
+	// back as it finishes a logout.
+	Pending bool `json:"pending,omitempty"`
+	// KeyBinding authenticates the server an API-key login used with the
+	// key itself, so a key from the environment goes nowhere else.
+	KeyBinding string `json:"keyBinding,omitempty"`
 }
+
+// gone reports an account that is being logged out or never finished
+// logging in.
+func (a *accountState) gone() bool { return a.LoggingOut || a.Pending }
 
 // Open opens or creates the profile in dir, finishing an interrupted
 // logout first.
@@ -136,7 +150,7 @@ func Open(dir string, opts Options) (*Profile, error) {
 			return err
 		}
 		acct, err := p.loadAccount()
-		if err == nil && acct.LoggingOut {
+		if err == nil && acct.gone() {
 			return p.finishLogout(acct)
 		}
 		return nil
@@ -230,7 +244,7 @@ func (p *Profile) activeAccount() (*accountState, error) {
 	if err != nil {
 		return nil, err
 	}
-	if a.LoggingOut {
+	if a.gone() {
 		return nil, ErrNotLoggedIn
 	}
 	return a, nil

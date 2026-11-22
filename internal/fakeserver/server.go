@@ -49,6 +49,9 @@ type Config struct {
 	OnWrite func()
 	// EngHidesPasswords makes the Engineering collection hide passwords.
 	EngHidesPasswords bool
+	// ClaimPadding adds a claim of this many bytes to access tokens, as
+	// claim-heavy servers issue them.
+	ClaimPadding int
 }
 
 // Server is a running fake server.
@@ -439,6 +442,9 @@ func (s *Server) issue(grant string, withRefresh bool) obj {
 		"nbf": now.Unix(), "exp": now.Add(lifetime).Unix(), "iss": s.URL() + "|login",
 		"sub": sub, "premium": cfg.Premium, "name": "Alice", "email": s.email, "email_verified": true,
 		"sstamp": "stamp", "device": "dev", "devicetype": "MacOsCLI", "client_id": clientID, "scope": []string{"api", "offline_access"}, "amr": []string{"Application"},
+	}
+	if cfg.ClaimPadding > 0 {
+		claims["padding"] = strings.Repeat("p", cfg.ClaimPadding)
 	}
 	payload, _ := json.Marshal(claims)
 	access := "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9." + base64.RawURLEncoding.EncodeToString(payload) + ".sig" + strconv.Itoa(seq)

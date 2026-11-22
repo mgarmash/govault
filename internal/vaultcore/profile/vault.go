@@ -94,6 +94,9 @@ func (p *Profile) Unlock(ctx context.Context, req UnlockRequest) (string, error)
 // adoptAPIKey exchanges key at the configured server, which must be the
 // account's, and checks the token is for this account.
 func (p *Profile) adoptAPIKey(ctx context.Context, ps *profileState, acct *accountState, key APIKey) (*credentials, error) {
+	if err := checkEnvKey(acct, key); err != nil {
+		return nil, err
+	}
 	o, err := p.connect(ps, acct, nil, nil)
 	if err != nil {
 		return nil, err

@@ -2,10 +2,15 @@ package profile
 
 import (
 	"context"
+	"crypto/hmac"
+	"crypto/rand"
+	"crypto/sha256"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/txchen/govault/internal/vaultcore/api"
@@ -73,7 +78,23 @@ func (p *Profile) loadCredentials(ps *profileState, acct *accountState, userKey 
 		if err != nil {
 			return nil, err
 		}
-		raw = v
+		defer crypto.ZeroBytes(v)
+		if len(v) != 32 {
+			return nil, fmt.Errorf("profile: the credential store holds no %s key", credentialsFile)
+		}
+		sealed, err := os.ReadFile(p.path(credentialsFile))
+		if errors.Is(err, os.ErrNotExist) {
+			return nil, nil
+		}
+		if err != nil {
+			return nil, err
+		}
+		var key [32]byte
+		copy(key[:], v)
+		defer crypto.ZeroBytes(key[:])
+		if raw, err = crypto.Open(key, sealed, p.credentialsAD(ps, acct)); err != nil {
+			return nil, fmt.Errorf("profile: %s: %w", credentialsFile, err)
+		}
 	case backendFile:
 		if userKey == nil {
 			return nil, nil
@@ -123,10 +144,22 @@ func (p *Profile) saveCredentials(ps *profileState, acct *accountState, c *crede
 	defer crypto.ZeroBytes(raw)
 	switch acct.Credentials {
 	case backendKeyring:
+		// The credential store keeps a fixed-size key, which seals the
+		// record on disk: tokens can outgrow what some stores hold, as
+		// Windows Credential Manager's 2,560 bytes.
 		if p.opts.Keyring == nil {
 			return errors.New("profile: the credential store is not available")
 		}
-		return p.opts.Keyring.Set(keyringService, ps.ProfileID, raw)
+		key, err := p.keyringKey(ps)
+		if err != nil {
+			return err
+		}
+		defer crypto.ZeroBytes(key[:])
+		sealed, err := crypto.Seal(key, raw, p.credentialsAD(ps, acct))
+		if err != nil {
+			return err
+		}
+		return privatefile.WriteFile(p.path(credentialsFile), sealed)
 	case backendFile:
 		if userKey == nil {
 			return nil
@@ -141,6 +174,66 @@ func (p *Profile) saveCredentials(ps *profileState, acct *accountState, c *crede
 			return err
 		}
 		return privatefile.WriteFile(p.path(credentialsFile), sealed)
+	}
+	return nil
+}
+
+// keyringKey returns the profile's credentials key from the credential
+// store, creating it there first if it has none.
+func (p *Profile) keyringKey(ps *profileState) ([32]byte, error) {
+	var key [32]byte
+	v, err := p.opts.Keyring.Get(keyringService, ps.ProfileID)
+	switch {
+	case err == nil && len(v) == 32:
+		copy(key[:], v)
+		crypto.ZeroBytes(v)
+		return key, nil
+	case err != nil && !errors.Is(err, keyring.ErrNotFound):
+		return key, err
+	}
+	if _, err := rand.Read(key[:]); err != nil {
+		return key, err
+	}
+	if err := p.opts.Keyring.Set(keyringService, ps.ProfileID, key[:]); err != nil {
+		return key, err
+	}
+	return key, nil
+}
+
+// keyBinding authenticates the account, login and endpoints an API key
+// signed in to with a key derived from its secret.
+func keyBinding(acct *accountState, key APIKey) (string, error) {
+	k, err := crypto.SealKey([]byte(key.ClientSecret), "govault-cli api key binding v1")
+	if err != nil {
+		return "", err
+	}
+	defer crypto.ZeroBytes(k[:])
+	msg, err := json.Marshal(struct {
+		AccountID, LoginID, ClientID string
+		Endpoints                    api.Endpoints
+	}{acct.AccountID, acct.LoginID, key.ClientID, acct.Endpoints})
+	if err != nil {
+		return "", err
+	}
+	m := hmac.New(sha256.New, k[:])
+	m.Write(msg)
+	return base64.StdEncoding.EncodeToString(m.Sum(nil)), nil
+}
+
+// checkEnvKey runs before an API key from the environment is sent: the
+// key must name this account's user, and the account's server must be the
+// one this key signed in to.
+func checkEnvKey(acct *accountState, key APIKey) error {
+	uuid, ok := strings.CutPrefix(strings.ToLower(key.ClientID), "user.")
+	if !ok || uuid != strings.ToLower(acct.AccountID) {
+		return ErrDifferentAccount
+	}
+	want, err := keyBinding(acct, key)
+	if err != nil {
+		return err
+	}
+	if acct.KeyBinding == "" || !hmac.Equal([]byte(want), []byte(acct.KeyBinding)) {
+		return ErrUntrustedServer
 	}
 	return nil
 }
@@ -180,7 +273,7 @@ func (o *online) token(ctx context.Context, stale string) (string, error) {
 	var tok string
 	err := o.p.withLock(credsLockFile, true, func() error {
 		acct, err := o.p.loadAccount()
-		if err != nil || acct.LoginID != o.acct.LoginID || acct.LoggingOut {
+		if err != nil || acct.LoginID != o.acct.LoginID || acct.gone() {
 			return ErrStale
 		}
 		creds, err := o.p.loadCredentials(o.ps, o.acct, o.userKey)
@@ -194,6 +287,9 @@ func (o *online) token(ctx context.Context, stale string) (string, error) {
 		if creds == nil {
 			if o.acct.Grant != GrantAPIKey || o.envKey == nil {
 				return ErrNoCredentials
+			}
+			if err := checkEnvKey(o.acct, *o.envKey); err != nil {
+				return err
 			}
 			creds = &credentials{
 				Version: formatVersion, AccountID: o.acct.AccountID, LoginID: o.acct.LoginID,

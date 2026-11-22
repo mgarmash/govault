@@ -163,6 +163,11 @@ func (p *Profile) commitLogin(ctx context.Context, startPS *profileState, r logi
 	if p.opts.Keyring != nil {
 		acct.Credentials = backendKeyring
 	}
+	if r.apiKey != nil {
+		if acct.KeyBinding, err = keyBinding(acct, *r.apiKey); err != nil {
+			return "", err
+		}
+	}
 	creds := &credentials{
 		Version: formatVersion, AccountID: sub, LoginID: acct.LoginID, Endpoints: r.endpoints, Grant: r.grant,
 		RefreshToken: r.token.RefreshToken, AccessToken: r.token.AccessToken,
@@ -184,7 +189,11 @@ func (p *Profile) commitLogin(ctx context.Context, startPS *profileState, r logi
 	}
 	var session string
 	err = p.exclusive(func() error {
-		if cur, err := p.loadAccount(); err == nil {
+		if cur, err := p.loadAccount(); err == nil && cur.gone() {
+			if err := p.finishLogout(cur); err != nil {
+				return err
+			}
+		} else if err == nil {
 			return &AlreadyLoggedInError{Email: cur.Email}
 		} else if !errors.Is(err, ErrNotLoggedIn) {
 			return err
@@ -196,6 +205,19 @@ func (p *Profile) commitLogin(ctx context.Context, startPS *profileState, r logi
 		if ps.Generation != startPS.Generation || ps.Server != startPS.Server {
 			return ErrStale
 		}
+		// The account is journaled as pending before anything else is
+		// saved: an interrupted login is rolled back by the next Open.
+		pending := *acct
+		pending.Pending = true
+		if err := writeJSON(p.path(accountFile), &pending); err != nil {
+			return err
+		}
+		committed := false
+		defer func() {
+			if !committed {
+				_ = p.finishLogout(&pending)
+			}
+		}()
 		if err := p.store.SaveSnapshot(snap); err != nil {
 			return err
 		}
@@ -213,6 +235,7 @@ func (p *Profile) commitLogin(ctx context.Context, startPS *profileState, r logi
 		if err := writeJSON(p.path(accountFile), acct); err != nil {
 			return err
 		}
+		committed = true
 		return p.saveProfile(ps)
 	})
 	return session, err
