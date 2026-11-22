@@ -106,8 +106,8 @@ func OpenVault(rawSync []byte, userKey *crypto.SymmetricKey) (*VaultView, error)
 		userKey:  ownKey,
 		orgKeys:  data.orgKeys,
 	}
-	if resp.Profile.PrivateKey != nil && *resp.Profile.PrivateKey != "" {
-		if priv, err := crypto.DecryptPrivateKey(*resp.Profile.PrivateKey, ownKey); err == nil {
+	if wrapped := wrappedPrivateKey(&resp.Profile); wrapped != "" {
+		if priv, err := crypto.DecryptPrivateKey(wrapped, ownKey); err == nil {
 			v.Profile.PublicKey, _ = x509.MarshalPKIXPublicKey(&priv.PublicKey)
 			crypto.ZeroPrivateKey(priv)
 		}

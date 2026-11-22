@@ -1553,12 +1553,28 @@ func (s *Service) Collections() []Collection {
 	return out
 }
 
+// wrappedPrivateKey is the account's private key wrapped with the user
+// key: profile.privateKey, or accountKeys, which newer servers send.
+func wrappedPrivateKey(p *api.Profile) string {
+	if p.PrivateKey != nil && *p.PrivateKey != "" {
+		return *p.PrivateKey
+	}
+	var keys struct {
+		PublicKeyEncryptionKeyPair struct {
+			WrappedPrivateKey string `json:"wrappedPrivateKey"`
+		} `json:"publicKeyEncryptionKeyPair"`
+	}
+	_ = json.Unmarshal(p.Extra["accountKeys"], &keys)
+	return keys.PublicKeyEncryptionKeyPair.WrappedPrivateKey
+}
+
 func unwrapOrgKeys(p *api.Profile, userKey *crypto.SymmetricKey) map[string]*crypto.SymmetricKey {
 	keys := map[string]*crypto.SymmetricKey{}
-	if p.PrivateKey == nil || *p.PrivateKey == "" || len(p.Organizations) == 0 {
+	wrapped := wrappedPrivateKey(p)
+	if wrapped == "" || len(p.Organizations) == 0 {
 		return keys
 	}
-	priv, err := crypto.DecryptPrivateKey(*p.PrivateKey, userKey)
+	priv, err := crypto.DecryptPrivateKey(wrapped, userKey)
 	if err != nil {
 		return keys
 	}

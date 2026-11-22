@@ -112,9 +112,6 @@ func (p *Profile) LoginAPIKey(ctx context.Context, key APIKey) error {
 	if err != nil {
 		return err
 	}
-	if tok.Key == "" {
-		return errors.New("profile: the server sent no account key; this account cannot be unlocked with a master password")
-	}
 	kdf := crypto.KDFConfig{Type: crypto.KDFType(tok.KDF), Iterations: uint32(tok.KDFIters)}
 	if tok.KDFMemory != nil {
 		kdf.MemoryMB = uint32(*tok.KDFMemory)
@@ -177,6 +174,9 @@ func (p *Profile) commitLogin(ctx context.Context, startPS *profileState, r logi
 	protectedKey := syncResp.Profile.Key
 	if protectedKey == "" {
 		protectedKey = r.token.Key
+	}
+	if protectedKey == "" {
+		return "", errors.New("profile: the server sent no master-password-wrapped key; this account cannot be unlocked with a master password")
 	}
 	snap := &store.Snapshot{
 		SchemaVersion: store.CurrentSchemaVersion, AccountID: sub, ServerURL: r.endpoints.API, Email: email,

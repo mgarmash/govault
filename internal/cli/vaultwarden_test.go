@@ -40,6 +40,35 @@ func TestVaultwarden(t *testing.T) {
 	runServerSuite(t, url, http.DefaultClient, acct)
 }
 
+// TestBitwardenCloud runs the API-key suite against Bitwarden's cloud with
+// a disposable account:
+//
+//	GV_BITWARDEN_REGION=us|eu GV_BITWARDEN_PASSWORD=… \
+//	GV_BITWARDEN_CLIENT_ID=user.… GV_BITWARDEN_CLIENT_SECRET=… \
+//	go test ./internal/cli -run TestBitwardenCloud -v
+//
+// It signs in once, with the API key: a password login from a new device
+// meets Bitwarden's new-device verification, which gv does not support.
+// It renews the token once and never changes the vault.
+func TestBitwardenCloud(t *testing.T) {
+	region := os.Getenv("GV_BITWARDEN_REGION")
+	if region == "" {
+		t.Skip("set GV_BITWARDEN_REGION and a test account to run against Bitwarden's cloud")
+	}
+	server := map[string]string{"us": "bitwarden.com", "eu": "https://vault.bitwarden.eu"}[region]
+	if server == "" {
+		t.Fatalf("GV_BITWARDEN_REGION must be us or eu, not %q", region)
+	}
+	acct := vwAccount{
+		password: os.Getenv("GV_BITWARDEN_PASSWORD"),
+		clientID: os.Getenv("GV_BITWARDEN_CLIENT_ID"), clientSecret: os.Getenv("GV_BITWARDEN_CLIENT_SECRET"),
+	}
+	if acct.password == "" || acct.clientID == "" || acct.clientSecret == "" {
+		t.Fatal("GV_BITWARDEN_PASSWORD, GV_BITWARDEN_CLIENT_ID and GV_BITWARDEN_CLIENT_SECRET are required")
+	}
+	runAPIKeySuite(t, server, http.DefaultClient, acct, keyring.NewMemory())
+}
+
 // The suite itself is checked against the fake server.
 func TestServerSuiteOnFakeServer(t *testing.T) {
 	srv := fakeserver.New()
@@ -85,39 +114,60 @@ func runServerSuite(t *testing.T, url string, client *http.Client, acct vwAccoun
 		return
 	}
 	for _, withKeyring := range []bool{true, false} {
-		name := "apikey-keyring"
+		name := "apikey-no-keyring"
 		var ring *keyring.Memory
 		if withKeyring {
-			ring = keyring.NewMemory()
-		} else {
-			name = "apikey-no-keyring"
+			name, ring = "apikey-keyring", keyring.NewMemory()
 		}
-		t.Run(name, func(t *testing.T) {
-			vw := newVW(t, url, client, ring)
-			vw.env["BW_CLIENTID"], vw.env["BW_CLIENTSECRET"], vw.env["PW"] = id, secret, password
-			vw.must(t, "login", "--apikey", "--nointeraction")
-			if !withKeyring {
-				delete(vw.env, "BW_CLIENTID")
-				delete(vw.env, "BW_CLIENTSECRET")
-				if r := vw.run("sync"); r.code == 0 {
-					t.Fatal("a locked sync without credentials succeeded on a keyring-free host")
-				}
-				vw.env["BW_CLIENTID"], vw.env["BW_CLIENTSECRET"] = id, secret
-			}
-			vw.env["BW_SESSION"] = vw.must(t, "unlock", "--passwordenv", "PW", "--raw")
-			delete(vw.env, "BW_CLIENTID")
-			delete(vw.env, "BW_CLIENTSECRET")
-			vw.checkReads(t)
-			if withKeyring {
-				// A token the server rejects is renewed with a second client
-				// credentials exchange; there is no refresh token.
-				vw.spoilAccessToken(t, ring)
-				delete(vw.env, "BW_SESSION")
-				vw.must(t, "sync", "-f")
-			}
-			vw.must(t, "logout")
-		})
+		t.Run(name, func(t *testing.T) { runAPIKeySuite(t, url, client, acct, ring) })
 	}
+}
+
+// runAPIKeySuite signs in with the API key once, unlocks with the master
+// password, reads, renews a rejected token (with a keyring), locks and logs
+// out. Without a keyring it also checks that a locked sync needs the key
+// again.
+func runAPIKeySuite(t *testing.T, url string, client *http.Client, acct vwAccount, ring *keyring.Memory) {
+	withKeyring := ring != nil
+	id, secret := acct.clientID, acct.clientSecret
+	vw := newVW(t, url, client, ring)
+	vw.env["BW_CLIENTID"], vw.env["BW_CLIENTSECRET"], vw.env["PW"] = id, secret, acct.password
+	vw.must(t, "login", "--apikey", "--nointeraction")
+	t.Log("ok: login --apikey")
+	if !withKeyring {
+		delete(vw.env, "BW_CLIENTID")
+		delete(vw.env, "BW_CLIENTSECRET")
+		if r := vw.run("sync"); r.code == 0 {
+			t.Fatal("a locked sync without credentials succeeded on a keyring-free host")
+		}
+		t.Log("ok: locked sync refused without credentials")
+		vw.env["BW_CLIENTID"], vw.env["BW_CLIENTSECRET"] = id, secret
+	}
+	vw.env["BW_SESSION"] = vw.must(t, "unlock", "--passwordenv", "PW", "--raw")
+	t.Log("ok: unlock --passwordenv --raw")
+	delete(vw.env, "BW_CLIENTID")
+	delete(vw.env, "BW_CLIENTSECRET")
+	vw.checkReads(t)
+	if withKeyring {
+		// A token the server rejects is renewed with a second client
+		// credentials exchange; there is no refresh token.
+		vw.spoilAccessToken(t, ring)
+		session := vw.env["BW_SESSION"]
+		delete(vw.env, "BW_SESSION")
+		vw.must(t, "sync", "-f")
+		t.Log("ok: locked sync -f renewed a rejected token")
+		vw.env["BW_SESSION"] = session
+	}
+	vw.must(t, "lock")
+	if r := vw.run("list", "items", "--nointeraction"); r.err != "Vault is locked." {
+		t.Fatalf("after lock: exit %d %q", r.code, r.err)
+	}
+	t.Log("ok: lock")
+	vw.must(t, "logout")
+	if r := vw.run("status"); !strings.Contains(r.out, `"status":"unauthenticated"`) {
+		t.Fatalf("status after logout: exit %d", r.code)
+	}
+	t.Log("ok: logout")
 }
 
 type vwRun struct {
@@ -155,7 +205,8 @@ func (vw *vwRun) must(t *testing.T, args ...string) string {
 	t.Helper()
 	r := vw.run(args...)
 	if r.code != 0 {
-		t.Fatalf("gv %s: exit %d: %s%s", strings.Join(args, " "), r.code, r.err, r.out)
+		// stdout may hold vault data, so only stderr is shown.
+		t.Fatalf("gv %s: exit %d: %s", args[0], r.code, r.err)
 	}
 	return r.out
 }
@@ -176,11 +227,22 @@ func (vw *vwRun) checkReads(t *testing.T) {
 			t.Fatalf("list %s: %v", kind, err)
 		}
 	}
-	if len(items) > 0 {
-		vw.must(t, "get", "item", items[0]["id"].(string))
+	fields := 0
+	for _, it := range items {
+		id := it["id"].(string)
+		vw.must(t, "get", "item", id)
+		login, _ := it["login"].(map[string]any)
+		if _, ok := login["username"].(string); ok && fields < 4 {
+			vw.must(t, "get", "username", id)
+			fields++
+		}
+		if _, ok := login["password"].(string); ok && fields < 4 {
+			vw.must(t, "get", "password", id)
+			fields++
+		}
 	}
 	vw.must(t, "get", "fingerprint", "me")
-	t.Logf("read %d items", len(items))
+	t.Logf("ok: status, sync -f, list items/folders/collections/organizations, get item (%d items), %d login fields, fingerprint", len(items), fields)
 }
 
 func (vw *vwRun) spoilAccessToken(t *testing.T, ring *keyring.Memory) {
