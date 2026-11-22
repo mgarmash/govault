@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"testing"
 
@@ -156,16 +157,50 @@ func TestVaultwardenAcceptsEveryKindOfItemWrite(t *testing.T) {
 func TestEncryptedForIsTheSessionUser(t *testing.T) {
 	env := newVaultTestEnv(t)
 	svc := loggedInTestService(t, env)
-	o, err := svc.beginOp(context.Background())
-	if err != nil {
+	if _, err := svc.SaveCipher(context.Background(), &Cipher{Type: api.CipherTypeSecureNote, Name: "x", SecureNote: &SecureNote{}}); err != nil {
 		t.Fatal(err)
 	}
-	defer o.end()
-	if got := o.encryptedFor(); got == nil || *got != env.profileID {
-		t.Fatalf("encryptedFor = %v, want the profile ID %q from the signed-in session", got, env.profileID)
+	env.mu.Lock()
+	body := append([]byte(nil), env.lastBody...)
+	env.mu.Unlock()
+	if d, err := decodeAsVaultwarden(body); err != nil || d.EncryptedFor != env.profileID {
+		t.Fatalf("encryptedFor = %q, %v; want the profile ID %q", d.EncryptedFor, err, env.profileID)
 	}
-	o.accountID = "alice@example.com"
-	if got := o.encryptedFor(); got != nil {
-		t.Fatalf("an account known only by email sent encryptedFor %q", *got)
+}
+
+func TestEmailKeyedSessionGetsItsUserIDFromSync(t *testing.T) {
+	env := newVaultTestEnv(t)
+	env.profileID = "" // the server sent no profile ID at sign-in
+	svc := loggedInTestService(t, env)
+	if svc.accountID == "" {
+		t.Fatal("no account")
+	}
+
+	// Without an ID from the server, nothing is written.
+	if _, err := svc.SaveCipher(context.Background(), &Cipher{Type: api.CipherTypeSecureNote, Name: "x", SecureNote: &SecureNote{}}); !errors.Is(err, ErrAccountIDUnknown) {
+		t.Fatalf("save without a server user ID = %v, want ErrAccountIDUnknown", err)
+	}
+	env.mu.Lock()
+	sent := env.lastBody
+	env.mu.Unlock()
+	if sent != nil {
+		t.Fatalf("a write was sent without encryptedFor: %s", sent)
+	}
+
+	// The server now sends it: the save syncs, learns it and sends it.
+	env.mu.Lock()
+	env.profileID = "uuid-of-alice"
+	env.mu.Unlock()
+	if _, err := svc.SaveCipher(context.Background(), &Cipher{Type: api.CipherTypeSecureNote, Name: "y", SecureNote: &SecureNote{}}); err != nil {
+		t.Fatal(err)
+	}
+	env.mu.Lock()
+	body := append([]byte(nil), env.lastBody...)
+	env.mu.Unlock()
+	if d, err := decodeAsVaultwarden(body); err != nil || d.EncryptedFor != "uuid-of-alice" {
+		t.Fatalf("encryptedFor = %q, %v; want the ID the sync gave", d.EncryptedFor, err)
+	}
+	if svc.accountID == "uuid-of-alice" {
+		t.Fatal("the local storage key changed; it must stay as the vault was saved")
 	}
 }

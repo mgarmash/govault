@@ -39,6 +39,7 @@ var (
 	ErrArchiveNotConfirmed     = errors.New("state: the server did not confirm the change; GoVault synced to show where the item is now")
 	ErrPremiumRequired         = errors.New("state: archiving items needs a premium membership")
 	ErrCipherInTrash           = errors.New("state: the item is in Trash")
+	ErrAccountIDUnknown        = errors.New("state: could not confirm your account ID with the server; sync and try again")
 	ErrAccountChanged          = errors.New("state: the account changed since this was confirmed")
 	ErrSnapshotNotUpdated      = errors.New("state: the server has the change, but the local copy could not be updated; sync to refresh it")
 )

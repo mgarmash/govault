@@ -638,3 +638,30 @@ func TestExportKeepsArchivedDate(t *testing.T) {
 		t.Fatalf("a new item from the backup is archived at %v", got)
 	}
 }
+
+func TestImportSkipsTypesGoVaultCannotSave(t *testing.T) {
+	for _, typ := range []api.CipherType{api.CipherTypeBankAccount, api.CipherTypeDriversLicense, api.CipherTypePassport, 42} {
+		var it Item
+		raw := fmt.Sprintf(`{"id":"x-%d","type":%d,"name":"Unsupported","bankAccount":{"accountNumber":"1"}}`, typ, typ)
+		if err := json.Unmarshal([]byte(raw), &it); err != nil {
+			t.Fatal(err)
+		}
+		cur := &state.Cipher{ID: it.ID, Type: typ, Name: "Unsupported"}
+		p := BuildPlan(&Vault{Items: []Item{it}}, []*state.Cipher{cur}, nil)
+		e := &p.Entries[0]
+		if !e.Unsupported || e.Action != ActionSkip || !slices.Equal(e.Allowed(), []Action{ActionSkip}) || e.Match != nil {
+			t.Fatalf("type %d: entry %+v, allowed %v", typ, e, e.Allowed())
+		}
+		for _, a := range []Action{ActionCreate, ActionUpdate} {
+			if e.SetAction(a) {
+				t.Fatalf("type %d: %v allowed", typ, a)
+			}
+		}
+		// Even forced, nothing is written.
+		w := &fakeWriter{ciphers: map[string]*state.Cipher{}}
+		e.Action = ActionCreate
+		if res := Apply(context.Background(), w, p); len(w.saves) != 0 || !errors.Is(res.Err, ErrUnsupportedType) {
+			t.Fatalf("type %d: forced create = %+v, saves %v", typ, res, w.saves)
+		}
+	}
+}

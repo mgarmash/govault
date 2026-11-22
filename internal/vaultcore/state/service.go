@@ -59,6 +59,11 @@ type Service struct {
 	sessionCtx    context.Context
 	sessionCancel context.CancelFunc
 	unreadable    []string
+	// userID is the server ID of the signed-in user (profile.id), which item
+	// writes name as encryptedFor. It is kept apart from accountID, the key
+	// the vault is stored under, which an older server may have left as
+	// the email.
+	userID        string
 	premium       bool
 	archiveKnown  bool
 	archiveAbsent bool
@@ -928,7 +933,11 @@ func (s *Service) SaveCipher(ctx context.Context, c *Cipher) (*Cipher, error) {
 	if err != nil {
 		return nil, err
 	}
-	payload.EncryptedFor = o.encryptedFor()
+	userID, err := o.serverUserID()
+	if err != nil {
+		return nil, err
+	}
+	payload.EncryptedFor = &userID
 
 	encResp, err := withAuth(o, func(ctx context.Context, tok string) (*api.EncryptedCipher, error) {
 		if c.ID == "" {
@@ -1331,6 +1340,7 @@ type vaultData struct {
 	// unreadable lists personal items GoVault cannot read, such as ones in
 	// a newer format; a backup without them would be incomplete.
 	unreadable []string
+	userID     string
 	premium    bool
 	// archiveKnown: the server reported archivedDate on its ciphers;
 	// archiveAbsent: it sent ciphers and none reported it.
@@ -1362,6 +1372,7 @@ func (s *Service) applyDataLocked(d *vaultData) {
 	s.orgKeys = d.orgKeys
 	s.unreadable = d.unreadable
 	s.premium = d.premium
+	s.userID = d.userID
 	s.archiveKnown = d.archiveKnown
 	s.archiveAbsent = !d.archiveKnown && len(d.ciphers) > 0
 }
@@ -1509,6 +1520,7 @@ func (s *Service) clearDataLocked() {
 	s.folders = nil
 	s.unreadable = nil
 	s.premium = false
+	s.userID = ""
 	s.archiveKnown = false
 	s.archiveAbsent = false
 }
@@ -1570,6 +1582,7 @@ func decryptSyncResponse(resp *api.SyncResponse, userKey *crypto.SymmetricKey) (
 		collections: map[string]Collection{},
 		orgKeys:     unwrapOrgKeys(&resp.Profile, userKey),
 		premium:     profileFlag(resp.Profile.Extra, "premium") || profileFlag(resp.Profile.Extra, "premiumFromOrganization"),
+		userID:      resp.Profile.ID,
 	}
 	for _, org := range resp.Profile.Organizations {
 		if _, ok := d.orgKeys[org.ID]; ok {

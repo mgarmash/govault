@@ -44,7 +44,10 @@ type Entry struct {
 	// Ambiguous means several vault items have this item's type, name and
 	// username, so it is matched to none of them.
 	Ambiguous bool
-	CanUpdate bool
+	// Unsupported means GoVault cannot save items of this type (such as a
+	// bank account, driver's license or passport), so it is only skipped.
+	Unsupported bool
+	CanUpdate   bool
 	// UpdateBlocked says why Update is not offered for a backup item that
 	// cannot safely update its match, if that is the reason.
 	UpdateBlocked string
@@ -85,6 +88,8 @@ var (
 	// ErrRepromptRequired means the vault item is protected by
 	// master-password reprompt and the update was not verified.
 	ErrRepromptRequired = errors.New("export: updating this protected item needs your master password")
+	// ErrUnsupportedType means GoVault cannot save items of this type.
+	ErrUnsupportedType = errors.New("export: GoVault cannot save this type of item yet")
 )
 
 func sameTime(a, b *time.Time) bool {
@@ -94,6 +99,8 @@ func sameTime(a, b *time.Time) bool {
 // Allowed lists the actions the entry may take.
 func (e *Entry) Allowed() []Action {
 	switch {
+	case e.Unsupported:
+		return []Action{ActionSkip}
 	case e.Class == ClassNew:
 		return []Action{ActionCreate, ActionSkip}
 	case e.CanUpdate:
@@ -231,6 +238,11 @@ func BuildPlan(backup *Vault, current []*state.Cipher, folders []state.Folder) *
 	for i, it := range items {
 		e := Entry{Item: it, FolderName: backupFolders[val(it.FolderID)]}
 		match := matches[i]
+		if !it.savable() {
+			e.Class, e.Action, e.Unsupported = ClassNew, ActionSkip, true
+			p.Entries = append(p.Entries, e)
+			continue
+		}
 		switch {
 		case match == nil && ambiguous[i]:
 			e.Class, e.Action, e.Ambiguous = ClassNew, ActionSkip, true
@@ -449,6 +461,9 @@ func Apply(ctx context.Context, w Writer, p *Plan) Result {
 }
 
 func createItem(ctx context.Context, w Writer, e *Entry, folderFor func(string) (*string, error)) error {
+	if !e.Item.savable() {
+		return ErrUnsupportedType
+	}
 	c := e.Item.content()
 	if e.Class != ClassNew && c.Login != nil {
 		// Create Copy: a passkey belongs to one item and is never copied.
@@ -464,6 +479,9 @@ func createItem(ctx context.Context, w Writer, e *Entry, folderFor func(string) 
 }
 
 func updateItem(ctx context.Context, w Writer, e *Entry, folderFor func(string) (*string, error)) error {
+	if !e.Item.savable() {
+		return ErrUnsupportedType
+	}
 	if e.Match == nil || !e.CanUpdate {
 		return state.ErrReadOnlyCipher
 	}

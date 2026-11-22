@@ -2682,6 +2682,8 @@ func friendlyError(err error) string {
 		return "This server does not support Archive. It needs Vaultwarden 1.36 or later."
 	case errors.Is(err, state.ErrPremiumRequired):
 		return "Archive needs a premium membership."
+	case errors.Is(err, state.ErrAccountIDUnknown):
+		return "Could not confirm your account ID with the server. Sync and try again."
 	case errors.Is(err, state.ErrArchiveNotConfirmed):
 		return "The server did not confirm the change. GoVault synced to show where the item is now."
 	case errors.Is(err, state.ErrCipherInTrash):

@@ -518,6 +518,18 @@ func sameMatch(a, b *int) bool {
 	return (a == nil) == (b == nil) && (a == nil || *a == *b)
 }
 
+// savable reports whether GoVault can create or update an item of this
+// type: login, secure note, card, identity and SSH key. Newer types, such
+// as a bank account, driver's license or passport, carry data it cannot
+// encode yet.
+func (it Item) savable() bool {
+	switch it.Type {
+	case api.CipherTypeLogin, api.CipherTypeSecureNote, api.CipherTypeCard, api.CipherTypeIdentity, api.CipherTypeSSHKey:
+		return true
+	}
+	return false
+}
+
 // complete reports whether the item has the nested object its type needs.
 // An item without it cannot update a vault item: that would erase the
 // vault item's login, card, identity or key.

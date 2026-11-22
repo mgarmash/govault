@@ -2,7 +2,7 @@ package state
 
 import (
 	"context"
-	"strings"
+	"errors"
 
 	"github.com/txchen/govault/internal/vaultcore/api"
 	"github.com/txchen/govault/internal/vaultcore/crypto"
@@ -266,14 +266,25 @@ func (s *Service) allCollectionsLocked(c *Cipher, pred func(Collection) bool) bo
 	return known > 0
 }
 
-// encryptedFor is the user ID a cipher write names as its owner: the
-// account's server ID. An account known only by its email, which older
-// servers could leave GoVault with, sends none rather than a wrong one,
-// since the server refuses any ID but the user's.
-func (o *op) encryptedFor() *string {
-	if o.accountID == "" || strings.Contains(o.accountID, "@") {
-		return nil
+// serverUserID is the user ID a cipher write names as its owner
+// (encryptedFor), which the server refuses unless it is the signed-in
+// user's. It comes from the last sync's profile; without one a sync is
+// tried, and if the server still sends none, nothing is written.
+func (o *op) serverUserID() (string, error) {
+	o.s.mu.RLock()
+	id := o.s.userID
+	o.s.mu.RUnlock()
+	if id != "" {
+		return id, nil
 	}
-	id := o.accountID
-	return &id
+	if err := o.s.sync(o.ctx, true); err != nil && !errors.Is(err, ErrSyncDeferred) {
+		return "", err
+	}
+	o.s.mu.RLock()
+	id = o.s.userID
+	o.s.mu.RUnlock()
+	if id == "" {
+		return "", ErrAccountIDUnknown
+	}
+	return id, nil
 }

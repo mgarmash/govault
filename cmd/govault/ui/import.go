@@ -591,6 +591,8 @@ func importRow(m *AppModel, p *export.Plan, i int) core.Node {
 		note = "Already in " + m.importDestination(e.Match)
 	case export.ClassNew:
 		switch {
+		case e.Unsupported:
+			note = "GoVault cannot save this type of item yet, so it is skipped."
 		case e.Ambiguous:
 			note = "Several vault items have this name, so it is not matched to any. Choose Create to add it as a new item."
 		case e.Item.ArchivedDate != nil && !m.Core.CanArchive():
