@@ -31,6 +31,7 @@ var (
 	ErrAttachmentNotFound      = errors.New("state: attachment not found")
 	ErrHiddenByOrganization    = errors.New("state: hidden by your organization")
 	ErrUnsupportedUpload       = errors.New("state: server requested an unsupported attachment upload method")
+	ErrSnapshotNotUpdated      = errors.New("state: the server has the change, but the local copy could not be updated; sync to refresh it")
 )
 
 type FilterCategory int
@@ -111,6 +112,7 @@ type Login struct {
 	PasswordRevisionDate *time.Time
 	Fido2Credentials     []Fido2Credential
 	Extra                map[string]json.RawMessage
+	Shape                api.Shape
 }
 
 type LoginURI struct {
@@ -122,6 +124,7 @@ type LoginURI struct {
 	Checksum   *string
 	ChecksumOf string
 	Extra      map[string]json.RawMessage
+	Shape      api.Shape
 }
 
 // Fido2Credential is a passkey. GoVault shows and can remove passkeys but
@@ -143,11 +146,15 @@ type Fido2Credential struct {
 	Discoverable    string
 	CreationDate    string
 	Sealed          json.RawMessage
+	// Unreadable names the fields that did not decrypt, so an export can
+	// refuse to write a passkey that would not work.
+	Unreadable []string
 }
 
 type SecureNote struct {
 	Type  int
 	Extra map[string]json.RawMessage
+	Shape api.Shape
 }
 
 type Card struct {
@@ -158,6 +165,7 @@ type Card struct {
 	ExpYear        string
 	Code           string
 	Extra          map[string]json.RawMessage
+	Shape          api.Shape
 }
 
 type Identity struct {
@@ -180,6 +188,7 @@ type Identity struct {
 	PassportNumber string
 	LicenseNumber  string
 	Extra          map[string]json.RawMessage
+	Shape          api.Shape
 }
 
 type SSHKey struct {
@@ -187,6 +196,7 @@ type SSHKey struct {
 	PublicKey      string
 	KeyFingerprint string
 	Extra          map[string]json.RawMessage
+	Shape          api.Shape
 }
 
 type CustomField struct {
@@ -195,6 +205,7 @@ type CustomField struct {
 	Type     int
 	LinkedID *int
 	Extra    map[string]json.RawMessage
+	Shape    api.Shape
 }
 
 type Attachment struct {
@@ -211,6 +222,7 @@ type PasswordHistoryEntry struct {
 	Password     string
 	LastUsedDate time.Time
 	Extra        map[string]json.RawMessage
+	Shape        api.Shape
 }
 
 // TrashResult reports what EmptyTrash did: items deleted and read-only

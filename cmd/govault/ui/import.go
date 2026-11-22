@@ -119,7 +119,11 @@ func (m *AppModel) confirmExport(cx *core.Scope) {
 	ciphers, folders := m.Core.AllCiphers(), m.Core.Folders()
 	go func() {
 		defer crypto.ZeroBytes(pwBytes)
-		data, err := export.EncryptWithPassword(export.Build(ciphers, folders), pwBytes, export.DefaultKDF)
+		var data []byte
+		v, err := export.Build(ciphers, folders)
+		if err == nil {
+			data, err = export.EncryptWithPassword(v, pwBytes, export.DefaultKDF)
+		}
 		m.Scope.Post(func() {
 			if !m.StillUnlocked(gen) {
 				crypto.ZeroBytes(data)

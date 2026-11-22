@@ -3,6 +3,7 @@ package state
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 
 	"github.com/txchen/govault/internal/vaultcore/api"
 	"github.com/txchen/govault/internal/vaultcore/crypto"
@@ -232,57 +233,62 @@ func (o *op) refreshCipher(prev *Cipher, fallback *api.EncryptedCipher) (*Cipher
 		decrypted.CollectionIDs = append([]string(nil), prev.CollectionIDs...)
 	}
 
-	o.s.mu.Lock()
-	if !o.currentLocked() {
-		o.s.mu.Unlock()
-		return nil, ErrLocked
-	}
-	o.s.ciphers[decrypted.ID] = decrypted
-	o.s.mu.Unlock()
-
-	o.storeSnapshotCipher(enc)
-	o.s.notifyUpdated()
-	return cloneCipher(decrypted), nil
+	return o.commitCipher(decrypted, enc)
 }
 
-func (o *op) storeSnapshotCipher(enc *api.EncryptedCipher) {
+// storeSnapshotCipher replaces or adds enc in the encrypted snapshot.
+func (o *op) storeSnapshotCipher(enc *api.EncryptedCipher) error {
+	return o.updateSnapshot(func(resp *api.SyncResponse) {
+		for i := range resp.Ciphers {
+			if resp.Ciphers[i].ID == enc.ID {
+				if len(enc.CollectionIDs) == 0 {
+					enc.CollectionIDs = resp.Ciphers[i].CollectionIDs
+				}
+				resp.Ciphers[i] = *enc
+				return
+			}
+		}
+		resp.Ciphers = append(resp.Ciphers, *enc)
+	})
+}
+
+// updateSnapshot applies edit to the encrypted snapshot and saves it, so a
+// change the server accepted is also what the next unlock or offline
+// export sees, before the next sync. It runs under persistMu and only while
+// o's session is current, like every snapshot write.
+func (o *op) updateSnapshot(edit func(resp *api.SyncResponse)) error {
 	o.s.persistMu.Lock()
 	defer o.s.persistMu.Unlock()
 	o.s.mu.RLock()
 	snap, ok := o.s.snapshot, o.currentLocked()
 	o.s.mu.RUnlock()
-	if snap == nil || !ok {
-		return
+	if !ok {
+		return ErrLocked
+	}
+	if snap == nil {
+		return ErrLoggedOut
 	}
 	var resp api.SyncResponse
 	if err := json.Unmarshal(snap.RawSyncJSON, &resp); err != nil {
-		return
+		return fmt.Errorf("%w: %w", ErrSnapshotNotUpdated, err)
 	}
-	replaced := false
-	for i := range resp.Ciphers {
-		if resp.Ciphers[i].ID == enc.ID {
-			if len(enc.CollectionIDs) == 0 {
-				enc.CollectionIDs = resp.Ciphers[i].CollectionIDs
-			}
-			resp.Ciphers[i] = *enc
-			replaced = true
-		}
-	}
-	if !replaced {
-		resp.Ciphers = append(resp.Ciphers, *enc)
-	}
+	edit(&resp)
 	raw, err := json.Marshal(resp)
 	if err != nil {
-		return
+		return fmt.Errorf("%w: %w", ErrSnapshotNotUpdated, err)
 	}
 	updated := *snap
 	updated.RawSyncJSON = raw
-	if !o.current() || o.s.cfg.Store.SaveSnapshot(&updated) != nil {
-		return
+	if !o.current() {
+		return ErrLocked
+	}
+	if err := o.s.cfg.Store.SaveSnapshot(&updated); err != nil {
+		return fmt.Errorf("%w: %w", ErrSnapshotNotUpdated, err)
 	}
 	o.s.mu.Lock()
 	if o.s.snapshot == snap && o.currentLocked() {
 		o.s.snapshot = &updated
 	}
 	o.s.mu.Unlock()
+	return nil
 }

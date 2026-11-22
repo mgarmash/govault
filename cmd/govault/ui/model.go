@@ -224,17 +224,21 @@ type EditDraft struct {
 	Fields     []EditFieldDraft
 	Revision   *time.Time
 	Source     *state.Cipher
-	// RemovePasskey drops the passkey on save; cancelling the edit keeps it.
-	RemovePasskey bool
+	// RemovedPasskeys are indexes into Source.Login.Fido2Credentials of the
+	// passkeys the user removed. They go only when the draft is saved.
+	RemovedPasskeys []int
 }
 
-// DraftPasskey is the passkey of the item being edited, if it has one and
-// the user has not removed it.
-func (d *EditDraft) DraftPasskey() *state.Fido2Credential {
-	if d == nil || d.RemovePasskey || d.Source == nil || d.Source.Login == nil || len(d.Source.Login.Fido2Credentials) == 0 || d.Type != api.CipherTypeLogin {
+// DraftPasskeys are the passkeys of the item being edited, removed or not.
+func (d *EditDraft) DraftPasskeys() []state.Fido2Credential {
+	if d == nil || d.Source == nil || d.Source.Login == nil || d.Type != api.CipherTypeLogin {
 		return nil
 	}
-	return &d.Source.Login.Fido2Credentials[0]
+	return d.Source.Login.Fido2Credentials
+}
+
+func (d *EditDraft) PasskeyRemoved(i int) bool {
+	return d != nil && slices.Contains(d.RemovedPasskeys, i)
 }
 
 type RepromptModal struct {
@@ -2179,6 +2183,7 @@ func cloneDraft(d *EditDraft) *EditDraft {
 	cp := *d
 	cp.URIs = append([]EditURIDraft(nil), d.URIs...)
 	cp.Fields = append([]EditFieldDraft(nil), d.Fields...)
+	cp.RemovedPasskeys = slices.Clone(d.RemovedPasskeys)
 	return &cp
 }
 
@@ -2233,6 +2238,12 @@ func cipherFromDraft(d *EditDraft) *state.Cipher {
 		login.URIs = nil
 		for _, u := range d.URIs {
 			text := strings.TrimSpace(u.URI)
+			if u.orig != nil && text == strings.TrimSpace(u.orig.URI) {
+				// Unchanged, even when blank: it may carry a match setting
+				// or fields GoVault does not show.
+				login.URIs = append(login.URIs, *u.orig)
+				continue
+			}
 			if text == "" {
 				continue
 			}
@@ -2243,8 +2254,14 @@ func cipherFromDraft(d *EditDraft) *state.Cipher {
 			}
 			login.URIs = append(login.URIs, nu)
 		}
-		if d.RemovePasskey {
-			login.Fido2Credentials = nil
+		if len(d.RemovedPasskeys) > 0 {
+			var kept []state.Fido2Credential
+			for i, f := range login.Fido2Credentials {
+				if !d.PasskeyRemoved(i) {
+					kept = append(kept, f)
+				}
+			}
+			login.Fido2Credentials = kept
 		}
 		base.Login = login
 	case api.CipherTypeSecureNote:
@@ -2307,7 +2324,8 @@ func cipherFromDraft(d *EditDraft) *state.Cipher {
 
 	base.Fields = nil
 	for _, f := range d.Fields {
-		if strings.TrimSpace(f.Name) == "" && strings.TrimSpace(f.Value) == "" {
+		unchanged := f.orig != nil && f.Name == f.orig.Name && f.Value == f.orig.Value && f.Type == f.orig.Type
+		if !unchanged && strings.TrimSpace(f.Name) == "" && strings.TrimSpace(f.Value) == "" {
 			continue
 		}
 		nf := state.CustomField{}

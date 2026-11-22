@@ -338,6 +338,7 @@ func newVaultTestEnv(t *testing.T) *vaultTestEnv {
 			updated.Notes = p.Notes
 			updated.Key = p.Key
 			updated.Favorite = p.Favorite
+			updated.FolderID = p.FolderID
 			updated.Login = p.Login
 			updated.Card = p.Card
 			updated.Identity = p.Identity

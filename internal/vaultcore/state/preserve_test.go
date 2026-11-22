@@ -6,6 +6,7 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"testing"
 	"time"
@@ -336,3 +337,164 @@ func TestService_ImportedPasskeyIsSealedWithTheNewItemKey(t *testing.T) {
 		}
 	}
 }
+
+func b64(n int) string { return base64.StdEncoding.EncodeToString(bytes.Repeat([]byte{7}, n)) }
+
+func TestService_KeyChangeFiltersEncStringsAtTheLeaf(t *testing.T) {
+	env := newVaultTestEnv(t)
+	seedSealedLogin(t, env)
+	sealed := mustEncString(t, "secret", env.cipherKey)
+	legacy := "1." + b64(16) + "|" + b64(16) + "|" + b64(32)
+	unknownType := "9." + b64(16) + "|" + b64(32)
+	env.mu.Lock()
+	c := env.ciphers["c-1"]
+	login := *c.Login
+	login.Extra = map[string]json.RawMessage{
+		"legacyField":  json.RawMessage(fmt.Sprintf("%q", legacy)),
+		"futureType":   json.RawMessage(fmt.Sprintf("%q", unknownType)),
+		"mixed":        json.RawMessage(fmt.Sprintf(`{"secret":%q,"flag":true,"note":"1.0","deep":{"s":%q,"n":2}}`, sealed, legacy)),
+		"plainVersion": json.RawMessage(`"1.0"`),
+	}
+	c.Login = &login
+	env.ciphers["c-1"] = c
+	env.mu.Unlock()
+	svc := loggedInTestService(t, env)
+
+	cp, _ := svc.GetCipher("c-1")
+	cp.ID, cp.Key, cp.Name = "", nil, "GitHub (Copy)"
+	cp.Login.Fido2Credentials = nil
+	if _, err := svc.SaveCipher(context.Background(), cp); err != nil {
+		t.Fatal(err)
+	}
+	got := obj(t, env.body(t)["login"])
+	for _, k := range []string{"legacyField", "futureType"} {
+		if _, ok := got[k]; ok {
+			t.Fatalf("%s (an EncString of a type GoVault cannot decrypt) survived a key change", k)
+		}
+	}
+	sameJSON(t, "mixed", got["mixed"], `{"deep":{"n":2},"flag":true,"note":"1.0"}`)
+	sameJSON(t, "plainVersion", got["plainVersion"], `"1.0"`)
+}
+
+func TestService_KeyChangeRefusesEncStringsInArrays(t *testing.T) {
+	env := newVaultTestEnv(t)
+	seedSealedLogin(t, env)
+	env.mu.Lock()
+	c := env.ciphers["c-1"]
+	login := *c.Login
+	login.Extra = map[string]json.RawMessage{"list": json.RawMessage(fmt.Sprintf(`["plain",%q]`, mustEncString(t, "x", env.cipherKey)))}
+	c.Login = &login
+	env.ciphers["c-1"] = c
+	env.mu.Unlock()
+	svc := loggedInTestService(t, env)
+
+	cp, _ := svc.GetCipher("c-1")
+	cp.ID, cp.Key = "", nil
+	if _, err := svc.SaveCipher(context.Background(), cp); !errors.Is(err, ErrSealedField) {
+		t.Fatalf("SaveCipher = %v, want ErrSealedField", err)
+	}
+	env.mu.Lock()
+	sent := env.lastBody
+	env.mu.Unlock()
+	if sent != nil {
+		t.Fatalf("a refused save still reached the server: %s", sent)
+	}
+
+	// Under the same key the array is sent back unchanged.
+	cur, _ := svc.GetCipher("c-1")
+	if _, err := svc.SaveCipher(context.Background(), cur); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestLooksLikeEncString(t *testing.T) {
+	for s, want := range map[string]bool{
+		"2." + b64(16) + "|" + b64(16) + "|" + b64(32): true,
+		"1." + b64(16) + "|" + b64(32):                 true,
+		"4." + b64(256):                                true,
+		"12." + b64(8):                                 true,
+		"1.0":                                          false,
+		"v2.abc":                                       false,
+		"2.":                                           false,
+		"2.not base64!":                                false,
+		"https://example.com":                          false,
+	} {
+		if got := crypto.LooksLikeEncString(s); got != want {
+			t.Errorf("LooksLikeEncString(%q) = %v, want %v", s, got, want)
+		}
+	}
+}
+
+func TestService_KeepsWirePresenceOfKnownFields(t *testing.T) {
+	env := newVaultTestEnv(t)
+	k := env.cipherKey
+	env.mu.Lock()
+	c := env.ciphers["c-1"]
+	var login api.EncryptedLogin
+	raw := fmt.Sprintf(`{"password":%q,"totp":null,"uris":[{"uri":%q}],"fido2Credentials":[]}`, mustEncString(t, "pw", k), mustEncString(t, "https://github.com", k))
+	if err := json.Unmarshal([]byte(raw), &login); err != nil {
+		t.Fatal(err)
+	}
+	c.Login = &login
+	env.ciphers["c-1"] = c
+	env.mu.Unlock()
+	svc := loggedInTestService(t, env)
+
+	check := func(step string, l jsonObj) {
+		t.Helper()
+		if _, ok := l["username"]; ok {
+			t.Fatalf("%s: absent username was sent as %s", step, l["username"])
+		}
+		sameJSON(t, step+": totp", l["totp"], `null`)
+		sameJSON(t, step+": fido2Credentials", l["fido2Credentials"], `[]`)
+		if _, ok := obj(t, arr(t, l["uris"])[0])["match"]; ok {
+			t.Fatalf("%s: absent uri match was sent", step)
+		}
+	}
+	cur, _ := svc.GetCipher("c-1")
+	cur.Name = "Renamed"
+	if _, err := svc.SaveCipher(context.Background(), cur); err != nil {
+		t.Fatal(err)
+	}
+	check("save", obj(t, env.body(t)["login"]))
+
+	snap, err := svc.cfg.Store.LoadSnapshot(svc.accountID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var resp struct {
+		Ciphers []jsonObj `json:"ciphers"`
+	}
+	if err := json.Unmarshal(snap.RawSyncJSON, &resp); err != nil {
+		t.Fatal(err)
+	}
+	for _, sc := range resp.Ciphers {
+		if string(sc["id"]) == `"c-1"` {
+			check("snapshot", obj(t, sc["login"]))
+			return
+		}
+	}
+	t.Fatal("c-1 missing from snapshot")
+}
+
+func TestService_UnreadablePasskeyFieldIsReported(t *testing.T) {
+	env := newVaultTestEnv(t)
+	seedSealedLogin(t, env)
+	other, _ := crypto.GenerateSymmetricKey()
+	env.mu.Lock()
+	c := env.ciphers["c-1"]
+	login := *c.Login
+	login.Fido2Credentials = []api.EncryptedFido2Credential{{
+		RpID: ptr(mustEncString(t, "github.com", env.cipherKey)), KeyValue: ptr(mustEncString(t, "k", other)), CreationDate: "2026-03-14T10:22:00Z",
+	}}
+	c.Login = &login
+	env.ciphers["c-1"] = c
+	env.mu.Unlock()
+	svc := loggedInTestService(t, env)
+	got, _ := svc.GetCipher("c-1")
+	if f := got.Login.Fido2Credentials[0]; f.RpID != "github.com" || len(f.Unreadable) != 1 || f.Unreadable[0] != "keyValue" {
+		t.Fatalf("passkey = %+v, want keyValue reported unreadable", f)
+	}
+}
+
+func ptr(s string) *string { return &s }

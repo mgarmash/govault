@@ -105,7 +105,6 @@ func (m *AppModel) CloneActive(cx *core.Scope) {
 		src.Data = nil
 		src.EncryptedFor = nil
 		src.EncryptedByKeyID = nil
-		src.Extra = nil
 		src.ReadOnly = false
 		src.HidePassword = false
 		src.Name = c.Name + " (Copy)"

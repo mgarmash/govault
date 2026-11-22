@@ -263,11 +263,8 @@ func editorLoginFields(cx *core.Scope, m *AppModel, showPW *core.Signal[bool]) c
 				}, editorFieldHeight))),
 			)),
 			core.Show{
-				When: func() bool {
-					d := m.EditDraft.Get()
-					return d != nil && d.Source != nil && d.Source.Login != nil && len(d.Source.Login.Fido2Credentials) > 0
-				},
-				Then: func(cx *core.Scope) core.Node { return card(editorPasskeyRow(cx, m)) },
+				When: func() bool { return hasDraftPasskeys(m) },
+				Then: func(cx *core.Scope) core.Node { return editorPasskeyRows(cx, m) },
 			},
 			section("Websites", core.Dynamic(func(cx *core.Scope) core.Node {
 				n := uriCount.Get()

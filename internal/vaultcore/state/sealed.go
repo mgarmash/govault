@@ -1,10 +1,14 @@
 package state
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
+	"fmt"
+	"slices"
 
 	"github.com/txchen/govault/internal/vaultcore/crypto"
 )
@@ -18,57 +22,112 @@ func sealedKeyID(key *crypto.SymmetricKey) string {
 	return hex.EncodeToString(sum[:16])
 }
 
+// ErrSealedField means an item holds encrypted data GoVault does not know
+// and cannot carry to a new key, so the save is refused instead of
+// silently dropping or corrupting it.
+var ErrSealedField = errors.New("state: this item holds encrypted data GoVault cannot copy to a new key")
+
 // keepSealed returns the unknown fields to send back with a save.
 //
 // Under the key they were sealed with they are kept byte for byte. Under
 // another key (a clone, an import copy, a move to another key) an encrypted
-// value can no longer be decrypted by anyone, so every value that is or
-// contains an EncString is dropped; plaintext values (booleans, numbers,
-// plain strings, null) are kept.
-func keepSealed(m map[string]json.RawMessage, sameKey bool) map[string]json.RawMessage {
+// value can no longer be decrypted by anyone, so each EncString is removed
+// where it sits and every plaintext value around it is kept. An EncString
+// inside an array cannot be removed without shifting the rest, so such a
+// save is refused with ErrSealedField.
+func keepSealed(m map[string]json.RawMessage, sameKey bool) (map[string]json.RawMessage, error) {
 	if len(m) == 0 {
-		return nil
+		return nil, nil
 	}
 	out := make(map[string]json.RawMessage, len(m))
 	for k, v := range m {
-		if !sameKey && containsEncString(v) {
+		if sameKey {
+			out[k] = append(json.RawMessage(nil), v...)
 			continue
 		}
-		out[k] = append(json.RawMessage(nil), v...)
+		kept, keep, err := stripSealed(v)
+		if err != nil {
+			return nil, fmt.Errorf("%w (field %q)", err, k)
+		}
+		if keep {
+			out[k] = kept
+		}
 	}
 	if len(out) == 0 {
-		return nil
+		return nil, nil
 	}
-	return out
+	return out, nil
 }
 
-func containsEncString(raw json.RawMessage) bool {
+// stripSealed removes the EncStrings from one JSON value. keep is false
+// when the value itself is an EncString.
+func stripSealed(raw json.RawMessage) (json.RawMessage, bool, error) {
 	var v any
-	if err := json.Unmarshal(raw, &v); err != nil {
-		return true
+	dec := json.NewDecoder(bytes.NewReader(raw))
+	dec.UseNumber()
+	if err := dec.Decode(&v); err != nil {
+		return nil, false, ErrSealedField
 	}
-	var walk func(any) bool
-	walk = func(v any) bool {
+	if !hasEncString(v) {
+		return append(json.RawMessage(nil), raw...), true, nil
+	}
+	var strip func(v any) (any, bool, error)
+	strip = func(v any) (any, bool, error) {
 		switch t := v.(type) {
 		case string:
-			_, err := crypto.ParseEncString(t)
-			return err == nil
+			return t, !crypto.LooksLikeEncString(t), nil
 		case []any:
 			for _, e := range t {
-				if walk(e) {
-					return true
+				if s, ok := e.(string); ok && crypto.LooksLikeEncString(s) {
+					return nil, false, ErrSealedField
 				}
 			}
-		case map[string]any:
-			for _, e := range t {
-				if walk(e) {
-					return true
+			for i, e := range t {
+				ne, _, err := strip(e)
+				if err != nil {
+					return nil, false, err
 				}
+				t[i] = ne
+			}
+			return t, true, nil
+		case map[string]any:
+			for k, e := range t {
+				ne, keep, err := strip(e)
+				if err != nil {
+					return nil, false, err
+				}
+				if keep {
+					t[k] = ne
+				} else {
+					delete(t, k)
+				}
+			}
+			return t, true, nil
+		}
+		return v, true, nil
+	}
+	nv, keep, err := strip(v)
+	if err != nil || !keep {
+		return nil, false, err
+	}
+	out, err := json.Marshal(nv)
+	return out, err == nil, err
+}
+
+func hasEncString(v any) bool {
+	switch t := v.(type) {
+	case string:
+		return crypto.LooksLikeEncString(t)
+	case []any:
+		return slices.ContainsFunc(t, hasEncString)
+	case map[string]any:
+		for _, e := range t {
+			if hasEncString(e) {
+				return true
 			}
 		}
-		return false
 	}
-	return walk(v)
+	return false
 }
 
 // uriChecksum is the checksum Bitwarden stores with each login URI: the

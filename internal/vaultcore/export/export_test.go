@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -30,7 +31,7 @@ func TestEncryptedExportRoundTrip(t *testing.T) {
 	gh.FolderID = &work
 	gh.Fields = []state.CustomField{{Name: "PIN", Value: "1234", Type: 1}}
 	note := &state.Cipher{ID: "c-note", Type: api.CipherTypeSecureNote, Name: "Note", Notes: "body", SecureNote: &state.SecureNote{}}
-	v := Build([]*state.Cipher{gh, note, shared, trashed}, []state.Folder{{ID: work, Name: "Work"}})
+	v, _ := Build([]*state.Cipher{gh, note, shared, trashed}, []state.Folder{{ID: work, Name: "Work"}})
 	if len(v.Items) != 2 {
 		t.Fatalf("Build kept %d items, want personal active only", len(v.Items))
 	}
@@ -243,7 +244,7 @@ func TestImportUpdateKeepsPasskeyAndUnknownFields(t *testing.T) {
 func TestImportCopyNeverCopiesPasskeyAndExportIncludesIt(t *testing.T) {
 	src := sealedLogin("c-gh")
 	src.Login.Fido2Credentials[0].KeyValue = "private-key"
-	v := Build([]*state.Cipher{src}, nil)
+	v, _ := Build([]*state.Cipher{src}, nil)
 	f := v.Items[0].Login.Fido2Credentials
 	if len(f) != 1 || f[0].RpID != "github.com" || f[0].KeyValue != "private-key" || f[0].CreationDate != "2026-03-14T10:22:00Z" {
 		t.Fatalf("export passkey = %+v", f)
@@ -268,5 +269,74 @@ func TestImportCopyNeverCopiesPasskeyAndExportIncludesIt(t *testing.T) {
 	c := w.ciphers["new-1"]
 	if c == nil || len(c.Login.Fido2Credentials) != 1 || c.Login.Fido2Credentials[0].Sealed != nil || c.SealedKeyID != "" {
 		t.Fatalf("a new item from a backup should import its passkey in plaintext to be sealed on save: %+v", c)
+	}
+}
+
+func TestImportUpdateNeverErasesANestedObject(t *testing.T) {
+	cur := sealedLogin("c-gh")
+	for _, raw := range []string{
+		`{"id":"c-gh","type":1,"name":"GitHub"}`,
+		`{"id":"c-gh","type":1,"name":"GitHub","login":null}`,
+	} {
+		var it Item
+		if err := json.Unmarshal([]byte(raw), &it); err != nil {
+			t.Fatal(err)
+		}
+		p := BuildPlan(&Vault{Items: []Item{it}}, []*state.Cipher{cur}, nil)
+		e := &p.Entries[0]
+		if e.CanUpdate || e.SetAction(ActionUpdate) || slices.Contains(e.Allowed(), ActionUpdate) {
+			t.Fatalf("%s: a login item without a login may update the vault item", raw)
+		}
+		e.CanUpdate, e.Action = true, ActionUpdate
+		w := &fakeWriter{ciphers: map[string]*state.Cipher{"c-gh": sealedLogin("c-gh")}}
+		res := Apply(context.Background(), w, p)
+		if len(w.saves) != 0 || res.Failed != 1 {
+			t.Fatalf("%s: forced update saved %v (result %+v)", raw, w.saves, res)
+		}
+	}
+
+	c := sealedLogin("c-gh")
+	mergeContent(c, Item{Type: api.CipherTypeLogin, Name: "GitHub"})
+	if c.Login == nil || c.Login.Password != "old" || len(c.Login.Fido2Credentials) != 1 {
+		t.Fatalf("mergeContent cleared the login: %+v", c.Login)
+	}
+}
+
+func TestImportUpdateMatchesDuplicatesExactly(t *testing.T) {
+	extra := func(v string) map[string]json.RawMessage { return map[string]json.RawMessage{"x": json.RawMessage(v)} }
+	three := 3
+	c := login("c-gh", "GitHub", "alice", "pw")
+	u := c.Login.URIs[0].URI
+	c.Login.URIs = []state.LoginURI{{URI: u, Extra: extra(`"nil-match"`)}, {URI: u, Match: &three, Extra: extra(`"match-3"`)}}
+	c.Fields = []state.CustomField{{Name: "PIN", Type: 1, Extra: extra(`"a"`)}, {Name: "PIN", Type: 1, Extra: extra(`"b"`)}, {Name: "Note", Type: 0, Extra: extra(`"n"`)}}
+
+	it := FromCipher(login("c-gh", "GitHub", "alice", "pw"))
+	it.Login.URIs = []URI{{URI: opt(u), Match: &three}, {URI: opt(u)}}
+	it.Fields = []Field{{Name: opt("PIN"), Type: 1}, {Name: opt("PIN"), Type: 1}, {Name: opt("PIN"), Type: 1}, {Name: opt("Note"), Type: 1}}
+	mergeContent(c, it)
+
+	if got := c.Login.URIs; string(got[0].Extra["x"]) != `"match-3"` || string(got[1].Extra["x"]) != `"nil-match"` {
+		t.Fatalf("URI extras matched by position instead of match setting: %s, %s", got[0].Extra["x"], got[1].Extra["x"])
+	}
+	want := []string{`"a"`, `"b"`, ``, ``}
+	for i, f := range c.Fields {
+		if string(f.Extra["x"]) != want[i] {
+			t.Fatalf("field %d extra = %q, want %q", i, f.Extra["x"], want[i])
+		}
+	}
+
+	c.Fields = []state.CustomField{{Name: "Other", Type: 0}, {Name: "PIN", Type: 1, Extra: extra(`"a"`)}, {Name: "PIN", Type: 1, Extra: extra(`"b"`)}}
+	mergeContent(c, Item{Type: api.CipherTypeLogin, Fields: []Field{{Name: opt("PIN"), Type: 1}}})
+	if len(c.Fields[0].Extra) != 0 {
+		t.Fatalf("an ambiguous match took %s", c.Fields[0].Extra["x"])
+	}
+}
+
+func TestExportRefusesUnreadablePasskey(t *testing.T) {
+	c := sealedLogin("c-gh")
+	c.Login.Fido2Credentials[0].Unreadable = []string{"keyValue"}
+	v, err := Build([]*state.Cipher{c}, nil)
+	if !errors.Is(err, ErrUnreadablePasskey) || v != nil || !strings.Contains(err.Error(), `"GitHub"`) || !strings.Contains(err.Error(), "keyValue") {
+		t.Fatalf("Build = %v, %v; want ErrUnreadablePasskey naming GitHub and keyValue", v, err)
 	}
 }

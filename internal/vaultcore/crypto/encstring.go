@@ -134,3 +134,28 @@ func (e *EncString) String() string {
 		return ""
 	}
 }
+
+// LooksLikeEncString reports whether s has the shape of an EncString of any
+// type, including types this package cannot decrypt: a numeric type, a dot,
+// then one to three non-empty standard base64 parts separated by "|".
+func LooksLikeEncString(s string) bool {
+	typeStr, body, ok := strings.Cut(s, ".")
+	if !ok || len(typeStr) == 0 || len(typeStr) > 2 || body == "" {
+		return false
+	}
+	for _, r := range typeStr {
+		if r < '0' || r > '9' {
+			return false
+		}
+	}
+	parts := strings.Split(body, "|")
+	if len(parts) > 3 {
+		return false
+	}
+	for _, p := range parts {
+		if b, err := base64.StdEncoding.DecodeString(p); err != nil || len(b) == 0 {
+			return false
+		}
+	}
+	return true
+}

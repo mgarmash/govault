@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"bytes"
 	"encoding/json"
 	"strings"
 	"testing"
@@ -11,7 +12,12 @@ import (
 	"github.com/txchen/govault/internal/vaultcore/state"
 )
 
-// passkeyLogin is c-github as a server stores it with a passkey and the
+const (
+	sealedPasskeyA = `{"credentialId":"2.sealed-a","futurePasskeyField":1}`
+	sealedPasskeyB = `{"credentialId":"2.sealed-b"}`
+)
+
+// passkeyLogin is c-github as a server stores it with two passkeys and the
 // fields GoVault does not show.
 func passkeyLogin(svc *mockVaultService) *state.Cipher {
 	match := 3
@@ -20,10 +26,14 @@ func passkeyLogin(svc *mockVaultService) *state.Cipher {
 	c.SealedKeyID = "key-1"
 	c.Extra = map[string]json.RawMessage{"futureCipherField": json.RawMessage(`"plain"`)}
 	c.Login.Extra = map[string]json.RawMessage{"autofillOnPageLoad": json.RawMessage(`true`)}
+	c.Login.Shape = api.Shape{"totp": json.RawMessage(`null`)}
 	c.Login.URIs[0].Match = &match
 	c.Login.URIs[0].Checksum, c.Login.URIs[0].ChecksumOf = &cs, c.Login.URIs[0].URI
 	c.Login.URIs[0].Extra = map[string]json.RawMessage{"futureUriField": json.RawMessage(`7`)}
-	c.Login.Fido2Credentials = []state.Fido2Credential{{RpID: "github.com", CreationDate: "2026-03-14T10:22:00Z", Sealed: json.RawMessage(`{"credentialId":"2.sealed"}`)}}
+	c.Login.Fido2Credentials = []state.Fido2Credential{
+		{RpID: "github.com", CreationDate: "2026-03-14T10:22:00Z", Sealed: json.RawMessage(sealedPasskeyA)},
+		{RpID: "gist.github.com", CreationDate: "2026-04-01T08:00:00Z", Sealed: json.RawMessage(sealedPasskeyB)},
+	}
 	linked := 2
 	c.Fields = []state.CustomField{{Name: "PIN", Value: "1", Type: 1, LinkedID: &linked, Extra: map[string]json.RawMessage{"futureFieldField": json.RawMessage(`"keep"`)}}}
 	return c
@@ -40,11 +50,11 @@ func TestEditorKeepsWhatItDoesNotShow(t *testing.T) {
 	if out.Name != "GitHub (work)" || out.Login.Password != "changed" || out.SealedKeyID != "key-1" {
 		t.Fatalf("edit not applied: %+v", out)
 	}
-	if string(out.Extra["futureCipherField"]) != `"plain"` || string(out.Login.Extra["autofillOnPageLoad"]) != `true` {
-		t.Fatal("unknown fields lost")
+	if string(out.Extra["futureCipherField"]) != `"plain"` || string(out.Login.Extra["autofillOnPageLoad"]) != `true` || string(out.Login.Shape["totp"]) != `null` {
+		t.Fatal("unknown fields or wire shape lost")
 	}
-	if len(out.Login.Fido2Credentials) != 1 || string(out.Login.Fido2Credentials[0].Sealed) != `{"credentialId":"2.sealed"}` {
-		t.Fatalf("passkey lost: %+v", out.Login.Fido2Credentials)
+	if len(out.Login.Fido2Credentials) != 2 || string(out.Login.Fido2Credentials[0].Sealed) != sealedPasskeyA {
+		t.Fatalf("passkeys lost: %+v", out.Login.Fido2Credentials)
 	}
 	u := out.Login.URIs[0]
 	if u.Match == nil || *u.Match != 3 || u.Checksum == nil || u.ChecksumOf != u.URI || string(u.Extra["futureUriField"]) != `7` {
@@ -66,7 +76,32 @@ func TestEditorKeepsWhatItDoesNotShow(t *testing.T) {
 	}
 }
 
-func TestPasskeyShownAndRemovedOnlyOnSave(t *testing.T) {
+func TestEditorKeepsExistingBlankRows(t *testing.T) {
+	match := 5
+	c := &state.Cipher{ID: "c-blank", Type: api.CipherTypeLogin, Name: "Blank rows", Login: &state.Login{
+		Username: "alice",
+		URIs:     []state.LoginURI{{URI: "", Match: &match, Extra: map[string]json.RawMessage{"futureUriField": json.RawMessage(`1`)}}, {URI: "https://a.example"}},
+	}, Fields: []state.CustomField{{Name: "", Value: "", Type: 0, Extra: map[string]json.RawMessage{"futureFieldField": json.RawMessage(`2`)}}}}
+	d := draftFromCipher(c)
+	d.Name = "Renamed"
+	d.URIs = append(d.URIs, EditURIDraft{URI: "  "})
+	d.Fields = append(d.Fields, EditFieldDraft{})
+	out := cipherFromDraft(d)
+	if len(out.Login.URIs) != 2 || out.Login.URIs[0].Match == nil || *out.Login.URIs[0].Match != 5 || string(out.Login.URIs[0].Extra["futureUriField"]) != `1` {
+		t.Fatalf("existing blank URI lost or new blank URI kept: %+v", out.Login.URIs)
+	}
+	if len(out.Fields) != 1 || string(out.Fields[0].Extra["futureFieldField"]) != `2` {
+		t.Fatalf("existing blank field lost or new blank field kept: %+v", out.Fields)
+	}
+
+	d = draftFromCipher(c)
+	d.URIs[1].URI = ""
+	if out := cipherFromDraft(d); len(out.Login.URIs) != 1 {
+		t.Fatalf("a URI the user cleared was kept: %+v", out.Login.URIs)
+	}
+}
+
+func TestRemoveOnePasskeyKeepsTheOther(t *testing.T) {
 	svc := newMockVaultService(state.StatusUnlocked)
 	passkeyLogin(svc)
 	app, m, root := startSecurityApp(t, svc, PlatformHooks{})
@@ -74,32 +109,35 @@ func TestPasskeyShownAndRemovedOnlyOnSave(t *testing.T) {
 	app.OnAlert = func(core.AlertConfig) int { a := answers[0]; answers = answers[1:]; return a }
 
 	app.Post(func() { m.SelectCipher(root, "c-github") })
-	app.WaitFor("id:detail-passkey", 2*time.Second)
-	if !app.Exists("id:detail-view >> text:github.com · Created Mar 14, 2026") {
-		t.Fatal("passkey row does not show the site and creation date")
+	app.WaitFor("id:detail-passkey-1", 2*time.Second)
+	if !app.Exists("id:detail-view >> text:github.com · Created Mar 14, 2026") || !app.Exists("id:detail-view >> text:gist.github.com · Created Apr 1, 2026") {
+		t.Fatal("detail does not show both passkeys")
 	}
 
 	app.Press("id:detail-edit")
-	app.WaitFor("id:editor-passkey-remove", 2*time.Second)
-	app.Press("id:editor-passkey-remove")
+	app.WaitFor("id:editor-passkey-remove-1", 2*time.Second)
+	app.Press("id:editor-passkey-remove-1")
 	app.Settle()
-	if m.EditDraft.Get().RemovePasskey || !app.Exists("id:editor-passkey") {
+	if len(m.EditDraft.Get().RemovedPasskeys) != 0 || !app.Exists("id:editor-passkey-1") {
 		t.Fatal("cancelling the dialog removed the passkey")
 	}
-	app.Press("id:editor-passkey-remove")
-	app.WaitFor("id:editor-passkey-removed", 2*time.Second)
-	if c, _ := svc.GetCipher("c-github"); len(c.Login.Fido2Credentials) != 1 {
+	app.Press("id:editor-passkey-remove-1")
+	app.WaitFor("id:editor-passkey-removed-1", 2*time.Second)
+	if !app.Exists("id:editor-passkey") {
+		t.Fatal("removing the second passkey hid the first")
+	}
+	if c, _ := svc.GetCipher("c-github"); len(c.Login.Fido2Credentials) != 2 {
 		t.Fatal("passkey removed before saving")
 	}
 	app.Press("id:editor-save")
 	app.WaitUntil(2*time.Second, func() bool { return !m.EditMode.Get() })
 
 	c, _ := svc.GetCipher("c-github")
-	if len(c.Login.Fido2Credentials) != 0 {
-		t.Fatal("saving did not remove the passkey")
+	if len(c.Login.Fido2Credentials) != 1 || !bytes.Equal(c.Login.Fido2Credentials[0].Sealed, []byte(sealedPasskeyA)) {
+		t.Fatalf("save kept %+v, want only the first passkey unchanged", c.Login.Fido2Credentials)
 	}
 	if string(c.Login.Extra["autofillOnPageLoad"]) != `true` || c.Login.URIs[0].Checksum == nil || string(c.Fields[0].Extra["futureFieldField"]) != `"keep"` || string(c.Extra["futureCipherField"]) != `"plain"` {
-		t.Fatalf("removing the passkey changed other fields: %+v", c.Login)
+		t.Fatalf("removing a passkey changed other fields: %+v", c.Login)
 	}
 }
 
@@ -117,12 +155,12 @@ func TestLeavingEditorKeepsPasskey(t *testing.T) {
 	app.WaitFor("id:editor-passkey-removed", 2*time.Second)
 	app.Press("id:editor-cancel")
 	app.WaitUntil(2*time.Second, func() bool { return !m.EditMode.Get() })
-	if c, _ := svc.GetCipher("c-github"); len(c.Login.Fido2Credentials) != 1 {
+	if c, _ := svc.GetCipher("c-github"); len(c.Login.Fido2Credentials) != 2 {
 		t.Fatal("leaving the editor without saving removed the passkey")
 	}
 }
 
-func TestCloneDoesNotCopyPasskey(t *testing.T) {
+func TestCloneDoesNotCopyPasskeyButKeepsExtras(t *testing.T) {
 	svc := newMockVaultService(state.StatusUnlocked)
 	passkeyLogin(svc)
 	app, m, root := startSecurityApp(t, svc, PlatformHooks{})
@@ -130,7 +168,7 @@ func TestCloneDoesNotCopyPasskey(t *testing.T) {
 	app.WaitFor("id:detail-clone", 2*time.Second)
 	app.Press("id:detail-clone")
 	app.WaitUntil(2*time.Second, func() bool { return m.EditMode.Get() })
-	if m.EditDraft.Get().DraftPasskey() != nil || app.Exists("id:editor-passkey") {
+	if len(m.EditDraft.Get().DraftPasskeys()) != 0 || app.Exists("id:editor-passkey") {
 		t.Fatal("clone editor offers the passkey")
 	}
 	app.Press("id:editor-save")
@@ -139,7 +177,10 @@ func TestCloneDoesNotCopyPasskey(t *testing.T) {
 	if err != nil || len(cp.Login.Fido2Credentials) != 0 || !strings.HasSuffix(cp.Name, "(Copy)") {
 		t.Fatalf("clone = %+v, %v", cp, err)
 	}
-	if orig, _ := svc.GetCipher("c-github"); len(orig.Login.Fido2Credentials) != 1 {
-		t.Fatal("clone changed the original passkey")
+	if string(cp.Extra["futureCipherField"]) != `"plain"` {
+		t.Fatal("clone dropped top-level unknown fields; the key-change filter decides what goes")
+	}
+	if orig, _ := svc.GetCipher("c-github"); len(orig.Login.Fido2Credentials) != 2 {
+		t.Fatal("clone changed the original passkeys")
 	}
 }

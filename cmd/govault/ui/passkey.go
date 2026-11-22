@@ -1,12 +1,13 @@
 package ui
 
 import (
+	"fmt"
+	"slices"
 	"time"
 
 	"github.com/nsgo-dev/nsgo/core"
 	"github.com/nsgo-dev/nsgo/icons/lucide"
 	"github.com/nsgo-dev/nsgo/ui"
-	"github.com/txchen/govault/internal/vaultcore/api"
 	"github.com/txchen/govault/internal/vaultcore/state"
 )
 
@@ -32,20 +33,33 @@ func passkeyText(f *state.Fido2Credential) string {
 	return "Stored in this item"
 }
 
-func detailPasskeyRow(c *state.Cipher) core.Node {
-	if c.Login == nil || len(c.Login.Fido2Credentials) == 0 {
-		return nil
+func passkeyTestID(base string, i int) string {
+	if i == 0 {
+		return base
 	}
-	return fieldRow("Passkey", fieldOpts{
-		testID: "detail-passkey",
-		value:  staticValue(passkeyText(&c.Login.Fido2Credentials[0])),
-	})
+	return fmt.Sprintf("%s-%d", base, i)
 }
 
-// ConfirmRemovePasskey asks before marking the passkey of the item being
+// detailPasskeyRows shows every passkey of a login, read-only.
+func detailPasskeyRows(c *state.Cipher) []core.Node {
+	if c.Login == nil {
+		return nil
+	}
+	var rows []core.Node
+	for i := range c.Login.Fido2Credentials {
+		rows = append(rows, fieldRow("Passkey", fieldOpts{
+			testID: passkeyTestID("detail-passkey", i),
+			value:  staticValue(passkeyText(&c.Login.Fido2Credentials[i])),
+		}))
+	}
+	return rows
+}
+
+// ConfirmRemovePasskey asks before marking passkey i of the item being
 // edited for removal. It goes only when the user saves.
-func (m *AppModel) ConfirmRemovePasskey(cx *core.Scope) {
-	if m.EditDraft.Get().DraftPasskey() == nil {
+func (m *AppModel) ConfirmRemovePasskey(cx *core.Scope, i int) {
+	d := m.EditDraft.Get()
+	if i < 0 || i >= len(d.DraftPasskeys()) || d.PasskeyRemoved(i) {
 		return
 	}
 	cx.ShowAlert(core.AlertConfig{
@@ -58,51 +72,67 @@ func (m *AppModel) ConfirmRemovePasskey(cx *core.Scope) {
 		Cancelable: true,
 	}, func(idx int) {
 		if idx == 1 {
-			m.MutateDraft(func(d *EditDraft) { d.RemovePasskey = true })
+			m.MutateDraft(func(d *EditDraft) {
+				if !d.PasskeyRemoved(i) {
+					d.RemovedPasskeys = append(d.RemovedPasskeys, i)
+				}
+			})
 		}
 	})
 }
 
-func editorPasskeyRow(cx *core.Scope, m *AppModel) core.Node {
+func hasDraftPasskeys(m *AppModel) bool {
+	return len(m.EditDraft.Get().DraftPasskeys()) > 0
+}
+
+// editorPasskeyRows lists the passkeys of the item being edited, each with
+// its own remove button, or Undo once removed.
+func editorPasskeyRows(cx *core.Scope, m *AppModel) core.Node {
 	return core.Dynamic(func(cx *core.Scope) core.Node {
 		d := m.EditDraft.Get()
-		if d == nil || d.Source == nil || d.Source.Login == nil || len(d.Source.Login.Fido2Credentials) == 0 || d.Type != api.CipherTypeLogin {
-			return nil
-		}
-		if d.RemovePasskey {
-			return formRow("Passkey", core.View{
+		passkeys := d.DraftPasskeys()
+		var rows []core.Node
+		for i := range passkeys {
+			if d.PasskeyRemoved(i) {
+				rows = append(rows, formRow("Passkey", core.View{
+					Class: "flex-1 flex-row items-center gap-2",
+					Children: []core.Node{
+						core.Text{TestID: passkeyTestID("editor-passkey-removed", i), Class: "flex-1 text-[13px] text-gv-fg2", Content: "Removed when you save"},
+						ui.Button{
+							TestID:  passkeyTestID("editor-passkey-undo", i),
+							Text:    "Undo",
+							Variant: ui.ButtonGhost,
+							Size:    ui.SizeSmall,
+							OnPress: func() {
+								m.MutateDraft(func(d *EditDraft) {
+									d.RemovedPasskeys = slices.DeleteFunc(d.RemovedPasskeys, func(x int) bool { return x == i })
+								})
+							},
+						},
+					},
+				}))
+				continue
+			}
+			rows = append(rows, formRow("Passkey", core.View{
 				Class: "flex-1 flex-row items-center gap-2",
 				Children: []core.Node{
-					core.Text{TestID: "editor-passkey-removed", Class: "flex-1 text-[13px] text-gv-fg2", Content: "Removed when you save"},
+					core.Text{TestID: passkeyTestID("editor-passkey", i), MaxLines: 1, Class: "flex-1 text-[13px] text-gv-fg", Content: passkeyText(&passkeys[i])},
 					ui.Button{
-						TestID:  "editor-passkey-undo",
-						Text:    "Undo",
-						Variant: ui.ButtonGhost,
-						Size:    ui.SizeSmall,
-						OnPress: func() { m.MutateDraft(func(d *EditDraft) { d.RemovePasskey = false }) },
+						TestID:   passkeyTestID("editor-passkey-remove", i),
+						Icon:     lucide.Trash,
+						Label:    "Remove passkey",
+						Variant:  ui.ButtonGhost,
+						Side:     24,
+						IconSize: 13,
+						Tint:     func() core.Color { return themeColor(cx, "gv-danger") },
+						OnPress:  func() { m.ConfirmRemovePasskey(cx, i) },
 					},
 				},
-			})
+			}))
 		}
-		p := d.DraftPasskey()
-		if p == nil {
+		if len(rows) == 0 {
 			return nil
 		}
-		return formRow("Passkey", core.View{
-			Class: "flex-1 flex-row items-center gap-2",
-			Children: []core.Node{
-				core.Text{TestID: "editor-passkey", MaxLines: 1, Class: "flex-1 text-[13px] text-gv-fg", Content: passkeyText(p)},
-				ui.Button{
-					TestID:   "editor-passkey-remove",
-					Icon:     lucide.Trash,
-					Label:    "Remove passkey",
-					Variant:  ui.ButtonGhost,
-					Side:     24,
-					IconSize: 13,
-					Tint:     func() core.Color { return themeColor(cx, "gv-danger") },
-					OnPress:  func() { m.ConfirmRemovePasskey(cx) },
-				},
-			},
-		})
+		return card(rows...)
 	})
 }

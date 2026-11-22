@@ -3,13 +3,108 @@ package api
 import (
 	"bytes"
 	"encoding/json"
+	"maps"
+	"reflect"
+	"strings"
 	"time"
 )
 
 // The nested parts of a cipher keep every field the server sends, known or
 // not, in Extra, and send it back unchanged on save. A field GoVault does
 // not model, such as login.autofillOnPageLoad or a field a newer server
-// adds, therefore survives edits.
+// adds, therefore survives edits. Shape keeps how known fields without a
+// value were sent, so an untouched absent, null or empty field goes back
+// the same way.
+
+// Shape records the known fields that carried no value: an empty
+// RawMessage for a field that was absent, else its empty JSON value
+// (null, "", [] or {}).
+type Shape map[string]json.RawMessage
+
+func unmarshalNested(data []byte, dst any, extra *map[string]json.RawMessage, shape *Shape) error {
+	if err := unmarshalWithExtra(data, dst, extra); err != nil {
+		return err
+	}
+	var all map[string]json.RawMessage
+	if err := json.Unmarshal(data, &all); err != nil {
+		return err
+	}
+	out := Shape{}
+	for _, name := range jsonNames(dst) {
+		v, ok := all[name]
+		switch {
+		case !ok:
+			out[name] = json.RawMessage{}
+		case emptyJSON(v):
+			out[name] = bytes.Clone(v)
+		}
+	}
+	if len(out) > 0 {
+		*shape = out
+	}
+	return nil
+}
+
+func marshalNested(src any, extra map[string]json.RawMessage, shape Shape) ([]byte, error) {
+	if len(shape) == 0 {
+		return marshalWithExtra(src, extra)
+	}
+	base, err := json.Marshal(src)
+	if err != nil {
+		return nil, err
+	}
+	var merged map[string]json.RawMessage
+	if err := json.Unmarshal(base, &merged); err != nil {
+		return nil, err
+	}
+	if merged == nil {
+		merged = map[string]json.RawMessage{}
+	}
+	for name, was := range shape {
+		cur, ok := merged[name]
+		switch {
+		case len(was) == 0 && (!ok || emptyJSON(cur) || zeroJSON(cur)):
+			delete(merged, name)
+		case len(was) > 0 && (!ok || emptyJSON(cur)):
+			merged[name] = bytes.Clone(was)
+		}
+	}
+	out := make(map[string]json.RawMessage, len(extra)+len(merged))
+	maps.Copy(out, extra)
+	maps.Copy(out, merged)
+	return json.Marshal(out)
+}
+
+func emptyJSON(v json.RawMessage) bool {
+	switch string(bytes.TrimSpace(v)) {
+	case "null", `""`, "[]", "{}":
+		return true
+	}
+	return false
+}
+
+func zeroJSON(v json.RawMessage) bool {
+	switch string(bytes.TrimSpace(v)) {
+	case "0", "false":
+		return true
+	}
+	return false
+}
+
+func jsonNames(dst any) []string {
+	t := reflect.TypeOf(dst).Elem()
+	var out []string
+	for i := range t.NumField() {
+		tag := t.Field(i).Tag.Get("json")
+		if tag == "" || tag == "-" {
+			continue
+		}
+		if name, _, _ := strings.Cut(tag, ","); name != "" {
+			out = append(out, name)
+		}
+	}
+	return out
+}
 
 type EncryptedLogin struct {
 	Username             *string                    `json:"username"`
@@ -19,12 +114,13 @@ type EncryptedLogin struct {
 	PasswordRevisionDate *time.Time                 `json:"passwordRevisionDate,omitempty"`
 	Fido2Credentials     []EncryptedFido2Credential `json:"fido2Credentials,omitempty"`
 	Extra                map[string]json.RawMessage `json:"-"`
+	Shape                Shape                      `json:"-"`
 }
 
 func (l *EncryptedLogin) UnmarshalJSON(data []byte) error {
 	type alias EncryptedLogin
 	var v alias
-	if err := unmarshalWithExtra(data, &v, &v.Extra); err != nil {
+	if err := unmarshalNested(data, &v, &v.Extra, &v.Shape); err != nil {
 		return err
 	}
 	*l = EncryptedLogin(v)
@@ -33,7 +129,7 @@ func (l *EncryptedLogin) UnmarshalJSON(data []byte) error {
 
 func (l EncryptedLogin) MarshalJSON() ([]byte, error) {
 	type alias EncryptedLogin
-	return marshalWithExtra(alias(l), l.Extra)
+	return marshalNested(alias(l), l.Extra, l.Shape)
 }
 
 type EncryptedLoginURI struct {
@@ -41,12 +137,13 @@ type EncryptedLoginURI struct {
 	Match       *int                       `json:"match"`
 	URIChecksum *string                    `json:"uriChecksum,omitempty"`
 	Extra       map[string]json.RawMessage `json:"-"`
+	Shape       Shape                      `json:"-"`
 }
 
 func (u *EncryptedLoginURI) UnmarshalJSON(data []byte) error {
 	type alias EncryptedLoginURI
 	var v alias
-	if err := unmarshalWithExtra(data, &v, &v.Extra); err != nil {
+	if err := unmarshalNested(data, &v, &v.Extra, &v.Shape); err != nil {
 		return err
 	}
 	*u = EncryptedLoginURI(v)
@@ -55,7 +152,7 @@ func (u *EncryptedLoginURI) UnmarshalJSON(data []byte) error {
 
 func (u EncryptedLoginURI) MarshalJSON() ([]byte, error) {
 	type alias EncryptedLoginURI
-	return marshalWithExtra(alias(u), u.Extra)
+	return marshalNested(alias(u), u.Extra, u.Shape)
 }
 
 // EncryptedFido2Credential is a passkey as the server stores it. Every
@@ -129,12 +226,13 @@ func (f EncryptedFido2Credential) MarshalJSON() ([]byte, error) {
 type EncryptedSecureNote struct {
 	Type  int                        `json:"type"`
 	Extra map[string]json.RawMessage `json:"-"`
+	Shape Shape                      `json:"-"`
 }
 
 func (n *EncryptedSecureNote) UnmarshalJSON(data []byte) error {
 	type alias EncryptedSecureNote
 	var v alias
-	if err := unmarshalWithExtra(data, &v, &v.Extra); err != nil {
+	if err := unmarshalNested(data, &v, &v.Extra, &v.Shape); err != nil {
 		return err
 	}
 	*n = EncryptedSecureNote(v)
@@ -143,7 +241,7 @@ func (n *EncryptedSecureNote) UnmarshalJSON(data []byte) error {
 
 func (n EncryptedSecureNote) MarshalJSON() ([]byte, error) {
 	type alias EncryptedSecureNote
-	return marshalWithExtra(alias(n), n.Extra)
+	return marshalNested(alias(n), n.Extra, n.Shape)
 }
 
 type EncryptedCard struct {
@@ -154,12 +252,13 @@ type EncryptedCard struct {
 	ExpYear        *string                    `json:"expYear"`
 	Code           *string                    `json:"code"`
 	Extra          map[string]json.RawMessage `json:"-"`
+	Shape          Shape                      `json:"-"`
 }
 
 func (c *EncryptedCard) UnmarshalJSON(data []byte) error {
 	type alias EncryptedCard
 	var v alias
-	if err := unmarshalWithExtra(data, &v, &v.Extra); err != nil {
+	if err := unmarshalNested(data, &v, &v.Extra, &v.Shape); err != nil {
 		return err
 	}
 	*c = EncryptedCard(v)
@@ -168,7 +267,7 @@ func (c *EncryptedCard) UnmarshalJSON(data []byte) error {
 
 func (c EncryptedCard) MarshalJSON() ([]byte, error) {
 	type alias EncryptedCard
-	return marshalWithExtra(alias(c), c.Extra)
+	return marshalNested(alias(c), c.Extra, c.Shape)
 }
 
 type EncryptedIdentity struct {
@@ -191,12 +290,13 @@ type EncryptedIdentity struct {
 	PassportNumber *string                    `json:"passportNumber"`
 	LicenseNumber  *string                    `json:"licenseNumber"`
 	Extra          map[string]json.RawMessage `json:"-"`
+	Shape          Shape                      `json:"-"`
 }
 
 func (i *EncryptedIdentity) UnmarshalJSON(data []byte) error {
 	type alias EncryptedIdentity
 	var v alias
-	if err := unmarshalWithExtra(data, &v, &v.Extra); err != nil {
+	if err := unmarshalNested(data, &v, &v.Extra, &v.Shape); err != nil {
 		return err
 	}
 	*i = EncryptedIdentity(v)
@@ -205,7 +305,7 @@ func (i *EncryptedIdentity) UnmarshalJSON(data []byte) error {
 
 func (i EncryptedIdentity) MarshalJSON() ([]byte, error) {
 	type alias EncryptedIdentity
-	return marshalWithExtra(alias(i), i.Extra)
+	return marshalNested(alias(i), i.Extra, i.Shape)
 }
 
 type EncryptedSSHKey struct {
@@ -213,12 +313,13 @@ type EncryptedSSHKey struct {
 	PublicKey      *string                    `json:"publicKey"`
 	KeyFingerprint *string                    `json:"keyFingerprint"`
 	Extra          map[string]json.RawMessage `json:"-"`
+	Shape          Shape                      `json:"-"`
 }
 
 func (k *EncryptedSSHKey) UnmarshalJSON(data []byte) error {
 	type alias EncryptedSSHKey
 	var v alias
-	if err := unmarshalWithExtra(data, &v, &v.Extra); err != nil {
+	if err := unmarshalNested(data, &v, &v.Extra, &v.Shape); err != nil {
 		return err
 	}
 	*k = EncryptedSSHKey(v)
@@ -227,7 +328,7 @@ func (k *EncryptedSSHKey) UnmarshalJSON(data []byte) error {
 
 func (k EncryptedSSHKey) MarshalJSON() ([]byte, error) {
 	type alias EncryptedSSHKey
-	return marshalWithExtra(alias(k), k.Extra)
+	return marshalNested(alias(k), k.Extra, k.Shape)
 }
 
 type EncryptedField struct {
@@ -236,12 +337,13 @@ type EncryptedField struct {
 	Type     int                        `json:"type"`
 	LinkedID *int                       `json:"linkedId,omitempty"`
 	Extra    map[string]json.RawMessage `json:"-"`
+	Shape    Shape                      `json:"-"`
 }
 
 func (f *EncryptedField) UnmarshalJSON(data []byte) error {
 	type alias EncryptedField
 	var v alias
-	if err := unmarshalWithExtra(data, &v, &v.Extra); err != nil {
+	if err := unmarshalNested(data, &v, &v.Extra, &v.Shape); err != nil {
 		return err
 	}
 	*f = EncryptedField(v)
@@ -250,19 +352,20 @@ func (f *EncryptedField) UnmarshalJSON(data []byte) error {
 
 func (f EncryptedField) MarshalJSON() ([]byte, error) {
 	type alias EncryptedField
-	return marshalWithExtra(alias(f), f.Extra)
+	return marshalNested(alias(f), f.Extra, f.Shape)
 }
 
 type EncryptedPasswordHistory struct {
 	Password     string                     `json:"password"`
 	LastUsedDate time.Time                  `json:"lastUsedDate"`
 	Extra        map[string]json.RawMessage `json:"-"`
+	Shape        Shape                      `json:"-"`
 }
 
 func (h *EncryptedPasswordHistory) UnmarshalJSON(data []byte) error {
 	type alias EncryptedPasswordHistory
 	var v alias
-	if err := unmarshalWithExtra(data, &v, &v.Extra); err != nil {
+	if err := unmarshalNested(data, &v, &v.Extra, &v.Shape); err != nil {
 		return err
 	}
 	*h = EncryptedPasswordHistory(v)
@@ -271,5 +374,5 @@ func (h *EncryptedPasswordHistory) UnmarshalJSON(data []byte) error {
 
 func (h EncryptedPasswordHistory) MarshalJSON() ([]byte, error) {
 	type alias EncryptedPasswordHistory
-	return marshalWithExtra(alias(h), h.Extra)
+	return marshalNested(alias(h), h.Extra, h.Shape)
 }

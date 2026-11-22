@@ -660,16 +660,33 @@ func (s *Service) SaveCipher(ctx context.Context, c *Cipher) (*Cipher, error) {
 	if len(decrypted.CollectionIDs) == 0 {
 		decrypted.CollectionIDs = append([]string(nil), c.CollectionIDs...)
 	}
+	return o.commitCipher(decrypted, encResp)
+}
 
-	s.mu.Lock()
-	if !o.currentLocked() {
-		s.mu.Unlock()
+// commitCipher records a cipher the server returned after a change: first
+// in the encrypted snapshot, then in memory. Memory always takes the
+// server's version, even when the snapshot write fails and the error is
+// returned.
+func (o *op) commitCipher(decrypted *Cipher, enc *api.EncryptedCipher) (*Cipher, error) {
+	stored := *enc
+	if len(stored.CollectionIDs) == 0 {
+		stored.CollectionIDs = append([]string(nil), decrypted.CollectionIDs...)
+	}
+	snapErr := o.storeSnapshotCipher(&stored)
+	if errors.Is(snapErr, ErrLocked) {
 		return nil, ErrLocked
 	}
-	s.ciphers[decrypted.ID] = decrypted
-	s.mu.Unlock()
-
-	s.notifyUpdated()
+	o.s.mu.Lock()
+	if !o.currentLocked() {
+		o.s.mu.Unlock()
+		return nil, ErrLocked
+	}
+	o.s.ciphers[decrypted.ID] = decrypted
+	o.s.mu.Unlock()
+	o.s.notifyUpdated()
+	if snapErr != nil {
+		return nil, snapErr
+	}
 	return cloneCipher(decrypted), nil
 }
 
@@ -691,6 +708,13 @@ func (s *Service) SoftDeleteCipher(ctx context.Context, id string) error {
 	}
 
 	now := time.Now().UTC()
+	snapErr := o.updateSnapshot(func(resp *api.SyncResponse) {
+		for i := range resp.Ciphers {
+			if resp.Ciphers[i].ID == id {
+				resp.Ciphers[i].DeletedDate = &now
+			}
+		}
+	})
 	s.mu.Lock()
 	if c, ok := s.ciphers[id]; ok && o.currentLocked() {
 		c.DeletedDate = &now
@@ -698,7 +722,7 @@ func (s *Service) SoftDeleteCipher(ctx context.Context, id string) error {
 	s.mu.Unlock()
 
 	s.notifyUpdated()
-	return nil
+	return snapErr
 }
 
 func (s *Service) RestoreCipher(ctx context.Context, id string) error {
@@ -727,18 +751,13 @@ func (s *Service) RestoreCipher(ctx context.Context, id string) error {
 	if err != nil {
 		return err
 	}
-
-	s.mu.Lock()
-	if o.currentLocked() {
-		if prev := s.ciphers[decrypted.ID]; prev != nil && len(decrypted.CollectionIDs) == 0 {
-			decrypted.CollectionIDs = append([]string(nil), prev.CollectionIDs...)
-		}
-		s.ciphers[decrypted.ID] = decrypted
+	s.mu.RLock()
+	if prev := s.ciphers[decrypted.ID]; prev != nil && len(decrypted.CollectionIDs) == 0 {
+		decrypted.CollectionIDs = append([]string(nil), prev.CollectionIDs...)
 	}
-	s.mu.Unlock()
-
-	s.notifyUpdated()
-	return nil
+	s.mu.RUnlock()
+	_, err = o.commitCipher(decrypted, encResp)
+	return err
 }
 
 func (s *Service) HardDeleteCipher(ctx context.Context, id string) error {
@@ -758,6 +777,7 @@ func (s *Service) HardDeleteCipher(ctx context.Context, id string) error {
 		return err
 	}
 
+	snapErr := o.removeSnapshotCiphers(id)
 	s.mu.Lock()
 	if o.currentLocked() {
 		delete(s.ciphers, id)
@@ -765,7 +785,13 @@ func (s *Service) HardDeleteCipher(ctx context.Context, id string) error {
 	s.mu.Unlock()
 
 	s.notifyUpdated()
-	return nil
+	return snapErr
+}
+
+func (o *op) removeSnapshotCiphers(ids ...string) error {
+	return o.updateSnapshot(func(resp *api.SyncResponse) {
+		resp.Ciphers = slices.DeleteFunc(resp.Ciphers, func(c api.EncryptedCipher) bool { return slices.Contains(ids, c.ID) })
+	})
 }
 
 // EmptyTrash permanently deletes every item in Trash the user may delete and
@@ -794,6 +820,7 @@ func (s *Service) EmptyTrash(ctx context.Context) (TrashResult, error) {
 	slices.Sort(ids)
 
 	var errs []error
+	var deleted []string
 	for _, id := range ids {
 		_, err := withAuth(o, func(ctx context.Context, tok string) (struct{}, error) {
 			return struct{}{}, o.client.HardDeleteCipher(ctx, tok, id)
@@ -806,6 +833,7 @@ func (s *Service) EmptyTrash(ctx context.Context) (TrashResult, error) {
 			continue
 		}
 		res.Deleted++
+		deleted = append(deleted, id)
 		s.mu.Lock()
 		if o.currentLocked() {
 			delete(s.ciphers, id)
@@ -813,6 +841,9 @@ func (s *Service) EmptyTrash(ctx context.Context) (TrashResult, error) {
 		s.mu.Unlock()
 	}
 	if res.Deleted > 0 {
+		if err := o.removeSnapshotCiphers(deleted...); err != nil {
+			errs = append(errs, err)
+		}
 		if err := s.sync(ctx, true); err != nil && !errors.Is(err, ErrLocked) {
 			errs = append(errs, err)
 		}
@@ -872,6 +903,18 @@ func (s *Service) SaveFolder(ctx context.Context, f *Folder) (*Folder, error) {
 		return nil, err
 	}
 
+	snapErr := o.updateSnapshot(func(resp *api.SyncResponse) {
+		for i := range resp.Folders {
+			if resp.Folders[i].ID == encResp.ID {
+				resp.Folders[i] = *encResp
+				return
+			}
+		}
+		resp.Folders = append(resp.Folders, *encResp)
+	})
+	if errors.Is(snapErr, ErrLocked) {
+		return nil, ErrLocked
+	}
 	s.mu.Lock()
 	if !o.currentLocked() {
 		s.mu.Unlock()
@@ -881,6 +924,9 @@ func (s *Service) SaveFolder(ctx context.Context, f *Folder) (*Folder, error) {
 	s.mu.Unlock()
 
 	s.notifyUpdated()
+	if snapErr != nil {
+		return nil, snapErr
+	}
 	cp := decrypted
 	return &cp, nil
 }
@@ -899,6 +945,14 @@ func (s *Service) DeleteFolder(ctx context.Context, id string) error {
 		return err
 	}
 
+	snapErr := o.updateSnapshot(func(resp *api.SyncResponse) {
+		resp.Folders = slices.DeleteFunc(resp.Folders, func(f api.EncryptedFolder) bool { return f.ID == id })
+		for i := range resp.Ciphers {
+			if f := resp.Ciphers[i].FolderID; f != nil && *f == id {
+				resp.Ciphers[i].FolderID = nil
+			}
+		}
+	})
 	s.mu.Lock()
 	if o.currentLocked() {
 		delete(s.folders, id)
@@ -911,7 +965,7 @@ func (s *Service) DeleteFolder(ctx context.Context, id string) error {
 	s.mu.Unlock()
 
 	s.notifyUpdated()
-	return nil
+	return snapErr
 }
 
 func (s *Service) loadCurrentSnapshot() (*store.Snapshot, error) {

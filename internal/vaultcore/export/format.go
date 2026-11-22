@@ -5,6 +5,8 @@ package export
 
 import (
 	"cmp"
+	"errors"
+	"fmt"
 	"slices"
 	"strings"
 	"time"
@@ -164,8 +166,12 @@ func val(p *string) string {
 
 // Build exports the active personal items and the folders, as a Bitwarden
 // individual vault export does: organization items and Trash are left out.
-func Build(ciphers []*state.Cipher, folders []state.Folder) *Vault {
+//
+// An item whose passkey does not fully decrypt fails the export with
+// ErrUnreadablePasskey naming the item.
+func Build(ciphers []*state.Cipher, folders []state.Folder) (*Vault, error) {
 	v := &Vault{Folders: []Folder{}, Items: []Item{}}
+	var errs []error
 	for _, f := range folders {
 		v.Folders = append(v.Folders, Folder{ID: f.ID, Name: f.Name})
 	}
@@ -174,12 +180,22 @@ func Build(ciphers []*state.Cipher, folders []state.Folder) *Vault {
 		if c == nil || c.DeletedDate != nil || (c.OrganizationID != nil && *c.OrganizationID != "") {
 			continue
 		}
+		if c.Login != nil {
+			for _, f := range c.Login.Fido2Credentials {
+				if len(f.Unreadable) > 0 {
+					errs = append(errs, fmt.Errorf("%w in %q (%s)", ErrUnreadablePasskey, c.Name, strings.Join(f.Unreadable, ", ")))
+				}
+			}
+		}
 		v.Items = append(v.Items, FromCipher(c))
+	}
+	if len(errs) > 0 {
+		return nil, errors.Join(errs...)
 	}
 	slices.SortFunc(v.Items, func(a, b Item) int {
 		return cmp.Or(cmp.Compare(strings.ToLower(a.Name), strings.ToLower(b.Name)), cmp.Compare(a.ID, b.ID))
 	})
-	return v
+	return v, nil
 }
 
 func FromCipher(c *state.Cipher) Item {
@@ -239,18 +255,24 @@ func (it Item) content() *state.Cipher {
 // mergeContent replaces the content of c with that of the backup item while
 // keeping what the backup does not describe: unknown fields the server
 // stores, URI checksums of unchanged URIs, and passkeys. An existing passkey
-// is never removed; a backup passkey is only taken when c has none.
+// is never removed; a backup passkey is only taken when c has none. A
+// nested object the backup lacks is kept, never cleared.
+//
+// A backup field or URI takes what GoVault keeps for an existing one only
+// when they match exactly (name and type, or text and match setting) and
+// the match is unambiguous; each existing entry is used at most once.
 func mergeContent(c *state.Cipher, it Item) {
 	var fields []state.CustomField
-	for _, f := range it.Fields {
+	usedFields := make([]bool, len(c.Fields))
+	for i, f := range it.Fields {
 		nf := state.CustomField{Name: val(f.Name), Value: val(f.Value), Type: f.Type, LinkedID: f.LinkedID}
-		for _, old := range c.Fields {
-			if old.Name == nf.Name && old.Type == nf.Type {
-				nf.Extra = old.Extra
-				if nf.LinkedID == nil {
-					nf.LinkedID = old.LinkedID
-				}
-				break
+		if j := pickOld(len(c.Fields), i, usedFields, func(j int) bool {
+			return c.Fields[j].Name == nf.Name && c.Fields[j].Type == nf.Type
+		}); j >= 0 {
+			old := c.Fields[j]
+			nf.Extra, nf.Shape = old.Extra, old.Shape
+			if nf.LinkedID == nil {
+				nf.LinkedID = old.LinkedID
 			}
 		}
 		fields = append(fields, nf)
@@ -264,20 +286,20 @@ func mergeContent(c *state.Cipher, it Item) {
 			out = &cp
 		}
 		out.Username, out.Password, out.TOTP = val(l.Username), val(l.Password), val(l.TOTP)
-		prev, used := out.URIs, map[int]bool{}
+		prev := out.URIs
+		used := make([]bool, len(prev))
 		out.URIs = nil
-		for _, u := range l.URIs {
+		for i, u := range l.URIs {
 			text := val(u.URI)
 			if text == "" {
 				continue
 			}
 			nu := state.LoginURI{URI: text, Match: u.Match}
-			for i, old := range prev {
-				if !used[i] && old.URI == text {
-					used[i] = true
-					nu.Checksum, nu.ChecksumOf, nu.Extra = old.Checksum, old.ChecksumOf, old.Extra
-					break
-				}
+			if j := pickOld(len(prev), i, used, func(j int) bool {
+				return prev[j].URI == text && sameMatch(prev[j].Match, u.Match)
+			}); j >= 0 {
+				old := prev[j]
+				nu.Checksum, nu.ChecksumOf, nu.Extra, nu.Shape = old.Checksum, old.ChecksumOf, old.Extra, old.Shape
 			}
 			out.URIs = append(out.URIs, nu)
 		}
@@ -287,33 +309,27 @@ func mergeContent(c *state.Cipher, it Item) {
 			}
 		}
 		c.Login = out
-	} else {
-		c.Login = nil
 	}
 
 	if it.SecureNote != nil || it.Type == api.CipherTypeSecureNote {
 		sn := &state.SecureNote{}
 		if c.SecureNote != nil {
-			sn.Extra = c.SecureNote.Extra
+			sn.Extra, sn.Shape = c.SecureNote.Extra, c.SecureNote.Shape
 		}
 		if it.SecureNote != nil {
 			sn.Type = it.SecureNote.Type
 		}
 		c.SecureNote = sn
-	} else {
-		c.SecureNote = nil
 	}
 
 	if k := it.Card; k != nil {
 		out := &state.Card{}
 		if c.Card != nil {
-			out.Extra = c.Card.Extra
+			out.Extra, out.Shape = c.Card.Extra, c.Card.Shape
 		}
 		out.CardholderName, out.Brand, out.Number = val(k.CardholderName), val(k.Brand), val(k.Number)
 		out.ExpMonth, out.ExpYear, out.Code = val(k.ExpMonth), val(k.ExpYear), val(k.Code)
 		c.Card = out
-	} else {
-		c.Card = nil
 	}
 
 	if i := it.Identity; i != nil {
@@ -325,20 +341,64 @@ func mergeContent(c *state.Cipher, it Item) {
 			PassportNumber: val(i.PassportNumber), LicenseNumber: val(i.LicenseNumber),
 		}
 		if c.Identity != nil {
-			out.Extra = c.Identity.Extra
+			out.Extra, out.Shape = c.Identity.Extra, c.Identity.Shape
 		}
 		c.Identity = out
-	} else {
-		c.Identity = nil
 	}
 
 	if k := it.SSHKey; k != nil {
 		out := &state.SSHKey{PrivateKey: k.PrivateKey, PublicKey: k.PublicKey, KeyFingerprint: k.KeyFingerprint}
 		if c.SSHKey != nil {
-			out.Extra = c.SSHKey.Extra
+			out.Extra, out.Shape = c.SSHKey.Extra, c.SSHKey.Shape
 		}
 		c.SSHKey = out
-	} else {
-		c.SSHKey = nil
 	}
 }
+
+// pickOld returns the unused old entry that matches entry pos of the
+// backup, or -1. Several candidates are told apart only by position; if
+// position does not decide, none is used rather than guessing.
+func pickOld(n, pos int, used []bool, match func(int) bool) int {
+	var cands []int
+	for j := range n {
+		if !used[j] && match(j) {
+			cands = append(cands, j)
+		}
+	}
+	pick := -1
+	switch {
+	case len(cands) == 1:
+		pick = cands[0]
+	case slices.Contains(cands, pos):
+		pick = pos
+	}
+	if pick >= 0 {
+		used[pick] = true
+	}
+	return pick
+}
+
+func sameMatch(a, b *int) bool {
+	return (a == nil) == (b == nil) && (a == nil || *a == *b)
+}
+
+// complete reports whether the item has the nested object its type needs.
+// An item without it cannot update a vault item: that would erase the
+// vault item's login, card, identity or key.
+func (it Item) complete() bool {
+	switch it.Type {
+	case api.CipherTypeLogin:
+		return it.Login != nil
+	case api.CipherTypeCard:
+		return it.Card != nil
+	case api.CipherTypeIdentity:
+		return it.Identity != nil
+	case api.CipherTypeSSHKey:
+		return it.SSHKey != nil
+	}
+	return true
+}
+
+// ErrUnreadablePasskey means a passkey did not decrypt, so a backup of it
+// would not work; the export is refused rather than written incomplete.
+var ErrUnreadablePasskey = errors.New("export: a passkey could not be decrypted")

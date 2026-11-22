@@ -156,7 +156,7 @@ func BuildPlan(backup *Vault, current []*state.Cipher, folders []state.Folder) *
 			used[match.ID] = true
 			e.Match = match
 			e.Diff = diff(it, e.FolderName, match, currentFolders[val(match.FolderID)])
-			e.CanUpdate = !match.ReadOnly && !match.HidePassword
+			e.CanUpdate = !match.ReadOnly && !match.HidePassword && it.complete()
 			e.Class, e.Action = ClassIdentical, ActionSkip
 			if len(e.Diff) > 0 {
 				e.Class = ClassConflict
@@ -369,7 +369,7 @@ func updateItem(ctx context.Context, w Writer, e *Entry, folderFor func(string) 
 	if err != nil {
 		return err
 	}
-	if cur.ReadOnly || cur.HidePassword || cur.DeletedDate != nil || cur.Type != e.Item.Type {
+	if cur.ReadOnly || cur.HidePassword || cur.DeletedDate != nil || cur.Type != e.Item.Type || !e.Item.complete() {
 		return state.ErrReadOnlyCipher
 	}
 	folder, err := folderFor(e.FolderName)

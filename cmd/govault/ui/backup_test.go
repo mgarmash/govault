@@ -100,7 +100,7 @@ func TestImportReviewLeavesConflictsUntilApproved(t *testing.T) {
 	login.Password = "backup-password-value"
 	changed.Login = &login
 	fresh := &state.Cipher{ID: "b-new", Type: api.CipherTypeLogin, Name: "Brand New", Login: &state.Login{Username: "n", Password: "pw"}}
-	backup := export.Build([]*state.Cipher{&changed, fresh}, nil)
+	backup, _ := export.Build([]*state.Cipher{&changed, fresh}, nil)
 
 	dir := t.TempDir()
 	plain := writeBackup(t, dir, "plain.json", backup, "")
