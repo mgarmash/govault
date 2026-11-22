@@ -333,6 +333,8 @@ func (s *Service) Account() state.Account {
 	return state.Account{ID: "demo", Email: "demo@govault.dev"}
 }
 
+func (s *Service) TrustedServerURL(string) string { return "" }
+
 func (s *Service) AuthAttempt() uint64 { return 0 }
 
 func (s *Service) RevokeAuthAttempts() {}

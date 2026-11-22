@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"net/http"
+	"net/http/httptest"
 	"runtime"
 	"sync"
 	"testing"
@@ -355,8 +357,8 @@ func TestService_SignInAgainRefusesAnotherAccountBeforeSavingAnything(t *testing
 	if err := svc.Login(context.Background(), LoginRequest{ServerURL: env.server.URL, Email: env.email, MasterPassword: env.password, SameAccount: &same}); err != nil {
 		t.Fatalf("the same account = %v", err)
 	}
-	if a := svc.Account(); a.ID != env.profileID || serverOrigin(a.ServerURL) != serverOrigin(env.server.URL) {
-		t.Fatalf("Account() = %+v", a)
+	if a := svc.Account(); a.ID != env.profileID || serverOrigin(svc.TrustedServerURL(a.ID)) != serverOrigin(env.server.URL) {
+		t.Fatalf("Account() = %+v, trusted server %q", a, svc.TrustedServerURL(a.ID))
 	}
 }
 
@@ -450,5 +452,63 @@ func TestService_UnsavedRotatedTokenIsKeptAndFlagged(t *testing.T) {
 	svc.mu.Unlock()
 	if err := svc.forceSync(context.Background()); err != nil || svc.CredentialsNotSaved() {
 		t.Fatalf("after a saved refresh: %v, still reported %v", err, svc.CredentialsNotSaved())
+	}
+}
+
+func TestService_SignInAgainNeverSendsToTheSnapshotServer(t *testing.T) {
+	env := newVaultTestEnv(t)
+	var attackerHits int
+	attacker := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		attackerHits++
+		w.WriteHeader(http.StatusInternalServerError)
+	}))
+	defer attacker.Close()
+	secrets := newMemSecretStore()
+	svc := loginThenReopen(t, env, secrets, func(st store.Store) {
+		snap, _ := st.LoadSnapshot(env.profileID)
+		snap.ServerURL = attacker.URL
+		_ = st.SaveSnapshot(snap)
+	})
+	if err := svc.UnlockWithPassword(context.Background(), env.password); err != nil || !svc.LocalOnly() {
+		t.Fatalf("unlock = %v, local only %v", err, svc.LocalOnly())
+	}
+	acct := svc.Account()
+	trusted := svc.TrustedServerURL(acct.ID)
+	if serverOrigin(trusted) != serverOrigin(env.server.URL) {
+		t.Fatalf("trusted server = %q, want the one signed in to, not the snapshot's", trusted)
+	}
+
+	// Sign In Again aimed at the snapshot's server is refused before
+	// prelogin; aimed at the trusted one it works.
+	bad := Account{ID: acct.ID, ServerURL: attacker.URL}
+	if err := svc.Login(context.Background(), LoginRequest{ServerURL: attacker.URL, Email: env.email, MasterPassword: env.password, SameAccount: &bad}); !errors.Is(err, ErrDifferentAccount) {
+		t.Fatalf("sign-in at the snapshot server = %v, want ErrDifferentAccount", err)
+	}
+	good := Account{ID: acct.ID, ServerURL: trusted}
+	if err := svc.Login(context.Background(), LoginRequest{ServerURL: trusted, Email: env.email, MasterPassword: env.password, SameAccount: &good}); err != nil {
+		t.Fatal(err)
+	}
+	if attackerHits != 0 {
+		t.Fatalf("the snapshot server received %d requests", attackerHits)
+	}
+}
+
+func TestService_SignInRecordIsKeptApartAndRemovedOnLogout(t *testing.T) {
+	env := newVaultTestEnv(t)
+	secrets := newMemSecretStore()
+	svc := newServiceWith(t, env, store.NewFileStore(t.TempDir()), secrets)
+	if err := svc.Login(context.Background(), LoginRequest{ServerURL: env.server.URL, Email: env.email, MasterPassword: env.password}); err != nil {
+		t.Fatal(err)
+	}
+	// A token problem does not lose where the account signs in.
+	_ = secrets.Delete(refreshTokenKeyPrefix + env.profileID)
+	if svc.TrustedServerURL(env.profileID) != env.server.URL {
+		t.Fatalf("trusted server = %q", svc.TrustedServerURL(env.profileID))
+	}
+	if err := svc.Logout(context.Background(), secrets); err != nil {
+		t.Fatal(err)
+	}
+	if _, ok, _ := secrets.Get(signInRecordPrefix + env.profileID); ok || svc.TrustedServerURL(env.profileID) != "" {
+		t.Fatal("the sign-in record survived logout")
 	}
 }

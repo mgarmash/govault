@@ -41,7 +41,7 @@ func signInView(cx *core.Scope, m *AppModel) core.Node {
 					NoAutoCorrect: true,
 					Value:         m.LoginServer.Get,
 					OnChange:      m.LoginServer.Set,
-					Disabled:      func() bool { return m.LoginBusy.Get() || m.CanReturnToUnlock() },
+					Disabled:      func() bool { return m.LoginBusy.Get() || (m.CanReturnToUnlock() && m.ReSignInServer.Get() != "") },
 				})),
 				formField("Email", authInput(base.Input{
 					TestID:        "login-email",

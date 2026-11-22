@@ -50,6 +50,8 @@ type mockVaultService struct {
 	localOnly    bool
 	credsUnsaved bool
 	lastLogin    state.LoginRequest
+	// trustedServer is the server the trusted sign-in record names.
+	trustedServer string
 	// unlockCommitted, when set, holds UnlockWithPassword after it commits
 	// until the test answers.
 	unlockCommitted chan struct{}
@@ -313,8 +315,10 @@ func (m *mockVaultService) HardDeleteCipher(_ context.Context, id string) error 
 }
 
 func (m *mockVaultService) Account() state.Account {
-	return state.Account{ID: "acct-1", ServerURL: "https://vault.example", Email: "alice@example.com"}
+	return state.Account{ID: "acct-1", Email: "alice@example.com"}
 }
+
+func (m *mockVaultService) TrustedServerURL(string) string { return m.trustedServer }
 
 func (m *mockVaultService) AuthAttempt() uint64 {
 	m.mu.RLock()

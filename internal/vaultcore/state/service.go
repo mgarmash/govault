@@ -108,6 +108,14 @@ func (s *Service) Status() LockStatus {
 func (s *Service) Login(ctx context.Context, req LoginRequest) error {
 	gen := s.attemptFrom(ctx)
 	serverURL, email := req.ServerURL, req.Email
+	// Sign In Again goes only to the server this account last signed in to,
+	// as the secret store records it; nothing, prelogin included, is sent
+	// anywhere else.
+	if want := req.SameAccount; want != nil {
+		if trusted := s.TrustedServerURL(want.ID); trusted != "" && serverOrigin(trusted) != serverOrigin(serverURL) {
+			return ErrDifferentAccount
+		}
+	}
 	client, kdfCfg, masterKey, pwHash, err := s.prepareLogin(ctx, req)
 	if err != nil {
 		return err
@@ -197,6 +205,9 @@ func (s *Service) Login(ctx context.Context, req LoginRequest) error {
 			return ErrLocked
 		}
 		err := s.saveRefreshToken(accountID, snap.ServerURL, tok.RefreshToken)
+		if err == nil {
+			err = s.saveSignInRecord(accountID, snap.ServerURL)
+		}
 		s.secretMu.Unlock()
 		if err != nil {
 			userKey.Zero()
@@ -295,13 +306,50 @@ func (s *Service) RevokeAuthAttempts() {
 }
 
 // Account is the account of the vault on this device: the one open, or
-// else the one whose snapshot would be unlocked.
+// else the one whose snapshot would be unlocked. Its server is left out:
+// the snapshot is editable, so where to sign in comes only from
+// TrustedServerURL.
 func (s *Service) Account() Account {
 	snap, err := s.loadCurrentSnapshot()
 	if err != nil || snap == nil {
 		return Account{}
 	}
-	return Account{ID: snap.AccountID, ServerURL: snap.ServerURL, Email: snap.Email}
+	return Account{ID: snap.AccountID, Email: snap.Email}
+}
+
+// TrustedServerURL is the server accountID last signed in to, from the
+// record each sign-in keeps in the secret store, or "" when there is none
+// (such as after an upgrade from a version that kept no record).
+func (s *Service) TrustedServerURL(accountID string) string {
+	if s.cfg.Secrets == nil || accountID == "" {
+		return ""
+	}
+	raw, ok, err := s.cfg.Secrets.Get(signInRecordPrefix + accountID)
+	if err != nil || !ok {
+		return ""
+	}
+	var rec signInRecord
+	if json.Unmarshal([]byte(raw), &rec) != nil || rec.AccountID != accountID || serverOrigin(rec.ServerURL) == "" {
+		return ""
+	}
+	return rec.ServerURL
+}
+
+const signInRecordPrefix = "signin:"
+
+// signInRecord is where an account signed in, kept apart from its refresh
+// token so it survives token problems.
+type signInRecord struct {
+	ServerURL string `json:"server"`
+	AccountID string `json:"account"`
+}
+
+func (s *Service) saveSignInRecord(accountID, serverURL string) error {
+	raw, err := json.Marshal(signInRecord{ServerURL: serverURL, AccountID: accountID})
+	if err != nil {
+		return err
+	}
+	return s.cfg.Secrets.Set(signInRecordPrefix+accountID, string(raw))
 }
 
 type authAttemptKey struct{}
@@ -535,7 +583,7 @@ func (s *Service) logout(secrets store.SecretStore, gen *uint64) error {
 		if sec == nil {
 			continue
 		}
-		for _, key := range []string{refreshTokenKeyPrefix + accountID, userKeyPrefix + accountID} {
+		for _, key := range []string{refreshTokenKeyPrefix + accountID, userKeyPrefix + accountID, signInRecordPrefix + accountID} {
 			if err := sec.Delete(key); err != nil {
 				errs = append(errs, fmt.Errorf("state: delete %s: %w", strings.TrimSuffix(key, accountID), err))
 			}

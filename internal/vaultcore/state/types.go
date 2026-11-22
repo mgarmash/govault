@@ -341,6 +341,7 @@ type VaultService interface {
 	UnreadableItems() []string
 	BackupData() BackupData
 	Account() Account
+	TrustedServerURL(accountID string) string
 	AuthAttempt() uint64
 	RevokeAuthAttempts()
 	LocalOnly() bool

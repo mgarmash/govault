@@ -382,8 +382,11 @@ type AppModel struct {
 	CredentialsNotSaved *core.Signal[bool]
 	// ReSignIn shows the sign-in form over a locked vault.
 	ReSignIn *core.Signal[bool]
-	LastSync *core.Signal[time.Time]
-	Route    *core.Signal[MainRoute]
+	// ReSignInServer is the trusted server Sign In Again signs in to, or ""
+	// when the user must enter it.
+	ReSignInServer *core.Signal[string]
+	LastSync       *core.Signal[time.Time]
+	Route          *core.Signal[MainRoute]
 
 	BiometricKind     *core.Signal[core.BiometricKind]
 	BiometricHardware *core.Signal[bool]
@@ -568,6 +571,7 @@ func NewAppModel(app *core.Scope, coreSvc state.VaultService, hooks PlatformHook
 		LocalOnly:           core.NewSignal(app, false),
 		CredentialsNotSaved: core.NewSignal(app, false),
 		ReSignIn:            core.NewSignal(app, false),
+		ReSignInServer:      core.NewSignal(app, ""),
 		LastSync:            core.NewSignal(app, time.Time{}),
 		Route:               core.NewSignal(app, RouteVault),
 		BiometricKind:       core.NewSignal(app, core.BiometricNone),
@@ -920,9 +924,14 @@ func (m *AppModel) loginRequest() (state.LoginRequest, bool) {
 		Email:     strings.TrimSpace(m.LoginEmail.Get()),
 	}
 	if m.CanReturnToUnlock() {
-		// Sign In Again renews the vault on this device: its account only.
+		// Sign In Again renews the vault on this device: its account only,
+		// at its trusted server when one is recorded.
 		acct := m.Core.Account()
-		req.ServerURL, req.Email, req.SameAccount = acct.ServerURL, acct.Email, &acct
+		if trusted := m.ReSignInServer.Get(); trusted != "" {
+			req.ServerURL = trusted
+		}
+		acct.ServerURL = req.ServerURL
+		req.Email, req.SameAccount = acct.Email, &acct
 	}
 	password := m.LoginPassword.Get()
 	if req.ServerURL == "" || req.Email == "" || password == "" {
@@ -1087,9 +1096,13 @@ func emailSentNotice(hint string) string {
 // the local copy; signing in replaces the saved sign-in.
 func (m *AppModel) SignInAgain() {
 	acct := m.Core.Account()
+	trusted := m.Core.TrustedServerURL(acct.ID)
 	m.ReSignIn.Set(true)
 	m.Lock()
-	m.LoginServer.Set(acct.ServerURL)
+	// Only the trusted sign-in record says where to sign in. Without one
+	// the user enters the server; the editable snapshot never fills it.
+	m.ReSignInServer.Set(trusted)
+	m.LoginServer.Set(trusted)
 	m.LoginEmail.Set(acct.Email)
 	m.LoginError.Set("")
 }
@@ -1131,7 +1144,6 @@ func (m *AppModel) finishLogin(serverURL, email string) {
 		p.Email = email
 		if acct.ID != "" {
 			p.AccountID = acct.ID
-			p.ServerURL = strings.TrimRight(acct.ServerURL, "/")
 		}
 		return p
 	})
@@ -1404,15 +1416,27 @@ func (m *AppModel) LockOnSystemEvent() bool {
 		// sleep, including a biometric prompt answered later.
 		m.Core.RevokeAuthAttempts()
 		m.RevokePending()
-		m.LockBusy.Set(false)
-		m.LoginBusy.Set(false)
-		m.LockPassword.Set("")
-		m.LoginPassword.Set("")
-		m.RepromptPW.Set("")
+		m.clearAuthInputs()
 		return false
 	}
+	// The UI may show the vault while the unlock that opened it has not
+	// reported back yet; nothing it typed or started survives either.
 	m.Lock()
+	m.clearAuthInputs()
 	return true
+}
+
+// clearAuthInputs empties every password field and ends every sign-in or
+// unlock the UI shows as running.
+func (m *AppModel) clearAuthInputs() {
+	m.LockBusy.Set(false)
+	m.LoginBusy.Set(false)
+	m.RepromptBusy.Set(false)
+	m.LockPassword.Set("")
+	m.LoginPassword.Set("")
+	m.RepromptPW.Set("")
+	m.TwoFactorCode.Set("")
+	m.ReleaseSecureInput()
 }
 
 func (m *AppModel) Logout(cx *core.Scope) {
