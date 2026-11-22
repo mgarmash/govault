@@ -181,9 +181,11 @@ func parse(argv []string, commands []*command) (*parsed, error) {
 	return p, nil
 }
 
+// invalidCommandError names only the unknown command: the arguments after
+// it can be a password or a session key.
 type invalidCommandError struct{ args []string }
 
-func (e *invalidCommandError) Error() string { return "Invalid command: " + strings.Join(e.args, " ") }
+func (e *invalidCommandError) Error() string { return "Invalid command: " + e.args[0] }
 
 // lenient: a command gv does not offer is reported as such whatever its
 // options and arguments are.

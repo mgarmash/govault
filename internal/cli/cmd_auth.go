@@ -13,6 +13,10 @@ import (
 	"github.com/txchen/govault/internal/vaultcore/profile"
 )
 
+// invalidYubiKeyOTP is checked locally, as the desktop checks it, so a
+// stray paste never reaches the server.
+const invalidYubiKeyOTP = "That is not a YubiKey code: touch the key to type one."
+
 func (a *app) status(p *parsed) response {
 	prof, err := a.openProfile()
 	if err != nil {
@@ -346,16 +350,18 @@ func (a *app) login(p *parsed) response {
 	}
 	code, hasCode := p.opt("code")
 
+	if hasCode && api.TwoFactorProvider(method) == api.TwoFactorYubiKey {
+		otp, ok := api.NormalizeYubiKeyOTP(code)
+		if !ok {
+			return failure(invalidYubiKeyOTP)
+		}
+		code = otp
+	}
 	login, err := prof.BeginPasswordLogin(a.ctx, email, []byte(pw))
 	if err != nil {
 		return loginFailure(err, prof)
 	}
 	defer login.Close()
-	if hasCode && api.TwoFactorProvider(method) == api.TwoFactorYubiKey {
-		if otp, ok := api.NormalizeYubiKeyOTP(code); ok {
-			code = otp
-		}
-	}
 	var twoFactor *api.TwoFactorLogin
 	if hasCode && method >= 0 {
 		twoFactor = &api.TwoFactorLogin{Provider: api.TwoFactorProvider(method), Token: code}
@@ -410,9 +416,11 @@ func (a *app) login(p *parsed) response {
 			}
 		}
 		if provider == api.TwoFactorYubiKey {
-			if otp, ok := api.NormalizeYubiKeyOTP(code); ok {
-				code = otp
+			otp, ok := api.NormalizeYubiKeyOTP(code)
+			if !ok {
+				return failure(invalidYubiKeyOTP)
 			}
+			code = otp
 		}
 		key, err = login.Complete(a.ctx, &api.TwoFactorLogin{Provider: provider, Token: code})
 		if errors.As(err, &tfErr) {
