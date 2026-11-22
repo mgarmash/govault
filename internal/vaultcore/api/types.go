@@ -248,66 +248,6 @@ func (p CipherPayload) MarshalJSON() ([]byte, error) {
 	return marshalWithExtra(alias(p), p.Extra)
 }
 
-type EncryptedLogin struct {
-	Username             *string             `json:"username"`
-	Password             *string             `json:"password"`
-	TOTP                 *string             `json:"totp"`
-	URIs                 []EncryptedLoginURI `json:"uris,omitempty"`
-	PasswordRevisionDate *time.Time          `json:"passwordRevisionDate,omitempty"`
-}
-
-type EncryptedLoginURI struct {
-	URI   *string `json:"uri"`
-	Match *int    `json:"match"`
-}
-
-type EncryptedSecureNote struct {
-	Type int `json:"type"`
-}
-
-type EncryptedCard struct {
-	CardholderName *string `json:"cardholderName"`
-	Brand          *string `json:"brand"`
-	Number         *string `json:"number"`
-	ExpMonth       *string `json:"expMonth"`
-	ExpYear        *string `json:"expYear"`
-	Code           *string `json:"code"`
-}
-
-type EncryptedIdentity struct {
-	Title          *string `json:"title"`
-	FirstName      *string `json:"firstName"`
-	MiddleName     *string `json:"middleName"`
-	LastName       *string `json:"lastName"`
-	Address1       *string `json:"address1"`
-	Address2       *string `json:"address2"`
-	Address3       *string `json:"address3"`
-	City           *string `json:"city"`
-	State          *string `json:"state"`
-	PostalCode     *string `json:"postalCode"`
-	Country        *string `json:"country"`
-	Company        *string `json:"company"`
-	Email          *string `json:"email"`
-	Phone          *string `json:"phone"`
-	SSN            *string `json:"ssn"`
-	Username       *string `json:"username"`
-	PassportNumber *string `json:"passportNumber"`
-	LicenseNumber  *string `json:"licenseNumber"`
-}
-
-type EncryptedSSHKey struct {
-	PrivateKey     *string `json:"privateKey"`
-	PublicKey      *string `json:"publicKey"`
-	KeyFingerprint *string `json:"keyFingerprint"`
-}
-
-type EncryptedField struct {
-	Name     *string `json:"name"`
-	Value    *string `json:"value"`
-	Type     int     `json:"type"`
-	LinkedID *int    `json:"linkedId,omitempty"`
-}
-
 type EncryptedAttachment struct {
 	ID       string                     `json:"id"`
 	URL      string                     `json:"url,omitempty"`
@@ -368,11 +308,6 @@ type AttachmentUploadResponse struct {
 	URL            string           `json:"url"`
 	FileUploadType int              `json:"fileUploadType"`
 	CipherResponse *EncryptedCipher `json:"cipherResponse,omitempty"`
-}
-
-type EncryptedPasswordHistory struct {
-	Password     string    `json:"password"`
-	LastUsedDate time.Time `json:"lastUsedDate"`
 }
 
 func unmarshalWithExtra(data []byte, dst any, extra *map[string]json.RawMessage) error {

@@ -60,10 +60,47 @@ type Field struct {
 }
 
 type Login struct {
-	URIs     []URI   `json:"uris"`
-	Username *string `json:"username"`
-	Password *string `json:"password"`
-	TOTP     *string `json:"totp"`
+	URIs             []URI   `json:"uris"`
+	Username         *string `json:"username"`
+	Password         *string `json:"password"`
+	TOTP             *string `json:"totp"`
+	Fido2Credentials []Fido2 `json:"fido2Credentials"`
+}
+
+// Fido2 is a passkey as Bitwarden exports it (Fido2CredentialExport): every
+// field in plaintext, inside the encryption of the export itself.
+type Fido2 struct {
+	CredentialID    string `json:"credentialId"`
+	KeyType         string `json:"keyType"`
+	KeyAlgorithm    string `json:"keyAlgorithm"`
+	KeyCurve        string `json:"keyCurve"`
+	KeyValue        string `json:"keyValue"`
+	RpID            string `json:"rpId"`
+	UserHandle      string `json:"userHandle"`
+	UserName        string `json:"userName"`
+	Counter         string `json:"counter"`
+	RpName          string `json:"rpName"`
+	UserDisplayName string `json:"userDisplayName"`
+	Discoverable    string `json:"discoverable"`
+	CreationDate    string `json:"creationDate"`
+}
+
+func fido2FromState(f state.Fido2Credential) Fido2 {
+	return Fido2{
+		CredentialID: f.CredentialID, KeyType: f.KeyType, KeyAlgorithm: f.KeyAlgorithm, KeyCurve: f.KeyCurve,
+		KeyValue: f.KeyValue, RpID: f.RpID, UserHandle: f.UserHandle, UserName: f.UserName, Counter: f.Counter,
+		RpName: f.RpName, UserDisplayName: f.UserDisplayName, Discoverable: f.Discoverable, CreationDate: f.CreationDate,
+	}
+}
+
+// toState gives a passkey from a backup in plaintext; a save seals it under
+// the key of the item it is saved to.
+func (f Fido2) toState() state.Fido2Credential {
+	return state.Fido2Credential{
+		CredentialID: f.CredentialID, KeyType: f.KeyType, KeyAlgorithm: f.KeyAlgorithm, KeyCurve: f.KeyCurve,
+		KeyValue: f.KeyValue, RpID: f.RpID, UserHandle: f.UserHandle, UserName: f.UserName, Counter: f.Counter,
+		RpName: f.RpName, UserDisplayName: f.UserDisplayName, Discoverable: f.Discoverable, CreationDate: f.CreationDate,
+	}
 }
 
 type URI struct {
@@ -158,9 +195,12 @@ func FromCipher(c *state.Cipher) Item {
 		it.Fields = append(it.Fields, Field{Name: opt(f.Name), Value: opt(f.Value), Type: f.Type, LinkedID: f.LinkedID})
 	}
 	if l := c.Login; l != nil {
-		out := &Login{URIs: []URI{}, Username: opt(l.Username), Password: opt(l.Password), TOTP: opt(l.TOTP)}
+		out := &Login{URIs: []URI{}, Username: opt(l.Username), Password: opt(l.Password), TOTP: opt(l.TOTP), Fido2Credentials: []Fido2{}}
 		for _, u := range l.URIs {
 			out.URIs = append(out.URIs, URI{Match: u.Match, URI: opt(u.URI)})
+		}
+		for _, f := range l.Fido2Credentials {
+			out.Fido2Credentials = append(out.Fido2Credentials, fido2FromState(f))
 		}
 		it.Login = out
 	}
@@ -192,44 +232,113 @@ func (it Item) content() *state.Cipher {
 	for _, h := range it.PasswordHistory {
 		c.PasswordHistory = append(c.PasswordHistory, state.PasswordHistoryEntry{Password: h.Password, LastUsedDate: h.LastUsedDate})
 	}
-	applyContent(c, it)
+	mergeContent(c, it)
 	return c
 }
 
-// applyContent replaces the type-specific fields of c with those of it.
-func applyContent(c *state.Cipher, it Item) {
-	c.Login, c.SecureNote, c.Card, c.Identity, c.SSHKey, c.Fields = nil, nil, nil, nil, nil, nil
+// mergeContent replaces the content of c with that of the backup item while
+// keeping what the backup does not describe: unknown fields the server
+// stores, URI checksums of unchanged URIs, and passkeys. An existing passkey
+// is never removed; a backup passkey is only taken when c has none.
+func mergeContent(c *state.Cipher, it Item) {
+	var fields []state.CustomField
 	for _, f := range it.Fields {
-		c.Fields = append(c.Fields, state.CustomField{Name: val(f.Name), Value: val(f.Value), Type: f.Type, LinkedID: f.LinkedID})
+		nf := state.CustomField{Name: val(f.Name), Value: val(f.Value), Type: f.Type, LinkedID: f.LinkedID}
+		for _, old := range c.Fields {
+			if old.Name == nf.Name && old.Type == nf.Type {
+				nf.Extra = old.Extra
+				if nf.LinkedID == nil {
+					nf.LinkedID = old.LinkedID
+				}
+				break
+			}
+		}
+		fields = append(fields, nf)
 	}
+	c.Fields = fields
+
 	if l := it.Login; l != nil {
-		out := &state.Login{Username: val(l.Username), Password: val(l.Password), TOTP: val(l.TOTP)}
+		out := &state.Login{}
+		if c.Login != nil {
+			cp := *c.Login
+			out = &cp
+		}
+		out.Username, out.Password, out.TOTP = val(l.Username), val(l.Password), val(l.TOTP)
+		prev, used := out.URIs, map[int]bool{}
+		out.URIs = nil
 		for _, u := range l.URIs {
-			if val(u.URI) != "" {
-				out.URIs = append(out.URIs, state.LoginURI{URI: val(u.URI), Match: u.Match})
+			text := val(u.URI)
+			if text == "" {
+				continue
+			}
+			nu := state.LoginURI{URI: text, Match: u.Match}
+			for i, old := range prev {
+				if !used[i] && old.URI == text {
+					used[i] = true
+					nu.Checksum, nu.ChecksumOf, nu.Extra = old.Checksum, old.ChecksumOf, old.Extra
+					break
+				}
+			}
+			out.URIs = append(out.URIs, nu)
+		}
+		if len(out.Fido2Credentials) == 0 {
+			for _, f := range l.Fido2Credentials {
+				out.Fido2Credentials = append(out.Fido2Credentials, f.toState())
 			}
 		}
 		c.Login = out
+	} else {
+		c.Login = nil
 	}
+
 	if it.SecureNote != nil || it.Type == api.CipherTypeSecureNote {
-		c.SecureNote = &state.SecureNote{}
-		if it.SecureNote != nil {
-			c.SecureNote.Type = it.SecureNote.Type
+		sn := &state.SecureNote{}
+		if c.SecureNote != nil {
+			sn.Extra = c.SecureNote.Extra
 		}
+		if it.SecureNote != nil {
+			sn.Type = it.SecureNote.Type
+		}
+		c.SecureNote = sn
+	} else {
+		c.SecureNote = nil
 	}
+
 	if k := it.Card; k != nil {
-		c.Card = &state.Card{CardholderName: val(k.CardholderName), Brand: val(k.Brand), Number: val(k.Number), ExpMonth: val(k.ExpMonth), ExpYear: val(k.ExpYear), Code: val(k.Code)}
+		out := &state.Card{}
+		if c.Card != nil {
+			out.Extra = c.Card.Extra
+		}
+		out.CardholderName, out.Brand, out.Number = val(k.CardholderName), val(k.Brand), val(k.Number)
+		out.ExpMonth, out.ExpYear, out.Code = val(k.ExpMonth), val(k.ExpYear), val(k.Code)
+		c.Card = out
+	} else {
+		c.Card = nil
 	}
+
 	if i := it.Identity; i != nil {
-		c.Identity = &state.Identity{
+		out := &state.Identity{
 			Title: val(i.Title), FirstName: val(i.FirstName), MiddleName: val(i.MiddleName), LastName: val(i.LastName),
 			Address1: val(i.Address1), Address2: val(i.Address2), Address3: val(i.Address3), City: val(i.City),
 			State: val(i.State), PostalCode: val(i.PostalCode), Country: val(i.Country), Company: val(i.Company),
 			Email: val(i.Email), Phone: val(i.Phone), SSN: val(i.SSN), Username: val(i.Username),
 			PassportNumber: val(i.PassportNumber), LicenseNumber: val(i.LicenseNumber),
 		}
+		if c.Identity != nil {
+			out.Extra = c.Identity.Extra
+		}
+		c.Identity = out
+	} else {
+		c.Identity = nil
 	}
+
 	if k := it.SSHKey; k != nil {
-		c.SSHKey = &state.SSHKey{PrivateKey: k.PrivateKey, PublicKey: k.PublicKey, KeyFingerprint: k.KeyFingerprint}
+		out := &state.SSHKey{PrivateKey: k.PrivateKey, PublicKey: k.PublicKey, KeyFingerprint: k.KeyFingerprint}
+		if c.SSHKey != nil {
+			out.Extra = c.SSHKey.Extra
+		}
+		c.SSHKey = out
+	} else {
+		c.SSHKey = nil
 	}
 }

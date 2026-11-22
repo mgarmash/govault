@@ -87,7 +87,7 @@ func TestService_SSHKeyCipherRoundTrip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("SaveCipher: %v", err)
 	}
-	if created.SSHKey == nil || *created.SSHKey != *key {
+	if created.SSHKey == nil || created.SSHKey.PrivateKey != key.PrivateKey || created.SSHKey.PublicKey != key.PublicKey || created.SSHKey.KeyFingerprint != key.KeyFingerprint {
 		t.Fatalf("created SSHKey = %+v", created.SSHKey)
 	}
 

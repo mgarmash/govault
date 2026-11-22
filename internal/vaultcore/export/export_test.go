@@ -184,3 +184,89 @@ func TestPlanClassifiesAndAppliesOnlyApproved(t *testing.T) {
 		t.Fatal("read-only conflict was changed instead of copied")
 	}
 }
+
+func sealedLogin(id string) *state.Cipher {
+	c := login(id, "GitHub", "alice", "old")
+	cs := "2.checksum|of|uri"
+	c.SealedKeyID = "key-1"
+	c.Extra = map[string]json.RawMessage{"futureCipherField": json.RawMessage(`"plain"`)}
+	c.Login.Extra = map[string]json.RawMessage{"autofillOnPageLoad": json.RawMessage(`true`)}
+	c.Login.URIs[0].Checksum, c.Login.URIs[0].ChecksumOf = &cs, c.Login.URIs[0].URI
+	c.Login.URIs[0].Extra = map[string]json.RawMessage{"futureUriField": json.RawMessage(`7`)}
+	c.Login.Fido2Credentials = []state.Fido2Credential{{CredentialID: "cred-1", RpID: "github.com", CreationDate: "2026-03-14T10:22:00Z", Sealed: json.RawMessage(`{"credentialId":"2.sealed"}`)}}
+	c.Fields = []state.CustomField{{Name: "PIN", Value: "1", Type: 1, Extra: map[string]json.RawMessage{"futureFieldField": json.RawMessage(`"keep"`)}}}
+	return c
+}
+
+func TestImportUpdateKeepsPasskeyAndUnknownFields(t *testing.T) {
+	cur := sealedLogin("c-gh")
+	w := &fakeWriter{ciphers: map[string]*state.Cipher{"c-gh": cur}}
+
+	backup := FromCipher(login("c-gh", "GitHub", "alice", "new"))
+	backup.Fields = []Field{{Name: opt("PIN"), Value: opt("2"), Type: 1}}
+	p := BuildPlan(&Vault{Items: []Item{backup}}, []*state.Cipher{cur}, nil)
+	if !p.Entries[0].SetAction(ActionUpdate) {
+		t.Fatal("update not allowed")
+	}
+	if res := Apply(context.Background(), w, p); res.Updated != 1 || res.Err != nil {
+		t.Fatalf("apply = %+v", res)
+	}
+	got := w.ciphers["c-gh"]
+	if got.Login.Password != "new" || got.Fields[0].Value != "2" {
+		t.Fatalf("update not applied: %+v", got.Login)
+	}
+	if got.SealedKeyID != "key-1" || string(got.Extra["futureCipherField"]) != `"plain"` ||
+		string(got.Login.Extra["autofillOnPageLoad"]) != `true` ||
+		got.Login.URIs[0].Checksum == nil || *got.Login.URIs[0].Checksum != "2.checksum|of|uri" || got.Login.URIs[0].ChecksumOf != got.Login.URIs[0].URI ||
+		string(got.Login.URIs[0].Extra["futureUriField"]) != `7` ||
+		string(got.Fields[0].Extra["futureFieldField"]) != `"keep"` {
+		t.Fatalf("update lost unknown fields or checksums: %+v", got)
+	}
+	if len(got.Login.Fido2Credentials) != 1 || string(got.Login.Fido2Credentials[0].Sealed) != `{"credentialId":"2.sealed"}` {
+		t.Fatalf("update removed the passkey: %+v", got.Login.Fido2Credentials)
+	}
+
+	other := FromCipher(login("c-gh", "GitHub", "alice", "new"))
+	other.Login.Fido2Credentials = []Fido2{{CredentialID: "cred-other", RpID: "github.com", KeyValue: "k"}}
+	e := BuildPlan(&Vault{Items: []Item{other}}, []*state.Cipher{sealedLogin("c-gh")}, nil).Entries[0]
+	if !strings.Contains(strings.Join(e.Diff, ","), "Passkey") {
+		t.Fatalf("diff = %v, want Passkey", e.Diff)
+	}
+	w = &fakeWriter{ciphers: map[string]*state.Cipher{"c-gh": sealedLogin("c-gh")}}
+	e.SetAction(ActionUpdate)
+	Apply(context.Background(), w, &Plan{Entries: []Entry{e}})
+	if f := w.ciphers["c-gh"].Login.Fido2Credentials; len(f) != 1 || f[0].CredentialID != "cred-1" {
+		t.Fatalf("an existing passkey was replaced: %+v", f)
+	}
+}
+
+func TestImportCopyNeverCopiesPasskeyAndExportIncludesIt(t *testing.T) {
+	src := sealedLogin("c-gh")
+	src.Login.Fido2Credentials[0].KeyValue = "private-key"
+	v := Build([]*state.Cipher{src}, nil)
+	f := v.Items[0].Login.Fido2Credentials
+	if len(f) != 1 || f[0].RpID != "github.com" || f[0].KeyValue != "private-key" || f[0].CreationDate != "2026-03-14T10:22:00Z" {
+		t.Fatalf("export passkey = %+v", f)
+	}
+	data, _ := json.Marshal(v)
+	if !strings.Contains(string(data), `"fido2Credentials":[{"credentialId":"cred-1"`) {
+		t.Fatalf("export JSON lacks fido2Credentials: %s", data)
+	}
+
+	cur := login("c-gh", "GitHub", "alice", "different")
+	p := BuildPlan(v, []*state.Cipher{cur}, nil)
+	p.Entries[0].SetAction(ActionCreate)
+	w := &fakeWriter{ciphers: map[string]*state.Cipher{"c-gh": cur}}
+	Apply(context.Background(), w, p)
+	if c := w.ciphers["new-1"]; c == nil || len(c.Login.Fido2Credentials) != 0 {
+		t.Fatalf("Create Copy copied the passkey: %+v", c)
+	}
+
+	p = BuildPlan(v, nil, nil)
+	w = &fakeWriter{ciphers: map[string]*state.Cipher{}}
+	Apply(context.Background(), w, p)
+	c := w.ciphers["new-1"]
+	if c == nil || len(c.Login.Fido2Credentials) != 1 || c.Login.Fido2Credentials[0].Sealed != nil || c.SealedKeyID != "" {
+		t.Fatalf("a new item from a backup should import its passkey in plaintext to be sealed on save: %+v", c)
+	}
+}

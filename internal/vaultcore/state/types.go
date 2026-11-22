@@ -95,6 +95,12 @@ type Cipher struct {
 	ReadOnly         bool
 	HidePassword     bool
 	Extra            map[string]json.RawMessage
+	// SealedKeyID identifies the key the server copies of this item's
+	// encrypted blobs (passkeys, URI checksums, encrypted unknown fields)
+	// are sealed with. A save under the same key sends them back unchanged;
+	// under another key they cannot be decrypted and are dropped (see
+	// keepSealed).
+	SealedKeyID string
 }
 
 type Login struct {
@@ -103,15 +109,45 @@ type Login struct {
 	TOTP                 string
 	URIs                 []LoginURI
 	PasswordRevisionDate *time.Time
+	Fido2Credentials     []Fido2Credential
+	Extra                map[string]json.RawMessage
 }
 
 type LoginURI struct {
 	URI   string
 	Match *int
+	// Checksum is the server's encrypted checksum of ChecksumOf, the URI text
+	// it was computed for. It is sent back while URI still equals ChecksumOf
+	// and recomputed otherwise.
+	Checksum   *string
+	ChecksumOf string
+	Extra      map[string]json.RawMessage
+}
+
+// Fido2Credential is a passkey. GoVault shows and can remove passkeys but
+// never creates or uses them. Sealed is the passkey exactly as the server
+// sent it, which is what a save sends back; the decrypted fields are for
+// display and for export.
+type Fido2Credential struct {
+	CredentialID    string
+	KeyType         string
+	KeyAlgorithm    string
+	KeyCurve        string
+	KeyValue        string
+	RpID            string
+	UserHandle      string
+	UserName        string
+	Counter         string
+	RpName          string
+	UserDisplayName string
+	Discoverable    string
+	CreationDate    string
+	Sealed          json.RawMessage
 }
 
 type SecureNote struct {
-	Type int
+	Type  int
+	Extra map[string]json.RawMessage
 }
 
 type Card struct {
@@ -121,6 +157,7 @@ type Card struct {
 	ExpMonth       string
 	ExpYear        string
 	Code           string
+	Extra          map[string]json.RawMessage
 }
 
 type Identity struct {
@@ -142,12 +179,14 @@ type Identity struct {
 	Username       string
 	PassportNumber string
 	LicenseNumber  string
+	Extra          map[string]json.RawMessage
 }
 
 type SSHKey struct {
 	PrivateKey     string
 	PublicKey      string
 	KeyFingerprint string
+	Extra          map[string]json.RawMessage
 }
 
 type CustomField struct {
@@ -155,6 +194,7 @@ type CustomField struct {
 	Value    string
 	Type     int
 	LinkedID *int
+	Extra    map[string]json.RawMessage
 }
 
 type Attachment struct {
@@ -170,6 +210,7 @@ type Attachment struct {
 type PasswordHistoryEntry struct {
 	Password     string
 	LastUsedDate time.Time
+	Extra        map[string]json.RawMessage
 }
 
 // TrashResult reports what EmptyTrash did: items deleted and read-only

@@ -410,7 +410,8 @@ func seedCiphers() []*state.Cipher {
 		{
 			ID: "c-github", Type: api.CipherTypeLogin, Name: "GitHub", Favorite: true,
 			FolderID: folder("f-work"),
-			Login:    login("alex-morgan", "x7#Kq9!vLm2@Pz4w&Rt8", "JBSWY3DPEHPK3PXP", "https://github.com/login", "https://github.com/northwind"),
+			Login: withPasskey(login("alex-morgan", "x7#Kq9!vLm2@Pz4w&Rt8", "JBSWY3DPEHPK3PXP", "https://github.com/login", "https://github.com/northwind"),
+				state.Fido2Credential{RpID: "github.com", RpName: "GitHub", UserName: "alex-morgan", CreationDate: "2026-03-14T10:22:00Z"}),
 			Fields: []state.CustomField{
 				{Name: "Organization", Value: "northwind", Type: 0},
 				{Name: "Recovery code", Value: "a7f2-9c1e-44d0-b8e3", Type: 1},
@@ -537,6 +538,11 @@ func seedCiphers() []*state.Cipher {
 			CreationDate: ago(1500 * day), RevisionDate: ago(400 * day), DeletedDate: ago(5 * day),
 		},
 	}
+}
+
+func withPasskey(l *state.Login, f state.Fido2Credential) *state.Login {
+	l.Fido2Credentials = append(l.Fido2Credentials, f)
+	return l
 }
 
 func demoSSHKey(comment string) *state.SSHKey {

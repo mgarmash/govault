@@ -5,8 +5,10 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"io"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -88,6 +90,14 @@ type vaultTestEnv struct {
 	authSeen    []string
 	syncStarted chan struct{}
 	syncGate    chan struct{}
+	lastBody    []byte
+}
+
+func (env *vaultTestEnv) hasCipher(id string) bool {
+	env.mu.Lock()
+	defer env.mu.Unlock()
+	_, ok := env.ciphers[id]
+	return ok && !strings.Contains(id, "/")
 }
 
 func newVaultTestEnv(t *testing.T) *vaultTestEnv {
@@ -278,8 +288,12 @@ func newVaultTestEnv(t *testing.T) *vaultTestEnv {
 			})
 
 		case r.Method == http.MethodPost && r.URL.Path == "/api/ciphers":
+			body, _ := io.ReadAll(r.Body)
 			var p api.CipherPayload
-			_ = json.NewDecoder(r.Body).Decode(&p)
+			_ = json.Unmarshal(body, &p)
+			env.mu.Lock()
+			env.lastBody = body
+			env.mu.Unlock()
 			now := time.Now().UTC()
 			created := api.EncryptedCipher{
 				ID:           "c-created",
@@ -293,32 +307,47 @@ func newVaultTestEnv(t *testing.T) *vaultTestEnv {
 				Login:        p.Login,
 				SecureNote:   p.SecureNote,
 				SSHKey:       p.SSHKey,
+				Card:         p.Card,
+				Identity:     p.Identity,
+				Fields:       p.Fields,
+				Extra:        p.Extra,
 			}
 			env.mu.Lock()
 			env.ciphers[created.ID] = created
 			env.mu.Unlock()
 			_ = json.NewEncoder(w).Encode(created)
 
-		case r.Method == http.MethodPut && r.URL.Path == "/api/ciphers/c-1":
+		case r.Method == http.MethodPut && strings.HasPrefix(r.URL.Path, "/api/ciphers/") && env.hasCipher(strings.TrimPrefix(r.URL.Path, "/api/ciphers/")):
+			id := strings.TrimPrefix(r.URL.Path, "/api/ciphers/")
+			body, _ := io.ReadAll(r.Body)
 			var p api.CipherPayload
-			_ = json.NewDecoder(r.Body).Decode(&p)
+			_ = json.Unmarshal(body, &p)
 			env.mu.Lock()
-			if env.conflictOnID == "c-1" {
+			if env.conflictOnID == id {
 				env.mu.Unlock()
 				w.WriteHeader(http.StatusConflict)
 				return
 			}
+			env.lastBody = body
 			env.lastUpdateKey = p.Key
 			env.lastUpdateRev = p.LastKnownRevisionDate
 			now := env.revDate.Add(time.Minute)
 			env.revDate = now
-			updated := env.ciphers["c-1"]
+			updated := env.ciphers[id]
 			updated.Name = p.Name
+			updated.Notes = p.Notes
 			updated.Key = p.Key
+			updated.Favorite = p.Favorite
 			updated.Login = p.Login
+			updated.Card = p.Card
+			updated.Identity = p.Identity
+			updated.SecureNote = p.SecureNote
+			updated.SSHKey = p.SSHKey
+			updated.Fields = p.Fields
 			updated.PasswordHistory = p.PasswordHistory
+			updated.Extra = p.Extra
 			updated.RevisionDate = &now
-			env.ciphers["c-1"] = updated
+			env.ciphers[id] = updated
 			env.mu.Unlock()
 			_ = json.NewEncoder(w).Encode(updated)
 

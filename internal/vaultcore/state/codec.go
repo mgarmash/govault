@@ -60,6 +60,7 @@ func decryptCipher(enc *api.EncryptedCipher, userKey *crypto.SymmetricKey) (*Cip
 		ReadOnly:         enc.Edit != nil && !*enc.Edit,
 		HidePassword:     enc.ViewPassword != nil && !*enc.ViewPassword,
 		Extra:            cloneExtra(enc.Extra),
+		SealedKeyID:      sealedKeyID(activeKey),
 	}
 
 	if enc.Login != nil {
@@ -70,7 +71,7 @@ func decryptCipher(enc *api.EncryptedCipher, userKey *crypto.SymmetricKey) (*Cip
 		c.Login = login
 	}
 	if enc.SecureNote != nil {
-		c.SecureNote = &SecureNote{Type: enc.SecureNote.Type}
+		c.SecureNote = &SecureNote{Type: enc.SecureNote.Type, Extra: cloneExtra(enc.SecureNote.Extra)}
 	}
 	if enc.Card != nil {
 		card, err := decryptCard(enc.Card, activeKey)
@@ -109,6 +110,7 @@ func decryptCipher(enc *api.EncryptedCipher, userKey *crypto.SymmetricKey) (*Cip
 				Value:    fv,
 				Type:     f.Type,
 				LinkedID: cloneIntPtr(f.LinkedID),
+				Extra:    cloneExtra(f.Extra),
 			}
 		}
 	}
@@ -140,6 +142,7 @@ func decryptCipher(enc *api.EncryptedCipher, userKey *crypto.SymmetricKey) (*Cip
 			c.PasswordHistory[i] = PasswordHistoryEntry{
 				Password:     pw,
 				LastUsedDate: h.LastUsedDate,
+				Extra:        cloneExtra(h.Extra),
 			}
 		}
 	}
@@ -163,6 +166,10 @@ func encryptCipherPayload(c *Cipher, userKey *crypto.SymmetricKey) (*api.CipherP
 		activeKey = cipherKey
 	}
 
+	// Blobs the server sealed (passkeys, URI checksums, encrypted unknown
+	// fields) are only sent back under the key they were sealed with.
+	same := c.SealedKeyID != "" && c.SealedKeyID == sealedKeyID(activeKey)
+
 	encName, err := crypto.EncryptString(c.Name, activeKey)
 	if err != nil {
 		return nil, err
@@ -183,35 +190,35 @@ func encryptCipherPayload(c *Cipher, userKey *crypto.SymmetricKey) (*api.CipherP
 		Notes:                 encNotes,
 		LastKnownRevisionDate: cloneTimePtr(c.RevisionDate),
 		CollectionIDs:         append([]string(nil), c.CollectionIDs...),
-		Extra:                 cloneExtra(c.Extra),
+		Extra:                 keepSealed(c.Extra, same),
 	}
 
 	if c.Login != nil {
-		login, err := encryptLogin(c.Login, activeKey)
+		login, err := encryptLogin(c.Login, activeKey, same)
 		if err != nil {
 			return nil, err
 		}
 		p.Login = login
 	}
 	if c.SecureNote != nil {
-		p.SecureNote = &api.EncryptedSecureNote{Type: c.SecureNote.Type}
+		p.SecureNote = &api.EncryptedSecureNote{Type: c.SecureNote.Type, Extra: keepSealed(c.SecureNote.Extra, same)}
 	}
 	if c.Card != nil {
-		card, err := encryptCard(c.Card, activeKey)
+		card, err := encryptCard(c.Card, activeKey, same)
 		if err != nil {
 			return nil, err
 		}
 		p.Card = card
 	}
 	if c.Identity != nil {
-		ident, err := encryptIdentity(c.Identity, activeKey)
+		ident, err := encryptIdentity(c.Identity, activeKey, same)
 		if err != nil {
 			return nil, err
 		}
 		p.Identity = ident
 	}
 	if c.SSHKey != nil {
-		key, err := encryptSSHKey(c.SSHKey, activeKey)
+		key, err := encryptSSHKey(c.SSHKey, activeKey, same)
 		if err != nil {
 			return nil, err
 		}
@@ -233,6 +240,7 @@ func encryptCipherPayload(c *Cipher, userKey *crypto.SymmetricKey) (*api.CipherP
 				Value:    fv,
 				Type:     f.Type,
 				LinkedID: cloneIntPtr(f.LinkedID),
+				Extra:    keepSealed(f.Extra, same),
 			}
 		}
 	}
@@ -246,6 +254,7 @@ func encryptCipherPayload(c *Cipher, userKey *crypto.SymmetricKey) (*api.CipherP
 			p.PasswordHistory[i] = api.EncryptedPasswordHistory{
 				Password:     pw,
 				LastUsedDate: h.LastUsedDate,
+				Extra:        keepSealed(h.Extra, same),
 			}
 		}
 	}
@@ -285,18 +294,72 @@ func decryptLogin(enc *api.EncryptedLogin, key *crypto.SymmetricKey) (*Login, er
 		if err != nil {
 			return nil, err
 		}
-		uris[i] = LoginURI{URI: uriStr, Match: cloneIntPtr(u.Match)}
+		uris[i] = LoginURI{
+			URI: uriStr, Match: cloneIntPtr(u.Match),
+			Checksum: cloneStringPtr(u.URIChecksum), ChecksumOf: uriStr,
+			Extra: cloneExtra(u.Extra),
+		}
 	}
-	return &Login{
+	l := &Login{
 		Username:             username,
 		Password:             password,
 		TOTP:                 totp,
 		URIs:                 uris,
 		PasswordRevisionDate: cloneTimePtr(enc.PasswordRevisionDate),
-	}, nil
+		Extra:                cloneExtra(enc.Extra),
+	}
+	for _, f := range enc.Fido2Credentials {
+		l.Fido2Credentials = append(l.Fido2Credentials, decryptFido2(f, key))
+	}
+	return l, nil
 }
 
-func encryptLogin(l *Login, key *crypto.SymmetricKey) (*api.EncryptedLogin, error) {
+// decryptFido2 decrypts a passkey for display and export. A field that does
+// not decrypt is left empty: the passkey itself is still kept and sent back
+// as the server stored it.
+func decryptFido2(f api.EncryptedFido2Credential, key *crypto.SymmetricKey) Fido2Credential {
+	dec := func(p *string) string {
+		v, err := decryptOptional(p, key)
+		if err != nil {
+			return ""
+		}
+		return v
+	}
+	return Fido2Credential{
+		CredentialID: dec(f.CredentialID), KeyType: dec(f.KeyType), KeyAlgorithm: dec(f.KeyAlgorithm),
+		KeyCurve: dec(f.KeyCurve), KeyValue: dec(f.KeyValue), RpID: dec(f.RpID),
+		UserHandle: dec(f.UserHandle), UserName: dec(f.UserName), Counter: dec(f.Counter),
+		RpName: dec(f.RpName), UserDisplayName: dec(f.UserDisplayName), Discoverable: dec(f.Discoverable),
+		CreationDate: f.CreationDate,
+		Sealed:       append(json.RawMessage(nil), f.Raw...),
+	}
+}
+
+// encryptFido2 seals a passkey that came from plaintext, such as one in an
+// imported backup. Passkeys from the server are never re-encrypted.
+func encryptFido2(f Fido2Credential, key *crypto.SymmetricKey) (api.EncryptedFido2Credential, error) {
+	var out api.EncryptedFido2Credential
+	fields := []struct {
+		plain string
+		dst   **string
+	}{
+		{f.CredentialID, &out.CredentialID}, {f.KeyType, &out.KeyType}, {f.KeyAlgorithm, &out.KeyAlgorithm},
+		{f.KeyCurve, &out.KeyCurve}, {f.KeyValue, &out.KeyValue}, {f.RpID, &out.RpID},
+		{f.UserHandle, &out.UserHandle}, {f.UserName, &out.UserName}, {f.Counter, &out.Counter},
+		{f.RpName, &out.RpName}, {f.UserDisplayName, &out.UserDisplayName}, {f.Discoverable, &out.Discoverable},
+	}
+	for _, fl := range fields {
+		v, err := encryptOptional(fl.plain, key)
+		if err != nil {
+			return out, err
+		}
+		*fl.dst = v
+	}
+	out.CreationDate = f.CreationDate
+	return out, nil
+}
+
+func encryptLogin(l *Login, key *crypto.SymmetricKey, same bool) (*api.EncryptedLogin, error) {
 	username, err := encryptOptional(l.Username, key)
 	if err != nil {
 		return nil, err
@@ -317,16 +380,42 @@ func encryptLogin(l *Login, key *crypto.SymmetricKey) (*api.EncryptedLogin, erro
 			if err != nil {
 				return nil, err
 			}
-			uris[i] = api.EncryptedLoginURI{URI: eu, Match: cloneIntPtr(u.Match)}
+			out := api.EncryptedLoginURI{URI: eu, Match: cloneIntPtr(u.Match), Extra: keepSealed(u.Extra, same)}
+			switch {
+			case same && u.Checksum != nil && u.URI == u.ChecksumOf:
+				out.URIChecksum = cloneStringPtr(u.Checksum)
+			case u.URI != "":
+				if out.URIChecksum, err = uriChecksum(u.URI, key); err != nil {
+					return nil, err
+				}
+			}
+			uris[i] = out
 		}
 	}
-	return &api.EncryptedLogin{
+	out := &api.EncryptedLogin{
 		Username:             username,
 		Password:             password,
 		TOTP:                 totp,
 		URIs:                 uris,
 		PasswordRevisionDate: cloneTimePtr(l.PasswordRevisionDate),
-	}, nil
+		Extra:                keepSealed(l.Extra, same),
+	}
+	for _, f := range l.Fido2Credentials {
+		switch {
+		case len(f.Sealed) > 0 && same:
+			out.Fido2Credentials = append(out.Fido2Credentials, api.EncryptedFido2Credential{Raw: append(json.RawMessage(nil), f.Sealed...)})
+		case len(f.Sealed) > 0:
+			// Sealed under another key: nobody could use it here, and a
+			// passkey is never copied to another item.
+		default:
+			ef, err := encryptFido2(f, key)
+			if err != nil {
+				return nil, err
+			}
+			out.Fido2Credentials = append(out.Fido2Credentials, ef)
+		}
+	}
+	return out, nil
 }
 
 func decryptCard(enc *api.EncryptedCard, key *crypto.SymmetricKey) (*Card, error) {
@@ -346,10 +435,11 @@ func decryptCard(enc *api.EncryptedCard, key *crypto.SymmetricKey) (*Card, error
 		ExpMonth:       out[3],
 		ExpYear:        out[4],
 		Code:           out[5],
+		Extra:          cloneExtra(enc.Extra),
 	}, nil
 }
 
-func encryptCard(c *Card, key *crypto.SymmetricKey) (*api.EncryptedCard, error) {
+func encryptCard(c *Card, key *crypto.SymmetricKey, same bool) (*api.EncryptedCard, error) {
 	vals := []string{c.CardholderName, c.Brand, c.Number, c.ExpMonth, c.ExpYear, c.Code}
 	out := make([]*string, len(vals))
 	for i, v := range vals {
@@ -366,6 +456,7 @@ func encryptCard(c *Card, key *crypto.SymmetricKey) (*api.EncryptedCard, error) 
 		ExpMonth:       out[3],
 		ExpYear:        out[4],
 		Code:           out[5],
+		Extra:          keepSealed(c.Extra, same),
 	}, nil
 }
 
@@ -391,10 +482,11 @@ func decryptIdentity(enc *api.EncryptedIdentity, key *crypto.SymmetricKey) (*Ide
 		State: out[8], PostalCode: out[9], Country: out[10], Company: out[11],
 		Email: out[12], Phone: out[13], SSN: out[14], Username: out[15],
 		PassportNumber: out[16], LicenseNumber: out[17],
+		Extra: cloneExtra(enc.Extra),
 	}, nil
 }
 
-func encryptIdentity(id *Identity, key *crypto.SymmetricKey) (*api.EncryptedIdentity, error) {
+func encryptIdentity(id *Identity, key *crypto.SymmetricKey, same bool) (*api.EncryptedIdentity, error) {
 	vals := []string{
 		id.Title, id.FirstName, id.MiddleName, id.LastName,
 		id.Address1, id.Address2, id.Address3, id.City,
@@ -416,6 +508,7 @@ func encryptIdentity(id *Identity, key *crypto.SymmetricKey) (*api.EncryptedIden
 		State: out[8], PostalCode: out[9], Country: out[10], Company: out[11],
 		Email: out[12], Phone: out[13], SSN: out[14], Username: out[15],
 		PassportNumber: out[16], LicenseNumber: out[17],
+		Extra: keepSealed(id.Extra, same),
 	}, nil
 }
 
@@ -429,10 +522,10 @@ func decryptSSHKey(enc *api.EncryptedSSHKey, key *crypto.SymmetricKey) (*SSHKey,
 		}
 		out[i] = v
 	}
-	return &SSHKey{PrivateKey: out[0], PublicKey: out[1], KeyFingerprint: out[2]}, nil
+	return &SSHKey{PrivateKey: out[0], PublicKey: out[1], KeyFingerprint: out[2], Extra: cloneExtra(enc.Extra)}, nil
 }
 
-func encryptSSHKey(k *SSHKey, key *crypto.SymmetricKey) (*api.EncryptedSSHKey, error) {
+func encryptSSHKey(k *SSHKey, key *crypto.SymmetricKey, same bool) (*api.EncryptedSSHKey, error) {
 	vals := []string{k.PrivateKey, k.PublicKey, k.KeyFingerprint}
 	out := make([]*string, len(vals))
 	for i, v := range vals {
@@ -442,7 +535,7 @@ func encryptSSHKey(k *SSHKey, key *crypto.SymmetricKey) (*api.EncryptedSSHKey, e
 		}
 		out[i] = ev
 	}
-	return &api.EncryptedSSHKey{PrivateKey: out[0], PublicKey: out[1], KeyFingerprint: out[2]}, nil
+	return &api.EncryptedSSHKey{PrivateKey: out[0], PublicKey: out[1], KeyFingerprint: out[2], Extra: keepSealed(k.Extra, same)}, nil
 }
 
 func decryptBytesFromString(encStr string, key *crypto.SymmetricKey) ([]byte, error) {
@@ -498,43 +591,51 @@ func cloneCipher(c *Cipher) *Cipher {
 	if c.Login != nil {
 		l := *c.Login
 		l.PasswordRevisionDate = cloneTimePtr(c.Login.PasswordRevisionDate)
-		if len(c.Login.URIs) > 0 {
-			l.URIs = make([]LoginURI, len(c.Login.URIs))
-			for i, u := range c.Login.URIs {
-				l.URIs[i] = LoginURI{URI: u.URI, Match: cloneIntPtr(u.Match)}
-			}
+		l.Extra = cloneExtra(c.Login.Extra)
+		l.URIs = nil
+		for _, u := range c.Login.URIs {
+			u.Match = cloneIntPtr(u.Match)
+			u.Checksum = cloneStringPtr(u.Checksum)
+			u.Extra = cloneExtra(u.Extra)
+			l.URIs = append(l.URIs, u)
+		}
+		l.Fido2Credentials = nil
+		for _, f := range c.Login.Fido2Credentials {
+			f.Sealed = append(json.RawMessage(nil), f.Sealed...)
+			l.Fido2Credentials = append(l.Fido2Credentials, f)
 		}
 		cp.Login = &l
 	}
 	if c.SecureNote != nil {
 		sn := *c.SecureNote
+		sn.Extra = cloneExtra(c.SecureNote.Extra)
 		cp.SecureNote = &sn
 	}
 	if c.Card != nil {
 		card := *c.Card
+		card.Extra = cloneExtra(c.Card.Extra)
 		cp.Card = &card
 	}
 	if c.Identity != nil {
 		id := *c.Identity
+		id.Extra = cloneExtra(c.Identity.Extra)
 		cp.Identity = &id
 	}
 	if c.SSHKey != nil {
 		k := *c.SSHKey
+		k.Extra = cloneExtra(c.SSHKey.Extra)
 		cp.SSHKey = &k
 	}
-	if len(c.Fields) > 0 {
-		cp.Fields = make([]CustomField, len(c.Fields))
-		for i, f := range c.Fields {
-			cp.Fields[i] = CustomField{
-				Name:     f.Name,
-				Value:    f.Value,
-				Type:     f.Type,
-				LinkedID: cloneIntPtr(f.LinkedID),
-			}
-		}
+	cp.Fields = nil
+	for _, f := range c.Fields {
+		f.LinkedID = cloneIntPtr(f.LinkedID)
+		f.Extra = cloneExtra(f.Extra)
+		cp.Fields = append(cp.Fields, f)
 	}
-	if len(c.PasswordHistory) > 0 {
-		cp.PasswordHistory = append([]PasswordHistoryEntry(nil), c.PasswordHistory...)
+	cp.PasswordHistory = nil
+	for _, h := range c.PasswordHistory {
+		h.Extra = cloneExtra(h.Extra)
+		cp.PasswordHistory = append(cp.PasswordHistory, h)
 	}
 	if len(c.Attachments) > 0 {
 		cp.Attachments = make([]Attachment, len(c.Attachments))

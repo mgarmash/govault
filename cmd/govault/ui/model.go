@@ -167,14 +167,20 @@ type SSHAgentHost interface {
 
 const DefaultPrefsKey = "govault.prefs"
 
+// EditURIDraft is one website in the editor. orig is the URI it was opened
+// with, whose match setting, checksum and unknown fields a save keeps.
 type EditURIDraft struct {
-	URI string
+	URI  string
+	orig *state.LoginURI
 }
 
+// EditFieldDraft is one custom field in the editor. orig keeps the linked
+// field and unknown fields of the field it was opened with.
 type EditFieldDraft struct {
 	Name  string
 	Value string
 	Type  int
+	orig  *state.CustomField
 }
 
 type EditDraft struct {
@@ -218,6 +224,17 @@ type EditDraft struct {
 	Fields     []EditFieldDraft
 	Revision   *time.Time
 	Source     *state.Cipher
+	// RemovePasskey drops the passkey on save; cancelling the edit keeps it.
+	RemovePasskey bool
+}
+
+// DraftPasskey is the passkey of the item being edited, if it has one and
+// the user has not removed it.
+func (d *EditDraft) DraftPasskey() *state.Fido2Credential {
+	if d == nil || d.RemovePasskey || d.Source == nil || d.Source.Login == nil || len(d.Source.Login.Fido2Credentials) == 0 || d.Type != api.CipherTypeLogin {
+		return nil
+	}
+	return &d.Source.Login.Fido2Credentials[0]
 }
 
 type RepromptModal struct {
@@ -2116,7 +2133,8 @@ func draftFromCipher(c *state.Cipher) *EditDraft {
 		d.Password = c.Login.Password
 		d.TOTP = c.Login.TOTP
 		for _, u := range c.Login.URIs {
-			d.URIs = append(d.URIs, EditURIDraft{URI: u.URI})
+			orig := u
+			d.URIs = append(d.URIs, EditURIDraft{URI: u.URI, orig: &orig})
 		}
 	}
 	if c.Card != nil {
@@ -2151,7 +2169,8 @@ func draftFromCipher(c *state.Cipher) *EditDraft {
 		d.SSHFinger = c.SSHKey.KeyFingerprint
 	}
 	for _, f := range c.Fields {
-		d.Fields = append(d.Fields, EditFieldDraft{Name: f.Name, Value: f.Value, Type: f.Type})
+		orig := f
+		d.Fields = append(d.Fields, EditFieldDraft{Name: f.Name, Value: f.Value, Type: f.Type, orig: &orig})
 	}
 	return d
 }
@@ -2163,10 +2182,20 @@ func cloneDraft(d *EditDraft) *EditDraft {
 	return &cp
 }
 
+// cipherFromDraft turns the editor draft into the cipher to save. It starts
+// from the item the editor opened and changes only what the editor shows,
+// so everything else the item holds is saved unchanged: passkeys (unless
+// the user removed them), URI match settings and checksums, linked fields,
+// identity fields the editor does not show, and fields GoVault does not
+// model at all.
 func cipherFromDraft(d *EditDraft) *state.Cipher {
 	var base state.Cipher
+	var src *state.Cipher
 	if d.Source != nil {
 		base = *d.Source
+		if d.Source.Type == d.Type {
+			src = d.Source
+		}
 	}
 	base.ID = d.ID
 	base.Type = d.Type
@@ -2193,58 +2222,87 @@ func cipherFromDraft(d *EditDraft) *state.Cipher {
 
 	switch d.Type {
 	case api.CipherTypeLogin:
-		var uris []state.LoginURI
+		login := &state.Login{}
+		if src != nil && src.Login != nil {
+			cp := *src.Login
+			login = &cp
+		}
+		login.Username = d.Username
+		login.Password = d.Password
+		login.TOTP = strings.TrimSpace(d.TOTP)
+		login.URIs = nil
 		for _, u := range d.URIs {
-			if s := strings.TrimSpace(u.URI); s != "" {
-				uris = append(uris, state.LoginURI{URI: s})
+			text := strings.TrimSpace(u.URI)
+			if text == "" {
+				continue
 			}
+			nu := state.LoginURI{URI: text}
+			if u.orig != nil {
+				nu = *u.orig
+				nu.URI = text
+			}
+			login.URIs = append(login.URIs, nu)
 		}
-		base.Login = &state.Login{
-			Username: d.Username,
-			Password: d.Password,
-			TOTP:     strings.TrimSpace(d.TOTP),
-			URIs:     uris,
+		if d.RemovePasskey {
+			login.Fido2Credentials = nil
 		}
+		base.Login = login
 	case api.CipherTypeSecureNote:
-		base.SecureNote = &state.SecureNote{Type: 0}
+		base.SecureNote = &state.SecureNote{}
+		if src != nil && src.SecureNote != nil {
+			cp := *src.SecureNote
+			base.SecureNote = &cp
+		}
 	case api.CipherTypeCard:
-		base.Card = &state.Card{
-			CardholderName: d.Cardholder,
-			Brand:          d.Brand,
-			Number:         d.CardNumber,
-			ExpMonth:       d.ExpMonth,
-			ExpYear:        d.ExpYear,
-			Code:           d.CardCode,
+		card := &state.Card{}
+		if src != nil && src.Card != nil {
+			cp := *src.Card
+			card = &cp
 		}
+		card.CardholderName = d.Cardholder
+		card.Brand = d.Brand
+		card.Number = d.CardNumber
+		card.ExpMonth = d.ExpMonth
+		card.ExpYear = d.ExpYear
+		card.Code = d.CardCode
+		base.Card = card
 	case api.CipherTypeIdentity:
-		base.Identity = &state.Identity{
-			Title:          d.IdentTitle,
-			FirstName:      d.FirstName,
-			MiddleName:     d.MiddleName,
-			LastName:       d.LastName,
-			Company:        d.Company,
-			Email:          d.Email,
-			Phone:          d.Phone,
-			Address1:       d.Address1,
-			City:           d.City,
-			State:          d.State,
-			PostalCode:     d.PostalCode,
-			Country:        d.Country,
-			Username:       d.IdentUser,
-			SSN:            d.SSN,
-			PassportNumber: d.Passport,
-			LicenseNumber:  d.License,
+		id := &state.Identity{}
+		if src != nil && src.Identity != nil {
+			cp := *src.Identity
+			id = &cp
 		}
+		id.Title = d.IdentTitle
+		id.FirstName = d.FirstName
+		id.MiddleName = d.MiddleName
+		id.LastName = d.LastName
+		id.Company = d.Company
+		id.Email = d.Email
+		id.Phone = d.Phone
+		id.Address1 = d.Address1
+		id.City = d.City
+		id.State = d.State
+		id.PostalCode = d.PostalCode
+		id.Country = d.Country
+		id.Username = d.IdentUser
+		id.SSN = d.SSN
+		id.PassportNumber = d.Passport
+		id.LicenseNumber = d.License
+		base.Identity = id
 	case api.CipherTypeSSHKey:
 		priv := strings.TrimSpace(d.SSHPrivate)
 		if priv != "" {
 			priv += "\n"
 		}
-		base.SSHKey = &state.SSHKey{
-			PrivateKey:     priv,
-			PublicKey:      strings.TrimSpace(d.SSHPublic),
-			KeyFingerprint: strings.TrimSpace(d.SSHFinger),
+		key := &state.SSHKey{}
+		if src != nil && src.SSHKey != nil {
+			cp := *src.SSHKey
+			key = &cp
 		}
+		key.PrivateKey = priv
+		key.PublicKey = strings.TrimSpace(d.SSHPublic)
+		key.KeyFingerprint = strings.TrimSpace(d.SSHFinger)
+		base.SSHKey = key
 	}
 
 	base.Fields = nil
@@ -2252,11 +2310,12 @@ func cipherFromDraft(d *EditDraft) *state.Cipher {
 		if strings.TrimSpace(f.Name) == "" && strings.TrimSpace(f.Value) == "" {
 			continue
 		}
-		base.Fields = append(base.Fields, state.CustomField{
-			Name:  f.Name,
-			Value: f.Value,
-			Type:  f.Type,
-		})
+		nf := state.CustomField{}
+		if f.orig != nil {
+			nf = *f.orig
+		}
+		nf.Name, nf.Value, nf.Type = f.Name, f.Value, f.Type
+		base.Fields = append(base.Fields, nf)
 	}
 	return &base
 }

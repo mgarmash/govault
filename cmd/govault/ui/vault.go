@@ -1295,6 +1295,9 @@ func detailContent(cx *core.Scope, m *AppModel, c *state.Cipher) core.Node {
 		if strings.TrimSpace(c.Login.TOTP) != "" {
 			rows = append(rows, totpRow(cx, m, c))
 		}
+		if row := detailPasskeyRow(c); row != nil {
+			rows = append(rows, row)
+		}
 		if len(rows) > 0 {
 			blocks = append(blocks, section("Credentials", card(rows...)))
 		}

@@ -193,13 +193,61 @@ func diff(it Item, folderName string, c *state.Cipher, currentFolder string) []s
 		add("Verification Code", a.TOTP != b.TOTP)
 		add("Websites", !slices.Equal(uriList(a), uriList(b)))
 	}
-	add("Card", ptrDiff(want.Card, c.Card))
-	add("Identity", ptrDiff(want.Identity, c.Identity))
-	add("SSH Key", ptrDiff(want.SSHKey, c.SSHKey))
+	if want.Login != nil && c.Login != nil && len(want.Login.Fido2Credentials) > 0 {
+		add("Passkey", !samePasskeys(want.Login.Fido2Credentials, c.Login.Fido2Credentials))
+	}
+	add("Card", ptrDiff(cardContentOf(want.Card), cardContentOf(c.Card)))
+	add("Identity", ptrDiff(identityContentOf(want.Identity), identityContentOf(c.Identity)))
+	add("SSH Key", ptrDiff(sshKeyContentOf(want.SSHKey), sshKeyContentOf(c.SSHKey)))
 	add("Custom Fields", !slices.EqualFunc(want.Fields, c.Fields, func(x, y state.CustomField) bool {
 		return x.Name == y.Name && x.Value == y.Value && x.Type == y.Type
 	}))
 	return out
+}
+
+// samePasskeys compares passkeys by credential and relying party, never by
+// their secret material.
+func samePasskeys(a, b []state.Fido2Credential) bool {
+	return slices.EqualFunc(a, b, func(x, y state.Fido2Credential) bool {
+		return x.CredentialID == y.CredentialID && x.RpID == y.RpID
+	})
+}
+
+// The content types reduce nested items to what the user sees, so the diff
+// ignores the unknown fields the server stores with them.
+type cardContent struct {
+	CardholderName, Brand, Number, ExpMonth, ExpYear, Code string
+}
+
+type identityContent struct {
+	Title, FirstName, MiddleName, LastName, Address1, Address2, Address3, City, State,
+	PostalCode, Country, Company, Email, Phone, SSN, Username, PassportNumber, LicenseNumber string
+}
+
+type sshKeyContent struct {
+	PrivateKey, PublicKey, KeyFingerprint string
+}
+
+func cardContentOf(t *state.Card) *cardContent {
+	if t == nil {
+		return nil
+	}
+	return &cardContent{t.CardholderName, t.Brand, t.Number, t.ExpMonth, t.ExpYear, t.Code}
+}
+
+func identityContentOf(t *state.Identity) *identityContent {
+	if t == nil {
+		return nil
+	}
+	return &identityContent{t.Title, t.FirstName, t.MiddleName, t.LastName, t.Address1, t.Address2, t.Address3,
+		t.City, t.State, t.PostalCode, t.Country, t.Company, t.Email, t.Phone, t.SSN, t.Username, t.PassportNumber, t.LicenseNumber}
+}
+
+func sshKeyContentOf(t *state.SSHKey) *sshKeyContent {
+	if t == nil {
+		return nil
+	}
+	return &sshKeyContent{t.PrivateKey, t.PublicKey, t.KeyFingerprint}
 }
 
 func uriList(l *state.Login) []string {
@@ -300,6 +348,10 @@ func Apply(ctx context.Context, w Writer, p *Plan) Result {
 
 func createItem(ctx context.Context, w Writer, e *Entry, folderFor func(string) (*string, error)) error {
 	c := e.Item.content()
+	if e.Class != ClassNew && c.Login != nil {
+		// Create Copy: a passkey belongs to one item and is never copied.
+		c.Login.Fido2Credentials = nil
+	}
 	folder, err := folderFor(e.FolderName)
 	if err != nil {
 		return err
@@ -329,7 +381,7 @@ func updateItem(ctx context.Context, w Writer, e *Entry, folderFor func(string) 
 	cur.Favorite = e.Item.Favorite
 	cur.Reprompt = e.Item.Reprompt
 	cur.FolderID = folder
-	applyContent(cur, e.Item)
+	mergeContent(cur, e.Item)
 	_, err = w.SaveCipher(ctx, cur)
 	return err
 }

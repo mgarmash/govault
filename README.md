@@ -103,7 +103,7 @@ Bitwarden's mobile apps are native, but its desktop app is an Electron and Angul
 
 <sub>Measured on an Apple silicon Mac running macOS 27.2. Memory is the physical footprint from `footprint`, summed over all of an app's processes. CPU is from seven `top` samples 5 seconds apart and from the CPU time each app used over the same 30 seconds. Both apps were signed in to the same account and vault (about 440 items), showing the main vault list with no item open, idle for at least 30 seconds (CPU time used: GoVault 0.02 s, Bitwarden 0.96 s). Download sizes are the release assets on GitHub.</sub>
 
-GoVault does not replace everything the official app does. It has no Intel Mac build, no Bitwarden Send, no passkey management and no browser-extension integration, and accounts are created on your server's web vault.
+GoVault does not replace everything the official app does. It has no Intel Mac build, no Bitwarden Send and no browser-extension integration, and accounts are created on your server's web vault. GoVault keeps the passkeys stored in your vault, shows them on each item, and can remove them, but it cannot create passkeys or sign in with them. Use the Bitwarden browser extension for that.
 
 ## Features
 
@@ -127,6 +127,7 @@ GoVault does not replace everything the official app does. It has no Intel Mac b
 - Logins (with live verification codes), cards, identities, secure notes and **SSH keys**, with an Ed25519 key generator and an optional read-only local `ssh-agent` (off by default).
 - **Attachments**: encrypted upload, download and delete. Downloads are written as private files.
 - **Password history** for logins.
+- **Passkeys**: each login shows its passkey (website and creation date) read-only, and you can remove it. GoVault keeps passkeys and every other field it does not display intact when you edit an item.
 - **Organizations and shared collections**, honoring read-only and hidden-password permissions.
 - **Vault Health**: reused and weak passwords, expiring cards and unsecured websites, checked entirely on your device.
 - **Encrypted backup**: export a password-protected, Bitwarden-compatible JSON file.

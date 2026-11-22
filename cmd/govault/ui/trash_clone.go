@@ -109,6 +109,14 @@ func (m *AppModel) CloneActive(cx *core.Scope) {
 		src.ReadOnly = false
 		src.HidePassword = false
 		src.Name = c.Name + " (Copy)"
+		// A passkey belongs to one item; Bitwarden does not copy it either.
+		hadPasskey := false
+		if c.Login != nil {
+			login := *c.Login
+			hadPasskey = len(login.Fido2Credentials) > 0
+			login.Fido2Credentials = nil
+			src.Login = &login
+		}
 		draft := draftFromCipher(&src)
 		draft.IsNew = true
 		draft.Revision = nil
@@ -116,5 +124,8 @@ func (m *AppModel) CloneActive(cx *core.Scope) {
 		m.EditDirty.Set(true)
 		m.EditError.Set("")
 		m.EditMode.Set(true)
+		if hadPasskey {
+			m.ShowToast(ui.ToastInfo, "Passkeys are not copied", "The copy has the login details without the passkey.")
+		}
 	})
 }
