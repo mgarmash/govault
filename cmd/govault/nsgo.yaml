@@ -17,8 +17,11 @@ linux:
   # The desktop entry's menu category. Security alone is an additional
   # category desktop-file-validate wants beside Settings or System, and a
   # second main category lists the app twice, so the AppStream metadata
-  # (linux/dev.txchen.govault.appdata.xml) adds Security instead.
+  # (linux/share/metainfo) adds Security instead.
   categories: [Utility]
+  # Installed at /usr/share by the .deb and pacman packages and at the
+  # AppImage's usr/share: the AppStream metadata, in place of NSGo's.
+  share: linux/share
 
 # gv, the command-line client, ships in every desktop package: signed in
 # GoVault.app/Contents/MacOS, beside the executable on Windows and Linux,

@@ -63,6 +63,11 @@
     <display_length compare="ge">768</display_length>
   </requires>
   <releases>
+    <release version="0.3.5" date="2026-11-22">
+      <description>
+        <p>On Linux, GoVault appears under Utilities in application menus and ships AppStream metadata for software centers.</p>
+      </description>
+    </release>
     <release version="0.3.4" date="2026-11-22">
       <description>
         <p>SSH key items sync from Vaultwarden 1.37.5, the menu bar icon setting applies immediately, and screen readers read each sidebar row once.</p>

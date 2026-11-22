@@ -11,9 +11,6 @@ dist/
 *.AppImage
 *.pkg.tar.gz
 
-# Staged by scripts/build-release.sh
-cmd/govault/resources/
-
 # Go test / coverage artifacts
 *.test
 *.out

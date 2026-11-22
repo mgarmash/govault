@@ -132,8 +132,8 @@ As planned, before NSGo could package commands: NSGo v0.2.0 copies executable re
 | --- | --- |
 | macOS DMG | Done. `GoVault.app/Contents/MacOS/gv`, signed with the app's identity before the app, so `codesign --verify --deep --strict` and notarization cover it. Settings installs `/usr/local/bin/gv`. |
 | Homebrew | Ready: the cask's `binary` stanza works from the first release built this way. |
-| Windows NSIS | Done. Console-subsystem `gv.exe` in the installation directory, Authenticode-signed with the app's PE files; `windows.path` adds the directory to the user's Path once, broadcasts `WM_SETTINGCHANGE` and removes only its own entry on uninstall. No `GoVault.com` console companion. |
-| Debian, Arch | Done. `/opt/govault/gv` and a package-owned `/usr/bin/gv` link. |
+| Windows NSIS | Done. Console-subsystem `gv.exe` in the installation directory, Authenticode-signed with the app's PE files; `windows.path` adds the directory to the user's Path once, broadcasts `WM_SETTINGCHANGE`, records that it added the entry and removes it on uninstall only then. No `GoVault.com` console companion. |
+| Debian, Arch | Done. `/opt/govault/gv` and a package-owned `/usr/bin/gv` link; AppStream metadata at `/usr/share/metainfo`. |
 | AppImage | Done. `gv` at the image root. `install-linux.sh` installs a `gv` launcher beside the image that extracts it with `--appimage-extract` (no FUSE) and extracts again whenever the image changes, so GUI-initiated updates refresh it. It never replaces a `gv` it did not install. |
 | Store builds | None carry `gv`: NSGo leaves commands out of store packages. |
 
