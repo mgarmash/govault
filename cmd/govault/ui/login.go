@@ -41,7 +41,7 @@ func signInView(cx *core.Scope, m *AppModel) core.Node {
 					NoAutoCorrect: true,
 					Value:         m.LoginServer.Get,
 					OnChange:      m.LoginServer.Set,
-					Disabled:      m.LoginBusy.Get,
+					Disabled:      func() bool { return m.LoginBusy.Get() || m.CanReturnToUnlock() },
 				})),
 				formField("Email", authInput(base.Input{
 					TestID:        "login-email",
@@ -49,7 +49,7 @@ func signInView(cx *core.Scope, m *AppModel) core.Node {
 					NoAutoCorrect: true,
 					Value:         m.LoginEmail.Get,
 					OnChange:      m.LoginEmail.Set,
-					Disabled:      m.LoginBusy.Get,
+					Disabled:      func() bool { return m.LoginBusy.Get() || m.CanReturnToUnlock() },
 				})),
 				formField("Master Password", passwordField(cx, base.Input{
 					TestID:        "login-password",

@@ -34,6 +34,7 @@ var (
 	ErrSyncDeferred            = errors.New("state: changes kept landing during sync; nothing was synced yet")
 	ErrServerMismatch          = errors.New("state: the saved sign-in belongs to a different server than this vault copy; sign in again")
 	ErrSignInRequired          = errors.New("state: sign in again to sync; the vault is available offline until then")
+	ErrDifferentAccount        = errors.New("state: this signs in to a different account than the vault on this device; to use a different account, log out first")
 	ErrAccountChanged          = errors.New("state: the account changed since this was confirmed")
 	ErrSnapshotNotUpdated      = errors.New("state: the server has the change, but the local copy could not be updated; sync to refresh it")
 )
@@ -286,6 +287,19 @@ type LoginRequest struct {
 	TwoFactorProvider api.TwoFactorProvider
 	TwoFactorCode     string
 	RememberDevice    bool
+
+	// SameAccount, when set, is the account of the local vault this
+	// sign-in renews (Sign In Again). A login to any other account or
+	// server is refused with ErrDifferentAccount before anything is saved.
+	SameAccount *Account
+}
+
+// Account is who a vault belongs to: the account ID and the server and
+// email it was signed in with.
+type Account struct {
+	ID        string
+	ServerURL string
+	Email     string
 }
 
 type Organization struct {
@@ -326,6 +340,7 @@ type VaultService interface {
 	TrashSelection() TrashSelection
 	UnreadableItems() []string
 	BackupData() BackupData
+	Account() Account
 	AuthAttempt() uint64
 	RevokeAuthAttempts()
 	LocalOnly() bool

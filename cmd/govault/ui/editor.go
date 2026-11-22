@@ -68,10 +68,11 @@ func EditorPaneView(cx *core.Scope, m *AppModel) core.Node {
 						},
 					},
 					ui.Button{
-						TestID:  "editor-cancel",
-						Text:    "Cancel",
-						Variant: ui.ButtonSecondary,
-						OnPress: func() { m.CancelEdit(cx) },
+						TestID:   "editor-cancel",
+						Text:     "Cancel",
+						Variant:  ui.ButtonSecondary,
+						Disabled: m.EditBusy.Get,
+						OnPress:  func() { m.CancelEdit(cx) },
 					},
 					ui.Button{
 						TestID:  "editor-save",
@@ -548,5 +549,6 @@ func draftInputClass(m *AppModel, testID, placeholder, class string, get func(*E
 		OnChange: func(v string) {
 			m.MutateDraft(func(d *EditDraft) { set(d, v) })
 		},
+		Disabled: m.EditBusy.Get,
 	}, editorFieldHeight))
 }

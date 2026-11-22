@@ -96,6 +96,11 @@ func NewDesktopShell(app *core.Scope, demoMode bool) *DesktopShell {
 					shell.model.ServiceLeftUnlocked(st)
 					return
 				}
+				// A sleep or Back to Unlock may have locked the session
+				// again before this callback ran.
+				if shell.service.Status() != state.StatusUnlocked {
+					return
+				}
 				shell.model.LockState.Set(st)
 				shell.startRealtimeAsync()
 			})

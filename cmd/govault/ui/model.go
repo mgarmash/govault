@@ -919,6 +919,11 @@ func (m *AppModel) loginRequest() (state.LoginRequest, bool) {
 		ServerURL: strings.TrimSpace(m.LoginServer.Get()),
 		Email:     strings.TrimSpace(m.LoginEmail.Get()),
 	}
+	if m.CanReturnToUnlock() {
+		// Sign In Again renews the vault on this device: its account only.
+		acct := m.Core.Account()
+		req.ServerURL, req.Email, req.SameAccount = acct.ServerURL, acct.Email, &acct
+	}
 	password := m.LoginPassword.Get()
 	if req.ServerURL == "" || req.Email == "" || password == "" {
 		return req, false
@@ -1081,8 +1086,12 @@ func emailSentNotice(hint string) string {
 // SignInAgain shows the sign-in form over a locked vault without removing
 // the local copy; signing in replaces the saved sign-in.
 func (m *AppModel) SignInAgain() {
+	acct := m.Core.Account()
 	m.ReSignIn.Set(true)
 	m.Lock()
+	m.LoginServer.Set(acct.ServerURL)
+	m.LoginEmail.Set(acct.Email)
+	m.LoginError.Set("")
 }
 
 // CanReturnToUnlock reports a sign-in form shown over a locked local vault,
@@ -1114,9 +1123,16 @@ func (m *AppModel) finishLogin(serverURL, email string) {
 	m.TwoFactor.Set(nil)
 	m.TwoFactorCode.Set("")
 	m.TwoFactorNotice.Set("")
+	// Who just signed in comes from the service, never from settings left
+	// by an earlier account.
+	acct := m.Core.Account()
 	m.UpdatePrefs(func(p UserPrefs) UserPrefs {
 		p.ServerURL = strings.TrimRight(serverURL, "/")
 		p.Email = email
+		if acct.ID != "" {
+			p.AccountID = acct.ID
+			p.ServerURL = strings.TrimRight(acct.ServerURL, "/")
+		}
 		return p
 	})
 	m.SyncAccountMetaFromSnapshot()
@@ -1390,6 +1406,9 @@ func (m *AppModel) LockOnSystemEvent() bool {
 		m.RevokePending()
 		m.LockBusy.Set(false)
 		m.LoginBusy.Set(false)
+		m.LockPassword.Set("")
+		m.LoginPassword.Set("")
+		m.RepromptPW.Set("")
 		return false
 	}
 	m.Lock()
@@ -1495,6 +1514,9 @@ func (m *AppModel) RefreshVaultData() {
 		return
 	}
 	m.LocalOnly.Set(m.Core.LocalOnly())
+	if f := m.Hooks.Favicons; f != nil {
+		f.SetOffline(m.LocalOnly.GetUntracked())
+	}
 	m.CredentialsNotSaved.Set(m.Core.CredentialsNotSaved())
 	folders := m.Core.Folders()
 	m.Folders.Set(folders)
@@ -1868,7 +1890,9 @@ func (m *AppModel) CancelEdit(cx *core.Scope) {
 
 func (m *AppModel) MutateDraft(fn func(d *EditDraft)) {
 	cur := m.EditDraft.Get()
-	if cur == nil {
+	// While the draft saves, edits would be lost when the save closes the
+	// editor, so none are taken; the editor shows its fields disabled.
+	if cur == nil || m.EditBusy.Get() {
 		return
 	}
 	cp := cloneDraft(cur)
@@ -2215,7 +2239,7 @@ func (m *AppModel) SubmitReprompt() {
 	m.RepromptError.Set("")
 	pwBytes := []byte(pw)
 	cb := m.Reprompt.Get().OnAllow
-	accountID := m.Prefs.Get().AccountID
+	accountID := m.Core.Account().ID
 
 	go func() {
 		defer crypto.ZeroBytes(pwBytes)

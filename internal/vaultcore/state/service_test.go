@@ -105,6 +105,7 @@ type vaultTestEnv struct {
 	// rotateRefresh makes each refresh token valid once, as servers that
 	// rotate them do.
 	rotateRefresh bool
+	noNewRefresh  bool
 	refreshes     int
 	refreshSpent  map[string]bool
 }
@@ -268,6 +269,11 @@ func newVaultTestEnv(t *testing.T) *vaultTestEnv {
 				if rotate {
 					next = fmt.Sprintf("ref-rot-%d", n)
 				}
+				env.mu.Lock()
+				if env.noNewRefresh {
+					next = ""
+				}
+				env.mu.Unlock()
 				_ = json.NewEncoder(w).Encode(api.TokenResponse{
 					AccessToken:  "tok-2",
 					RefreshToken: next,

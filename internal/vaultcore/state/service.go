@@ -164,6 +164,10 @@ func (s *Service) Login(ctx context.Context, req LoginRequest) error {
 	if accountID == "" {
 		accountID = crypto.NormalizeEmail(email)
 	}
+	if want := req.SameAccount; want != nil && (want.ID != accountID || serverOrigin(want.ServerURL) != serverOrigin(serverURL)) {
+		userKey.Zero()
+		return ErrDifferentAccount
+	}
 	snap := &store.Snapshot{
 		SchemaVersion: store.CurrentSchemaVersion,
 		AccountID:     accountID,
@@ -274,14 +278,30 @@ func (s *Service) attemptGen() uint64 {
 // attempt that a sleep, lock or logout revoked before it finished.
 func (s *Service) AuthAttempt() uint64 { return s.attemptGen() }
 
-// RevokeAuthAttempts ends every sign-in and unlock in progress. An unlocked
-// session is left alone; locking it revokes attempts too.
+// RevokeAuthAttempts ends every sign-in and unlock in progress, for a
+// sleep, lock, logout or Back to Unlock while the user sees no unlocked
+// vault. One that already committed its session in the meantime, before
+// the UI heard of it, is locked again: either way nothing it started
+// stays open.
 func (s *Service) RevokeAuthAttempts() {
 	s.mu.Lock()
-	defer s.mu.Unlock()
-	if s.status != StatusUnlocked {
-		s.endSessionLocked()
+	if s.status == StatusUnlocked {
+		s.mu.Unlock()
+		s.Lock()
+		return
 	}
+	s.endSessionLocked()
+	s.mu.Unlock()
+}
+
+// Account is the account of the vault on this device: the one open, or
+// else the one whose snapshot would be unlocked.
+func (s *Service) Account() Account {
+	snap, err := s.loadCurrentSnapshot()
+	if err != nil || snap == nil {
+		return Account{}
+	}
+	return Account{ID: snap.AccountID, ServerURL: snap.ServerURL, Email: snap.Email}
 }
 
 type authAttemptKey struct{}
@@ -371,15 +391,14 @@ func (s *Service) unlock(ctx context.Context, userKey *crypto.SymmetricKey, gen 
 
 	// The vault decrypted, so it opens even when the saved sign-in cannot
 	// be trusted or read; it is then local only.
+	// A local-only session builds no API client, so a malformed server
+	// address in the snapshot cannot keep a good vault shut.
 	_, credErr := s.loadRefreshToken(snap.AccountID, snap.ServerURL)
 	localOnly := credErr != nil || snap.ServerURL == ""
 	var client *api.Client
-	if snap.ServerURL != "" {
-		client, err = s.newAPIClient(snap.ServerURL)
-		if err != nil {
-			ownedKey.Zero()
-			data.zero()
-			return err
+	if !localOnly {
+		if client, err = s.newAPIClient(snap.ServerURL); err != nil {
+			localOnly, client = true, nil
 		}
 	}
 

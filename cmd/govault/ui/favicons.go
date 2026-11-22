@@ -105,6 +105,7 @@ type FaviconStore struct {
 	cfg     FaviconStoreConfig
 	client  *http.Client
 	enabled atomic.Bool
+	offline atomic.Bool
 	fetches atomic.Int64
 
 	mu         sync.Mutex
@@ -161,6 +162,10 @@ func NewFaviconStore(cfg FaviconStoreConfig) *FaviconStore {
 }
 
 func (s *FaviconStore) SetEnabled(on bool) { s.enabled.Store(on) }
+
+// SetOffline keeps icons to what is cached: a local-only vault sends no
+// site domains to the server.
+func (s *FaviconStore) SetOffline(on bool) { s.offline.Store(on) }
 
 // SetOnLoaded sets what runs, on a worker goroutine, once a domain's icon is cached.
 func (s *FaviconStore) SetOnLoaded(fn func(domain string)) {
@@ -351,6 +356,9 @@ func (s *FaviconStore) load(job faviconJob) ([]byte, error) {
 	}
 	if !s.enabled.Load() {
 		return nil, errors.New("favicon: disabled")
+	}
+	if s.offline.Load() {
+		return nil, errors.New("favicon: offline")
 	}
 	data, err := s.fetch(job.serverURL, job.domain)
 	if err != nil {

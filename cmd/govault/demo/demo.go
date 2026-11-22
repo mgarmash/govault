@@ -329,6 +329,10 @@ func (s *Service) HardDeleteCipher(_ context.Context, id string) error {
 	return nil
 }
 
+func (s *Service) Account() state.Account {
+	return state.Account{ID: "demo", Email: "demo@govault.dev"}
+}
+
 func (s *Service) AuthAttempt() uint64 { return 0 }
 
 func (s *Service) RevokeAuthAttempts() {}

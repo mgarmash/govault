@@ -320,13 +320,97 @@ func TestService_RevokedAttemptsNeverPublish(t *testing.T) {
 		t.Fatalf("status = %v", svc.Status())
 	}
 
-	// Revoking never ends an unlocked session.
+	// An unlock that committed before the UI heard of it is locked again
+	// by the revoke the sleep sends.
 	if err := svc.UnlockWithPassword(context.Background(), env.password); err != nil {
 		t.Fatal(err)
 	}
 	svc.RevokeAuthAttempts()
-	if err := svc.SyncNow(context.Background()); err != nil {
-		t.Fatalf("sync after a revoke while unlocked = %v", err)
+	if svc.Status() != StatusLocked {
+		t.Fatalf("status after a revoke over a committed unlock = %v, want locked", svc.Status())
+	}
+}
+
+func TestService_SignInAgainRefusesAnotherAccountBeforeSavingAnything(t *testing.T) {
+	env := newVaultTestEnv(t)
+	st := store.NewFileStore(t.TempDir())
+	secrets := newMemSecretStore()
+	svc := newServiceWith(t, env, st, secrets)
+	for _, want := range []Account{
+		{ID: "someone-else", ServerURL: env.server.URL},
+		{ID: env.profileID, ServerURL: "https://other.example"},
+	} {
+		err := svc.Login(context.Background(), LoginRequest{ServerURL: env.server.URL, Email: env.email, MasterPassword: env.password, SameAccount: &want})
+		if !errors.Is(err, ErrDifferentAccount) {
+			t.Fatalf("login with %+v = %v, want ErrDifferentAccount", want, err)
+		}
+	}
+	if _, err := st.LoadSnapshot(env.profileID); err == nil {
+		t.Fatal("a refused sign-in saved a snapshot")
+	}
+	if _, ok, _ := secrets.Get(refreshTokenKeyPrefix + env.profileID); ok {
+		t.Fatal("a refused sign-in saved a refresh token")
+	}
+	same := Account{ID: env.profileID, ServerURL: env.server.URL + "/"}
+	if err := svc.Login(context.Background(), LoginRequest{ServerURL: env.server.URL, Email: env.email, MasterPassword: env.password, SameAccount: &same}); err != nil {
+		t.Fatalf("the same account = %v", err)
+	}
+	if a := svc.Account(); a.ID != env.profileID || serverOrigin(a.ServerURL) != serverOrigin(env.server.URL) {
+		t.Fatalf("Account() = %+v", a)
+	}
+}
+
+func TestService_MalformedServerURLStillOpensLocalOnly(t *testing.T) {
+	env := newVaultTestEnv(t)
+	svc := loginThenReopen(t, env, newMemSecretStore(), func(st store.Store) {
+		snap, _ := st.LoadSnapshot(env.profileID)
+		snap.ServerURL = "http://[::1"
+		_ = st.SaveSnapshot(snap)
+	})
+	if err := svc.UnlockWithPassword(context.Background(), env.password); err != nil {
+		t.Fatalf("unlock with a malformed server address = %v", err)
+	}
+	if !svc.LocalOnly() {
+		t.Fatal("expected a local-only vault")
+	}
+}
+
+func TestService_RefreshWithoutANewTokenKeepsTheUnsavedOne(t *testing.T) {
+	env := newVaultTestEnv(t)
+	secrets := &flakySecrets{memSecretStore: newMemSecretStore()}
+	svc := newServiceWith(t, env, store.NewFileStore(t.TempDir()), secrets)
+	if err := svc.Login(context.Background(), LoginRequest{ServerURL: env.server.URL, Email: env.email, MasterPassword: env.password}); err != nil {
+		t.Fatal(err)
+	}
+	env.mu.Lock()
+	env.rotateRefresh = true
+	env.mu.Unlock()
+	secrets.setFails = true
+	svc.mu.Lock()
+	svc.accessToken = ""
+	svc.mu.Unlock()
+	if err := svc.forceSync(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	svc.mu.RLock()
+	unsaved := svc.unsavedRefresh
+	svc.mu.RUnlock()
+
+	// The server answers the next refresh with an access token only.
+	env.mu.Lock()
+	env.rotateRefresh, env.noNewRefresh = false, true
+	env.mu.Unlock()
+	secrets.setFails = false
+	svc.mu.Lock()
+	svc.accessToken = ""
+	svc.mu.Unlock()
+	if err := svc.forceSync(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	svc.mu.RLock()
+	defer svc.mu.RUnlock()
+	if !svc.credsUnsaved || svc.unsavedRefresh != unsaved || unsaved == "" {
+		t.Fatalf("after an access-token-only refresh: warning %v, token kept %v", svc.credsUnsaved, svc.unsavedRefresh == unsaved)
 	}
 }
 

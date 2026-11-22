@@ -77,7 +77,9 @@ func TestRepromptVerifiesTheAccountCapturedOnTheUIThread(t *testing.T) {
 			return false
 		}
 	})
-	if id != "acct-9" {
-		t.Fatalf("verified account %q", id)
+	// The account comes from the service, never from settings that may
+	// still name an earlier account.
+	if id != "acct-1" {
+		t.Fatalf("verified account %q, want the open vault's", id)
 	}
 }

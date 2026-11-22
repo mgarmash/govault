@@ -49,6 +49,10 @@ type mockVaultService struct {
 	revokes      int
 	localOnly    bool
 	credsUnsaved bool
+	lastLogin    state.LoginRequest
+	// unlockCommitted, when set, holds UnlockWithPassword after it commits
+	// until the test answers.
+	unlockCommitted chan struct{}
 	// saveGate, when set, holds SaveCipher until it is closed.
 	saveGate chan struct{}
 }
@@ -96,6 +100,7 @@ func (m *mockVaultService) Status() state.LockStatus {
 func (m *mockVaultService) Login(_ context.Context, req state.LoginRequest) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
+	m.lastLogin = req
 	if string(req.MasterPassword) != m.password {
 		return api.ErrUnauthorized
 	}
@@ -124,11 +129,18 @@ func (m *mockVaultService) SendEmailTwoFactorCode(_ context.Context, req state.L
 
 func (m *mockVaultService) UnlockWithPassword(_ context.Context, pw []byte) error {
 	m.mu.Lock()
-	defer m.mu.Unlock()
 	if string(pw) != m.password {
+		m.mu.Unlock()
 		return crypto.ErrInvalidMAC
 	}
 	m.status = state.StatusUnlocked
+	committed := m.unlockCommitted
+	m.mu.Unlock()
+	if committed != nil {
+		// The service has committed the session; the UI has not heard yet.
+		committed <- struct{}{}
+		<-committed
+	}
 	return nil
 }
 
@@ -300,6 +312,10 @@ func (m *mockVaultService) HardDeleteCipher(_ context.Context, id string) error 
 	return nil
 }
 
+func (m *mockVaultService) Account() state.Account {
+	return state.Account{ID: "acct-1", ServerURL: "https://vault.example", Email: "alice@example.com"}
+}
+
 func (m *mockVaultService) AuthAttempt() uint64 {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
@@ -311,6 +327,9 @@ func (m *mockVaultService) RevokeAuthAttempts() {
 	defer m.mu.Unlock()
 	m.attempt++
 	m.revokes++
+	if m.status == state.StatusUnlocked {
+		m.status = state.StatusLocked
+	}
 }
 
 func (m *mockVaultService) LocalOnly() bool { return m.localOnly }

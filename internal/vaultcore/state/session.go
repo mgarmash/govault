@@ -171,13 +171,17 @@ func (o *op) refreshAfter(ctx context.Context, stale string) (string, error) {
 		return "", ErrLocked
 	}
 	o.s.accessToken = resp.AccessToken
-	o.s.unsavedRefresh = ""
-	o.s.credsUnsaved = saveErr != nil
-	if saveErr != nil {
-		// The request goes on with the new token; the session remembers
-		// that the next unlock needs a fresh sign-in, for the UI to show.
-		o.s.unsavedRefresh = resp.RefreshToken
-		go o.s.notifyUpdated()
+	// Only a new refresh token changes what is saved. A refresh that
+	// issued none leaves an unsaved token, and its warning, as they were.
+	if resp.RefreshToken != "" {
+		o.s.unsavedRefresh = ""
+		o.s.credsUnsaved = saveErr != nil
+		if saveErr != nil {
+			// The request goes on with the new token; the session remembers
+			// that the next unlock needs a fresh sign-in, for the UI to show.
+			o.s.unsavedRefresh = resp.RefreshToken
+			go o.s.notifyUpdated()
+		}
 	}
 	return resp.AccessToken, nil
 }

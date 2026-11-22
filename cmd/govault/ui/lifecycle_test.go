@@ -172,13 +172,40 @@ func TestLateSaveLeavesANewerDraftAlone(t *testing.T) {
 	// While it saves, the user discards the editor and starts another item.
 	app.Post(func() { m.EditMode.Set(false); m.EditDraft.Set(nil); m.EditDirty.Set(false) })
 	app.Post(func() { m.StartCreateCipher(root) })
-	app.Post(func() { m.MutateDraft(func(d *EditDraft) { d.Name = "Second" }) })
-	app.WaitUntil(2*time.Second, func() bool { d := m.EditDraft.Get(); return d != nil && d.Name == "Second" })
+	var second uint64
+	app.WaitUntil(2*time.Second, func() bool {
+		d := m.EditDraft.Get()
+		if d != nil {
+			second = d.session
+		}
+		return d != nil && d.Name == ""
+	})
 	close(gate)
 	app.WaitUntil(2*time.Second, func() bool { return !m.EditBusy.Get() })
 	app.Settle()
-	if d := m.EditDraft.Get(); d == nil || d.Name != "Second" || !m.EditMode.Get() {
+	if d := m.EditDraft.Get(); d == nil || d.session != second || !m.EditMode.Get() {
 		t.Fatalf("the newer draft was replaced: %+v", d)
+	}
+}
+
+func TestEditsDuringASaveAreRefused(t *testing.T) {
+	svc := newMockVaultService(state.StatusUnlocked)
+	gate := make(chan struct{})
+	svc.saveGate = gate
+	app, m, root := startSecurityApp(t, svc, PlatformHooks{})
+	app.Post(func() { m.StartCreateCipher(root) })
+	app.WaitUntil(2*time.Second, func() bool { return m.EditMode.Get() })
+	app.Post(func() { m.MutateDraft(func(d *EditDraft) { d.Name = "Submitted" }); m.SaveDraft(root) })
+	app.WaitUntil(2*time.Second, func() bool { return m.EditBusy.Get() })
+	app.Post(func() { m.MutateDraft(func(d *EditDraft) { d.Name = "Typed during save" }) })
+	app.Settle()
+	if d := m.EditDraft.Get(); d == nil || d.Name != "Submitted" {
+		t.Fatalf("an edit was taken while saving, and would be lost: %+v", d)
+	}
+	close(gate)
+	app.WaitUntil(2*time.Second, func() bool { return !m.EditBusy.Get() })
+	if c, err := svc.GetCipher("c-new"); err != nil || c.Name != "Submitted" {
+		t.Fatalf("saved %+v, %v", c, err)
 	}
 }
 
@@ -226,5 +253,65 @@ func TestFirstSignInHasNoWayBackToUnlock(t *testing.T) {
 	app.WaitFor("id:login-submit", 2*time.Second)
 	if app.Exists("id:login-back-to-unlock") {
 		t.Fatal("a first sign-in offers Back to Unlock")
+	}
+}
+
+func TestSignInAgainIsForTheSameAccountOnly(t *testing.T) {
+	svc := newMockVaultService(state.StatusUnlocked)
+	svc.localOnly = true
+	app, m, _ := startSecurityApp(t, svc, PlatformHooks{})
+	app.Post(func() {
+		m.UpdatePrefs(func(p UserPrefs) UserPrefs { p.AccountID = "stale-account"; return p })
+		m.RefreshVaultData()
+		m.SyncState.Set(SyncAuthExpired)
+	})
+	app.WaitFor("id:signin-banner-action", 2*time.Second)
+	app.Press("id:signin-banner-action")
+	app.WaitFor("id:login-server", 2*time.Second)
+	if m.LoginServer.Get() != "https://vault.example" || m.LoginEmail.Get() != "alice@example.com" {
+		t.Fatalf("form prefilled with %q / %q, want the vault's account", m.LoginServer.Get(), m.LoginEmail.Get())
+	}
+	app.Post(func() { m.LoginServer.Set("https://other.example"); m.LoginPassword.Set("master-password"); m.Login() })
+	app.WaitUntil(2*time.Second, func() bool { return m.LockState.Get() == state.StatusUnlocked })
+	svc.mu.RLock()
+	req := svc.lastLogin
+	svc.mu.RUnlock()
+	if req.SameAccount == nil || req.SameAccount.ID != "acct-1" || req.ServerURL != "https://vault.example" || req.Email != "alice@example.com" {
+		t.Fatalf("Sign In Again sent %+v, want the vault's account only", req)
+	}
+	if got := m.Prefs.Get().AccountID; got != "acct-1" {
+		t.Fatalf("settings name account %q after sign-in, want the one the service signed in", got)
+	}
+}
+
+func TestSleepBetweenUnlockCommitAndTheUIStaysLocked(t *testing.T) {
+	svc := newMockVaultService(state.StatusLocked)
+	committed := make(chan struct{})
+	svc.unlockCommitted = committed
+	app, m, _ := startSecurityApp(t, svc, PlatformHooks{})
+	app.Post(func() {
+		m.UpdatePrefs(func(p UserPrefs) UserPrefs { p.LockOnSleep = true; return p })
+		m.LockPassword.Set("master-password")
+		m.UnlockWithPassword()
+	})
+	app.WaitUntil(2*time.Second, func() bool {
+		select {
+		case <-committed:
+			return true
+		default:
+			return false
+		}
+	})
+	// The service is unlocked; the UI still shows the lock screen. Sleep.
+	app.Post(func() { m.LockOnSystemEvent() })
+	app.Settle()
+	committed <- struct{}{}
+	app.WaitUntil(2*time.Second, func() bool { return !m.LockBusy.Get() })
+	app.Settle()
+	if svc.Status() != state.StatusLocked || m.LockState.Get() == state.StatusUnlocked {
+		t.Fatalf("after a sleep during unlock: service %v, UI %v", svc.Status(), m.LockState.Get())
+	}
+	if m.LockPassword.Get() != "" {
+		t.Fatal("the master password field survived the sleep")
 	}
 }

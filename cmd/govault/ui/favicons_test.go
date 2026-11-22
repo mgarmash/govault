@@ -6,6 +6,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"sync/atomic"
 	"testing"
@@ -238,5 +239,29 @@ func TestLegacyIconFilesGoWhenTheCacheOpensAndOnLogout(t *testing.T) {
 	}
 	if _, err := os.Stat(legacy); !os.IsNotExist(err) {
 		t.Fatalf("a legacy icon survived logout: %v", err)
+	}
+}
+
+func TestOfflineIconsNeverFetch(t *testing.T) {
+	srv := newIconServer(t)
+	store := NewFaviconStore(FaviconStoreConfig{CacheDir: t.TempDir(), HTTPClient: srv.Client()})
+	store.SetAccount("acct-1")
+	store.SetOffline(true)
+	store.Lookup(srv.URL, "github.com")
+	deadline := time.Now().Add(2 * time.Second)
+	for {
+		store.mu.Lock()
+		_, miss := store.failed["github.com"]
+		store.mu.Unlock()
+		if miss {
+			break
+		}
+		if time.Now().After(deadline) {
+			t.Fatal("the offline lookup never finished")
+		}
+		runtime.Gosched()
+	}
+	if srv.hits.Load() != 0 {
+		t.Fatalf("a local-only vault fetched %d icons", srv.hits.Load())
 	}
 }
