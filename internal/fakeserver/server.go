@@ -44,6 +44,9 @@ type Config struct {
 	Subject string
 	// OmitPermissions leaves edit and viewPassword out of every item.
 	OmitPermissions bool
+	// OnWrite runs inside each request that changes the vault, before it
+	// is applied.
+	OnWrite func()
 }
 
 // Server is a running fake server.

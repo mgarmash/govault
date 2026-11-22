@@ -1,4 +1,4 @@
-// Package cli implements gv, GoVault's read-only command-line client. Its
+// Package cli implements gv, GoVault's command-line client. Its
 // commands, flags, environment variables and output follow the official
 // Bitwarden CLI (bw), so scripts written for bw run with gv.
 package cli

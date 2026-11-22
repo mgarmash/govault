@@ -170,7 +170,7 @@ govault/
 │   │   ├── secureinput_darwin.go # Secure Event Input release (purego)
 │   │   ├── sleeplock_darwin.go # sleep/screen-lock observers (purego/objc)
 │   │   └── ui/                 # Login/2FA, Lock, Vault, Editor, Generator, Settings, favicons
-│   └── gv/                     # read-only, bw-compatible CLI (see cli-design.md)
+│   └── gv/                     # bw-compatible CLI (see cli-design.md)
 ├── internal/
 │   ├── cli/                    # gv commands, parsing, prompts and bw-shaped output
 │   ├── fakeserver/             # Bitwarden-compatible test server

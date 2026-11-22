@@ -89,7 +89,7 @@ go tool nsgo build -target macos_arm64 ./cmd/govault   # app bundle and installe
 
 ## Command line: `gv`
 
-GoVault includes `gv`, a read-only command-line client that speaks the [Bitwarden CLI](https://bitwarden.com/help/cli/)'s commands, options, environment variables and output, so scripts written for `bw` work by changing the command name. It needs no display or desktop session and runs on headless servers.
+GoVault includes `gv`, a command-line client that speaks the [Bitwarden CLI](https://bitwarden.com/help/cli/)'s commands, options, environment variables and output, so scripts written for `bw` work by changing the command name. It needs no display or desktop session and runs on headless servers.
 
 ```sh
 gv config server https://vault.example.com
@@ -112,7 +112,7 @@ gv lock
 | macOS app | **Settings → Command Line → Install** links `/usr/local/bin/gv` to the app (asks for an administrator password once) and updates with the app | **Settings → Command Line → Uninstall** |
 | Homebrew | Automatic with the cask | `brew uninstall --cask govault` |
 
-It supports `login` (master password with authenticator, email or YubiKey two-step login, or a personal API key), `unlock`, `lock`, `logout`, `status`, `sync`, `config server`, `list`, `get` (items, fields, TOTP codes, attachments, folders, collections, organizations, fingerprints), `generate` and `encode`. It cannot change the vault. `gv` keeps its own sign-in, separate from the app's, under `GoVault CLI` in your configuration directory (or `$BITWARDENCLI_APPDATA_DIR`), and keeps its credentials in the system keychain when there is one. See [docs/cli-design.md](docs/cli-design.md) for details and the few differences from `bw`.
+It supports `login` (master password with authenticator, email or YubiKey two-step login, or a personal API key), `unlock`, `lock`, `logout`, `status`, `sync`, `config server`, `list`, `get` (items, fields, TOTP codes, attachments, folders, collections, organizations, fingerprints), `create`, `edit`, `delete`, `restore` and `archive` (items, folders, attachments, item collections), `import` and `export` (Bitwarden JSON and CSV, encrypted with the account key or a password, and ZIP with attachments), `generate`, `encode` and `completion`. It does not yet move items to organizations, administer organizations, or use Send. `gv` keeps its own sign-in, separate from the app's, under `GoVault CLI` in your configuration directory (or `$BITWARDENCLI_APPDATA_DIR`), and keeps its credentials in the system keychain when there is one. See [docs/cli-design.md](docs/cli-design.md) for details and the few differences from `bw`.
 
 ## Why GoVault?
 

@@ -1,0 +1,93 @@
+{
+  "name": "write-import",
+  "steps": [
+    {
+      "args": [
+        "import",
+        "bitwardenjson",
+        "{{TMP}}/in.json"
+      ],
+      "stdout": "Imported {{TMP}}/in.json",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "import",
+        "bitwardencsv",
+        "{{TMP}}/in.csv"
+      ],
+      "stdout": "Imported {{TMP}}/in.csv",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "list",
+        "items",
+        "--search",
+        "imported"
+      ],
+      "stdout": "[{\"type\":1,\"favorite\":true,\"reprompt\":0,\"id\":\"b0000002-0000-4000-8000-000000000002\",\"collectionIds\":[],\"object\":\"item\",\"folderId\":\"b0000001-0000-4000-8000-000000000001\",\"name\":\"Imported login\",\"notes\":\"n\",\"fields\":[{\"type\":0,\"name\":\"k\",\"value\":\"v\"}],\"login\":{\"uris\":[{\"uri\":\"https://imported.example.com\"}],\"fido2Credentials\":[],\"username\":\"iu\",\"password\":\"ip\",\"passwordRevisionDate\":null},\"passwordHistory\":[],\"creationDate\":\"{{TIME}}\",\"revisionDate\":\"{{TIME}}\",\"attachments\":[]},{\"type\":2,\"favorite\":false,\"reprompt\":0,\"id\":\"b0000003-0000-4000-8000-000000000003\",\"collectionIds\":[],\"object\":\"item\",\"folderId\":\"f0f0f0f0-aaaa-4bbb-8ccc-dddddddddddd\",\"name\":\"Imported note\",\"notes\":\"secret note\",\"fields\":[],\"secureNote\":{\"type\":0},\"passwordHistory\":[],\"creationDate\":\"{{TIME}}\",\"revisionDate\":\"{{TIME}}\",\"attachments\":[]}]",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "list",
+        "items",
+        "--search",
+        "csv"
+      ],
+      "stdout": "[{\"type\":1,\"favorite\":true,\"reprompt\":0,\"id\":\"b0000005-0000-4000-8000-000000000005\",\"collectionIds\":[],\"object\":\"item\",\"folderId\":\"b0000004-0000-4000-8000-000000000004\",\"name\":\"CSV login\",\"notes\":\"a note\",\"fields\":[{\"type\":0,\"name\":\"f1\",\"value\":\"v1\"},{\"type\":0,\"name\":\"f2\",\"value\":\"v2\"}],\"login\":{\"uris\":[{\"uri\":\"https://a.example.com\"},{\"uri\":\"https://b.example.com\"}],\"fido2Credentials\":[],\"username\":\"cu\",\"password\":\"cp\",\"passwordRevisionDate\":null},\"passwordHistory\":[],\"creationDate\":\"{{TIME}}\",\"revisionDate\":\"{{TIME}}\",\"attachments\":[]},{\"type\":2,\"favorite\":false,\"reprompt\":0,\"id\":\"b0000006-0000-4000-8000-000000000006\",\"collectionIds\":[],\"object\":\"item\",\"name\":\"CSV note\",\"notes\":\"body\",\"fields\":[],\"secureNote\":{\"type\":0},\"passwordHistory\":[],\"creationDate\":\"{{TIME}}\",\"revisionDate\":\"{{TIME}}\",\"attachments\":[]}]",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "list",
+        "folders"
+      ],
+      "stdout": "[{\"name\":\"CSV folder\",\"object\":\"folder\",\"id\":\"b0000004-0000-4000-8000-000000000004\"},{\"name\":\"Home\",\"object\":\"folder\",\"id\":\"f1f1f1f1-aaaa-4bbb-8ccc-dddddddddddd\"},{\"name\":\"Imported folder\",\"object\":\"folder\",\"id\":\"b0000001-0000-4000-8000-000000000001\"},{\"name\":\"Work\",\"object\":\"folder\",\"id\":\"f0f0f0f0-aaaa-4bbb-8ccc-dddddddddddd\"},{\"name\":\"No Folder\",\"object\":\"folder\",\"id\":\"\"}]",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "import"
+      ],
+      "stdout": "",
+      "stderr": "`format` was not provided.",
+      "exit": 1
+    },
+    {
+      "args": [
+        "import",
+        "bitwardenjson"
+      ],
+      "stdout": "",
+      "stderr": "`filepath` was not provided.",
+      "exit": 1
+    },
+    {
+      "args": [
+        "import",
+        "bitwardenjson",
+        "{{TMP}}/missing.json"
+      ],
+      "stdout": "",
+      "stderr": "ENOENT: no such file or directory, open '{{TMP}}/missing.json'",
+      "exit": 1
+    },
+    {
+      "args": [
+        "import",
+        "bitwardenjson",
+        "{{TMP}}/empty.json"
+      ],
+      "stdout": "",
+      "stderr": "Import file was empty.",
+      "exit": 1
+    }
+  ]
+}

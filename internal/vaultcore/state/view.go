@@ -23,6 +23,7 @@ type VaultView struct {
 	Policies      []Policy
 
 	typeData map[string]map[string]any
+	enc      *api.SyncResponse
 	userKey  *crypto.SymmetricKey
 	orgKeys  map[string]*crypto.SymmetricKey
 }
@@ -103,6 +104,7 @@ func OpenVault(rawSync []byte, userKey *crypto.SymmetricKey) (*VaultView, error)
 			Premium: data.premium,
 		},
 		typeData: map[string]map[string]any{},
+		enc:      &resp,
 		userKey:  ownKey,
 		orgKeys:  data.orgKeys,
 	}

@@ -1,0 +1,12 @@
+folder,favorite,type,name,notes,fields,reprompt,archivedDate,login_uri,login_username,login_password,login_totp
+,,login,Archived GitHub,,,0,2026-03-05T06:07:08.000Z,https://github.com,archived,arch-secret,
+,,login,Empty login,,,0,,,,,
+Work,1,login,GitHub,Personal account,"recovery email: alice@recovery.example
+pin: 4321
+2fa: true
+user: ",0,,"https://github.com/login,https://gist.github.com",alice,gh-secret,JBSWY3DPEHPK3PXP
+,,login,Match modes,,,0,,"https://exact.example.org/path?q=1,https://starts.example.org/app,^https://re\.example\.org/[0-9]+$,https://never.example.org,https://host.example.org:8443",modes,modes-secret,
+Home,,note,Recovery codes,"code-1
+code-2",,0,,,,,
+,,login,Renamed,,,0,,https://github.example.com,alice-corp,ghe-secret,
+,,login,x,,,0,,,,,

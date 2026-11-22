@@ -107,3 +107,41 @@ var writeCases = []contractCase{
 		s("get", "item", fakeserver.ItemGitHub),
 	}},
 }
+
+const (
+	importJSON = `{"encrypted":false,"folders":[{"id":"` + fakeserver.FolderWork + `","name":"Work"},{"id":"00000000-1111-4222-8333-444444444444","name":"Imported folder"}],` +
+		`"items":[{"id":"x1","type":1,"name":"Imported login","folderId":"00000000-1111-4222-8333-444444444444","favorite":true,"notes":"n",` +
+		`"login":{"uris":[{"uri":"https://imported.example.com","match":null}],"username":"iu","password":"ip","totp":null},"fields":[{"name":"k","value":"v","type":0}]},` +
+		`{"id":"x2","type":2,"name":"Imported note","folderId":"` + fakeserver.FolderWork + `","notes":"secret note","secureNote":{"type":0}}]}`
+	importCSV = "folder,favorite,type,name,notes,fields,reprompt,login_uri,login_username,login_password,login_totp\r\n" +
+		"CSV folder,1,login,CSV login,a note,\"f1: v1\nf2: v2\",0,\"https://a.example.com,https://b.example.com\",cu,cp,\r\n" +
+		",,note,CSV note,body,,0,,,,\r\n"
+)
+
+func init() {
+	contractCases = append(contractCases,
+		contractCase{Name: "write-export", State: "unlocked", Steps: []contractStep{
+			s("export", "--format", "json", "--raw"),
+			s("export", "--raw"),
+			s("export", "--format", "xml"),
+			s("export", "--format", "json", "--output", "{{TMP}}/"),
+			s("export", "--format", "encrypted_json", "--output", "{{TMP}}/acct.json"),
+			s("export", "--format", "json", "--password", "pw123", "--output", "{{TMP}}/pw.json"),
+			s("import", "bitwardenjson", "{{TMP}}/acct.json"),
+			{Args: []string{"import", "bitwardenjson", "{{TMP}}/pw.json", "--passwordenv", "IMPORTPW"}, Env: map[string]string{"IMPORTPW": "pw123"}, Session: true},
+			s("list", "items", "--search", "github enterprise"),
+			s("list", "folders"),
+		}},
+		contractCase{Name: "write-import", State: "unlocked", Steps: []contractStep{
+			{Args: []string{"import", "bitwardenjson", "{{TMP}}/in.json"}, Session: true, Files: map[string]string{"in.json": importJSON}},
+			{Args: []string{"import", "bitwardencsv", "{{TMP}}/in.csv"}, Session: true, Files: map[string]string{"in.csv": importCSV}},
+			s("list", "items", "--search", "imported"),
+			s("list", "items", "--search", "csv"),
+			s("list", "folders"),
+			s("import"),
+			s("import", "bitwardenjson"),
+			s("import", "bitwardenjson", "{{TMP}}/missing.json"),
+			{Args: []string{"import", "bitwardenjson", "{{TMP}}/empty.json"}, Session: true, Files: map[string]string{"empty.json": ""}},
+		}},
+	)
+}

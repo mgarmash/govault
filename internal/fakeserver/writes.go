@@ -122,6 +122,9 @@ func (s *Server) attachmentMeta(w http.ResponseWriter, cipherID, attachmentID st
 // write serves the endpoints that change the vault; false when path is
 // none of them.
 func (s *Server) write(w http.ResponseWriter, r *http.Request, parts []string) bool {
+	if hook := s.config().OnWrite; hook != nil && r.Method != http.MethodGet {
+		hook()
+	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	m := r.Method
@@ -155,8 +158,14 @@ func (s *Server) write(w http.ResponseWriter, r *http.Request, parts []string) b
 		var folderIDs []string
 		folders, _ := body["folders"].([]any)
 		for _, f := range folders {
-			id := s.newID()
 			fo, _ := f.(map[string]any)
+			// As Vaultwarden does, a folder the user has keeps its ID; any
+			// other becomes a new folder.
+			if id, _ := fo["id"].(string); slices.ContainsFunc(s.folders, func(f obj) bool { return f["id"] == id }) {
+				folderIDs = append(folderIDs, id)
+				continue
+			}
+			id := s.newID()
 			s.folders = append(s.folders, obj{"id": id, "name": fo["name"], "revisionDate": now(), "object": "folder"})
 			folderIDs = append(folderIDs, id)
 		}
@@ -379,4 +388,24 @@ func (s *Server) Items() []map[string]any {
 	var out []map[string]any
 	_ = json.Unmarshal(raw, &out)
 	return out
+}
+
+// Touch changes an item as another client would: a new revision date.
+func (s *Server) Touch(id string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if _, it := s.findItem(id); it != nil {
+		it["revisionDate"] = now()
+		s.bump()
+	}
+}
+
+// Item returns one stored item, or nil.
+func (s *Server) Item(id string) map[string]any {
+	for _, it := range s.Items() {
+		if it["id"] == id {
+			return it
+		}
+	}
+	return nil
 }

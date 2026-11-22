@@ -47,7 +47,8 @@ func TestVaultwarden(t *testing.T) {
 //	GV_BITWARDEN_CLIENT_ID=user.… GV_BITWARDEN_CLIENT_SECRET=… \
 //	go test ./internal/cli -run TestBitwardenCloud -v
 //
-// It signs in once, with the API key: a password login from a new device
+// GV_WRITE_TESTS=1 adds the write suite, which changes only items of its
+// own. It signs in once, with the API key: a password login from a new device
 // meets Bitwarden's new-device verification, which gv does not support.
 // It renews the token once and never changes the vault.
 func TestBitwardenCloud(t *testing.T) {
@@ -68,6 +69,10 @@ func TestBitwardenCloud(t *testing.T) {
 	}
 	runAPIKeySuite(t, server, http.DefaultClient, acct, keyring.NewMemory())
 }
+
+// isFake reports a fake server address, against which the write suite
+// always runs.
+func isFake(url string) bool { return strings.HasPrefix(url, "http://127.0.0.1:") }
 
 // The suite itself is checked against the fake server.
 func TestServerSuiteOnFakeServer(t *testing.T) {
@@ -100,6 +105,9 @@ func runServerSuite(t *testing.T, url string, client *http.Client, acct vwAccoun
 		vw.env["PW"] = password
 		vw.env["BW_SESSION"] = vw.must(t, args...)
 		vw.checkReads(t)
+		if writesEnabled() || isFake(url) {
+			vw.checkWrites(t)
+		}
 		vw.must(t, "lock")
 		if r := vw.run("list", "items", "--nointeraction"); r.err != "Vault is locked." {
 			t.Fatalf("after lock: %+v", r)
@@ -148,6 +156,9 @@ func runAPIKeySuite(t *testing.T, url string, client *http.Client, acct vwAccoun
 	delete(vw.env, "BW_CLIENTID")
 	delete(vw.env, "BW_CLIENTSECRET")
 	vw.checkReads(t)
+	if writesEnabled() || isFake(url) {
+		vw.checkWrites(t)
+	}
 	if withKeyring {
 		// A token the server rejects is renewed with a second client
 		// credentials exchange; there is no refresh token.

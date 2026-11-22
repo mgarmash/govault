@@ -36,6 +36,16 @@ func FormatServerURL(raw string) string {
 	return s
 }
 
+// FormatServiceURL normalizes a service URL as FormatServerURL does,
+// without the cloud shortcuts.
+func FormatServiceURL(raw string) string {
+	s := strings.TrimRight(strings.TrimSpace(raw), "/")
+	if s != "" && !strings.HasPrefix(s, "http://") && !strings.HasPrefix(s, "https://") {
+		s = "https://" + s
+	}
+	return s
+}
+
 // ResolveEndpoints maps a base URL from FormatServerURL to its services.
 // Bitwarden's US and EU clouds have fixed API and identity hosts; any
 // other server serves them under its base path.

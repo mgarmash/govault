@@ -135,7 +135,10 @@ type Vault struct {
 	*state.VaultView
 	AccountID string
 	Email     string
-	o         *online
+	// KDF is the account's key derivation, which password-protected
+	// exports use as Bitwarden's do.
+	KDF crypto.KDFConfig
+	o   *online
 }
 
 // Read opens the vault with sessionKey and runs fn while holding the
@@ -165,7 +168,7 @@ func (p *Profile) Read(sessionKey string, envKey *APIKey, fn func(*Vault) error)
 			return err
 		}
 		defer view.Close()
-		v := &Vault{VaultView: view, AccountID: acct.AccountID, Email: acct.Email}
+		v := &Vault{VaultView: view, AccountID: acct.AccountID, Email: acct.Email, KDF: snap.KDF}
 		if o, err := p.connect(ps, acct, userKey, envKey); err == nil {
 			v.o = o
 		}

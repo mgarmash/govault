@@ -1,0 +1,263 @@
+{
+  "encrypted": false,
+  "folders": [
+    {
+      "name": "Home",
+      "id": "f1f1f1f1-aaaa-4bbb-8ccc-dddddddddddd"
+    },
+    {
+      "name": "Work",
+      "id": "f0f0f0f0-aaaa-4bbb-8ccc-dddddddddddd"
+    }
+  ],
+  "items": [
+    {
+      "type": 1,
+      "favorite": false,
+      "reprompt": 0,
+      "id": "a000000a-0000-4000-8000-00000000000a",
+      "collectionIds": null,
+      "name": "Archived GitHub",
+      "fields": [],
+      "login": {
+        "uris": [
+          {
+            "uri": "https://github.com"
+          }
+        ],
+        "fido2Credentials": [],
+        "username": "archived",
+        "password": "arch-secret"
+      },
+      "passwordHistory": [],
+      "creationDate": "2026-01-02T03:04:05.678Z",
+      "revisionDate": "2026-02-03T04:05:06.789Z",
+      "archivedDate": "2026-03-05T06:07:08.000Z"
+    },
+    {
+      "type": 5,
+      "favorite": false,
+      "reprompt": 0,
+      "id": "a0000006-0000-4000-8000-000000000006",
+      "collectionIds": null,
+      "name": "Deploy key",
+      "fields": [],
+      "sshKey": {
+        "privateKey": "-----BEGIN OPENSSH PRIVATE KEY-----\nAAAA\n-----END OPENSSH PRIVATE KEY-----\n",
+        "publicKey": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIExample deploy",
+        "keyFingerprint": "SHA256:examplefingerprint"
+      },
+      "passwordHistory": [],
+      "creationDate": "2026-01-02T03:04:05.678Z",
+      "revisionDate": "2026-02-03T04:05:06.789Z"
+    },
+    {
+      "type": 1,
+      "favorite": false,
+      "reprompt": 0,
+      "id": "a000000c-0000-4000-8000-00000000000c",
+      "collectionIds": null,
+      "name": "Empty login",
+      "fields": [],
+      "login": {
+        "uris": [],
+        "fido2Credentials": []
+      },
+      "passwordHistory": [],
+      "creationDate": "2026-01-02T03:04:05.678Z",
+      "revisionDate": "2026-02-03T04:05:06.789Z"
+    },
+    {
+      "type": 1,
+      "favorite": true,
+      "reprompt": 0,
+      "id": "a0000001-0000-4000-8000-000000000001",
+      "collectionIds": null,
+      "folderId": "f0f0f0f0-aaaa-4bbb-8ccc-dddddddddddd",
+      "name": "GitHub",
+      "notes": "Personal account",
+      "fields": [
+        {
+          "type": 0,
+          "name": "recovery email",
+          "value": "alice@recovery.example"
+        },
+        {
+          "type": 1,
+          "name": "pin",
+          "value": "4321"
+        },
+        {
+          "type": 2,
+          "name": "2fa",
+          "value": "true"
+        },
+        {
+          "type": 3,
+          "name": "user",
+          "linkedId": 100
+        }
+      ],
+      "login": {
+        "uris": [
+          {
+            "uri": "https://github.com/login"
+          },
+          {
+            "uri": "https://gist.github.com",
+            "match": 1
+          }
+        ],
+        "fido2Credentials": [],
+        "username": "alice",
+        "password": "gh-secret",
+        "totp": "JBSWY3DPEHPK3PXP"
+      },
+      "passwordHistory": [
+        {
+          "password": "old-gh-secret",
+          "lastUsedDate": "2025-12-01T00:00:00.000Z"
+        }
+      ],
+      "creationDate": "2026-01-02T03:04:05.678Z",
+      "revisionDate": "2026-02-03T04:05:06.789Z"
+    },
+    {
+      "type": 1,
+      "favorite": false,
+      "reprompt": 0,
+      "id": "a000000b-0000-4000-8000-00000000000b",
+      "collectionIds": null,
+      "name": "Match modes",
+      "fields": [],
+      "login": {
+        "uris": [
+          {
+            "uri": "https://exact.example.org/path?q=1",
+            "match": 3
+          },
+          {
+            "uri": "https://starts.example.org/app",
+            "match": 2
+          },
+          {
+            "uri": "^https://re\\.example\\.org/[0-9]+$",
+            "match": 4
+          },
+          {
+            "uri": "https://never.example.org",
+            "match": 5
+          },
+          {
+            "uri": "https://host.example.org:8443",
+            "match": 1
+          }
+        ],
+        "fido2Credentials": [],
+        "username": "modes",
+        "password": "modes-secret"
+      },
+      "passwordHistory": [],
+      "creationDate": "2026-01-02T03:04:05.678Z",
+      "revisionDate": "2026-02-03T04:05:06.789Z"
+    },
+    {
+      "type": 4,
+      "favorite": false,
+      "reprompt": 0,
+      "id": "a0000005-0000-4000-8000-000000000005",
+      "collectionIds": null,
+      "name": "Passport identity",
+      "fields": [],
+      "identity": {
+        "title": "Ms",
+        "firstName": "Alice",
+        "lastName": "Example",
+        "address1": "1 Main St",
+        "city": "Springfield",
+        "postalCode": "12345",
+        "country": "US",
+        "email": "alice@example.com",
+        "username": "alice"
+      },
+      "passwordHistory": [],
+      "creationDate": "2026-01-02T03:04:05.678Z",
+      "revisionDate": "2026-02-03T04:05:06.789Z"
+    },
+    {
+      "type": 2,
+      "favorite": false,
+      "reprompt": 0,
+      "id": "a0000003-0000-4000-8000-000000000003",
+      "collectionIds": null,
+      "folderId": "f1f1f1f1-aaaa-4bbb-8ccc-dddddddddddd",
+      "name": "Recovery codes",
+      "notes": "code-1\ncode-2",
+      "fields": [],
+      "secureNote": {
+        "type": 0
+      },
+      "passwordHistory": [],
+      "creationDate": "2026-01-02T03:04:05.678Z",
+      "revisionDate": "2026-02-03T04:05:06.789Z"
+    },
+    {
+      "type": 1,
+      "favorite": false,
+      "reprompt": 0,
+      "id": "a0000002-0000-4000-8000-000000000002",
+      "collectionIds": null,
+      "name": "Renamed",
+      "fields": [],
+      "login": {
+        "uris": [
+          {
+            "uri": "https://github.example.com"
+          }
+        ],
+        "fido2Credentials": [],
+        "username": "alice-corp",
+        "password": "ghe-secret"
+      },
+      "passwordHistory": [],
+      "creationDate": "2026-01-02T03:04:05.678Z",
+      "revisionDate": "2026-11-22T22:15:28.766Z"
+    },
+    {
+      "type": 3,
+      "favorite": false,
+      "reprompt": 0,
+      "id": "a0000004-0000-4000-8000-000000000004",
+      "collectionIds": null,
+      "name": "Visa",
+      "fields": [],
+      "card": {
+        "cardholderName": "Alice Example",
+        "brand": "Visa",
+        "number": "4111111111111111",
+        "expMonth": "12",
+        "expYear": "2030",
+        "code": "123"
+      },
+      "passwordHistory": [],
+      "creationDate": "2026-01-02T03:04:05.678Z",
+      "revisionDate": "2026-02-03T04:05:06.789Z"
+    },
+    {
+      "type": 1,
+      "favorite": false,
+      "reprompt": 0,
+      "id": "b0000001-0000-4000-8000-000000000001",
+      "collectionIds": null,
+      "name": "x",
+      "fields": [],
+      "login": {
+        "uris": [],
+        "fido2Credentials": []
+      },
+      "passwordHistory": [],
+      "creationDate": "2026-11-22T22:15:33.239Z",
+      "revisionDate": "2026-11-22T22:15:33.239Z"
+    }
+  ]
+}

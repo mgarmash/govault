@@ -85,8 +85,9 @@ func runCase(t *testing.T, r runner, c contractCase, srv *fakeserver.Server) cap
 }
 
 var (
-	isoTime  = regexp.MustCompile(`20\d\d-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3}Z`)
-	tmpNames = regexp.MustCompile(`(/private)?/var/folders/[^"\s]+?/Test[^/"\s]*/\d+`)
+	isoTime    = regexp.MustCompile(`20\d\d-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3}Z`)
+	tmpNames   = regexp.MustCompile(`(/private)?/var/folders/[^"\s]+?/Test[^/"\s]*/\d+`)
+	exportName = regexp.MustCompile(`(bitwarden(?:_encrypted)?)_export_\d{14}`)
 )
 
 // normalize replaces values that legitimately differ between runs: the
@@ -96,6 +97,7 @@ func normalize(s string, srv *fakeserver.Server, tmp string) string {
 	s = strings.ReplaceAll(s, tmp, "{{TMP}}")
 	s = strings.ReplaceAll(s, "/private"+tmp, "{{TMP}}")
 	s = sessionPattern.ReplaceAllString(s, "{{SESSION}}")
+	s = exportName.ReplaceAllString(s, "${1}_export_{{STAMP}}")
 	s = isoTime.ReplaceAllStringFunc(s, func(m string) string {
 		if strings.HasPrefix(m, "2025-") || strings.HasPrefix(m, "2026-0") {
 			return m // fixture dates

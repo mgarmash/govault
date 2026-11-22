@@ -88,11 +88,24 @@ type Profile struct {
 // profileState survives logout: the profile's identity, the configured
 // server and the session generation.
 type profileState struct {
-	Version    int    `json:"version"`
-	ProfileID  string `json:"profileId"`
-	DeviceID   string `json:"deviceId"`
-	Server     string `json:"server"`
-	Generation uint64 `json:"generation"`
+	Version    int         `json:"version"`
+	ProfileID  string      `json:"profileId"`
+	DeviceID   string      `json:"deviceId"`
+	Server     string      `json:"server"`
+	Overrides  ServiceURLs `json:"overrides,omitempty"`
+	Generation uint64      `json:"generation"`
+}
+
+// ServiceURLs replace services of the server that do not live under its
+// base URL. gv uses the API and identity URLs; the others are kept as
+// configured, as Bitwarden's CLI keeps them.
+type ServiceURLs struct {
+	API           string `json:"api,omitempty"`
+	Identity      string `json:"identity,omitempty"`
+	WebVault      string `json:"webVault,omitempty"`
+	Icons         string `json:"icons,omitempty"`
+	Notifications string `json:"notifications,omitempty"`
+	Events        string `json:"events,omitempty"`
 }
 
 // accountState is the signed-in account. LoginID is new for every login,
@@ -239,8 +252,12 @@ func (p *Profile) Server() (string, error) {
 
 // SetServer configures the server while logged out; base is a URL from
 // api.FormatServerURL.
-func (p *Profile) SetServer(base string) error {
-	if _, err := api.ResolveEndpoints(base); err != nil {
+func (p *Profile) SetServer(base string) error { return p.SetServerURLs(base, ServiceURLs{}) }
+
+// SetServerURLs configures the server and service overrides while logged
+// out.
+func (p *Profile) SetServerURLs(base string, overrides ServiceURLs) error {
+	if _, err := resolve(base, overrides); err != nil {
 		return err
 	}
 	return p.exclusive(func() error {
@@ -253,14 +270,33 @@ func (p *Profile) SetServer(base string) error {
 		if err != nil {
 			return err
 		}
-		ps.Server = base
+		ps.Server, ps.Overrides = base, overrides
 		return p.saveProfile(ps)
 	})
 }
 
 // endpoints resolves the configured server.
 func (p *Profile) endpoints(ps *profileState) (api.Endpoints, error) {
-	return api.ResolveEndpoints(ps.Server)
+	return resolve(ps.Server, ps.Overrides)
+}
+
+func resolve(base string, o ServiceURLs) (api.Endpoints, error) {
+	e, err := api.ResolveEndpoints(base)
+	if err != nil {
+		return e, err
+	}
+	if o.API != "" {
+		e.API = o.API
+	}
+	if o.Identity != "" {
+		e.Identity = o.Identity
+	}
+	for _, u := range []string{e.API, e.Identity} {
+		if _, err := api.ResolveEndpoints(u); err != nil {
+			return e, err
+		}
+	}
+	return e, nil
 }
 
 // checkEndpoints refuses to send an account's credentials anywhere but the

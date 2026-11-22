@@ -44,17 +44,20 @@ func (a *app) config(p *parsed) response {
 	if strings.ToLower(p.arg(0)) != "server" {
 		return failure("Unknown setting.")
 	}
-	for _, name := range []string{"web-vault", "api", "identity", "icons", "notifications", "events", "key-connector"} {
-		if p.has(name) {
-			return failure(fmt.Sprintf("gv does not support --%s yet: it uses the API and identity services under the server URL.", name))
-		}
+	if p.has("key-connector") {
+		return failure("gv does not support Key Connector.")
+	}
+	overrides := profile.ServiceURLs{
+		API: api.FormatServiceURL(optValue(p, "api")), Identity: api.FormatServiceURL(optValue(p, "identity")),
+		WebVault: api.FormatServiceURL(optValue(p, "web-vault")), Icons: api.FormatServiceURL(optValue(p, "icons")),
+		Notifications: api.FormatServiceURL(optValue(p, "notifications")), Events: api.FormatServiceURL(optValue(p, "events")),
 	}
 	prof, err := a.openProfile()
 	if err != nil {
 		return errResponse(err)
 	}
 	value := p.arg(0 + 1)
-	if strings.TrimSpace(value) == "" {
+	if strings.TrimSpace(value) == "" && overrides == (profile.ServiceURLs{}) {
 		server, err := prof.Server()
 		if err != nil {
 			return errResponse(err)
@@ -65,17 +68,19 @@ func (a *app) config(p *parsed) response {
 		return str(server)
 	}
 	base := api.FormatServerURL(value)
-	if _, err := api.ResolveEndpoints(base); err != nil {
-		return failure("Invalid server URL: " + value)
+	if strings.TrimSpace(value) == "" {
+		base = ""
 	}
-	if err := prof.SetServer(base); err != nil {
+	if err := prof.SetServerURLs(base, overrides); err != nil {
 		if errors.Is(err, profile.ErrLogoutRequired) {
 			return failure("Logout required before server config update.")
 		}
 		return errResponse(err)
 	}
-	if api.InsecureServer(base) {
-		a.warn("Warning: " + base + " is not HTTPS. Your master password hash, tokens and vault data will cross the network unencrypted.")
+	for _, u := range []string{base, overrides.API, overrides.Identity} {
+		if api.InsecureServer(u) {
+			a.warn("Warning: " + u + " is not HTTPS. Your master password hash, tokens and vault data will cross the network unencrypted.")
+		}
 	}
 	return msg("Saved setting `config`.")
 }

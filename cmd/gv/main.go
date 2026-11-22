@@ -1,4 +1,4 @@
-// Command gv is GoVault's read-only command-line client, compatible with
+// Command gv is GoVault's command-line client, compatible with
 // the official Bitwarden CLI (bw).
 package main
 

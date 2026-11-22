@@ -226,8 +226,8 @@ func TestConfigWarnsAboutPlainHTTP(t *testing.T) {
 	if r := g.run("config", "server", "http://127.0.0.1:8080", "--nointeraction"); r.code != 0 || r.err != "" {
 		t.Fatalf("loopback http = %+v", r)
 	}
-	if r := g.run("config", "server", "--api", "https://x"); r.code != 1 {
-		t.Fatalf("--api = %+v", r)
+	if r := g.run("config", "server", "--key-connector", "https://kc.example.com"); r.code != 1 {
+		t.Fatalf("--key-connector = %+v", r)
 	}
 }
 
@@ -402,5 +402,21 @@ func TestMissingPermissionsHideOrganizationPasswords(t *testing.T) {
 	}
 	if out := g.mustRun("get", "password", fakeserver.ItemGitHubEnt); out != "ghe-secret" {
 		t.Fatalf("personal item = %q", out)
+	}
+}
+
+// Endpoint overrides route the API and identity services and bind the
+// sign-in to them.
+func TestConfigServerOverridesRouteServices(t *testing.T) {
+	g := newGV(t)
+	if r := g.run("config", "server", "https://unused.example.com", "--api", g.srv.URL()+"/api", "--identity", g.srv.URL()+"/identity"); r.code != 0 || r.err != "" {
+		t.Fatalf("config = %+v", r)
+	}
+	g.login()
+	if out := g.mustRun("get", "username", fakeserver.ItemGitHub); out != "alice" {
+		t.Fatalf("username = %q", out)
+	}
+	if r := g.run("config", "server", "--api", "http://api.example.com"); r.err != "Logout required before server config update." {
+		t.Fatalf("config while logged in = %+v", r)
 	}
 }

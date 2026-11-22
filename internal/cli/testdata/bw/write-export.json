@@ -1,0 +1,115 @@
+{
+  "name": "write-export",
+  "steps": [
+    {
+      "args": [
+        "export",
+        "--format",
+        "json",
+        "--raw"
+      ],
+      "stdout": "{\n  \"encrypted\": false,\n  \"folders\": [\n    {\n      \"name\": \"Home\",\n      \"id\": \"f1f1f1f1-aaaa-4bbb-8ccc-dddddddddddd\"\n    },\n    {\n      \"name\": \"Work\",\n      \"id\": \"f0f0f0f0-aaaa-4bbb-8ccc-dddddddddddd\"\n    }\n  ],\n  \"items\": [\n    {\n      \"type\": 1,\n      \"favorite\": false,\n      \"reprompt\": 0,\n      \"id\": \"a000000a-0000-4000-8000-00000000000a\",\n      \"collectionIds\": null,\n      \"name\": \"Archived GitHub\",\n      \"fields\": [],\n      \"login\": {\n        \"uris\": [\n          {\n            \"uri\": \"https://github.com\"\n          }\n        ],\n        \"fido2Credentials\": [],\n        \"username\": \"archived\",\n        \"password\": \"arch-secret\"\n      },\n      \"passwordHistory\": [],\n      \"creationDate\": \"2026-01-02T03:04:05.678Z\",\n      \"revisionDate\": \"2026-02-03T04:05:06.789Z\",\n      \"archivedDate\": \"2026-03-05T06:07:08.000Z\"\n    },\n    {\n      \"type\": 5,\n      \"favorite\": false,\n      \"reprompt\": 0,\n      \"id\": \"a0000006-0000-4000-8000-000000000006\",\n      \"collectionIds\": null,\n      \"name\": \"Deploy key\",\n      \"fields\": [],\n      \"sshKey\": {\n        \"privateKey\": \"-----BEGIN OPENSSH PRIVATE KEY-----\\nAAAA\\n-----END OPENSSH PRIVATE KEY-----\\n\",\n        \"publicKey\": \"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIExample deploy\",\n        \"keyFingerprint\": \"SHA256:examplefingerprint\"\n      },\n      \"passwordHistory\": [],\n      \"creationDate\": \"2026-01-02T03:04:05.678Z\",\n      \"revisionDate\": \"2026-02-03T04:05:06.789Z\"\n    },\n    {\n      \"type\": 1,\n      \"favorite\": false,\n      \"reprompt\": 0,\n      \"id\": \"a000000c-0000-4000-8000-00000000000c\",\n      \"collectionIds\": null,\n      \"name\": \"Empty login\",\n      \"fields\": [],\n      \"login\": {\n        \"uris\": [],\n        \"fido2Credentials\": []\n      },\n      \"passwordHistory\": [],\n      \"creationDate\": \"2026-01-02T03:04:05.678Z\",\n      \"revisionDate\": \"2026-02-03T04:05:06.789Z\"\n    },\n    {\n      \"type\": 1,\n      \"favorite\": true,\n      \"reprompt\": 0,\n      \"id\": \"a0000001-0000-4000-8000-000000000001\",\n      \"collectionIds\": null,\n      \"folderId\": \"f0f0f0f0-aaaa-4bbb-8ccc-dddddddddddd\",\n      \"name\": \"GitHub\",\n      \"notes\": \"Personal account\",\n      \"fields\": [\n        {\n          \"type\": 0,\n          \"name\": \"recovery email\",\n          \"value\": \"alice@recovery.example\"\n        },\n        {\n          \"type\": 1,\n          \"name\": \"pin\",\n          \"value\": \"4321\"\n        },\n        {\n          \"type\": 2,\n          \"name\": \"2fa\",\n          \"value\": \"true\"\n        },\n        {\n          \"type\": 3,\n          \"name\": \"user\",\n          \"linkedId\": 100\n        }\n      ],\n      \"login\": {\n        \"uris\": [\n          {\n            \"uri\": \"https://github.com/login\"\n          },\n          {\n            \"uri\": \"https://gist.github.com\",\n            \"match\": 1\n          }\n        ],\n        \"fido2Credentials\": [],\n        \"username\": \"alice\",\n        \"password\": \"gh-secret\",\n        \"totp\": \"JBSWY3DPEHPK3PXP\"\n      },\n      \"passwordHistory\": [\n        {\n          \"password\": \"old-gh-secret\",\n          \"lastUsedDate\": \"2025-12-01T00:00:00.000Z\"\n        }\n      ],\n      \"creationDate\": \"2026-01-02T03:04:05.678Z\",\n      \"revisionDate\": \"2026-02-03T04:05:06.789Z\"\n    },\n    {\n      \"type\": 1,\n      \"favorite\": false,\n      \"reprompt\": 0,\n      \"id\": \"a0000002-0000-4000-8000-000000000002\",\n      \"collectionIds\": null,\n      \"name\": \"GitHub Enterprise\",\n      \"fields\": [],\n      \"login\": {\n        \"uris\": [\n          {\n            \"uri\": \"https://github.example.com\"\n          }\n        ],\n        \"fido2Credentials\": [],\n        \"username\": \"alice-corp\",\n        \"password\": \"ghe-secret\"\n      },\n      \"passwordHistory\": [],\n      \"creationDate\": \"2026-01-02T03:04:05.678Z\",\n      \"revisionDate\": \"2026-02-03T04:05:06.789Z\"\n    },\n    {\n      \"type\": 1,\n      \"favorite\": false,\n      \"reprompt\": 0,\n      \"id\": \"a000000b-0000-4000-8000-00000000000b\",\n      \"collectionIds\": null,\n      \"name\": \"Match modes\",\n      \"fields\": [],\n      \"login\": {\n        \"uris\": [\n          {\n            \"uri\": \"https://exact.example.org/path?q=1\",\n            \"match\": 3\n          },\n          {\n            \"uri\": \"https://starts.example.org/app\",\n            \"match\": 2\n          },\n          {\n            \"uri\": \"^https://re\\\\.example\\\\.org/[0-9]+$\",\n            \"match\": 4\n          },\n          {\n            \"uri\": \"https://never.example.org\",\n            \"match\": 5\n          },\n          {\n            \"uri\": \"https://host.example.org:8443\",\n            \"match\": 1\n          }\n        ],\n        \"fido2Credentials\": [],\n        \"username\": \"modes\",\n        \"password\": \"modes-secret\"\n      },\n      \"passwordHistory\": [],\n      \"creationDate\": \"2026-01-02T03:04:05.678Z\",\n      \"revisionDate\": \"2026-02-03T04:05:06.789Z\"\n    },\n    {\n      \"type\": 4,\n      \"favorite\": false,\n      \"reprompt\": 0,\n      \"id\": \"a0000005-0000-4000-8000-000000000005\",\n      \"collectionIds\": null,\n      \"name\": \"Passport identity\",\n      \"fields\": [],\n      \"identity\": {\n        \"title\": \"Ms\",\n        \"firstName\": \"Alice\",\n        \"lastName\": \"Example\",\n        \"address1\": \"1 Main St\",\n        \"city\": \"Springfield\",\n        \"postalCode\": \"12345\",\n        \"country\": \"US\",\n        \"email\": \"alice@example.com\",\n        \"username\": \"alice\"\n      },\n      \"passwordHistory\": [],\n      \"creationDate\": \"2026-01-02T03:04:05.678Z\",\n      \"revisionDate\": \"2026-02-03T04:05:06.789Z\"\n    },\n    {\n      \"type\": 2,\n      \"favorite\": false,\n      \"reprompt\": 0,\n      \"id\": \"a0000003-0000-4000-8000-000000000003\",\n      \"collectionIds\": null,\n      \"folderId\": \"f1f1f1f1-aaaa-4bbb-8ccc-dddddddddddd\",\n      \"name\": \"Recovery codes\",\n      \"notes\": \"code-1\\ncode-2\",\n      \"fields\": [],\n      \"secureNote\": {\n        \"type\": 0\n      },\n      \"passwordHistory\": [],\n      \"creationDate\": \"2026-01-02T03:04:05.678Z\",\n      \"revisionDate\": \"2026-02-03T04:05:06.789Z\"\n    },\n    {\n      \"type\": 3,\n      \"favorite\": false,\n      \"reprompt\": 0,\n      \"id\": \"a0000004-0000-4000-8000-000000000004\",\n      \"collectionIds\": null,\n      \"name\": \"Visa\",\n      \"fields\": [],\n      \"card\": {\n        \"cardholderName\": \"Alice Example\",\n        \"brand\": \"Visa\",\n        \"number\": \"4111111111111111\",\n        \"expMonth\": \"12\",\n        \"expYear\": \"2030\",\n        \"code\": \"123\"\n      },\n      \"passwordHistory\": [],\n      \"creationDate\": \"2026-01-02T03:04:05.678Z\",\n      \"revisionDate\": \"2026-02-03T04:05:06.789Z\"\n    }\n  ]\n}",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "export",
+        "--raw"
+      ],
+      "stdout": "folder,favorite,type,name,notes,fields,reprompt,archivedDate,login_uri,login_username,login_password,login_totp\r\n,,login,Archived GitHub,,,0,2026-03-05T06:07:08.000Z,https://github.com,archived,arch-secret,\r\n,,login,Empty login,,,0,,,,,\r\nWork,1,login,GitHub,Personal account,\"recovery email: alice@recovery.example\npin: 4321\n2fa: true\nuser: \",0,,\"https://github.com/login,https://gist.github.com\",alice,gh-secret,JBSWY3DPEHPK3PXP\r\n,,login,GitHub Enterprise,,,0,,https://github.example.com,alice-corp,ghe-secret,\r\n,,login,Match modes,,,0,,\"https://exact.example.org/path?q=1,https://starts.example.org/app,^https://re\\.example\\.org/[0-9]+$,https://never.example.org,https://host.example.org:8443\",modes,modes-secret,\r\nHome,,note,Recovery codes,\"code-1\ncode-2\",,0,,,,,",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "export",
+        "--format",
+        "xml"
+      ],
+      "stdout": "",
+      "stderr": "'xml' is not a supported export format. Supported formats: csv, json, encrypted_json, zip.",
+      "exit": 1
+    },
+    {
+      "args": [
+        "export",
+        "--format",
+        "json",
+        "--output",
+        "{{TMP}}/"
+      ],
+      "stdout": "Saved {{TMP}}/bitwarden_export_{{STAMP}}.json",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "export",
+        "--format",
+        "encrypted_json",
+        "--output",
+        "{{TMP}}/acct.json"
+      ],
+      "stdout": "Saved {{TMP}}/acct.json",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "export",
+        "--format",
+        "json",
+        "--password",
+        "pw123",
+        "--output",
+        "{{TMP}}/pw.json"
+      ],
+      "stdout": "Saved {{TMP}}/pw.json",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "import",
+        "bitwardenjson",
+        "{{TMP}}/acct.json"
+      ],
+      "stdout": "Imported {{TMP}}/acct.json",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "import",
+        "bitwardenjson",
+        "{{TMP}}/pw.json",
+        "--passwordenv",
+        "IMPORTPW"
+      ],
+      "stdout": "Imported {{TMP}}/pw.json",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "list",
+        "items",
+        "--search",
+        "github enterprise"
+      ],
+      "stdout": "[{\"type\":1,\"favorite\":false,\"reprompt\":0,\"id\":\"a0000002-0000-4000-8000-000000000002\",\"collectionIds\":[],\"object\":\"item\",\"name\":\"GitHub Enterprise\",\"fields\":[],\"login\":{\"uris\":[{\"uri\":\"https://github.example.com\"}],\"fido2Credentials\":[],\"username\":\"alice-corp\",\"password\":\"ghe-secret\",\"passwordRevisionDate\":null},\"passwordHistory\":[],\"creationDate\":\"2026-01-02T03:04:05.678Z\",\"revisionDate\":\"2026-02-03T04:05:06.789Z\",\"attachments\":[]},{\"type\":1,\"favorite\":false,\"reprompt\":0,\"id\":\"b0000002-0000-4000-8000-000000000002\",\"collectionIds\":[],\"object\":\"item\",\"name\":\"GitHub Enterprise\",\"fields\":[],\"login\":{\"uris\":[{\"uri\":\"https://github.example.com\"}],\"fido2Credentials\":[],\"username\":\"alice-corp\",\"password\":\"ghe-secret\",\"passwordRevisionDate\":null},\"passwordHistory\":[],\"creationDate\":\"{{TIME}}\",\"revisionDate\":\"{{TIME}}\",\"attachments\":[]},{\"type\":1,\"favorite\":false,\"reprompt\":0,\"id\":\"b0000014-0000-4000-8000-000000000014\",\"collectionIds\":[],\"object\":\"item\",\"name\":\"GitHub Enterprise\",\"fields\":[],\"login\":{\"uris\":[{\"uri\":\"https://github.example.com\"}],\"fido2Credentials\":[],\"username\":\"alice-corp\",\"password\":\"ghe-secret\",\"passwordRevisionDate\":null},\"passwordHistory\":[],\"creationDate\":\"{{TIME}}\",\"revisionDate\":\"{{TIME}}\",\"attachments\":[]}]",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "list",
+        "folders"
+      ],
+      "stdout": "[{\"name\":\"Home\",\"object\":\"folder\",\"id\":\"f1f1f1f1-aaaa-4bbb-8ccc-dddddddddddd\"},{\"name\":\"Work\",\"object\":\"folder\",\"id\":\"f0f0f0f0-aaaa-4bbb-8ccc-dddddddddddd\"},{\"name\":\"No Folder\",\"object\":\"folder\",\"id\":\"\"}]",
+      "stderr": "",
+      "exit": 0
+    }
+  ]
+}
