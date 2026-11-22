@@ -97,8 +97,9 @@ func EditorPaneView(cx *core.Scope, m *AppModel) core.Node {
 								var rows []core.Node
 								if d := m.EditDraft.GetUntracked(); d != nil && d.IsNew {
 									rows = append(rows, formRow("Type", ui.Select[api.CipherType]{
-										TestID: "editor-type",
-										Style:  core.Style{Width: core.Pt(180)},
+										Disabled: m.EditBusy.Get,
+										TestID:   "editor-type",
+										Style:    core.Style{Width: core.Pt(180)},
 										Options: []ui.Option[api.CipherType]{
 											{Value: api.CipherTypeLogin, Label: "Login"},
 											{Value: api.CipherTypeSecureNote, Label: "Secure Note"},
@@ -118,9 +119,10 @@ func EditorPaneView(cx *core.Scope, m *AppModel) core.Node {
 											opts = append(opts, ui.Option[string]{Value: f.ID, Label: f.Name})
 										}
 										return ui.Select[string]{
-											TestID:  "editor-folder",
-											Style:   core.Style{Width: core.Pt(180)},
-											Options: opts,
+											Disabled: m.EditBusy.Get,
+											TestID:   "editor-folder",
+											Style:    core.Style{Width: core.Pt(180)},
+											Options:  opts,
 											Value: func() string {
 												if d := m.EditDraft.Get(); d != nil {
 													return d.FolderID
@@ -154,6 +156,7 @@ func EditorPaneView(cx *core.Scope, m *AppModel) core.Node {
 								Class: "p-2",
 								Children: []core.Node{
 									ui.Input{
+										Disabled:    m.EditBusy.Get,
 										TestID:      "editor-notes",
 										Placeholder: "Add a note",
 										Multiline:   true,
@@ -192,8 +195,9 @@ func switchRow(label, testID string, get func(*EditDraft) bool, set func(*EditDr
 		Children: []core.Node{
 			core.Text{Class: "flex-1 text-[13px] text-gv-fg", Content: label},
 			ui.Switch{
-				TestID: testID,
-				Label:  label,
+				Disabled: m.EditBusy.Get,
+				TestID:   testID,
+				Label:    label,
 				Checked: func() bool {
 					d := m.EditDraft.Get()
 					return d != nil && get(d)
@@ -225,6 +229,7 @@ func editorLoginFields(cx *core.Scope, m *AppModel, showPW *core.Signal[bool]) c
 			section("Credentials", card(
 				formRow("Username", draftInput(m, "editor-username", "name@example.com", func(d *EditDraft) string { return d.Username }, func(d *EditDraft, v string) { d.Username = v })),
 				formRow("Password", flexed(passwordField(cx, base.Input{
+					Disabled:      m.EditBusy.Get,
 					TestID:        "editor-password",
 					Placeholder:   "Password",
 					NoAutoCorrect: true,
@@ -237,6 +242,7 @@ func editorLoginFields(cx *core.Scope, m *AppModel, showPW *core.Signal[bool]) c
 					},
 					OnChange: func(v string) { m.MutateDraft(func(d *EditDraft) { d.Password = v }) },
 				}, editorFieldHeight, showPW, "editor-toggle-pw", ui.Button{
+					Disabled: m.EditBusy.Get,
 					TestID:   "editor-generate-pw",
 					Icon:     lucide.WandSparkles,
 					Label:    "Generate password",
@@ -250,6 +256,7 @@ func editorLoginFields(cx *core.Scope, m *AppModel, showPW *core.Signal[bool]) c
 					},
 				}))),
 				formRow("Authenticator", flexed(sizedInput(base.Input{
+					Disabled:      m.EditBusy.Get,
 					TestID:        "editor-totp",
 					Class:         "font-mono",
 					Placeholder:   "otpauth:// URI or setup key",
@@ -277,6 +284,7 @@ func editorLoginFields(cx *core.Scope, m *AppModel, showPW *core.Signal[bool]) c
 						Children: []core.Node{
 							icon(lucide.Globe(), 14, "text-gv-fg3"),
 							flexed(sizedInput(base.Input{
+								Disabled:      m.EditBusy.Get,
 								TestID:        fmt.Sprintf("editor-uri-%d", idx),
 								Placeholder:   "https://example.com",
 								NoAutoCorrect: true,
@@ -295,7 +303,7 @@ func editorLoginFields(cx *core.Scope, m *AppModel, showPW *core.Signal[bool]) c
 									})
 								},
 							}, editorFieldHeight)),
-							removeButton(cx, "Remove website", func() {
+							removeButton(cx, m, "Remove website", func() {
 								m.MutateDraft(func(d *EditDraft) {
 									if idx < len(d.URIs) {
 										d.URIs = append(d.URIs[:idx], d.URIs[idx+1:]...)
@@ -305,7 +313,7 @@ func editorLoginFields(cx *core.Scope, m *AppModel, showPW *core.Signal[bool]) c
 						},
 					})
 				}
-				rows = append(rows, addRow("editor-add-uri", "Add Website", func() {
+				rows = append(rows, addRow(m, "editor-add-uri", "Add Website", func() {
 					m.MutateDraft(func(d *EditDraft) { d.URIs = append(d.URIs, EditURIDraft{}) })
 				}))
 				return card(rows...)
@@ -314,8 +322,9 @@ func editorLoginFields(cx *core.Scope, m *AppModel, showPW *core.Signal[bool]) c
 	}
 }
 
-func removeButton(cx *core.Scope, label string, onPress func()) core.Node {
+func removeButton(cx *core.Scope, m *AppModel, label string, onPress func()) core.Node {
 	return ui.Button{
+		Disabled: m.EditBusy.Get,
 		Icon:     lucide.X,
 		Label:    label,
 		Variant:  ui.ButtonGhost,
@@ -326,13 +335,14 @@ func removeButton(cx *core.Scope, label string, onPress func()) core.Node {
 	}
 }
 
-func addRow(testID, label string, onPress func()) core.Node {
+func addRow(m *AppModel, testID, label string, onPress func()) core.Node {
 	return core.View{
-		TestID:  testID,
-		Role:    core.RoleButton,
-		Label:   label,
-		Class:   "flex-row items-center gap-2 px-4 h-[40px] active:bg-gv-fill",
-		OnPress: func(core.PressEvent) { onPress() },
+		Disabled: m.EditBusy.Get,
+		TestID:   testID,
+		Role:     core.RoleButton,
+		Label:    label,
+		Class:    "flex-row items-center gap-2 px-4 h-[40px] active:bg-gv-fill",
+		OnPress:  func(core.PressEvent) { onPress() },
 		Children: []core.Node{
 			core.View{
 				Class:    "w-[16px] h-[16px] rounded-full items-center justify-center bg-gv-accent",
@@ -392,6 +402,7 @@ func editorIdentityFields(m *AppModel) core.Node {
 func editorSSHKeyFields(m *AppModel) core.Node {
 	keyInput := func(testID, placeholder string, multiline bool, get func(*EditDraft) string, set func(*EditDraft, string)) core.Node {
 		in := ui.Input{
+			Disabled:    m.EditBusy.Get,
 			TestID:      testID,
 			Placeholder: placeholder,
 			Multiline:   multiline,
@@ -426,11 +437,12 @@ func editorSSHKeyFields(m *AppModel) core.Node {
 			Class: "flex-row items-center justify-end px-4 py-2",
 			Children: []core.Node{
 				ui.Button{
-					TestID:  "editor-ssh-generate",
-					Text:    "Generate Ed25519 Key",
-					Icon:    lucide.WandSparkles,
-					Variant: ui.ButtonSecondary,
-					OnPress: m.GenerateDraftSSHKey,
+					Disabled: m.EditBusy.Get,
+					TestID:   "editor-ssh-generate",
+					Text:     "Generate Ed25519 Key",
+					Icon:     lucide.WandSparkles,
+					Variant:  ui.ButtonSecondary,
+					OnPress:  m.GenerateDraftSSHKey,
 				},
 			},
 		},
@@ -465,6 +477,7 @@ func editorCustomFieldsSection(cx *core.Scope, m *AppModel) core.Node {
 			idx := i
 			field := func(get func(EditFieldDraft) string, set func(*EditFieldDraft, string), placeholder string) core.Node {
 				return flexed(sizedInput(base.Input{
+					Disabled:      m.EditBusy.Get,
 					Placeholder:   placeholder,
 					NoAutoCorrect: true,
 					Value: func() string {
@@ -487,7 +500,8 @@ func editorCustomFieldsSection(cx *core.Scope, m *AppModel) core.Node {
 				Class: "flex-row items-center gap-2 pl-4 pr-2 py-2",
 				Children: []core.Node{
 					ui.Select[int]{
-						Style: core.Style{Width: core.Pt(92)},
+						Disabled: m.EditBusy.Get,
+						Style:    core.Style{Width: core.Pt(92)},
 						Options: []ui.Option[int]{
 							{Value: 0, Label: "Text"},
 							{Value: 1, Label: "Hidden"},
@@ -509,7 +523,7 @@ func editorCustomFieldsSection(cx *core.Scope, m *AppModel) core.Node {
 					},
 					field(func(f EditFieldDraft) string { return f.Name }, func(f *EditFieldDraft, v string) { f.Name = v }, "Field name"),
 					field(func(f EditFieldDraft) string { return f.Value }, func(f *EditFieldDraft, v string) { f.Value = v }, "Value"),
-					removeButton(cx, "Remove field", func() {
+					removeButton(cx, m, "Remove field", func() {
 						m.MutateDraft(func(d *EditDraft) {
 							if idx < len(d.Fields) {
 								d.Fields = append(d.Fields[:idx], d.Fields[idx+1:]...)
@@ -519,7 +533,7 @@ func editorCustomFieldsSection(cx *core.Scope, m *AppModel) core.Node {
 				},
 			})
 		}
-		rows = append(rows, addRow("editor-add-field", "Add Field", func() {
+		rows = append(rows, addRow(m, "editor-add-field", "Add Field", func() {
 			m.MutateDraft(func(d *EditDraft) { d.Fields = append(d.Fields, EditFieldDraft{Type: 0}) })
 		}))
 		return card(rows...)

@@ -99,10 +99,11 @@ func editorPasskeyRows(cx *core.Scope, m *AppModel) core.Node {
 					Children: []core.Node{
 						core.Text{TestID: passkeyTestID("editor-passkey-removed", i), Class: "flex-1 text-[13px] text-gv-fg2", Content: "Removed when you save"},
 						ui.Button{
-							TestID:  passkeyTestID("editor-passkey-undo", i),
-							Text:    "Undo",
-							Variant: ui.ButtonGhost,
-							Size:    ui.SizeSmall,
+							Disabled: m.EditBusy.Get,
+							TestID:   passkeyTestID("editor-passkey-undo", i),
+							Text:     "Undo",
+							Variant:  ui.ButtonGhost,
+							Size:     ui.SizeSmall,
 							OnPress: func() {
 								m.MutateDraft(func(d *EditDraft) {
 									d.RemovedPasskeys = slices.DeleteFunc(d.RemovedPasskeys, func(x int) bool { return x == i })
@@ -118,6 +119,7 @@ func editorPasskeyRows(cx *core.Scope, m *AppModel) core.Node {
 				Children: []core.Node{
 					core.Text{TestID: passkeyTestID("editor-passkey", i), MaxLines: 1, Class: "flex-1 text-[13px] text-gv-fg", Content: passkeyText(&passkeys[i])},
 					ui.Button{
+						Disabled: m.EditBusy.Get,
 						TestID:   passkeyTestID("editor-passkey-remove", i),
 						Icon:     lucide.Trash,
 						Label:    "Remove passkey",

@@ -259,6 +259,7 @@ func TestFirstSignInHasNoWayBackToUnlock(t *testing.T) {
 func TestSignInAgainIsForTheSameAccountOnly(t *testing.T) {
 	svc := newMockVaultService(state.StatusUnlocked)
 	svc.localOnly = true
+	svc.trustedServer = "https://vault.example"
 	app, m, _ := startSecurityApp(t, svc, PlatformHooks{})
 	app.Post(func() {
 		m.UpdatePrefs(func(p UserPrefs) UserPrefs { p.AccountID = "stale-account"; return p })
@@ -314,4 +315,85 @@ func TestSleepBetweenUnlockCommitAndTheUIStaysLocked(t *testing.T) {
 	if m.LockPassword.Get() != "" {
 		t.Fatal("the master password field survived the sleep")
 	}
+}
+
+func TestSignInAgainWithoutATrustedRecordAsksForTheServer(t *testing.T) {
+	svc := newMockVaultService(state.StatusUnlocked)
+	svc.localOnly = true
+	app, m, _ := startSecurityApp(t, svc, PlatformHooks{})
+	app.Post(func() {
+		m.UpdatePrefs(func(p UserPrefs) UserPrefs { p.ServerURL = "https://from-snapshot.example"; return p })
+		m.RefreshVaultData()
+		m.SyncState.Set(SyncAuthExpired)
+	})
+	app.WaitFor("id:signin-banner-action", 2*time.Second)
+	app.Press("id:signin-banner-action")
+	app.WaitFor("id:login-server", 2*time.Second)
+	if m.LoginServer.Get() != "" || m.ReSignInServer.Get() != "" {
+		t.Fatalf("server prefilled with %q without a trusted record", m.LoginServer.Get())
+	}
+	app.Post(func() { m.LoginServer.Set("https://typed.example"); m.LoginPassword.Set("master-password"); m.Login() })
+	app.WaitUntil(2*time.Second, func() bool { return m.LockState.Get() == state.StatusUnlocked })
+	svc.mu.RLock()
+	req := svc.lastLogin
+	svc.mu.RUnlock()
+	if req.ServerURL != "https://typed.example" || req.SameAccount == nil || req.SameAccount.ID != "acct-1" || req.SameAccount.ServerURL != "https://typed.example" {
+		t.Fatalf("sign-in request = %+v, want the typed server and the vault's account", req)
+	}
+}
+
+func TestSleepAfterTheUIShowsTheVaultClearsTheUnlockForm(t *testing.T) {
+	svc := newMockVaultService(state.StatusLocked)
+	committed := make(chan struct{})
+	svc.unlockCommitted = committed
+	app, m, _ := startSecurityApp(t, svc, PlatformHooks{})
+	app.Post(func() {
+		m.UpdatePrefs(func(p UserPrefs) UserPrefs { p.LockOnSleep = true; return p })
+		m.LockPassword.Set("master-password")
+		m.UnlockWithPassword()
+	})
+	app.WaitUntil(2*time.Second, func() bool {
+		select {
+		case <-committed:
+			return true
+		default:
+			return false
+		}
+	})
+	// The status callback reached the UI, the worker has not reported yet.
+	app.Post(func() { m.LockState.Set(state.StatusUnlocked) })
+	app.Post(func() { m.LockOnSystemEvent() })
+	app.Settle()
+	if m.LockPassword.Get() != "" || m.LockBusy.Get() || m.LockState.Get() != state.StatusLocked {
+		t.Fatalf("after the sleep: password kept %v, busy %v, state %v", m.LockPassword.Get() != "", m.LockBusy.Get(), m.LockState.Get())
+	}
+	committed <- struct{}{}
+	app.Settle()
+	if m.LockState.Get() == state.StatusUnlocked {
+		t.Fatal("the late unlock completion reopened the vault")
+	}
+}
+
+func TestTheWholeEditorIsDisabledWhileSaving(t *testing.T) {
+	svc := newMockVaultService(state.StatusUnlocked)
+	gate := make(chan struct{})
+	svc.saveGate = gate
+	app, m, root := startSecurityApp(t, svc, PlatformHooks{})
+	app.Post(func() { m.StartCreateCipher(root) })
+	app.WaitFor("id:editor-password", 2*time.Second)
+	for _, id := range []string{"editor-name", "editor-password", "editor-notes", "editor-username", "editor-cancel"} {
+		if !app.Enabled("id:" + id) {
+			t.Fatalf("%s disabled before saving", id)
+		}
+	}
+	app.Post(func() { m.MutateDraft(func(d *EditDraft) { d.Name = "x" }); m.SaveDraft(root) })
+	app.WaitUntil(2*time.Second, func() bool { return m.EditBusy.Get() })
+	app.Settle()
+	for _, id := range []string{"editor-name", "editor-password", "editor-notes", "editor-username", "editor-cancel", "editor-add-uri"} {
+		if app.Enabled("id:" + id) {
+			t.Fatalf("%s is editable while saving", id)
+		}
+	}
+	close(gate)
+	app.WaitUntil(2*time.Second, func() bool { return !m.EditBusy.Get() })
 }
