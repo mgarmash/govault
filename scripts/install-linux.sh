@@ -94,6 +94,41 @@ gv_marker="# gv launcher installed by GoVault's install-linux.sh"
 
 is_gv_launcher() { [ -f "$1" ] && [ "$(sed -n 2p "$1")" = "$gv_marker" ]; }
 
+# write_gv_launcher IMAGE OUT writes the gv launcher for the AppImage at
+# IMAGE. The launcher is a literal template; IMAGE is its only value, as a
+# single-quoted shell word. Each user extracts gv into a private cache,
+# again whenever the image's contents change, and never runs a gv
+# extracted from other contents.
+write_gv_launcher() {
+  quoted="$(printf '%s' "$1" | sed "s/'/'\\\\''/g")"
+  {
+    printf '#!/bin/sh\n%s\n' "$gv_marker"
+    printf "image='%s'\n" "$quoted"
+    cat << 'LAUNCHER'
+# Runs the gv inside the GoVault AppImage, extracted without FUSE.
+digest() {
+  if command -v sha256sum > /dev/null 2>&1; then sha256sum < "$1"; else shasum -a 256 < "$1"; fi | cut -d ' ' -f 1
+}
+[ -f "$image" ] || { echo "gv: $image is missing; reinstall GoVault" >&2; exit 1; }
+dir="${XDG_CACHE_HOME:-$HOME/.cache}/govault-gv"
+id="$(digest "$image")"
+[ -n "$id" ] || { echo "gv: cannot read $image" >&2; exit 1; }
+if [ ! -x "$dir/gv" ] || [ "$(cat "$dir/stamp" 2> /dev/null)" != "$id" ]; then
+  ok=0
+  if (umask 077 && mkdir -p "$dir") && tmp="$(mktemp -d "$dir/.extract.XXXXXX")"; then
+    if (cd "$tmp" && "$image" --appimage-extract gv > /dev/null 2>&1) && [ -x "$tmp/squashfs-root/gv" ] &&
+      [ "$(digest "$image")" = "$id" ]; then
+      rm -f "$dir/stamp" && mv -f "$tmp/squashfs-root/gv" "$dir/gv" && printf '%s\n' "$id" > "$dir/stamp" && ok=1
+    fi
+    rm -rf "$tmp"
+  fi
+  [ "$ok" = 1 ] || { echo "gv: could not extract gv from $image; it was not run" >&2; exit 1; }
+fi
+exec "$dir/gv" "$@"
+LAUNCHER
+  } > "$2"
+}
+
 run_maybe_root() {
   if [ "$system" = 1 ]; then as_root "$@"; else "$@"; fi
 }
@@ -138,6 +173,8 @@ do_uninstall() {
       removed=1
     fi
   done
+  # This user's extracted gv; other users' caches are theirs.
+  rm -rf "${XDG_CACHE_HOME:-${HOME}/.cache}/${slug}-gv"
   if [ "$removed" = 1 ]; then
     say "GoVault was uninstalled. Your vault cache in ~/.local/share and settings were left in place."
   else
@@ -296,25 +333,7 @@ EOF
     if [ -e "${bin_dir}/gv" ] && ! is_gv_launcher "${bin_dir}/gv"; then
       say "Note: ${bin_dir}/gv is another program; it was left in place, so GoVault's gv was not installed."
     else
-      cat > "${work}/gv" << EOF
-#!/bin/sh
-${gv_marker}
-# Runs the gv inside the GoVault AppImage, extracting it again when the
-# image changes, as an update does. Extracting needs no FUSE.
-image='${bin_dir}/${slug}'
-dir='${gv_dir}'
-stamp="\$(stat -L -c '%s %Y' "\$image" 2> /dev/null)" || { echo "gv: \$image is missing; reinstall GoVault" >&2; exit 1; }
-if [ ! -x "\$dir/gv" ] || [ "\$(cat "\$dir/stamp" 2> /dev/null)" != "\$stamp" ]; then
-  if mkdir -p "\$dir" 2> /dev/null && tmp="\$(mktemp -d "\$dir/.extract.XXXXXX" 2> /dev/null)"; then
-    if (cd "\$tmp" && "\$image" --appimage-extract gv > /dev/null 2>&1) && [ -x "\$tmp/squashfs-root/gv" ]; then
-      mv -f "\$tmp/squashfs-root/gv" "\$dir/gv" && printf '%s\\n' "\$stamp" > "\$dir/stamp"
-    fi
-    rm -rf "\$tmp"
-  fi
-fi
-[ -x "\$dir/gv" ] || { echo "gv: could not extract gv from \$image" >&2; exit 1; }
-exec "\$dir/gv" "\$@"
-EOF
+      write_gv_launcher "${bin_dir}/${slug}" "${work}/gv"
       run_maybe_root install -m 755 "${work}/gv" "${bin_dir}/gv"
       if run_maybe_root "${bin_dir}/gv" --version > /dev/null 2>&1; then
         say "Installed gv, the command-line client: ${bin_dir}/gv"
@@ -332,6 +351,6 @@ EOF
 esac
 
 case "$mode" in
-  pacman | deb) say "Its command-line client is /opt/${slug}/gv." ;;
+  pacman | deb) say "Its command-line client is gv (/usr/bin/gv)." ;;
 esac
 say "GoVault ${version} is installed. Open it from your app launcher or run: ${slug}"
