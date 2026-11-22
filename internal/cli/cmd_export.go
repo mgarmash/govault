@@ -23,6 +23,9 @@ import (
 
 const policyDisablePersonalVaultExport = 10
 
+// maxExportSize is the largest file import reads.
+var maxExportSize = export.MaxFileSize
+
 var exportFormats = []string{"csv", "json", "encrypted_json", "zip"}
 
 // exportFileName is bw's ExportHelper.getFileName.
@@ -41,13 +44,17 @@ func (a *app) export(p *parsed) response {
 	password, hasPassword := p.opt("password")
 	format := optValue(p, "format")
 	switch {
-	case hasPassword && format == "json":
+	case format == "" && hasPassword, format == "json" && hasPassword:
+		// A password always means a password-protected file.
 		format = "encrypted_json"
 	case format == "":
 		format = "csv"
 	}
 	if !slices.Contains(exportFormats, format) {
 		return failure(fmt.Sprintf("'%s' is not a supported export format. Supported formats: %s.", format, strings.Join(exportFormats, ", ")))
+	}
+	if hasPassword && format != "encrypted_json" {
+		return failure(fmt.Sprintf("A %s export cannot be password protected: use --format encrypted_json with --password.", format))
 	}
 	return a.unlocked(func(v *profile.Vault) response {
 		for _, pol := range v.Policies {
@@ -64,6 +71,9 @@ func (a *app) export(p *parsed) response {
 				return failure("An export file password is required.")
 			}
 			password = pw
+		}
+		if err := exportComplete(v); err != nil {
+			return failure(err.Error())
 		}
 		var data []byte
 		var err error
@@ -84,6 +94,9 @@ func (a *app) export(p *parsed) response {
 		if err != nil {
 			return errResponse(err)
 		}
+		if format != "zip" && len(data) > maxExportSize {
+			return failure(fmt.Sprintf("The export is larger than %d MiB, which no GoVault or gv import reads.", maxExportSize>>20))
+		}
 		return a.saveResult(data, optValue(p, "output"), exportFileName(format, a.env.Now()))
 	})
 }
@@ -99,6 +112,26 @@ func (a *app) prettyJSON(v any) []byte {
 		return raw
 	}
 	return b.Bytes()
+}
+
+// exportComplete refuses an export that would leave out an item GoVault
+// cannot read, or a passkey part of which does not decrypt, as the
+// desktop's backup refuses it.
+func exportComplete(v *profile.Vault) error {
+	if n := len(v.Unreadable); n > 0 {
+		return fmt.Errorf("The export would be incomplete: %d item(s) GoVault cannot read (%s). Export them with another Bitwarden client.", n, strings.Join(v.Unreadable, ", "))
+	}
+	for _, c := range exported(v) {
+		if c.Login == nil {
+			continue
+		}
+		for _, f := range c.Login.Fido2Credentials {
+			if len(f.Unreadable) > 0 {
+				return fmt.Errorf("The export would be incomplete: a passkey of %s does not fully decrypt (%s).", c.ID, strings.Join(f.Unreadable, ", "))
+			}
+		}
+	}
+	return nil
 }
 
 // exported are the items bw exports: personal, outside Trash, of a type
@@ -221,7 +254,7 @@ func exportCSV(v *profile.Vault) []byte {
 }
 
 // accountItemOrder is the key order of bw's account-key export items.
-var accountItemOrder = []string{"name", "notes", "key", "fields", "login", "secureNote", "card", "identity", "sshKey", "passwordHistory", "creationDate", "revisionDate", "deletedDate", "archivedDate"}
+var accountItemOrder = []string{"name", "notes", "key", "fields", "login", "secureNote", "card", "identity", "sshKey", "bankAccount", "driversLicense", "passport", "passwordHistory", "creationDate", "revisionDate", "deletedDate", "archivedDate"}
 
 // exportAccount writes the encrypted items and folders as the server keeps
 // them, readable only with this account's key.
@@ -267,8 +300,9 @@ var (
 	zipUnsafeName = regexp.MustCompile(`[/\\><:"|?*.]`)
 )
 
-// exportZip is bw's zip export: data.json and, for each personal item
-// outside Trash, its attachments, named as bw names them.
+// exportZip is bw's zip export: data.json and the attachments of the
+// items data.json holds, named as bw names them, made unique against the
+// archive's paths. An attachment that does not download fails the export.
 func (a *app) exportZip(v *profile.Vault) ([]byte, error) {
 	var buf bytes.Buffer
 	zw := zip.NewWriter(&buf)
@@ -280,36 +314,44 @@ func (a *app) exportZip(v *profile.Vault) ([]byte, error) {
 		return nil, err
 	}
 	collapse := regexp.MustCompile(`__+`)
-	cipherNames := map[string]int{}
-	for _, c := range v.Ciphers {
-		if len(c.Attachments) == 0 || c.DeletedDate != nil || (c.OrganizationID != nil && *c.OrganizationID != "") {
+	used := map[string]bool{}
+	unique := func(stem, suffix string, n *int) string {
+		for {
+			name := stem + suffix
+			if *n > 0 {
+				name = fmt.Sprintf("%s_%d%s", stem, *n, suffix)
+			}
+			*n++
+			if !used[strings.ToLower(name)] {
+				used[strings.ToLower(name)] = true
+				return name
+			}
+		}
+	}
+	dirCount := map[string]int{}
+	for _, c := range exported(v) {
+		if len(c.Attachments) == 0 {
 			continue
 		}
-		dir := collapse.ReplaceAllString(zipUnsafe.ReplaceAllString(c.Name, "_"), "_")
-		if n, seen := cipherNames[c.Name]; seen {
-			dir += fmt.Sprintf("_%d", n)
-		}
-		cipherNames[c.Name]++
-		fileNames := map[string]int{}
+		stem := collapse.ReplaceAllString(zipUnsafe.ReplaceAllString(c.Name, "_"), "_")
+		n := dirCount[stem]
+		dir := unique("attachments/"+stem, "", &n)
+		dirCount[stem] = n
+		fileCount := map[string]int{}
 		for _, at := range c.Attachments {
 			data, err := v.Attachment(a.ctx, c, at.ID)
 			if err != nil {
-				a.warn(fmt.Sprintf("Failed to export attachment: Cipher Id: %s", c.ID))
-				continue
+				return nil, fmt.Errorf("The export would be incomplete: attachment %s of %s did not download: %s", at.ID, c.ID, userMessage(err))
 			}
 			base, suffix := at.FileName, ""
 			if parts := strings.Split(at.FileName, "."); len(parts) > 1 {
 				base, suffix = strings.Join(parts[:len(parts)-1], ""), "."+parts[len(parts)-1]
 			}
 			base = collapse.ReplaceAllString(zipUnsafeName.ReplaceAllString(base, "_"), "_")
-			name := base + suffix
-			if n, seen := fileNames[name]; seen {
-				fileNames[name] = n + 1
-				name = fmt.Sprintf("%s_%d%s", base, n, suffix)
-			} else {
-				fileNames[name] = 1
-			}
-			f, err := zw.Create("attachments/" + dir + "/" + name)
+			k := fileCount[base+suffix]
+			name := unique(dir+"/"+base, suffix, &k)
+			fileCount[base+suffix] = k
+			f, err := zw.Create(name)
 			if err != nil {
 				return nil, err
 			}
@@ -344,7 +386,10 @@ func (a *app) importCmd(p *parsed) response {
 	if path == "" {
 		return failure("`filepath` was not provided.")
 	}
-	data, err := os.ReadFile(path)
+	data, err := readLimited(path, export.MaxFileSize)
+	if errors.Is(err, errTooLarge) {
+		return failure(fmt.Sprintf("The import file is larger than %d MiB.", export.MaxFileSize>>20))
+	}
 	if errors.Is(err, os.ErrNotExist) {
 		shown := path
 		if !strings.ContainsAny(path, "/\\") {
@@ -452,6 +497,13 @@ func openAccountExport(w *profile.Writer, data []byte) (*export.Vault, error) {
 // A file folder the vault has, by ID, is reused; any other is created, as
 // Vaultwarden's import does.
 func (a *app) importVault(w *profile.Writer, v *export.Vault, path string) response {
+	// Organization policy decides what may be created before anything is.
+	limits := restrictions(w.View)
+	for _, it := range v.Items {
+		if restricted(&state.Cipher{Type: it.Type}, limits) {
+			return failure(fmt.Sprintf("Import cancelled: %s is of a type an organization policy restricts; nothing was imported.", idOrUnknown(it.ID)))
+		}
+	}
 	have := map[string]bool{}
 	for _, f := range w.Folders() {
 		have[f.ID] = true
@@ -468,7 +520,7 @@ func (a *app) importVault(w *profile.Writer, v *export.Vault, path string) respo
 		}
 		fileFolder[f.ID] = created.ID
 	}
-	var skipped []string
+	var skipped, unarchived []string
 	for _, it := range v.Items {
 		it.OrganizationID, it.CollectionIDs = nil, nil
 		if it.FolderID != nil {
@@ -483,8 +535,17 @@ func (a *app) importVault(w *profile.Writer, v *export.Vault, path string) respo
 			skipped = append(skipped, fmt.Sprintf("  - %s: unsupported item type", idOrUnknown(it.ID)))
 			continue
 		}
+		var saved *state.Cipher
 		if err == nil {
-			_, err = w.SaveCipher(a.ctx, c)
+			saved, err = w.SaveCipher(a.ctx, c)
+		}
+		// An archived item is archived again where the account may archive.
+		if err == nil && it.ArchivedDate != nil && saved != nil {
+			if w.View.Profile.Premium {
+				err = w.ArchiveCipher(a.ctx, saved.ID)
+			} else {
+				unarchived = append(unarchived, "  - "+idOrUnknown(it.ID))
+			}
 		}
 		var local *state.LocalCopyError
 		if err != nil && !errors.As(err, &local) {
@@ -493,8 +554,15 @@ func (a *app) importVault(w *profile.Writer, v *export.Vault, path string) respo
 			return r
 		}
 	}
+	var notes []string
 	if len(skipped) > 0 {
-		text := fmt.Sprintf("%d item(s) could not be imported and were skipped:\n%s", len(skipped), strings.Join(skipped, "\n"))
+		notes = append(notes, fmt.Sprintf("%d item(s) could not be imported and were skipped:\n%s", len(skipped), strings.Join(skipped, "\n")))
+	}
+	if len(unarchived) > 0 {
+		notes = append(notes, fmt.Sprintf("%d archived item(s) were imported outside the Archive, which needs premium:\n%s", len(unarchived), strings.Join(unarchived, "\n")))
+	}
+	if len(notes) > 0 {
+		text := strings.Join(notes, "\n")
 		return success(message{title: "Imported " + path, text: &text, raw: &text})
 	}
 	return msg("Imported " + path)

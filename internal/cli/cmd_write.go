@@ -208,17 +208,17 @@ func (a *app) createAttachment(p *parsed) response {
 		return failure("`file` option is required.")
 	}
 	abs, _ := filepath.Abs(file)
-	data, err := os.ReadFile(file)
+	data, err := readLimited(file, api.MaxAttachmentSize)
 	if errors.Is(err, os.ErrNotExist) {
 		return failure("Cannot find file at " + abs)
 	}
-	if err != nil {
-		return errResponse(err)
-	}
-	name := filepath.Base(abs)
-	if len(data) > api.MaxAttachmentSize {
+	if errors.Is(err, errTooLarge) {
 		return failure("The file is larger than the 100 MiB attachment limit.")
 	}
+	if err != nil {
+		return failure(err.Error())
+	}
+	name := filepath.Base(abs)
 	return a.writing(func(w *profile.Writer) response {
 		c, err := w.CipherForWrite(itemID)
 		if err != nil {

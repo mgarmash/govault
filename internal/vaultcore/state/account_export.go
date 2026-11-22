@@ -15,11 +15,11 @@ var ErrForeignExport = errors.New("state: this export is encrypted with another 
 
 // PersonalEncrypted returns the vault's personal items outside Trash and
 // its folders as the server stores them, encrypted, for an export that
-// only this account can read.
+// only this account can read. Callers check Unreadable first.
 func (v *VaultView) PersonalEncrypted() ([]api.EncryptedCipher, []api.EncryptedFolder) {
 	var out []api.EncryptedCipher
 	for _, c := range v.enc.Ciphers {
-		if c.DeletedDate == nil && (c.OrganizationID == nil || *c.OrganizationID == "") && len(c.Data) == 0 {
+		if c.DeletedDate == nil && (c.OrganizationID == nil || *c.OrganizationID == "") {
 			out = append(out, c)
 		}
 	}

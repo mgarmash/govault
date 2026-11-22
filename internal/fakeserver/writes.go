@@ -421,3 +421,19 @@ func (s *Server) Mutate(id string, fn func(it map[string]any, org, personal func
 		s.bump()
 	}
 }
+
+// Clear empties the vault: no items and no folders.
+func (s *Server) Clear() {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.items, s.folders = nil, nil
+	s.bump()
+}
+
+// DropAttachmentData removes the stored bytes of an attachment, so its
+// download fails.
+func (s *Server) DropAttachmentData(id string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	delete(s.blobs, id)
+}

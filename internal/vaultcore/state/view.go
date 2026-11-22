@@ -21,6 +21,9 @@ type VaultView struct {
 	Collections   []ViewCollection
 	Organizations []ViewOrganization
 	Policies      []Policy
+	// Unreadable lists the IDs of personal items GoVault cannot read, which
+	// a complete export cannot leave out.
+	Unreadable []string
 
 	typeData map[string]map[string]any
 	enc      *api.SyncResponse
@@ -103,10 +106,11 @@ func OpenVault(rawSync []byte, userKey *crypto.SymmetricKey) (*VaultView, error)
 			Email:   resp.Profile.Email,
 			Premium: data.premium,
 		},
-		typeData: map[string]map[string]any{},
-		enc:      &resp,
-		userKey:  ownKey,
-		orgKeys:  data.orgKeys,
+		Unreadable: data.unreadable,
+		typeData:   map[string]map[string]any{},
+		enc:        &resp,
+		userKey:    ownKey,
+		orgKeys:    data.orgKeys,
 	}
 	if wrapped := wrappedPrivateKey(&resp.Profile); wrapped != "" {
 		if priv, err := crypto.DecryptPrivateKey(wrapped, ownKey); err == nil {

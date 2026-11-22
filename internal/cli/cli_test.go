@@ -3,6 +3,7 @@ package cli
 import (
 	"bytes"
 	"errors"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -40,6 +41,8 @@ type gvTest struct {
 	term *scriptedTerminal
 	tty  bool
 	goos string
+	// stdout, when set, receives standard output instead of the result.
+	stdout io.Writer
 }
 
 type result struct {
@@ -75,6 +78,9 @@ func (g *gvTest) run(args ...string) result {
 	}
 	if g.term != nil {
 		env.Terminal = g.term
+	}
+	if g.stdout != nil {
+		env.Stdout = g.stdout
 	}
 	code := Run(env)
 	return result{stdout.String(), stderr.String(), code}

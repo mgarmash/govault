@@ -3,6 +3,7 @@ package cli
 import (
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"slices"
@@ -457,7 +458,13 @@ func safeFileName(name string) string {
 // write through a symbolic link.
 func (a *app) saveResult(data []byte, output, defaultName string) response {
 	if output == "" && a.flags.raw {
-		_, _ = a.env.Stdout.Write(data)
+		// A short or failed write, as to a full disk, fails the command.
+		if n, err := a.env.Stdout.Write(data); err != nil || n != len(data) {
+			if err == nil {
+				err = io.ErrShortWrite
+			}
+			return failure("Cannot write to standard output: " + err.Error())
+		}
 		return success(fileWritten{})
 	}
 	cwd, err := os.Getwd()
