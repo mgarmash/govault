@@ -11,6 +11,9 @@ var (
 	ErrRevisionConflict  = errors.New("api: revision conflict")
 	ErrNetworkOffline    = errors.New("api: network offline")
 	ErrNotFound          = errors.New("api: not found")
+	// ErrRedirectRefused means the server redirected an API request to
+	// another scheme, host or port, which GoVault never follows.
+	ErrRedirectRefused = errors.New("api: the server redirected to another address")
 )
 
 type APIError struct {

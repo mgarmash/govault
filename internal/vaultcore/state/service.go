@@ -26,6 +26,10 @@ const (
 )
 
 type ServiceConfig struct {
+	// TrustedServerURL is the server the user signed in to, from settings
+	// the snapshot cannot change. A refresh token stored before tokens
+	// were bound to their server is bound to it on first use.
+	TrustedServerURL  string
 	Store             store.Store
 	Secrets           store.SecretStore
 	AccountID         string
@@ -66,6 +70,12 @@ type Service struct {
 	persistMu  sync.Mutex
 	snapSeq    uint64
 	secretMu   sync.Mutex
+	// refreshMu makes one token refresh at a time, so concurrent callers
+	// never send the same rotating refresh token twice.
+	refreshMu sync.Mutex
+	// unsavedRefresh holds a refresh token the server issued but the
+	// secret store could not save, for the rest of the session.
+	unsavedRefresh string
 }
 
 var _ VaultService = (*Service)(nil)
@@ -95,6 +105,7 @@ func (s *Service) Status() LockStatus {
 }
 
 func (s *Service) Login(ctx context.Context, req LoginRequest) error {
+	gen := s.attemptGen()
 	serverURL, email := req.ServerURL, req.Email
 	client, kdfCfg, masterKey, pwHash, err := s.prepareLogin(ctx, req)
 	if err != nil {
@@ -127,6 +138,9 @@ func (s *Service) Login(ctx context.Context, req LoginRequest) error {
 		return err
 	}
 
+	// The revision is read before the vault, so a change made in between
+	// makes the snapshot look older, never newer, than it is.
+	revDate, _ := client.RevisionDate(ctx, tok.AccessToken)
 	syncResp, rawSync, err := client.Sync(ctx, tok.AccessToken)
 	if err != nil {
 		userKey.Zero()
@@ -149,7 +163,6 @@ func (s *Service) Login(ctx context.Context, req LoginRequest) error {
 	if accountID == "" {
 		accountID = crypto.NormalizeEmail(email)
 	}
-	revDate, _ := client.RevisionDate(ctx, tok.AccessToken)
 	snap := &store.Snapshot{
 		SchemaVersion: store.CurrentSchemaVersion,
 		AccountID:     accountID,
@@ -161,12 +174,16 @@ func (s *Service) Login(ctx context.Context, req LoginRequest) error {
 		LastSyncAt:    time.Now().UTC(),
 		RawSyncJSON:   rawSync,
 	}
+	if s.attemptGen() != gen {
+		userKey.Zero()
+		return ErrLocked
+	}
 	if err := s.cfg.Store.SaveSnapshot(snap); err != nil {
 		userKey.Zero()
 		return err
 	}
 	if s.cfg.Secrets != nil && tok.RefreshToken != "" {
-		if err := s.cfg.Secrets.Set(refreshTokenKeyPrefix+accountID, tok.RefreshToken); err != nil {
+		if err := s.saveRefreshToken(accountID, snap.ServerURL, tok.RefreshToken); err != nil {
 			userKey.Zero()
 			return err
 		}
@@ -176,6 +193,11 @@ func (s *Service) Login(ctx context.Context, req LoginRequest) error {
 	}
 
 	s.mu.Lock()
+	if s.sessionGen != gen {
+		s.mu.Unlock()
+		userKey.Zero()
+		return ErrLocked
+	}
 	s.stopRealtimeLocked()
 	s.startSessionLocked()
 	if s.userKey != nil {
@@ -225,7 +247,17 @@ func twoFactorRememberKey(serverURL, email string) string {
 	return twoFactorRememberPrefix + strings.TrimRight(strings.TrimSpace(serverURL), "/") + "|" + crypto.NormalizeEmail(email)
 }
 
+// attemptGen is the session generation an unlock or login starts under.
+// Lock, logout and a system sleep advance it, so an attempt still running
+// then can never publish an unlocked vault afterwards.
+func (s *Service) attemptGen() uint64 {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return s.sessionGen
+}
+
 func (s *Service) UnlockWithPassword(ctx context.Context, masterPassword []byte) error {
+	gen := s.attemptGen()
 	snap, err := s.loadCurrentSnapshot()
 	if err != nil {
 		return err
@@ -243,10 +275,14 @@ func (s *Service) UnlockWithPassword(ctx context.Context, masterPassword []byte)
 	}
 	defer userKey.Zero()
 
-	return s.UnlockWithUserKey(ctx, userKey)
+	return s.unlock(ctx, userKey, gen)
 }
 
 func (s *Service) UnlockWithUserKey(ctx context.Context, userKey *crypto.SymmetricKey) error {
+	return s.unlock(ctx, userKey, s.attemptGen())
+}
+
+func (s *Service) unlock(ctx context.Context, userKey *crypto.SymmetricKey, gen uint64) error {
 	if userKey == nil {
 		return crypto.ErrInvalidKeyLength
 	}
@@ -275,6 +311,11 @@ func (s *Service) UnlockWithUserKey(ctx context.Context, userKey *crypto.Symmetr
 
 	var client *api.Client
 	if snap.ServerURL != "" {
+		if _, err := s.loadRefreshToken(snap.AccountID, snap.ServerURL); err != nil && !errors.Is(err, api.ErrUnauthorized) {
+			ownedKey.Zero()
+			data.zero()
+			return err
+		}
 		client, err = s.newAPIClient(snap.ServerURL)
 		if err != nil {
 			ownedKey.Zero()
@@ -284,6 +325,12 @@ func (s *Service) UnlockWithUserKey(ctx context.Context, userKey *crypto.Symmetr
 	}
 
 	s.mu.Lock()
+	if s.sessionGen != gen {
+		s.mu.Unlock()
+		ownedKey.Zero()
+		data.zero()
+		return ErrLocked
+	}
 	s.stopRealtimeLocked()
 	s.startSessionLocked()
 	if s.userKey != nil {
@@ -452,6 +499,9 @@ func (s *Service) syncOnce(ctx context.Context, force bool) error {
 	revDate, revErr := withAuth(o, func(ctx context.Context, tok string) (time.Time, error) {
 		return o.client.RevisionDate(ctx, tok)
 	})
+	if errors.Is(revErr, ErrSignInNotSaved) {
+		return revErr
+	}
 	if !force && revErr == nil && !o.snap.RevisionDate.IsZero() && revDate.Equal(o.snap.RevisionDate) {
 		return nil
 	}
@@ -561,11 +611,28 @@ func (s *Service) StartRealtime(ctx context.Context) error {
 	}
 
 	go func() {
-		_ = rtClient.Run(o.ctx, o.accessToken, func(ev realtime.Event) {
+		_ = rtClient.Run(o.ctx, opTokens{o}, func() {
+			// Changes made while disconnected sent no notification.
+			go func() { _ = s.SyncNow(o.ctx) }()
+		}, func(ev realtime.Event) {
 			_ = s.handleRealtimeEvent(o.ctx, o.gen, ev)
 		})
 	}()
 	return nil
+}
+
+// opTokens gives the realtime connection the session's access token; a
+// token the hub rejected is dropped so the next one is refreshed.
+type opTokens struct{ o *op }
+
+func (t opTokens) Token() (string, error) { return t.o.accessToken() }
+
+func (t opTokens) Rejected(token string) {
+	t.o.s.mu.Lock()
+	defer t.o.s.mu.Unlock()
+	if t.o.currentLocked() && t.o.s.accessToken == token {
+		t.o.s.accessToken = ""
+	}
 }
 
 // HandleRealtimeEvent applies ev to the current session.

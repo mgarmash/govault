@@ -32,6 +32,8 @@ var (
 	ErrHiddenByOrganization    = errors.New("state: hidden by your organization")
 	ErrUnsupportedUpload       = errors.New("state: server requested an unsupported attachment upload method")
 	ErrSyncDeferred            = errors.New("state: changes kept landing during sync; nothing was synced yet")
+	ErrServerMismatch          = errors.New("state: the saved sign-in belongs to a different server than this vault copy; sign in again")
+	ErrSignInNotSaved          = errors.New("state: your sign-in could not be saved, so you will need to sign in again after locking")
 	ErrAccountChanged          = errors.New("state: the account changed since this was confirmed")
 	ErrSnapshotNotUpdated      = errors.New("state: the server has the change, but the local copy could not be updated; sync to refresh it")
 )

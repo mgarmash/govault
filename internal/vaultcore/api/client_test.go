@@ -295,3 +295,47 @@ func TestClassifyVaultwardenErrors(t *testing.T) {
 		t.Fatalf("plain 400 = %v", err)
 	}
 }
+
+func TestAPIRequestsNeverFollowRedirectsOffOrigin(t *testing.T) {
+	var leaked bool
+	other := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		leaked = true
+	}))
+	defer other.Close()
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Location", other.URL+r.URL.Path)
+		w.WriteHeader(http.StatusTemporaryRedirect)
+	}))
+	defer srv.Close()
+	c, err := NewClient(ClientConfig{ServerURL: srv.URL, HTTPClient: srv.Client()})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := c.LoginPassword(context.Background(), "a@b.com", "hash", nil); !errors.Is(err, ErrRedirectRefused) {
+		t.Fatalf("login = %v, want ErrRedirectRefused", err)
+	}
+	if _, err := c.RefreshToken(context.Background(), "refresh"); !errors.Is(err, ErrRedirectRefused) {
+		t.Fatalf("refresh = %v, want ErrRedirectRefused", err)
+	}
+	if _, _, err := c.Sync(context.Background(), "token"); !errors.Is(err, ErrRedirectRefused) {
+		t.Fatalf("sync = %v, want ErrRedirectRefused", err)
+	}
+	if leaked {
+		t.Fatal("a credential-bearing request reached another origin")
+	}
+}
+
+func TestInsecureServer(t *testing.T) {
+	for u, want := range map[string]bool{
+		"https://vault.example.com": false,
+		"http://vault.example.com":  true,
+		"http://192.168.1.10:8080":  true,
+		"http://localhost:8080":     false,
+		"http://127.0.0.1":          false,
+		"http://[::1]:8000":         false,
+	} {
+		if got := InsecureServer(u); got != want {
+			t.Errorf("InsecureServer(%q) = %v, want %v", u, got, want)
+		}
+	}
+}

@@ -8,7 +8,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/url"
+	"strings"
 
+	"github.com/txchen/govault/internal/vaultcore/api"
 	"github.com/txchen/govault/internal/vaultcore/crypto"
 )
 
@@ -171,4 +174,77 @@ func uriChecksum(uri string, key *crypto.SymmetricKey) (*string, error) {
 		return nil, err
 	}
 	return &enc, nil
+}
+
+// boundRefreshToken is how a refresh token is stored: with the origin of
+// the server that issued it, so a token is only ever sent back there.
+type boundRefreshToken struct {
+	Origin string `json:"origin"`
+	Token  string `json:"token"`
+}
+
+func serverOrigin(serverURL string) string {
+	u, err := url.Parse(strings.TrimSpace(serverURL))
+	if err != nil || u.Host == "" {
+		return ""
+	}
+	scheme, host, port := strings.ToLower(u.Scheme), strings.ToLower(u.Hostname()), u.Port()
+	if (scheme == "https" && port == "443") || (scheme == "http" && port == "80") {
+		port = ""
+	}
+	if strings.Contains(host, ":") {
+		host = "[" + host + "]"
+	}
+	if port != "" {
+		host += ":" + port
+	}
+	return scheme + "://" + host
+}
+
+// loadRefreshToken returns the refresh token for accountID if it was issued
+// by serverURL's origin. A token stored without its origin, by an older
+// GoVault, is bound to cfg.TrustedServerURL when that is the same origin,
+// and refused otherwise. No token gives api.ErrUnauthorized.
+func (s *Service) loadRefreshToken(accountID, serverURL string) (string, error) {
+	s.mu.RLock()
+	unsaved := s.unsavedRefresh
+	s.mu.RUnlock()
+	if unsaved != "" {
+		return unsaved, nil
+	}
+	if s.cfg.Secrets == nil {
+		return "", api.ErrUnauthorized
+	}
+	raw, ok, err := s.cfg.Secrets.Get(refreshTokenKeyPrefix + accountID)
+	if err != nil {
+		return "", err
+	}
+	if !ok || raw == "" {
+		return "", api.ErrUnauthorized
+	}
+	want := serverOrigin(serverURL)
+	var bound boundRefreshToken
+	if json.Unmarshal([]byte(raw), &bound) == nil && bound.Token != "" {
+		if bound.Origin == "" || bound.Origin != want {
+			return "", ErrServerMismatch
+		}
+		return bound.Token, nil
+	}
+	if want == "" || serverOrigin(s.cfg.TrustedServerURL) != want {
+		return "", ErrServerMismatch
+	}
+	s.secretMu.Lock()
+	defer s.secretMu.Unlock()
+	if err := s.saveRefreshToken(accountID, serverURL, raw); err != nil {
+		return "", err
+	}
+	return raw, nil
+}
+
+func (s *Service) saveRefreshToken(accountID, serverURL, token string) error {
+	raw, err := json.Marshal(boundRefreshToken{Origin: serverOrigin(serverURL), Token: token})
+	if err != nil {
+		return err
+	}
+	return s.cfg.Secrets.Set(refreshTokenKeyPrefix+accountID, string(raw))
 }

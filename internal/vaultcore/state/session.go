@@ -2,6 +2,7 @@ package state
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/txchen/govault/internal/vaultcore/api"
 	"github.com/txchen/govault/internal/vaultcore/crypto"
@@ -39,6 +40,7 @@ func (s *Service) endSessionLocked() {
 	}
 	s.sessionCtx, s.sessionCancel = nil, nil
 	s.accessToken = ""
+	s.unsavedRefresh = ""
 }
 
 type sessionGenKey struct{}
@@ -120,22 +122,27 @@ func (o *op) accessToken() (string, error) {
 	if tok != "" {
 		return tok, nil
 	}
-	return o.refreshToken(o.ctx)
+	return o.refreshAfter(o.ctx, "")
 }
 
-func (o *op) refreshToken(ctx context.Context) (string, error) {
-	if !o.current() {
+// refreshAfter gets a new access token after stale was rejected (or none
+// was held). Refreshes run one at a time; one that finds a newer token
+// than stale, from a refresh that finished meanwhile, uses it.
+func (o *op) refreshAfter(ctx context.Context, stale string) (string, error) {
+	o.s.refreshMu.Lock()
+	defer o.s.refreshMu.Unlock()
+	o.s.mu.RLock()
+	cur, ok := o.s.accessToken, o.currentLocked()
+	o.s.mu.RUnlock()
+	if !ok {
 		return "", ErrLocked
 	}
-	if o.s.cfg.Secrets == nil {
-		return "", api.ErrUnauthorized
+	if cur != "" && cur != stale {
+		return cur, nil
 	}
-	refreshTok, ok, err := o.s.cfg.Secrets.Get(refreshTokenKeyPrefix + o.accountID)
+	refreshTok, err := o.s.loadRefreshToken(o.accountID, o.snap.ServerURL)
 	if err != nil {
 		return "", err
-	}
-	if !ok || refreshTok == "" {
-		return "", api.ErrUnauthorized
 	}
 	resp, err := o.client.RefreshToken(ctx, refreshTok)
 	if err != nil {
@@ -144,13 +151,14 @@ func (o *op) refreshToken(ctx context.Context) (string, error) {
 
 	// Keychain writes can be slow or interactive, so they run outside s.mu.
 	// secretMu orders them with logout, which advances the session first.
+	var saveErr error
 	if resp.RefreshToken != "" {
 		o.s.secretMu.Lock()
 		if !o.current() {
 			o.s.secretMu.Unlock()
 			return "", ErrLocked
 		}
-		_ = o.s.cfg.Secrets.Set(refreshTokenKeyPrefix+o.accountID, resp.RefreshToken)
+		saveErr = o.s.saveRefreshToken(o.accountID, o.snap.ServerURL, resp.RefreshToken)
 		o.s.secretMu.Unlock()
 	}
 
@@ -160,6 +168,11 @@ func (o *op) refreshToken(ctx context.Context) (string, error) {
 		return "", ErrLocked
 	}
 	o.s.accessToken = resp.AccessToken
+	o.s.unsavedRefresh = ""
+	if saveErr != nil {
+		o.s.unsavedRefresh = resp.RefreshToken
+		return "", fmt.Errorf("%w: %w", ErrSignInNotSaved, saveErr)
+	}
 	return resp.AccessToken, nil
 }
 
@@ -169,7 +182,8 @@ func withAuth[T any](o *op, fn func(ctx context.Context, token string) (T, error
 		var zero T
 		return zero, err
 	}
-	return api.DoWithRefresh(o.ctx, tok, o.refreshToken, func(t string) (T, error) { return fn(o.ctx, t) })
+	refresh := func(ctx context.Context) (string, error) { return o.refreshAfter(ctx, tok) }
+	return api.DoWithRefresh(o.ctx, tok, refresh, func(t string) (T, error) { return fn(o.ctx, t) })
 }
 
 // itemKey returns a copy of the key that encrypts items owned by orgID, or

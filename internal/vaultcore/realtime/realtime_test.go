@@ -6,6 +6,7 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"sync"
 	"testing"
 	"time"
 
@@ -131,7 +132,7 @@ func TestWSClient_HandshakePingNotificationAndShutdown(t *testing.T) {
 	events := make(chan Event, 4)
 	done := make(chan error, 1)
 	go func() {
-		done <- client.Run(ctx, func() (string, error) { return "jwt-123", nil }, func(ev Event) {
+		done <- client.Run(ctx, &testTokens{tokens: []string{"jwt-123"}}, nil, func(ev Event) {
 			events <- ev
 		})
 	}()
@@ -169,5 +170,65 @@ func TestWSClient_HandshakePingNotificationAndShutdown(t *testing.T) {
 		}
 	case <-timeout.C:
 		t.Fatalf("timed out waiting for clean shutdown")
+	}
+}
+
+type testTokens struct {
+	mu       sync.Mutex
+	tokens   []string
+	rejected []string
+}
+
+func (t *testTokens) Token() (string, error) {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	return t.tokens[0], nil
+}
+
+func (t *testTokens) Rejected(token string) {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	t.rejected = append(t.rejected, token)
+	if len(t.tokens) > 1 && t.tokens[0] == token {
+		t.tokens = t.tokens[1:]
+	}
+}
+
+func TestWSClient_RefreshesARejectedTokenAndReportsEachConnect(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Query().Get("access_token") != "fresh" {
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+		conn, err := websocket.Accept(w, r, nil)
+		if err != nil {
+			return
+		}
+		defer conn.Close(websocket.StatusNormalClosure, "")
+		if _, _, err := conn.Read(r.Context()); err != nil {
+			return
+		}
+		_ = conn.Write(r.Context(), websocket.MessageText, []byte("{}\x1e"))
+		<-r.Context().Done()
+	}))
+	defer srv.Close()
+	client, err := NewClient(Config{ServerURL: srv.URL, HTTPClient: srv.Client(), InitialBackoff: time.Millisecond, MaxBackoff: 5 * time.Millisecond})
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	tokens := &testTokens{tokens: []string{"expired", "fresh"}}
+	connected := make(chan struct{}, 1)
+	go func() { _ = client.Run(ctx, tokens, func() { connected <- struct{}{} }, nil) }()
+	select {
+	case <-connected:
+	case <-time.After(5 * time.Second):
+		t.Fatal("never connected with the refreshed token")
+	}
+	tokens.mu.Lock()
+	defer tokens.mu.Unlock()
+	if len(tokens.rejected) == 0 || tokens.rejected[0] != "expired" {
+		t.Fatalf("rejected = %v, want the expired token reported", tokens.rejected)
 	}
 }

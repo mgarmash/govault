@@ -541,11 +541,7 @@ func NewAppModel(app *core.Scope, coreSvc state.VaultService, hooks PlatformHook
 		prefsKey = DefaultPrefsKey
 	}
 	prefs := core.NewPersisted(app, prefsKey, DefaultUserPrefs(), core.PersistOptions{Version: 1})
-	p := prefs.Get()
-	if p.DeviceID == "" {
-		p.DeviceID = newDeviceUUID()
-		_ = prefs.Set(p)
-	}
+	p := EnsureDeviceID(prefs)
 
 	m := &AppModel{
 		Scope:               app,
@@ -1095,11 +1091,15 @@ func (m *AppModel) UnlockWithPassword() {
 	m.LockBusy.Set(true)
 	m.LockError.Set("")
 	pwBytes := []byte(password)
+	gen := m.LockGeneration()
 
 	go func() {
 		defer crypto.ZeroBytes(pwBytes)
 		err := m.Core.UnlockWithPassword(context.Background(), pwBytes)
 		m.Scope.Post(func() {
+			if gen != m.LockGeneration() {
+				return
+			}
 			m.LockBusy.Set(false)
 			if err != nil {
 				m.LockError.Set(friendlyError(err))
@@ -1140,6 +1140,7 @@ func (m *AppModel) UnlockWithBiometric(cx *core.Scope) {
 	m.LockError.Set("")
 
 	secrets := m.Hooks.Secrets
+	gen := m.LockGeneration()
 	readKey := func() {
 		go func() {
 			encoded, ok, err := secrets.Get("userkey:" + accountID)
@@ -1166,6 +1167,9 @@ func (m *AppModel) UnlockWithBiometric(cx *core.Scope) {
 
 			err = m.Core.UnlockWithUserKey(context.Background(), key)
 			m.Scope.Post(func() {
+				if gen != m.LockGeneration() {
+					return
+				}
 				if err != nil {
 					m.unlockFailed(friendlyError(err))
 					return
@@ -1243,6 +1247,38 @@ func (m *AppModel) ToggleBiometric(cx *core.Scope, enable bool) {
 func (m *AppModel) Lock() {
 	m.RevokePending()
 	m.Core.Lock()
+	m.clearUnlockedUI()
+	m.LockState.Set(m.Core.Status())
+}
+
+// ServiceLeftUnlocked runs when the vault service leaves the unlocked state
+// on its own, such as a logout the server sent: the same cleanup as a
+// local lock, and for a logout the account-scoped settings too.
+func (m *AppModel) ServiceLeftUnlocked(st state.LockStatus) {
+	if st == state.StatusUnlocked {
+		return
+	}
+	m.RevokePending()
+	m.clearUnlockedUI()
+	m.LockState.Set(st)
+	if st == state.StatusLoggedOut {
+		m.forgetAccount()
+	}
+}
+
+func (m *AppModel) forgetAccount() {
+	m.resetFaviconMemory()
+	m.UpdatePrefs(func(p UserPrefs) UserPrefs {
+		p.AccountID = ""
+		p.BiometricEnabled = false
+		return p
+	})
+	m.Route.Set(RouteVault)
+}
+
+// clearUnlockedUI removes everything the unlocked vault put on screen or in
+// memory: drafts, dialogs, revealed secrets, backups and lists.
+func (m *AppModel) clearUnlockedUI() {
 	if m.Hooks.SSHAgent != nil {
 		m.Hooks.SSHAgent.Clear()
 	}
@@ -1261,7 +1297,6 @@ func (m *AppModel) Lock() {
 	// Locking stays quiet: Touch ID is offered again only once the window is
 	// reopened or the app starts.
 	m.LockAutoFired = true
-	m.LockState.Set(m.Core.Status())
 	m.ActiveCipher.Set(nil)
 	m.SelectedID.Set("")
 	m.EditMode.Set(false)
@@ -1283,7 +1318,16 @@ func (m *AppModel) Lock() {
 }
 
 func (m *AppModel) LockOnSystemEvent() bool {
-	if !m.Prefs.Get().LockOnSleep || m.LockState.Get() != state.StatusUnlocked {
+	if !m.Prefs.Get().LockOnSleep {
+		return false
+	}
+	if m.LockState.Get() != state.StatusUnlocked {
+		// An unlock still running must not finish after the sleep.
+		if m.LockBusy.Get() {
+			m.RevokePending()
+			m.Core.Lock()
+			m.LockBusy.Set(false)
+		}
 		return false
 	}
 	m.Lock()
@@ -1315,14 +1359,8 @@ func (m *AppModel) Logout(cx *core.Scope) {
 					m.ShowToast(ui.ToastWarning, "Logged out", "Some saved secrets could not be removed: "+err.Error())
 				}
 				m.Lock()
-				m.resetFaviconMemory()
 				m.LockState.Set(state.StatusLoggedOut)
-				m.UpdatePrefs(func(p UserPrefs) UserPrefs {
-					p.AccountID = ""
-					p.BiometricEnabled = false
-					return p
-				})
-				m.Route.Set(RouteVault)
+				m.forgetAccount()
 			})
 		}()
 	})
@@ -2408,6 +2446,18 @@ func friendlyError(err error) string {
 	default:
 		return err.Error()
 	}
+}
+
+// EnsureDeviceID gives the app its device identifier on first launch and
+// saves it, so the first sign-in already sends the identifier every later
+// launch uses.
+func EnsureDeviceID(prefs *core.Persisted[UserPrefs]) UserPrefs {
+	p := prefs.Get()
+	if p.DeviceID == "" {
+		p.DeviceID = newDeviceUUID()
+		_ = prefs.Set(p)
+	}
+	return p
 }
 
 func newDeviceUUID() string {

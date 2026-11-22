@@ -66,7 +66,7 @@ func NewDesktopShell(app *core.Scope, demoMode bool) *DesktopShell {
 	}
 
 	tempPrefs := core.NewPersisted(app, govaultui.DefaultPrefsKey, govaultui.DefaultUserPrefs(), core.PersistOptions{Version: 1})
-	initialPrefs := tempPrefs.Get()
+	initialPrefs := govaultui.EnsureDeviceID(tempPrefs)
 
 	meta := DiscoverAccountSnapshot(dataDir, initialPrefs.AccountID)
 	accountID := initialPrefs.AccountID
@@ -75,12 +75,13 @@ func NewDesktopShell(app *core.Scope, demoMode bool) *DesktopShell {
 	}
 
 	svc, err := state.NewService(state.ServiceConfig{
-		Store:      store.NewFileStore(dataDir),
-		Secrets:    secrets,
-		AccountID:  accountID,
-		DeviceID:   initialPrefs.DeviceID,
-		DeviceName: "GoVault Desktop",
-		DeviceType: deviceTypeForOS(),
+		TrustedServerURL: initialPrefs.ServerURL,
+		Store:            store.NewFileStore(dataDir),
+		Secrets:          secrets,
+		AccountID:        accountID,
+		DeviceID:         initialPrefs.DeviceID,
+		DeviceName:       "GoVault Desktop",
+		DeviceType:       deviceTypeForOS(),
 		OnStatusChange: func(st state.LockStatus) {
 			if st != state.StatusUnlocked {
 				shell.sshAgent.Clear()
@@ -92,10 +93,12 @@ func NewDesktopShell(app *core.Scope, demoMode bool) *DesktopShell {
 				if shell.model == nil {
 					return
 				}
-				shell.model.LockState.Set(st)
-				if st == state.StatusUnlocked {
-					shell.startRealtimeAsync()
+				if st != state.StatusUnlocked {
+					shell.model.ServiceLeftUnlocked(st)
+					return
 				}
+				shell.model.LockState.Set(st)
+				shell.startRealtimeAsync()
 			})
 		},
 		OnVaultUpdated: func() {

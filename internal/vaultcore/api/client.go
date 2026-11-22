@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"mime/multipart"
+	"net"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -31,6 +32,11 @@ type ClientConfig struct {
 type Client struct {
 	baseURL    string
 	httpClient *http.Client
+	// apiHTTP sends every request to the server's API: login, two-factor,
+	// token refresh and authenticated calls. It never follows a redirect
+	// to another scheme, host or port, so credentials stay on the origin
+	// the user signed in to.
+	apiHTTP    *http.Client
 	deviceID   string
 	deviceName string
 	deviceType int
@@ -52,9 +58,25 @@ func NewClient(cfg ClientConfig) (*Client, error) {
 		httpClient = &http.Client{Timeout: 30 * time.Second}
 	}
 
+	apiHTTP := *httpClient
+	inner := httpClient.CheckRedirect
+	apiHTTP.CheckRedirect = func(next *http.Request, via []*http.Request) error {
+		if len(via) >= 10 {
+			return errors.New("api: too many redirects")
+		}
+		if !sameOrigin(next.URL, u) {
+			return fmt.Errorf("%w to %s://%s", ErrRedirectRefused, next.URL.Scheme, next.URL.Host)
+		}
+		if inner != nil {
+			return inner(next, via)
+		}
+		return nil
+	}
+
 	return &Client{
 		baseURL:    base,
 		httpClient: httpClient,
+		apiHTTP:    &apiHTTP,
 		deviceID:   cfg.DeviceID,
 		deviceName: cfg.DeviceName,
 		deviceType: cfg.DeviceType,
@@ -308,10 +330,13 @@ func (c *Client) do(
 		req.Header.Set(k, v)
 	}
 
-	resp, err := c.httpClient.Do(req)
+	resp, err := c.apiHTTP.Do(req)
 	if err != nil {
 		if ctx.Err() != nil {
 			return nil, ctx.Err()
+		}
+		if errors.Is(err, ErrRedirectRefused) {
+			return nil, err
 		}
 		return nil, fmt.Errorf("%w: %v", ErrNetworkOffline, err)
 	}
@@ -536,4 +561,19 @@ func (c *Client) UploadAttachmentData(ctx context.Context, accessToken, cipherID
 func (c *Client) DeleteAttachment(ctx context.Context, accessToken, cipherID, attachmentID string) error {
 	_, err := c.do(ctx, http.MethodDelete, attachmentPath(cipherID, attachmentID), "", accessToken, nil, nil)
 	return err
+}
+
+// InsecureServer reports that serverURL is plain HTTP to a host other than
+// this machine, so passwords and vault data cross the network unencrypted.
+func InsecureServer(serverURL string) bool {
+	u, err := url.Parse(strings.TrimSpace(serverURL))
+	if err != nil || !strings.EqualFold(u.Scheme, "http") {
+		return false
+	}
+	host := u.Hostname()
+	if strings.EqualFold(host, "localhost") {
+		return false
+	}
+	ip := net.ParseIP(host)
+	return ip == nil || !ip.IsLoopback()
 }

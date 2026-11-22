@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -50,10 +51,14 @@ func (s *memSecretStore) Delete(account string) error {
 }
 
 type fakeRealtimeClient struct {
-	events chan realtime.Event
+	events  chan realtime.Event
+	connect bool
 }
 
-func (f *fakeRealtimeClient) Run(ctx context.Context, _ func() (string, error), onEvent func(realtime.Event)) error {
+func (f *fakeRealtimeClient) Run(ctx context.Context, _ realtime.Tokens, onConnect func(), onEvent func(realtime.Event)) error {
+	if f.connect && onConnect != nil {
+		onConnect()
+	}
 	for {
 		select {
 		case <-ctx.Done():
@@ -97,6 +102,11 @@ type vaultTestEnv struct {
 	syncResp  func() []byte
 	// onSync runs during each sync request, after its answer is fixed.
 	onSync func()
+	// rotateRefresh makes each refresh token valid once, as servers that
+	// rotate them do.
+	rotateRefresh bool
+	refreshes     int
+	refreshSpent  map[string]bool
 }
 
 func (env *vaultTestEnv) syncBody() []byte { return env.syncResp() }
@@ -240,9 +250,27 @@ func newVaultTestEnv(t *testing.T) *vaultTestEnv {
 				}
 				_ = json.NewEncoder(w).Encode(resp)
 			case "refresh_token":
+				env.mu.Lock()
+				env.refreshes++
+				n, rotate, used := env.refreshes, env.rotateRefresh, r.FormValue("refresh_token")
+				if rotate && (env.refreshSpent[used] || used == "") {
+					env.mu.Unlock()
+					w.WriteHeader(http.StatusBadRequest)
+					_, _ = w.Write([]byte(`{"error":"invalid_grant"}`))
+					return
+				}
+				if env.refreshSpent == nil {
+					env.refreshSpent = map[string]bool{}
+				}
+				env.refreshSpent[used] = true
+				env.mu.Unlock()
+				next := "ref-2"
+				if rotate {
+					next = fmt.Sprintf("ref-rot-%d", n)
+				}
 				_ = json.NewEncoder(w).Encode(api.TokenResponse{
 					AccessToken:  "tok-2",
-					RefreshToken: "ref-2",
+					RefreshToken: next,
 					ExpiresIn:    3600,
 					TokenType:    "Bearer",
 				})

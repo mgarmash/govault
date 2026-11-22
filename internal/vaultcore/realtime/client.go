@@ -18,8 +18,18 @@ const (
 	defaultMaxBackoff     = 60 * time.Second
 )
 
+// Tokens supplies access tokens. Rejected reports one the server refused,
+// so the next Token call gets a fresh one instead of retrying it.
+type Tokens interface {
+	Token() (string, error)
+	Rejected(token string)
+}
+
+// Client keeps a notification connection open. onConnect runs after each
+// handshake, the first and every reconnect, so the caller can catch up on
+// changes it missed while disconnected.
 type Client interface {
-	Run(ctx context.Context, accessToken func() (string, error), onEvent func(Event)) error
+	Run(ctx context.Context, tokens Tokens, onConnect func(), onEvent func(Event)) error
 }
 
 type Config struct {
@@ -76,9 +86,9 @@ func NewClient(cfg Config) (*WSClient, error) {
 	}, nil
 }
 
-func (c *WSClient) Run(ctx context.Context, accessToken func() (string, error), onEvent func(Event)) error {
-	if accessToken == nil {
-		return errors.New("realtime: accessToken provider is required")
+func (c *WSClient) Run(ctx context.Context, tokens Tokens, onConnect func(), onEvent func(Event)) error {
+	if tokens == nil {
+		return errors.New("realtime: token source is required")
 	}
 
 	backoff := c.initialBackoff
@@ -87,7 +97,7 @@ func (c *WSClient) Run(ctx context.Context, accessToken func() (string, error), 
 			return ctx.Err()
 		}
 
-		connected, err := c.runOnce(ctx, accessToken, onEvent)
+		connected, err := c.runOnce(ctx, tokens, onConnect, onEvent)
 		if ctx.Err() != nil {
 			return ctx.Err()
 		}
@@ -103,8 +113,8 @@ func (c *WSClient) Run(ctx context.Context, accessToken func() (string, error), 
 	}
 }
 
-func (c *WSClient) runOnce(ctx context.Context, accessToken func() (string, error), onEvent func(Event)) (bool, error) {
-	token, err := accessToken()
+func (c *WSClient) runOnce(ctx context.Context, tokens Tokens, onConnect func(), onEvent func(Event)) (bool, error) {
+	token, err := tokens.Token()
 	if err != nil {
 		return false, err
 	}
@@ -117,10 +127,13 @@ func (c *WSClient) runOnce(ctx context.Context, accessToken func() (string, erro
 	q.Set("access_token", token)
 	u.RawQuery = q.Encode()
 
-	conn, _, err := websocket.Dial(ctx, u.String(), &websocket.DialOptions{
+	conn, resp, err := websocket.Dial(ctx, u.String(), &websocket.DialOptions{
 		HTTPClient: c.httpClient,
 	})
 	if err != nil {
+		if resp != nil && (resp.StatusCode == http.StatusUnauthorized || resp.StatusCode == http.StatusForbidden) {
+			tokens.Rejected(token)
+		}
 		return false, err
 	}
 	defer conn.Close(websocket.StatusNormalClosure, "")
@@ -134,6 +147,9 @@ func (c *WSClient) runOnce(ctx context.Context, accessToken func() (string, erro
 	}
 	if err := ParseHandshakeResponse(hsResp); err != nil {
 		return false, err
+	}
+	if onConnect != nil {
+		onConnect()
 	}
 
 	for {

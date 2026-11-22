@@ -5,6 +5,7 @@ import (
 	"github.com/nsgo-dev/nsgo/core"
 	"github.com/nsgo-dev/nsgo/icons/lucide"
 	"github.com/nsgo-dev/nsgo/ui"
+	"github.com/txchen/govault/internal/vaultcore/api"
 )
 
 const authFieldHeight core.Points = 34
@@ -59,6 +60,16 @@ func signInView(cx *core.Scope, m *AppModel) core.Node {
 					OnSubmit:      func(string) { m.Login() },
 					Disabled:      m.LoginBusy.Get,
 				}, authFieldHeight, m.LoginShowPW, "login-toggle-pw")),
+			},
+		},
+		core.Show{
+			When: func() bool { return api.InsecureServer(m.LoginServer.Get()) },
+			Then: func(cx *core.Scope) core.Node {
+				return core.Text{
+					TestID:  "login-insecure",
+					Class:   "text-[12px] text-gv-warn",
+					Content: "This server does not use HTTPS. Your master password and vault data are sent unencrypted; use it only on a network you trust.",
+				}
 			},
 		},
 		core.Show{
