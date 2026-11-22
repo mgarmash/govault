@@ -1062,11 +1062,15 @@ func (m *AppModel) SendTwoFactorEmail() {
 	m.TwoFactorSending.Set(true)
 	m.LoginError.Set("")
 	m.TwoFactorNotice.Set("")
+	gen := m.LockGeneration()
 
 	go func() {
 		defer crypto.ZeroBytes(req.MasterPassword)
 		err := m.Core.SendEmailTwoFactorCode(context.Background(), req)
 		m.Scope.Post(func() {
+			if gen != m.LockGeneration() {
+				return
+			}
 			m.TwoFactorSending.Set(false)
 			if err != nil {
 				m.LoginError.Set("Could not send the verification email. " + friendlyError(err))
@@ -1432,6 +1436,7 @@ func (m *AppModel) clearAuthInputs() {
 	m.LockBusy.Set(false)
 	m.LoginBusy.Set(false)
 	m.RepromptBusy.Set(false)
+	m.TwoFactorSending.Set(false)
 	m.LockPassword.Set("")
 	m.LoginPassword.Set("")
 	m.RepromptPW.Set("")

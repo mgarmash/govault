@@ -52,6 +52,8 @@ type mockVaultService struct {
 	lastLogin    state.LoginRequest
 	// trustedServer is the server the trusted sign-in record names.
 	trustedServer string
+	// emailGate, when set, holds SendEmailTwoFactorCode until closed.
+	emailGate chan struct{}
 	// unlockCommitted, when set, holds UnlockWithPassword after it commits
 	// until the test answers.
 	unlockCommitted chan struct{}
@@ -120,6 +122,12 @@ func (m *mockVaultService) Login(_ context.Context, req state.LoginRequest) erro
 }
 
 func (m *mockVaultService) SendEmailTwoFactorCode(_ context.Context, req state.LoginRequest) error {
+	m.mu.RLock()
+	gate := m.emailGate
+	m.mu.RUnlock()
+	if gate != nil {
+		<-gate
+	}
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	if string(req.MasterPassword) != m.password {

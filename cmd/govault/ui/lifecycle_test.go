@@ -73,9 +73,13 @@ func TestSleepDuringSignInRevokesTheAttempt(t *testing.T) {
 	app.Post(func() {
 		m.UpdatePrefs(func(p UserPrefs) UserPrefs { p.LockOnSleep = true; return p })
 		m.LoginBusy.Set(true)
+		m.TwoFactorSending.Set(true)
 		m.LockOnSystemEvent()
 	})
 	app.WaitUntil(2*time.Second, func() bool { return !m.LoginBusy.Get() })
+	if m.TwoFactorSending.Get() {
+		t.Fatal("Send code stayed busy after the sleep")
+	}
 	svc.mu.Lock()
 	defer svc.mu.Unlock()
 	if svc.revokes != 1 {
@@ -361,9 +365,12 @@ func TestSleepAfterTheUIShowsTheVaultClearsTheUnlockForm(t *testing.T) {
 		}
 	})
 	// The status callback reached the UI, the worker has not reported yet.
-	app.Post(func() { m.LockState.Set(state.StatusUnlocked) })
+	app.Post(func() { m.LockState.Set(state.StatusUnlocked); m.TwoFactorSending.Set(true) })
 	app.Post(func() { m.LockOnSystemEvent() })
 	app.Settle()
+	if m.TwoFactorSending.Get() {
+		t.Fatal("Send code stayed busy after the sleep")
+	}
 	if m.LockPassword.Get() != "" || m.LockBusy.Get() || m.LockState.Get() != state.StatusLocked {
 		t.Fatalf("after the sleep: password kept %v, busy %v, state %v", m.LockPassword.Get() != "", m.LockBusy.Get(), m.LockState.Get())
 	}
@@ -381,7 +388,7 @@ func TestTheWholeEditorIsDisabledWhileSaving(t *testing.T) {
 	app, m, root := startSecurityApp(t, svc, PlatformHooks{})
 	app.Post(func() { m.StartCreateCipher(root) })
 	app.WaitFor("id:editor-password", 2*time.Second)
-	for _, id := range []string{"editor-name", "editor-password", "editor-notes", "editor-username", "editor-cancel"} {
+	for _, id := range []string{"editor-name", "editor-password", "editor-toggle-pw", "editor-notes", "editor-username", "editor-cancel"} {
 		if !app.Enabled("id:" + id) {
 			t.Fatalf("%s disabled before saving", id)
 		}
@@ -389,11 +396,36 @@ func TestTheWholeEditorIsDisabledWhileSaving(t *testing.T) {
 	app.Post(func() { m.MutateDraft(func(d *EditDraft) { d.Name = "x" }); m.SaveDraft(root) })
 	app.WaitUntil(2*time.Second, func() bool { return m.EditBusy.Get() })
 	app.Settle()
-	for _, id := range []string{"editor-name", "editor-password", "editor-notes", "editor-username", "editor-cancel", "editor-add-uri"} {
+	for _, id := range []string{"editor-name", "editor-password", "editor-toggle-pw", "editor-notes", "editor-username", "editor-cancel", "editor-add-uri"} {
 		if app.Enabled("id:" + id) {
 			t.Fatalf("%s is editable while saving", id)
 		}
 	}
 	close(gate)
 	app.WaitUntil(2*time.Second, func() bool { return !m.EditBusy.Get() })
+}
+
+func TestLateTwoFactorEmailAfterSleepIsIgnored(t *testing.T) {
+	svc := newMockVaultService(state.StatusLoggedOut)
+	svc.twoFactorCode = "123456"
+	gate := make(chan struct{})
+	svc.emailGate = gate
+	app, m, _ := startSecurityApp(t, svc, PlatformHooks{})
+	app.Post(func() {
+		m.UpdatePrefs(func(p UserPrefs) UserPrefs { p.LockOnSleep = true; return p })
+		m.LoginServer.Set("https://vault.example")
+		m.LoginEmail.Set("alice@example.com")
+		m.LoginPassword.Set("master-password")
+		m.Login()
+	})
+	app.WaitUntil(2*time.Second, func() bool { return m.TwoFactor.Get() != nil })
+	app.Post(func() { m.LoginPassword.Set("master-password"); m.SendTwoFactorEmail() })
+	app.WaitUntil(2*time.Second, func() bool { return m.TwoFactorSending.Get() })
+	app.Post(func() { m.LockOnSystemEvent() })
+	app.WaitUntil(2*time.Second, func() bool { return !m.TwoFactorSending.Get() })
+	close(gate)
+	app.Settle()
+	if m.TwoFactorNotice.Get() != "" || m.TwoFactorSending.Get() {
+		t.Fatalf("a late email completion after sleep took effect: notice %q", m.TwoFactorNotice.Get())
+	}
 }

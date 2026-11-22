@@ -165,6 +165,7 @@ func passwordField(cx *core.Scope, in base.Input, height core.Points, show *core
 			Side:     height - 8,
 			IconSize: 14,
 			Tint:     func() core.Color { return themeColor(cx, "gv-fg3") },
+			Disabled: in.Disabled,
 			OnPress:  func() { show.Set(!show.Get()) },
 		},
 	}
