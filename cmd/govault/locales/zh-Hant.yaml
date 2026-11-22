@@ -1,0 +1,806 @@
+# GoVault Traditional Chinese - Taiwan (zh-Hant) message catalog.
+
+# Common words
+
+cancel: 取消
+save: 儲存
+delete: 刪除
+remove: 移除
+edit: 編輯
+restore: 還原
+verify: 驗證
+copy: 複製
+undo: 復原
+never: 永不
+notAvailable: "—"
+
+# Item types
+
+typeLogin: 登入
+typeSecureNote: 安全筆記
+typeCard: 付款卡
+typeIdentity: 身分
+typeSSHKey: SSH 金鑰
+typeItem: 項目
+typeLogins: 登入
+typeCards: 付款卡
+typeIdentities: 身分
+typeSecureNotes: 安全筆記
+typeSSHKeys: SSH 金鑰
+
+# Sign in
+
+signInTitle: 登入 GoVault
+signInSubtitle: 連線至您的 Bitwarden 或 Vaultwarden 伺服器。
+serverURL: 伺服器 URL
+email: 電子郵件
+masterPassword: 主密碼
+masterPasswordPlaceholder: 主密碼
+required: 必填
+emailPlaceholder: name@example.com
+insecureServer: 此伺服器未使用 HTTPS。您的主密碼與密碼庫資料將以明文傳送，請僅在受信任的網路中使用。
+signIn: 登入
+backToUnlock: 返回解鎖
+signInFootnote: 端對端加密。您的主密碼絕不會離開此裝置。
+signInFieldsRequired: 請填寫伺服器 URL、電子郵件與主密碼。
+togglePasswordVisibility: 切換密碼顯示
+
+# Two-step login
+
+twoFactorTitle: 兩步驟驗證
+twoFactorEnterEmailCodeTo: "請輸入傳送至 {email} 的驗證碼。"
+twoFactorEnterEmailCode: 請輸入傳送至您電子郵件的驗證碼。
+twoFactorEnterAuthenticatorCode: 請輸入驗證器應用程式中的 6 位數驗證碼。
+twoFactorMethod: 驗證方式
+twoFactorAuthenticator: 驗證器應用程式
+twoFactorEmail: 電子郵件
+twoFactorYubiKey: YubiKey
+twoFactorDuo: Duo
+twoFactorOrganizationDuo: Duo（組織）
+twoFactorU2F: FIDO U2F
+twoFactorWebAuthn: 密碼金鑰 / WebAuthn
+twoFactorRememberedDevice: 已記住的裝置
+twoFactorOtherProvider: "方式 {number, number, integer}"
+verificationCode: 驗證碼
+rememberDevice: 記住此裝置
+backToSignIn: 返回登入
+sendCode: 傳送驗證碼
+resendCode: 重新傳送驗證碼
+twoFactorFootnote: 即使密碼外洩，兩步驟登入也能保護您的密碼庫安全。
+twoFactorCodeRequired: 請輸入驗證碼。
+twoFactorCodeInvalid: 驗證碼無效，請檢查後重試。
+twoFactorUnsupported: "此帳戶需要使用 {methods} 進行兩步驟登入，GoVault 目前尚未支援。請在網頁版密碼庫設定中啟用驗證器應用程式或電子郵件兩步驟登入，再於此處登入。"
+twoFactorEmailFailed: "無法傳送驗證郵件。{reason}"
+twoFactorEmailSentTo: "驗證碼已傳送至 {email}。"
+twoFactorEmailSent: 驗證碼已傳送至您的電子郵件。
+
+# Lock screen
+
+lockedTitle: GoVault 已鎖定
+unlock: 解鎖
+unlockWith: "使用 {method} 解鎖"
+orUseMasterPassword: 或使用主密碼
+logOutOrSwitchAccount: 登出或切換帳戶…
+logOutOrSwitchAccountLabel: 登出或切換帳戶
+lockFootnote: 鎖定的密碼庫在此裝置上保持靜態加密。
+masterPasswordRequired: 請輸入主密碼。
+biometricGeneric: 生物辨識
+biometricUnlockReason: 解鎖 GoVault
+biometricEnableReason: "為 GoVault 啟用 {method}"
+keychainPromptReason: 解鎖 GoVault
+biometricKeyUnavailable: 已儲存的生物辨識金鑰無法使用，請使用主密碼解鎖。
+biometricKeyCorrupt: 生物辨識金鑰已損毀，請使用主密碼解鎖。
+biometricKeyInvalid: 生物辨識金鑰無效，請使用主密碼解鎖。
+biometricFailed: 生物辨識驗證失敗，請輸入主密碼。
+keychainUnavailable: 鑰匙圈無法使用
+keychainUnavailableDetail: 無法存取系統鑰匙圈。
+biometricDisableFailed: 無法關閉生物辨識解鎖
+biometricEnableFailed: 無法開啟生物辨識解鎖
+biometricDisabled: "已關閉 {method}"
+biometricEnabled: "已開啟 {method}"
+biometricEnabledDetail: "您現在可以使用 {method} 解鎖 GoVault。"
+vaultLocked: 密碼庫已鎖定
+vaultLockedInactivity: 因長時間無操作已自動鎖定。
+
+# Log out
+
+logOutTitle: 要登出 GoVault 嗎？
+logOutMessage: 此裝置上快取的加密密碼庫與已儲存的生物辨識金鑰將被移除。
+logOut: 登出
+loggedOut: 已登出
+logOutSecretsLeft: "部分已儲存的機密無法移除：{reason}"
+
+# Toolbar and sidebar
+
+back: 返回
+forward: 前進
+searchVault: 搜尋密碼庫
+clearSearch: 清除搜尋
+offline: 離線
+syncNowLabel: 立即同步
+lockVault: 鎖定密碼庫
+newItem: 新增項目
+allItems: 所有項目
+favorites: 我的最愛
+categories: 類別
+folders: 資料夾
+newFolder: 新增資料夾
+collections: 分類
+tools: 工具
+generator: 產生器
+vaultHealth: 密碼庫健康
+archive: 封存
+trash: 垃圾桶
+settings: 設定
+importTitle: 匯入
+noFolder: 無資料夾
+collection: 分類
+folder: 資料夾
+folderActions: 資料夾動作
+renameFolderMenu: 重新命名資料夾…
+deleteFolder: 刪除資料夾
+resizePane: 調整窗格大小
+syncing: 正在同步…
+syncPending: 等待同步
+syncOfflineCached: 離線 · 快取密碼庫
+sessionExpired: 工作階段已逾期
+synced: 已同步
+syncedWhen: "同步於 {when}"
+justNow: 剛才
+minutesAgo: "{count, plural, other {# 分鐘前}}"
+hoursAgo: "{count, plural, other {# 小時前}}"
+daysAgo: "{count, plural, other {# 天前}}"
+shortDate: "{date, date, ::MMMd}"
+signInAgainToSync: 請重新登入以進行同步。在此之前，您的密碼庫可離線使用。
+sessionExpiredBanner: 工作階段已逾期——您仍可檢視快取的密碼庫。請重新登入以恢復同步。
+signInNotSaved: 無法儲存登入憑證。請重新登入，以便 GoVault 在鎖定後仍能同步。
+signInAgain: 重新登入
+
+# Item list
+
+itemCount: "{count, plural, other {# 個項目}}"
+trashCanRestore: 垃圾桶中的項目可以還原。
+emptyTrash: 清空垃圾桶
+searchInAllItems: 在所有項目中
+searchIn: "在「{section}」中"
+searchOnlyIn: "僅限「{section}」"
+searchAllItems: 搜尋所有項目
+noResults: 無結果
+trashIsEmpty: 垃圾桶是空的
+noItems: 沒有項目
+nothingInSectionMatches: "「{section}」中沒有符合「{query}」的項目。"
+nothingMatches: "沒有符合「{query}」的項目。"
+trashEmptyHint: 您刪除的項目會顯示在這裡。
+noItemsHint: 選擇「新增項目」來建立您的第一個項目。
+noItemSelected: 未選擇項目
+noItemSelectedHint: 從清單中選擇項目以檢視詳細資訊。
+shortcutSearch: 搜尋
+shortcutNewItem: 新增項目
+shortcutLock: 鎖定
+
+# Item context menu
+
+copyUsernameMenu: 複製使用者名稱
+copyPasswordMenu: 複製密碼
+copyVerificationCodeMenu: 複製驗證碼
+copyPublicKeyMenu: 複製公開金鑰
+deletePermanentlyMenu: 永久刪除…
+addToFavorites: 加入我的最愛
+removeFromFavorites: 從我的最愛移除
+clone: 複製副本
+archiveAction: 封存
+unarchiveAction: 取消封存
+moveToTrash: 移到垃圾桶
+
+# Item details
+
+username: 使用者名稱
+password: 密碼
+hiddenByOrganization: 已由您的組織隱藏
+revealPassword: 顯示密碼
+copyPassword: 複製密碼
+copyUsername: 複製使用者名稱
+credentials: 憑證
+website: 網站
+websiteNumbered: "網站 {number, number, integer}"
+openWebsite: 開啟網站
+copyWebsite: 複製網站
+websites: 網站
+cardholderName: 持卡人姓名
+copyCardholder: 複製持卡人姓名
+cardNumber: 卡號
+revealCardNumber: 顯示卡號
+copyCardNumber: 複製卡號
+expiration: 有效期限
+copyExpiration: 複製有效期限
+securityCode: 安全代碼
+brand: 品牌
+cardDetails: 付款卡詳細資訊
+fullName: 姓名
+company: 公司
+phone: 電話
+personal: 個人資訊
+address: 地址
+copyAddress: 複製地址
+socialSecurityNumber: 社會保險號碼
+passportNumber: 護照號碼
+copyPassportNumber: 複製護照號碼
+licenseNumber: 駕照號碼
+copyLicenseNumber: 複製駕照號碼
+documents: 證件
+customFields: 自訂欄位
+notes: 備註
+fingerprint: 指紋
+copyFingerprint: 複製指紋
+publicKey: 公開金鑰
+copyPublicKey: 複製公開金鑰
+privateKey: 私密金鑰
+revealField: "顯示 {field}"
+copyField: "複製 {field}"
+passwordHistory: "密碼歷史記錄（{count, number, integer}）"
+usedUntil: "使用至 {date, date, medium} {date, time, short}"
+oldPassword: 舊密碼
+viewOnly: 僅供檢視
+passwordReprompt: 重新詢問主密碼
+inTrash: 在垃圾桶中
+archived: 已封存
+deletePermanently: 永久刪除
+toggleFavorite: 切換我的最愛
+cloneItem: 複製項目副本
+timeRemaining: 剩餘時間
+secondsLeft: "{seconds, plural, other {# 秒}}"
+revealVerificationCode: 顯示驗證碼
+copyVerificationCode: 複製驗證碼
+cardPictureBrand: 付款卡
+cardPictureCardholder: 持卡人
+cardPictureExpires: 有效期限
+updatedOn: "更新於 {date, date, medium} {date, time, short}"
+createdOn: "建立於 {date, date, medium}"
+deletedWhen: "刪除於 {when}"
+
+# Copying
+
+copied: "已複製 {field}"
+passwordCopied: 已複製密碼
+usernameCopied: 已複製使用者名稱
+verificationCodeCopied: 已複製驗證碼
+publicKeyCopied: 已複製公開金鑰
+websiteCopied: 已複製網站
+cardholderNameCopied: 已複製持卡人姓名
+cardNumberCopied: 已複製卡號
+expirationCopied: 已複製有效期限
+securityCodeCopied: 已複製安全代碼
+fullNameCopied: 已複製姓名
+companyCopied: 已複製公司
+emailCopied: 已複製電子郵件
+phoneCopied: 已複製電話
+addressCopied: 已複製地址
+ssnCopied: 已複製社會保險號碼
+passportNumberCopied: 已複製護照號碼
+licenseNumberCopied: 已複製駕照號碼
+fingerprintCopied: 已複製指紋
+privateKeyCopied: 已複製私密金鑰
+oldPasswordCopied: 已複製舊密碼
+generatedCopied: 已複製產生的密碼
+copyFailed: 複製失敗
+clearsInConcealed: "已隱藏 · {seconds, plural, other {# 秒後清除}}"
+clearsIn: "{seconds, plural, other {# 秒後清除}}"
+concealedFromHistory: 已從剪貼簿記錄中隱藏
+
+# Master password reprompt
+
+repromptTitle: 主密碼驗證
+repromptPrompt: "{action, select, copyPassword {請輸入主密碼以複製密碼。} copyTOTP {請輸入主密碼以複製驗證碼。} revealTOTP {請輸入主密碼以顯示驗證碼。} revealPassword {請輸入主密碼以顯示密碼。} revealCardNumber {請輸入主密碼以顯示卡號。} copyCardNumber {請輸入主密碼以複製卡號。} revealSecurityCode {請輸入主密碼以顯示安全代碼。} copySecurityCode {請輸入主密碼以複製安全代碼。} revealSSN {請輸入主密碼以顯示社會保險號碼。} copySSN {請輸入主密碼以複製社會保險號碼。} revealField {請輸入主密碼以顯示自訂欄位。} copyField {請輸入主密碼以複製自訂欄位。} revealPrivateKey {請輸入主密碼以顯示私密金鑰。} copyPrivateKey {請輸入主密碼以複製私密金鑰。} revealOldPassword {請輸入主密碼以顯示舊密碼。} copyOldPassword {請輸入主密碼以複製舊密碼。} editItem {請輸入主密碼以編輯項目。} cloneItem {請輸入主密碼以複製項目副本。} archiveItem {請輸入主密碼以封存項目。} unarchiveItem {請輸入主密碼以取消封存項目。} downloadAttachment {請輸入主密碼以下載附件。} exportVault {請輸入主密碼以匯出密碼庫。} updateProtectedItem {請輸入主密碼以更新受保護的項目。} other {請輸入主密碼以繼續。}}"
+repromptBiometricReason: "{action, select, copyPassword {驗證以複製密碼} copyTOTP {驗證以複製驗證碼} revealTOTP {驗證以顯示驗證碼} revealPassword {驗證以顯示密碼} revealCardNumber {驗證以顯示卡號} copyCardNumber {驗證以複製卡號} revealSecurityCode {驗證以顯示安全代碼} copySecurityCode {驗證以複製安全代碼} revealSSN {驗證以顯示社會保險號碼} copySSN {驗證以複製社會保險號碼} revealField {驗證以顯示自訂欄位} copyField {驗證以複製自訂欄位} revealPrivateKey {驗證以顯示私密金鑰} copyPrivateKey {驗證以複製私密金鑰} revealOldPassword {驗證以顯示舊密碼} copyOldPassword {驗證以複製舊密碼} editItem {驗證以編輯項目} cloneItem {驗證以複製項目副本} archiveItem {驗證以封存項目} unarchiveItem {驗證以取消封存項目} downloadAttachment {驗證以下載附件} exportVault {驗證以匯出密碼庫} updateProtectedItem {驗證以更新受保護的項目} other {驗證以繼續}}"
+repromptUnavailable: 主密碼驗證無法使用。
+incorrectMasterPassword: 主密碼不正確。
+
+# Saving, trash and folders
+
+discardChangesTitle: 要捨棄未儲存的變更嗎？
+discardChangesMessage: 您對此項目的編輯尚未儲存。
+keepEditing: 繼續編輯
+discard: 捨棄
+nameRequired: 名稱不能為空白。
+cannotSaveOffline: 離線時無法儲存。
+itemSaved: 項目已儲存
+saveFailed: 儲存失敗
+itemChangedTitle: 項目已在其他裝置上變更
+itemChangedMessage: 自上次同步以來，此項目已在其他位置更新。請重新載入最新版本以避免覆蓋變更。
+reloadLatest: 重新載入最新
+localCopyNotUpdated: 已儲存至伺服器，但無法更新此裝置上的副本。
+syncNowAction: 立即同步
+updateFailed: 更新失敗
+favoriteUpdated: 我的最愛已更新
+moveToTrashFailed: 移到垃圾桶失敗
+movedToTrash: 已移到垃圾桶
+archiveFailed: 封存失敗
+unarchiveFailed: 取消封存失敗
+itemArchived: 項目已封存
+itemUnarchived: 項目已取消封存
+restoreFailed: 還原失敗
+itemRestored: 項目已還原
+deletePermanentlyTitle: 要永久刪除嗎？
+deletePermanentlyMessage: "「{name}」將被永久刪除，且無法復原。"
+deleteFailed: 刪除失敗
+permanentlyDeleted: 已永久刪除
+emptyTrashTitle: 要清空垃圾桶嗎？
+emptyTrashMessage: "{count, plural, other {# 個項目將被永久刪除，且無法復原。}}"
+emptyTrashFailed: 清空垃圾桶失敗
+trashEmptied: 垃圾桶已清空
+trashReadOnlyKept: "{count, plural, other {# 個唯讀項目保留在垃圾桶中。}}"
+trashChangedKept: "{count, plural, other {# 個項目已在其他裝置上變更，已予以保留。}}"
+trashPartlyDeleted: "{count, plural, other {已刪除 # 個項目}}"
+trashSomeNotDeleted: "部分項目無法刪除：{reason}"
+passkeysNotCopied: 密碼金鑰不會被複製
+passkeysNotCopiedDetail: 副本僅包含登入資訊，不包含密碼金鑰。
+cloneName: "{name}（副本）"
+newFolderTitle: 新增資料夾
+renameFolderTitle: 重新命名資料夾
+folderName: 資料夾名稱
+folderNameRequired: 資料夾名稱不能為空白。
+folderSaved: 資料夾已儲存
+deleteFolderTitle: 要刪除資料夾嗎？
+deleteFolderMessage: "「{name}」中的項目將移至「無資料夾」。"
+deleteFolderFailed: 刪除資料夾失敗
+folderDeleted: 資料夾已刪除
+
+# Sync
+
+sessionExpiredToast: 工作階段已逾期
+sessionExpiredToastDetail: 請重新登入以恢復同步。
+offlineToastDetail: 正在顯示快取的密碼庫。
+syncFailed: 同步失敗
+vaultSynced: 密碼庫已同步
+
+# Editor
+
+newItemOfType: "{kind, select, login {新增登入} secureNote {新增安全筆記} card {新增付款卡} identity {新增身分} sshKey {新增 SSH 金鑰} other {新增項目}}"
+editItemOfType: "{kind, select, login {編輯登入} secureNote {編輯安全筆記} card {編輯付款卡} identity {編輯身分} sshKey {編輯 SSH 金鑰} other {編輯項目}}"
+unsavedChanges: 有未儲存的變更
+noChanges: 無變更
+itemSection: 項目
+type: 類型
+name: 名稱
+favorite: 我的最愛
+masterPasswordReprompt: 重新詢問主密碼
+addNote: 新增備註
+generatePassword: 產生密碼
+authenticatorKey: 驗證器
+authenticatorKeyPlaceholder: otpauth:// URI 或設定金鑰
+removeWebsite: 移除網站
+addWebsite: 新增網站
+cardholder: 持卡人
+nameOnCard: 卡面姓名
+brandPlaceholder: Visa、Mastercard、Amex…
+cardNumberLabel: 卡號
+expiryMonthPlaceholder: MM
+expiryYearPlaceholder: YYYY
+securityCodePlaceholder: CVV
+firstName: 名字
+lastName: 姓氏
+phonePlaceholder: "+886 912 345 678"
+street: 街道地址
+streetPlaceholder: 忠孝東路一段 1 號
+city: 城市
+stateZip: 縣市 / 郵遞區號
+stateRegion: 縣市
+postalCode: 郵遞區號
+country: 國家/地區
+generateSSHKey: 產生 Ed25519 金鑰
+sshKeyGenerateFailed: "無法產生 SSH 金鑰：{reason}"
+fieldTypeText: 文字
+fieldTypeHidden: 隱藏
+fieldName: 欄位名稱
+fieldValue: 值
+removeField: 移除欄位
+addField: 新增欄位
+passkey: 密碼金鑰
+removedWhenSaved: 儲存時移除
+removePasskey: 移除密碼金鑰
+removePasskeyTitle: 要移除密碼金鑰嗎？
+removePasskeyMessage: 移除後，您將無法再使用此密碼金鑰登入。
+passkeySiteCreated: "{site} · 建立於 {date, date, medium}"
+passkeyCreated: "建立於 {date, date, medium}"
+passkeyStored: 儲存在此項目中
+
+# Attachments
+
+attachments: 附件
+attachFile: 附加檔案
+attachFileTitle: 附加檔案
+attachButton: 附加
+downloadFile: "下載 {file}"
+deleteFile: "刪除 {file}"
+saveAttachmentTitle: 儲存附件
+saveHere: 儲存至此處
+downloadFailed: 下載失敗
+attachmentSaved: 附件已儲存
+couldNotOpenFile: 無法開啟檔案
+fileTooLarge: 檔案過大
+attachmentLimit: 附件大小上限為 100 MiB。
+uploadFailed: 上傳失敗
+fileAttached: 已附加檔案
+deleteAttachmentTitle: 要刪除附件嗎？
+deleteAttachmentMessage: "「{file}」將被永久刪除。"
+attachmentDeleted: 附件已刪除
+bytes: "{count, number, integer} B"
+kilobytes: "{size, number, ::.0} KB"
+megabytes: "{size, number, ::.0} MB"
+gigabytes: "{size, number, ::.0} GB"
+terabytes: "{size, number, ::.0} TB"
+
+# Generator
+
+passwordMode: 密碼
+passphraseMode: 密碼短語
+strengthWeak: 弱
+strengthFair: 普通
+strengthStrong: 強
+strengthVeryStrong: 極強
+entropyBits: "{bits, plural, other {≈ # 位元熵}}"
+regenerate: 重新產生
+length: 長度
+characters: 字元
+uppercase: 大寫字母
+lowercase: 小寫字母
+numbers: 數字
+symbols: 符號
+avoidAmbiguous: 避免易混淆字元
+avoidAmbiguousDetail: 排除 l、1、I、O 與 0
+words: 單字數
+options: 選項
+wordSeparator: 單字分隔符
+wordSeparatorDetail: 放在每個單字之間
+capitalizeWords: 單字首字母大寫
+capitalizeWordsExample: Correct-Horse-Battery
+includeNumber: 包含數字
+includeNumberDetail: 在其中一個單字後加上數字
+
+# Vault Health
+
+healthReused: 重複使用
+healthWeak: 弱密碼
+healthExpiringCards: 即將到期的付款卡
+healthUnsecured: 不安全的 HTTP
+healthFilterEmpty: 此類別中沒有問題。
+healthAllClear: 一切正常
+healthAllClearDetail: 沒有重複使用或較弱的密碼、即將到期的付款卡或不安全的網站。
+reusedPasswords: 重複使用的密碼
+weakPasswords: 弱密碼
+unsecuredWebsites: 不安全的網站
+healthLocalOnly: 僅在此裝置上檢查，不會向伺服器傳送任何資料。
+openItem: "開啟 {name}"
+usedInItems: "{count, plural, other {用於 # 個項目}}"
+weakCommon: 常見密碼
+weakShort: "{count, plural, other {少於 # 個字元}}"
+weakPattern: 主要為連續或重複字元
+weakOneClass: 僅使用一種字元類型
+weakGuessable: 容易被猜到
+cardExpired: "已於 {expiry} 過期"
+cardExpires: "將於 {expiry} 到期"
+
+# Backup and import
+
+backupPasswordTitle: 備份密碼
+protectBackupTitle: 保護您的備份
+backupPasswordPrompt: 請輸入匯出此備份時設定的密碼。
+protectBackupPrompt: 請為加密備份設定密碼。若忘記將無法復原。
+backupPassword: 備份密碼
+confirmPassword: 確認密碼
+export: 匯出
+decrypt: 解密
+backupPasswordTooShort: "{count, plural, other {請至少使用 # 個字元。}}"
+backupPasswordsDiffer: 兩次輸入的密碼不相符。
+backupIncomplete: "{count, plural, other {有 # 個個人項目的格式 GoVault 無法讀取，因此備份將不完整。請改用 Bitwarden 網頁版密碼庫匯出。}}"
+exportFailed: 匯出失敗
+backupSaved: 加密備份已儲存
+backupSavedDetail: 請妥善保管備份密碼，忘記後無法復原。
+importBackupTitle: 匯入備份
+importButton: 匯入
+importFailed: 匯入失敗
+backupFileTooLarge: "檔案大小超過 {size, number, integer} MiB。"
+backupPasswordRequired: 請輸入備份密碼。
+incorrectBackupPassword: 備份密碼不正確。
+notBitwardenExport: 這不是 Bitwarden JSON 匯出檔案。
+backupAccountRestricted: 此備份已綁定至原帳戶。請將其重新匯出為受密碼保護的檔案。
+importResult: "匯入完成：新增 {created, number, integer} 個，更新 {updated, number, integer} 個"
+importSomeFailed: "{count, plural, other {# 個項目失敗：{reason}}}"
+importSkipped: "已略過 {count, number, integer} 個"
+importCreate: 新增
+importCreateCopy: 建立副本
+importUpdate: 更新現有項目
+importSkip: 略過
+noImport: 目前沒有正在進行的匯入
+noImportHint: 在「設定」中選擇「匯入備份」以檢視備份內容。
+reviewImport: 檢視匯入
+importSummary: "{file} · {added, number, integer} 個新增，{changed, number, integer} 個有變更，{identical, number, integer} 個相同。在您套用前不會變更任何內容。"
+selectAllNew: 全選新增
+skipAllConflicts: 略過全部衝突
+copyAllConflicts: 全部建立副本
+updateAllConflicts: 更新全部衝突
+skipAll: 全部略過
+importGroupChanged: "有變更（{count, number, integer}）"
+importGroupNew: "新增（{count, number, integer}）"
+importGroupIdentical: "相同（{count, number, integer}）"
+importApply: "套用：新增 {create, number, integer} 個，更新 {update, number, integer} 個，略過 {skip, number, integer} 個"
+personalVault: 您的個人密碼庫
+anOrganization: 某個組織
+sharedVaultOf: "{organization} 的共享密碼庫"
+organizationCollections: "{organization} · {collections}"
+showIdentical: "{count, plural, other {顯示 # 個相同的項目}}"
+hideIdentical: "{count, plural, other {隱藏 # 個相同的項目}}"
+importDiffers: "差異：{fields} · 位於{destination}"
+importCannotUpdateIncomplete: "無法更新：備份項目不完整"
+importCannotUpdateUnmatchable: "無法更新：其欄位或網站無法安全比對"
+importReadOnly: 現有項目為唯讀
+importProtected: "受保護：更新需要輸入主密碼"
+importAlreadyIn: "已存在於{destination}"
+importUnsupported: GoVault 目前無法儲存此類型的項目，因此已略過。
+importAmbiguous: 密碼庫中有多個同名項目，無法自動比對。請選擇「新增」以作為新項目加入。
+importArchivedNoPremium: 備份中為已封存項目；由於封存需要進階會員，將直接建立至您的密碼庫中。
+diffName: 名稱
+diffNotes: 備註
+diffFolder: 資料夾
+diffFavorite: 我的最愛
+diffReprompt: 重新詢問主密碼
+diffUsername: 使用者名稱
+diffPassword: 密碼
+diffTOTP: 驗證碼
+diffWebsites: 網站
+diffPasskey: 密碼金鑰
+diffCard: 付款卡
+diffIdentity: 身分
+diffSSHKey: SSH 金鑰
+diffCustomFields: 自訂欄位
+
+# Settings
+
+general: 一般
+language: 語言
+languageDetail: GoVault 顯示的語言。「系統預設」將跟隨系統的語言設定。
+systemDefault: 系統預設
+account: 帳戶
+syncNow: 立即同步
+keyDerivation: 金鑰衍生
+kdfArgon2id: "Argon2id · {memory, number, integer} MiB · {iterations, plural, other {# 次迭代}} · {threads, plural, other {# 執行緒}}"
+kdfPBKDF2: "PBKDF2-SHA256 · {iterations, plural, other {# 次迭代}}"
+lastSync: 上次同步
+notYetSynced: 尚未同步
+lastSyncAt: "{date, date, medium} {date, time, short}"
+logOutHint: 登出會移除本機密碼庫快取。
+security: 安全性
+autoLock: 自動鎖定
+autoLockDetail: 一段時間無操作後自動鎖定密碼庫。
+afterMinutes: "{count, plural, other {# 分鐘後}}"
+afterHours: "{count, plural, other {# 小時後}}"
+afterSeconds: "{count, plural, other {# 秒後}}"
+lockOnSleep: 睡眠或鎖定螢幕時鎖定
+lockOnSleepDetail: 當 Mac 進入睡眠或鎖定螢幕時鎖定密碼庫。
+backup: 備份
+exportBackup: 匯出加密備份
+exportBackupDetail: 由您設定密碼保護的 Bitwarden 相容 JSON 檔案。
+exportEllipsis: 匯出…
+importBackup: 匯入備份
+importBackupDetail: Bitwarden JSON 格式，支援加密或明文。在套用變更前可逐項檢視。
+importEllipsis: 匯入…
+privacy: 隱私權
+showWebsiteIcons: 顯示網站圖示
+showWebsiteIconsDetail: 從您的 Vaultwarden 伺服器擷取網站圖示。
+iconCache: 圖示快取
+iconCacheDetail: 移除此裝置上已下載的網站圖示。
+clearIconCache: 清除圖示快取
+iconCacheCleared: 圖示快取已清除
+iconCacheClearFailed: 無法清除圖示快取
+clipboard: 剪貼簿
+clearCopiedSecrets: 清除已複製的機密資訊
+clearCopiedSecretsDetail: 若剪貼簿中仍保留已複製的值，則在逾時後清除。
+concealedClipboard: 私密剪貼簿
+concealedClipboardDetail: 標記機密資訊，使剪貼簿管理員略過記錄。
+concealedActive: 已啟用
+macOSOnly: 僅限 macOS
+menuBar: 選單列
+tray: 系統匣
+showMenuBarIcon: 顯示選單列圖示
+showTrayIcon: 顯示系統匣圖示
+menuBarIconDetail: 從選單列開啟、同步或鎖定 GoVault。
+trayIconDetail: 從系統匣開啟、同步或鎖定 GoVault。
+launchAtLogin: 登入時啟動
+launchAtLoginDetail: 登入系統時自動啟動 GoVault。
+hideDockIcon: 隱藏 Dock 圖示
+hideDockIconDetail: 僅在選單列中保留 GoVault。
+hideDockIconNeedsMenuBar: 請先開啟選單列圖示，以確保仍可存取 GoVault。
+about: 關於
+appVersion: "GoVault {version}"
+developmentVersion: "{version} (開發版)"
+development: "(開發版)"
+updatesSigned: 更新經過簽章並會自動安裝。
+checkForUpdates: 檢查更新
+sshAgent: SSH 代理程式
+enableSSHAgent: 啟用 SSH 代理程式
+enableSSHAgentDetail: 從已解鎖的密碼庫提供 SSH 金鑰。已啟用重新詢問主密碼的金鑰不會提供。
+socket: 通訊端
+copySSHAuthSock: 複製 SSH_AUTH_SOCK
+sshAgentUnavailable: "代理程式無法使用：{reason}"
+sshAgentInUse: 另一個程序已使用此通訊端。
+sshAgentNotSocket: 該路徑已存在，且不是通訊端檔案。
+sshAgentUnsupported: 此系統不支援 Unix 通訊端。
+biometricUnavailable: 此 Mac 上無法使用 Touch ID——請配對具備 Touch ID 的鍵盤或在「系統設定」中註冊指紋。
+biometricDetail: 在系統鑰匙圈中保存封裝金鑰以快速解鎖。
+biometricHardware: 硬體級保護：macOS 僅在通過 Touch ID 驗證後釋放金鑰。
+biometricAppGated: "應用層驗證：金鑰儲存在您的登入鑰匙圈中，GoVault 在讀取前會要求 {method} 驗證。"
+promptAutomatically: 自動提示
+promptAutomaticallyDetail: "鎖定視窗開啟時立即要求 {method}。"
+
+# Menus
+
+openGoVault: 開啟 GoVault
+checkForUpdatesMenu: 檢查更新…
+syncNowMenu: 立即同步
+lockNow: 立即鎖定
+quitGoVault: 結束 GoVault
+editMenu: 編輯
+windowMenu: 視窗
+
+# Errors from the vault
+
+errorTwoFactorRequired: 此帳戶需要兩步驟登入。
+errorUnauthorized: 電子郵件或主密碼無效。
+errorOffline: 無法連線至伺服器，請檢查網路連線與伺服器 URL。
+errorRedirect: 伺服器重新導向至其他位址，GoVault 不會跟隨重新導向。
+errorNotFound: 伺服器找不到此項目。請同步後重試。
+errorRevisionConflict: 此項目已在其他裝置上變更。請同步後重試。
+errorAttachmentTooLarge: 附件大小上限為 100 MiB。
+errorArchiveUnsupported: 此伺服器不支援封存功能，需要 Vaultwarden 1.36 或更新版本。
+errorPremiumRequired: 封存功能需要進階會員。
+errorAccountIDUnknown: 無法向伺服器確認您的帳戶 ID。請同步後重試。
+errorArchiveNotConfirmed: 伺服器未確認此變更。GoVault 已重新同步以顯示項目的目前位置。
+errorCipherInTrash: 垃圾桶中的項目無法封存，請先還原該項目。
+errorLocked: 密碼庫已鎖定，請解鎖後重試。
+errorLoggedOut: 您尚未登入。
+errorCipherNotFound: 此項目已不在您的密碼庫中。
+errorFolderNotFound: 此資料夾已不在您的密碼庫中。
+errorReadOnly: 此項目為唯讀。
+errorOrganizationKey: GoVault 無法讀取此組織的項目。請同步後重試。
+errorAttachmentNotFound: 此附件已不在該項目中。
+errorHiddenByOrganization: 您的組織隱藏了此項目的機密資訊。
+errorUnsupportedUpload: 伺服器要求使用 GoVault 不支援的附件上傳方式。
+errorServerMismatch: 已儲存的登入憑證屬於與目前密碼庫副本不同的伺服器，請重新登入。
+errorSignInRequired: 請重新登入以進行同步。在此之前，您的密碼庫可離線使用。
+errorDifferentAccount: 目前登入的帳戶與此裝置上的密碼庫不符。若要切換帳戶，請先登出。
+errorAccountChanged: 自確認以來帳戶已變更，請重試。
+errorSnapshotNotUpdated: 伺服器已儲存變更，但無法更新此裝置上的副本。請同步以重新整理。
+errorSealedField: 此項目包含加密資料，GoVault 無法將其複製至新金鑰下。
+errorUnsupportedCipher: 此項目使用了 GoVault 目前無法讀取的格式。
+errorChangedSinceReview: 此項目在您檢視匯入後發生了變更，請重新檢視。
+errorRepromptRequired: 更新此受保護的項目需要輸入主密碼。
+errorUnsupportedType: GoVault 目前無法儲存此類型的項目。
+errorAmbiguousUpdate: GoVault 無法判斷備份項目對應哪些現有項目。
+errorUnreadablePasskey: 無法解密密碼金鑰。
+errorWrongBackupPassword: 備份密碼不正確。
+errorBackupTooLarge: 加密備份體積過大，GoVault 將無法重新匯入。
+errorServer: "伺服器回傳錯誤（{status}）：{detail}"
+errorWithDetail: "發生錯誤：{detail}"
+
+# NSGo catalogs
+
+github.com/nsgo-dev/nsgo/desktop/locales:
+  edit: 編輯
+  window: 視窗
+  about: 關於
+  aboutApp: "關於 {app}"
+  hide: 隱藏
+  hideApp: "隱藏 {app}"
+  hideOthers: 隱藏其他
+  showAll: 全部顯示
+  quit: 結束
+  quitApp: "結束 {app}"
+  undo: 還原
+  redo: 重做
+  cut: 剪下
+  copy: 拷貝
+  paste: 貼上
+  delete: 刪除
+  selectAll: 全選
+  minimize: 縮到最小
+  zoom: 縮放
+  toggleFullScreen: 切換全螢幕
+  enterFullScreen: 進入全螢幕
+  exitFullScreen: 離開全螢幕
+  close: 關閉
+  guideDrag: "將 {app} 拖移至上方列表以允許「{permission}」。"
+  guideDragHint: 拖移
+  permissionAccessibility: 輔助使用
+  permissionDeviceControl: 裝置控制與資料取用
+  permissionScreenRecording: 螢幕錄製
+  permissionScreenAudioRecording: 螢幕與系統音訊錄製
+  permissionInputMonitoring: 輸入監控
+  permissionFullDiskAccess: 完全取用磁碟
+  permissionAppManagement: App 管理
+  permissionDeveloperTools: 開發者工具
+  permissionBluetooth: 藍牙
+  permissionMediaLibrary: 媒體與 Apple Music
+  authSessionDone: 現在可以關閉此頁面並返回應用程式。
+  pasteAndMatchStyle: 貼上並符合樣式
+  startSpeaking: 開始朗讀
+  stopSpeaking: 停止朗讀
+  bringAllToFront: 將此程式所有視窗移至最前
+  services: 服務
+  help: 輔助說明
+  roleLink: 連結
+  roleTab: 分頁
+  roleSearchBox: 搜尋欄位
+  roleStatus: 狀態
+  roleMenu: 選單
+  roleMenuItem: 選單項目
+  roleDialog: 對話框
+  roleAlert: 提示
+  roleTable: 表格
+  roleGrid: 格線
+  roleRow: 列
+  roleColumnHeader: 欄標題
+  roleCell: 儲存格
+  statePartiallyChecked: 部分勾選
+  stateExpanded: 已展開
+  stateCollapsed: 已收合
+  spokenSeparator: "、"
+
+github.com/nsgo-dev/nsgo/updater/locales:
+  updateAvailable: "{app} 有新版本可用"
+  updateAvailableMessage: "{app} {version} 現已推出，您目前的版本是 {current}。"
+  update: 更新
+  later: 稍後
+  upToDate: 已是最新版本
+  upToDateMessage: "{app} {version} 是目前最新的版本。"
+  updateError: 無法檢查更新
+  updateErrorMessage: 檢查更新時發生錯誤，請稍後再試。
+  installError: 無法安裝更新
+  installErrorMessage: "{app} {version} 下載或安裝失敗，您可以改從其頁面取得。"
+  openPage: 開啟頁面
+  ok: 好
+
+github.com/nsgo-dev/nsgo/base/locales:
+  sortBy: "依 {column} 排序"
+  diffUnchangedLines: "{n, plural, other {# 行未變更}}"
+  diffExpandAll: 全部展開
+  diffStage: 暫存
+  diffDiscardChanges: 捨棄變更…
+  collapseMerge: 收合合併
+  expandMerge: 展開合併
+  colorHue: 色相
+  colorAlpha: 不透明度
+  colorSaturationBrightness: 飽和度與亮度
+  colorHex: 十六進位色碼
+  colorEyeDropper: 從螢幕取色
+  colorFormat: 色彩格式
+  colorCopy: 複製色彩
+  colorRed: 紅
+  colorGreen: 綠
+  colorBlue: 藍
+  colorHueDegrees: 色相角度
+  colorSaturationPercent: 飽和度百分比
+  colorBrightnessPercent: 亮度百分比
+  colorLightnessPercent: 明度百分比
+  colorOpacityPercent: 不透明度百分比
+  calendarPrevious: 上個月
+  calendarNext: 下個月
+  listClear: 清除
+  listNothingFound: 找不到結果
+  listSearch: 搜尋
+  commandSearch: 搜尋指令
+  commandSearchPlaceholder: 搜尋指令…
+  commandNoMatches: 沒有符合的指令
+  commandLoading: 載入中…
+  commandList: 指令
+  calendarMonth: "{d, date, ::yMMMM}"
+  calendarMonthName: "{d, date, ::MMM}"
+  calendarWeekday: "{d, date, ::EEEEE}"
+  breadcrumbsMore: 更多
+  flowLabel: "{nodes, plural, other {# 個節點}}、{edges, plural, other {# 條連線}}"
+
+github.com/nsgo-dev/nsgo/base/textview/locales:
+  alertNote: 備註
+  alertTip: 提示
+  alertImportant: 重要
+  alertWarning: 警告
+  alertCaution: 注意

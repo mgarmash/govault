@@ -1,0 +1,806 @@
+# GoVault Japanese (ja) message catalog.
+
+# Common words
+
+cancel: キャンセル
+save: 保存
+delete: 削除
+remove: 削除
+edit: 編集
+restore: 復元
+verify: 確認
+copy: コピー
+undo: 取り消す
+never: しない
+notAvailable: "—"
+
+# Item types
+
+typeLogin: ログイン
+typeSecureNote: セキュアメモ
+typeCard: カード
+typeIdentity: ID
+typeSSHKey: SSH キー
+typeItem: アイテム
+typeLogins: ログイン
+typeCards: カード
+typeIdentities: ID
+typeSecureNotes: セキュアメモ
+typeSSHKeys: SSH キー
+
+# Sign in
+
+signInTitle: GoVault にログイン
+signInSubtitle: Bitwarden または Vaultwarden サーバーに接続します。
+serverURL: サーバー URL
+email: メールアドレス
+masterPassword: マスターパスワード
+masterPasswordPlaceholder: マスターパスワード
+required: 必須
+emailPlaceholder: name@example.com
+insecureServer: このサーバーは HTTPS を使用していません。マスターパスワードと保管庫のデータが暗号化されずに送信されるため、信頼できるネットワークでのみ使用してください。
+signIn: ログイン
+backToUnlock: ロック解除に戻る
+signInFootnote: エンドツーエンド暗号化。マスターパスワードがこのデバイスから外部に送信されることはありません。
+signInFieldsRequired: サーバー URL、メールアドレス、マスターパスワードを入力してください。
+togglePasswordVisibility: パスワードの表示を切り替え
+
+# Two-step login
+
+twoFactorTitle: 2段階認証
+twoFactorEnterEmailCodeTo: "{email} に送信された認証コードを入力してください。"
+twoFactorEnterEmailCode: メールで送信された認証コードを入力してください。
+twoFactorEnterAuthenticatorCode: 認証アプリの 6 桁のコードを入力してください。
+twoFactorMethod: 認証方法
+twoFactorAuthenticator: 認証アプリ
+twoFactorEmail: メール
+twoFactorYubiKey: YubiKey
+twoFactorDuo: Duo
+twoFactorOrganizationDuo: Duo（組織）
+twoFactorU2F: FIDO U2F
+twoFactorWebAuthn: パスキー / WebAuthn
+twoFactorRememberedDevice: 記憶済みデバイス
+twoFactorOtherProvider: "方法 {number, number, integer}"
+verificationCode: 認証コード
+rememberDevice: このデバイスを記憶する
+backToSignIn: ログインに戻る
+sendCode: コードを送信
+resendCode: コードを再送信
+twoFactorFootnote: パスワードが漏えいしても、2段階認証により保管庫を保護できます。
+twoFactorCodeRequired: 認証コードを入力してください。
+twoFactorCodeInvalid: 認証コードが無効です。確認してもう一度お試しください。
+twoFactorUnsupported: "このアカウントは {methods} による2段階認証が必要ですが、GoVault はまだ対応していません。ここでログインするには、ウェブ保管庫の設定で認証アプリまたはメールによる2段階認証を有効にしてください。"
+twoFactorEmailFailed: "認証メールを送信できませんでした。{reason}"
+twoFactorEmailSentTo: "認証コードを {email} に送信しました。"
+twoFactorEmailSent: 認証コードをメールで送信しました。
+
+# Lock screen
+
+lockedTitle: GoVault はロックされています
+unlock: ロック解除
+unlockWith: "{method} でロック解除"
+orUseMasterPassword: またはマスターパスワードを使用
+logOutOrSwitchAccount: ログアウトまたはアカウント切り替え…
+logOutOrSwitchAccountLabel: ログアウトまたはアカウント切り替え
+lockFootnote: ロックされた保管庫はこのデバイス上で暗号化されたまま保存されます。
+masterPasswordRequired: マスターパスワードを入力してください。
+biometricGeneric: 生体認証
+biometricUnlockReason: GoVault のロックを解除
+biometricEnableReason: "GoVault で {method} を有効化"
+keychainPromptReason: GoVault のロックを解除
+biometricKeyUnavailable: 保存された生体認証キーを使用できません。マスターパスワードでロック解除してください。
+biometricKeyCorrupt: 生体認証キーが破損しています。マスターパスワードでロック解除してください。
+biometricKeyInvalid: 生体認証キーが無効です。マスターパスワードでロック解除してください。
+biometricFailed: 生体認証に失敗しました。マスターパスワードを入力してください。
+keychainUnavailable: キーチェーンを利用できません
+keychainUnavailableDetail: システムキーチェーンにアクセスできません。
+biometricDisableFailed: 生体認証ロック解除をオフにできませんでした
+biometricEnableFailed: 生体認証ロック解除をオンにできませんでした
+biometricDisabled: "{method} をオフにしました"
+biometricEnabled: "{method} をオンにしました"
+biometricEnabledDetail: "{method} で GoVault のロックを解除できるようになりました。"
+vaultLocked: 保管庫をロックしました
+vaultLockedInactivity: 一定時間操作がなかったため自動ロックされました。
+
+# Log out
+
+logOutTitle: GoVault からログアウトしますか？
+logOutMessage: このデバイスに保存されている暗号化済み保管庫キャッシュと生体認証キーが削除されます。
+logOut: ログアウト
+loggedOut: ログアウトしました
+logOutSecretsLeft: "一部の保存済みシークレットを削除できませんでした：{reason}"
+
+# Toolbar and sidebar
+
+back: 戻る
+forward: 進む
+searchVault: 保管庫を検索
+clearSearch: 検索をクリア
+offline: オフライン
+syncNowLabel: 今すぐ同期
+lockVault: 保管庫をロック
+newItem: 新規アイテム
+allItems: すべてのアイテム
+favorites: お気に入り
+categories: カテゴリー
+folders: フォルダー
+newFolder: 新規フォルダー
+collections: コレクション
+tools: ツール
+generator: ジェネレーター
+vaultHealth: 保管庫の健全性
+archive: アーカイブ
+trash: ごみ箱
+settings: 設定
+importTitle: インポート
+noFolder: フォルダーなし
+collection: コレクション
+folder: フォルダー
+folderActions: フォルダー操作
+renameFolderMenu: フォルダー名を変更…
+deleteFolder: フォルダーを削除
+resizePane: ペインのサイズを変更
+syncing: 同期中…
+syncPending: 同期待ち
+syncOfflineCached: オフライン · キャッシュ済み保管庫
+sessionExpired: セッション期限切れ
+synced: 同期済み
+syncedWhen: "{when}に同期"
+justNow: たった今
+minutesAgo: "{count, plural, other {# 分前}}"
+hoursAgo: "{count, plural, other {# 時間前}}"
+daysAgo: "{count, plural, other {# 日前}}"
+shortDate: "{date, date, ::MMMd}"
+signInAgainToSync: 同期するには再ログインしてください。それまではオフラインで保管庫を利用できます。
+sessionExpiredBanner: セッションの有効期限が切れました。キャッシュ済みの保管庫は引き続き閲覧できます。同期を再開するには再ログインしてください。
+signInNotSaved: ログイン情報を保存できませんでした。ロック後も同期できるよう、もう一度ログインしてください。
+signInAgain: 再ログイン
+
+# Item list
+
+itemCount: "{count, plural, other {# 件}}"
+trashCanRestore: ごみ箱のアイテムは復元できます。
+emptyTrash: ごみ箱を空にする
+searchInAllItems: すべてのアイテム内
+searchIn: "「{section}」内"
+searchOnlyIn: "「{section}」のみ"
+searchAllItems: すべてのアイテムを検索
+noResults: 結果なし
+trashIsEmpty: ごみ箱は空です
+noItems: アイテムがありません
+nothingInSectionMatches: "「{section}」に「{query}」と一致するアイテムはありません。"
+nothingMatches: "「{query}」と一致するアイテムはありません。"
+trashEmptyHint: 削除したアイテムがここに表示されます。
+noItemsHint: 「新規アイテム」から最初のアイテムを追加してください。
+noItemSelected: アイテム未選択
+noItemSelectedHint: リストからアイテムを選択すると詳細が表示されます。
+shortcutSearch: 検索
+shortcutNewItem: 新規アイテム
+shortcutLock: ロック
+
+# Item context menu
+
+copyUsernameMenu: ユーザー名をコピー
+copyPasswordMenu: パスワードをコピー
+copyVerificationCodeMenu: 認証コードをコピー
+copyPublicKeyMenu: 公開鍵をコピー
+deletePermanentlyMenu: 完全に削除…
+addToFavorites: お気に入りに追加
+removeFromFavorites: お気に入りから削除
+clone: 複製
+archiveAction: アーカイブ
+unarchiveAction: アーカイブ解除
+moveToTrash: ごみ箱に移動
+
+# Item details
+
+username: ユーザー名
+password: パスワード
+hiddenByOrganization: 組織により非表示
+revealPassword: パスワードを表示
+copyPassword: パスワードをコピー
+copyUsername: ユーザー名をコピー
+credentials: 認証情報
+website: ウェブサイト
+websiteNumbered: "ウェブサイト {number, number, integer}"
+openWebsite: ウェブサイトを開く
+copyWebsite: ウェブサイトをコピー
+websites: ウェブサイト
+cardholderName: 名義人名
+copyCardholder: 名義人名をコピー
+cardNumber: カード番号
+revealCardNumber: カード番号を表示
+copyCardNumber: カード番号をコピー
+expiration: 有効期限
+copyExpiration: 有効期限をコピー
+securityCode: セキュリティコード
+brand: ブランド
+cardDetails: カード詳細
+fullName: 氏名
+company: 会社
+phone: 電話番号
+personal: 個人情報
+address: 住所
+copyAddress: 住所をコピー
+socialSecurityNumber: 社会保障番号
+passportNumber: パスポート番号
+copyPassportNumber: パスポート番号をコピー
+licenseNumber: 免許証番号
+copyLicenseNumber: 免許証番号をコピー
+documents: 身分証明書
+customFields: カスタムフィールド
+notes: メモ
+fingerprint: フィンガープリント
+copyFingerprint: フィンガープリントをコピー
+publicKey: 公開鍵
+copyPublicKey: 公開鍵をコピー
+privateKey: 秘密鍵
+revealField: "{field} を表示"
+copyField: "{field} をコピー"
+passwordHistory: "パスワード履歴（{count, number, integer}）"
+usedUntil: "{date, date, medium} {date, time, short} まで使用"
+oldPassword: 旧パスワード
+viewOnly: 閲覧のみ
+passwordReprompt: マスターパスワードの再要求
+inTrash: ごみ箱内
+archived: アーカイブ済み
+deletePermanently: 完全に削除
+toggleFavorite: お気に入りを切り替え
+cloneItem: アイテムを複製
+timeRemaining: 残り時間
+secondsLeft: "{seconds, plural, other {# 秒}}"
+revealVerificationCode: 認証コードを表示
+copyVerificationCode: 認証コードをコピー
+cardPictureBrand: CARD
+cardPictureCardholder: 名義人
+cardPictureExpires: 有効期限
+updatedOn: "更新：{date, date, medium} {date, time, short}"
+createdOn: "作成：{date, date, medium}"
+deletedWhen: "削除：{when}"
+
+# Copying
+
+copied: "{field} をコピーしました"
+passwordCopied: パスワードをコピーしました
+usernameCopied: ユーザー名をコピーしました
+verificationCodeCopied: 認証コードをコピーしました
+publicKeyCopied: 公開鍵をコピーしました
+websiteCopied: ウェブサイトをコピーしました
+cardholderNameCopied: 名義人名をコピーしました
+cardNumberCopied: カード番号をコピーしました
+expirationCopied: 有効期限をコピーしました
+securityCodeCopied: セキュリティコードをコピーしました
+fullNameCopied: 氏名をコピーしました
+companyCopied: 会社をコピーしました
+emailCopied: メールアドレスをコピーしました
+phoneCopied: 電話番号をコピーしました
+addressCopied: 住所をコピーしました
+ssnCopied: 社会保障番号をコピーしました
+passportNumberCopied: パスポート番号をコピーしました
+licenseNumberCopied: 免許証番号をコピーしました
+fingerprintCopied: フィンガープリントをコピーしました
+privateKeyCopied: 秘密鍵をコピーしました
+oldPasswordCopied: 旧パスワードをコピーしました
+generatedCopied: 生成したパスワードをコピーしました
+copyFailed: コピーに失敗しました
+clearsInConcealed: "非表示 · {seconds, plural, other {# 秒後に消去}}"
+clearsIn: "{seconds, plural, other {# 秒後に消去}}"
+concealedFromHistory: クリップボード履歴から非表示
+
+# Master password reprompt
+
+repromptTitle: マスターパスワードの確認
+repromptPrompt: "{action, select, copyPassword {パスワードをコピーするにはマスターパスワードを入力してください。} copyTOTP {認証コードをコピーするにはマスターパスワードを入力してください。} revealTOTP {認証コードを表示するにはマスターパスワードを入力してください。} revealPassword {パスワードを表示するにはマスターパスワードを入力してください。} revealCardNumber {カード番号を表示するにはマスターパスワードを入力してください。} copyCardNumber {カード番号をコピーするにはマスターパスワードを入力してください。} revealSecurityCode {セキュリティコードを表示するにはマスターパスワードを入力してください。} copySecurityCode {セキュリティコードをコピーするにはマスターパスワードを入力してください。} revealSSN {社会保障番号を表示するにはマスターパスワードを入力してください。} copySSN {社会保障番号をコピーするにはマスターパスワードを入力してください。} revealField {カスタムフィールドを表示するにはマスターパスワードを入力してください。} copyField {カスタムフィールドをコピーするにはマスターパスワードを入力してください。} revealPrivateKey {秘密鍵を表示するにはマスターパスワードを入力してください。} copyPrivateKey {秘密鍵をコピーするにはマスターパスワードを入力してください。} revealOldPassword {旧パスワードを表示するにはマスターパスワードを入力してください。} copyOldPassword {旧パスワードをコピーするにはマスターパスワードを入力してください。} editItem {アイテムを編集するにはマスターパスワードを入力してください。} cloneItem {アイテムを複製するにはマスターパスワードを入力してください。} archiveItem {アイテムをアーカイブするにはマスターパスワードを入力してください。} unarchiveItem {アイテムのアーカイブを解除するにはマスターパスワードを入力してください。} downloadAttachment {添付ファイルをダウンロードするにはマスターパスワードを入力してください。} exportVault {保管庫をエクスポートするにはマスターパスワードを入力してください。} updateProtectedItem {保護されたアイテムを更新するにはマスターパスワードを入力してください。} other {続行するにはマスターパスワードを入力してください。}}"
+repromptBiometricReason: "{action, select, copyPassword {パスワードをコピーするために認証} copyTOTP {認証コードをコピーするために認証} revealTOTP {認証コードを表示するために認証} revealPassword {パスワードを表示するために認証} revealCardNumber {カード番号を表示するために認証} copyCardNumber {カード番号をコピーするために認証} revealSecurityCode {セキュリティコードを表示するために認証} copySecurityCode {セキュリティコードをコピーするために認証} revealSSN {社会保障番号を表示するために認証} copySSN {社会保障番号をコピーするために認証} revealField {カスタムフィールドを表示するために認証} copyField {カスタムフィールドをコピーするために認証} revealPrivateKey {秘密鍵を表示するために認証} copyPrivateKey {秘密鍵をコピーするために認証} revealOldPassword {旧パスワードを表示するために認証} copyOldPassword {旧パスワードをコピーするために認証} editItem {アイテムを編集するために認証} cloneItem {アイテムを複製するために認証} archiveItem {アイテムをアーカイブするために認証} unarchiveItem {アーカイブを解除するために認証} downloadAttachment {添付ファイルをダウンロードするために認証} exportVault {保管庫をエクスポートするために認証} updateProtectedItem {保護されたアイテムを更新するために認証} other {続行するために認証}}"
+repromptUnavailable: マスターパスワードの確認を利用できません。
+incorrectMasterPassword: マスターパスワードが正しくありません。
+
+# Saving, trash and folders
+
+discardChangesTitle: 未保存の変更を破棄しますか？
+discardChangesMessage: このアイテムの編集内容はまだ保存されていません。
+keepEditing: 編集を続ける
+discard: 破棄
+nameRequired: 名前を入力してください。
+cannotSaveOffline: オフライン時は保存できません。
+itemSaved: アイテムを保存しました
+saveFailed: 保存に失敗しました
+itemChangedTitle: 別のデバイスでアイテムが変更されました
+itemChangedMessage: 前回の同期以降、このアイテムは別の場所で更新されました。変更を上書きしないよう最新バージョンを再読み込みしてください。
+reloadLatest: 最新を読み込む
+localCopyNotUpdated: サーバーに保存されましたが、このデバイス上のコピーを更新できませんでした。
+syncNowAction: 今すぐ同期
+updateFailed: 更新に失敗しました
+favoriteUpdated: お気に入りを更新しました
+moveToTrashFailed: ごみ箱への移動に失敗しました
+movedToTrash: ごみ箱に移動しました
+archiveFailed: アーカイブに失敗しました
+unarchiveFailed: アーカイブ解除に失敗しました
+itemArchived: アイテムをアーカイブしました
+itemUnarchived: アーカイブを解除しました
+restoreFailed: 復元に失敗しました
+itemRestored: アイテムを復元しました
+deletePermanentlyTitle: 完全に削除しますか？
+deletePermanentlyMessage: "「{name}」は完全に削除され、元に戻せません。"
+deleteFailed: 削除に失敗しました
+permanentlyDeleted: 完全に削除しました
+emptyTrashTitle: ごみ箱を空にしますか？
+emptyTrashMessage: "{count, plural, other {# 件のアイテムが完全に削除され、元に戻せません。}}"
+emptyTrashFailed: ごみ箱を空にできませんでした
+trashEmptied: ごみ箱を空にしました
+trashReadOnlyKept: "{count, plural, other {読み取り専用のアイテム # 件がごみ箱に残りました。}}"
+trashChangedKept: "{count, plural, other {別のデバイスで変更されたアイテム # 件を保持しました。}}"
+trashPartlyDeleted: "{count, plural, other {# 件のアイテムを削除しました}}"
+trashSomeNotDeleted: "一部のアイテムを削除できませんでした：{reason}"
+passkeysNotCopied: パスキーはコピーされません
+passkeysNotCopiedDetail: 複製にはログイン情報のみ含まれ、パスキーは含まれません。
+cloneName: "{name}（コピー）"
+newFolderTitle: 新規フォルダー
+renameFolderTitle: フォルダー名を変更
+folderName: フォルダー名
+folderNameRequired: フォルダー名を入力してください。
+folderSaved: フォルダーを保存しました
+deleteFolderTitle: フォルダーを削除しますか？
+deleteFolderMessage: "「{name}」内のアイテムは「フォルダーなし」に移動されます。"
+deleteFolderFailed: フォルダーの削除に失敗しました
+folderDeleted: フォルダーを削除しました
+
+# Sync
+
+sessionExpiredToast: セッション期限切れ
+sessionExpiredToastDetail: 同期を再開するには再ログインしてください。
+offlineToastDetail: キャッシュ済みの保管庫を表示しています。
+syncFailed: 同期に失敗しました
+vaultSynced: 保管庫を同期しました
+
+# Editor
+
+newItemOfType: "{kind, select, login {新規ログイン} secureNote {新規セキュアメモ} card {新規カード} identity {新規 ID} sshKey {新規 SSH キー} other {新規アイテム}}"
+editItemOfType: "{kind, select, login {ログインを編集} secureNote {セキュアメモを編集} card {カードを編集} identity {ID を編集} sshKey {SSH キーを編集} other {アイテムを編集}}"
+unsavedChanges: 未保存の変更あり
+noChanges: 変更なし
+itemSection: アイテム
+type: 種類
+name: 名前
+favorite: お気に入り
+masterPasswordReprompt: マスターパスワードの再要求
+addNote: メモを追加
+generatePassword: パスワードを生成
+authenticatorKey: 認証キー
+authenticatorKeyPlaceholder: otpauth:// URI またはセットアップキー
+removeWebsite: ウェブサイトを削除
+addWebsite: ウェブサイトを追加
+cardholder: 名義人
+nameOnCard: カード記載の氏名
+brandPlaceholder: Visa、Mastercard、Amex…
+cardNumberLabel: 番号
+expiryMonthPlaceholder: MM
+expiryYearPlaceholder: YYYY
+securityCodePlaceholder: CVV
+firstName: 名
+lastName: 姓
+phonePlaceholder: "+81 90-1234-5678"
+street: 番地・建物名
+streetPlaceholder: 丸の内 1-1-1
+city: 市区町村
+stateZip: 都道府県 / 郵便番号
+stateRegion: 都道府県
+postalCode: 郵便番号
+country: 国/地域
+generateSSHKey: Ed25519 鍵を生成
+sshKeyGenerateFailed: "SSH キーを生成できませんでした：{reason}"
+fieldTypeText: テキスト
+fieldTypeHidden: 非表示
+fieldName: フィールド名
+fieldValue: 値
+removeField: フィールドを削除
+addField: フィールドを追加
+passkey: パスキー
+removedWhenSaved: 保存時に削除
+removePasskey: パスキーを削除
+removePasskeyTitle: パスキーを削除しますか？
+removePasskeyMessage: 削除すると、このパスキーではログインできなくなります。
+passkeySiteCreated: "{site} · {date, date, medium} に作成"
+passkeyCreated: "{date, date, medium} に作成"
+passkeyStored: このアイテムに保存済み
+
+# Attachments
+
+attachments: 添付ファイル
+attachFile: ファイルを添付
+attachFileTitle: ファイルを添付
+attachButton: 添付
+downloadFile: "{file} をダウンロード"
+deleteFile: "{file} を削除"
+saveAttachmentTitle: 添付ファイルを保存
+saveHere: ここに保存
+downloadFailed: ダウンロードに失敗しました
+attachmentSaved: 添付ファイルを保存しました
+couldNotOpenFile: ファイルを開けませんでした
+fileTooLarge: ファイルが大きすぎます
+attachmentLimit: 添付ファイルの上限は 100 MiB です。
+uploadFailed: アップロードに失敗しました
+fileAttached: ファイルを添付しました
+deleteAttachmentTitle: 添付ファイルを削除しますか？
+deleteAttachmentMessage: "「{file}」は完全に削除されます。"
+attachmentDeleted: 添付ファイルを削除しました
+bytes: "{count, number, integer} B"
+kilobytes: "{size, number, ::.0} KB"
+megabytes: "{size, number, ::.0} MB"
+gigabytes: "{size, number, ::.0} GB"
+terabytes: "{size, number, ::.0} TB"
+
+# Generator
+
+passwordMode: パスワード
+passphraseMode: パスフレーズ
+strengthWeak: 弱い
+strengthFair: 普通
+strengthStrong: 強い
+strengthVeryStrong: 非常に強い
+entropyBits: "{bits, plural, other {≈ # ビットのエントロピー}}"
+regenerate: 再生成
+length: 長さ
+characters: 文字種
+uppercase: 大文字
+lowercase: 小文字
+numbers: 数字
+symbols: 記号
+avoidAmbiguous: 紛らわしい文字を除外
+avoidAmbiguousDetail: l、1、I、O、0 を除外
+words: 単語数
+options: オプション
+wordSeparator: 単語の区切り文字
+wordSeparatorDetail: 各単語の間に挿入
+capitalizeWords: 先頭を大文字にする
+capitalizeWordsExample: Correct-Horse-Battery
+includeNumber: 数字を含める
+includeNumberDetail: いずれかの単語の末尾に数字を追加
+
+# Vault Health
+
+healthReused: 使い回し
+healthWeak: 弱いパスワード
+healthExpiringCards: 期限切れ間近のカード
+healthUnsecured: 安全でない HTTP
+healthFilterEmpty: このカテゴリーに問題はありません。
+healthAllClear: 問題ありません
+healthAllClearDetail: 使い回しや弱いパスワード、期限切れ間近のカード、安全でないウェブサイトはありません。
+reusedPasswords: 使い回されたパスワード
+weakPasswords: 弱いパスワード
+unsecuredWebsites: 安全でないウェブサイト
+healthLocalOnly: このデバイス上でのみチェックされます。サーバーには何も送信されません。
+openItem: "{name} を開く"
+usedInItems: "{count, plural, other {# 件のアイテムで使用}}"
+weakCommon: よくあるパスワード
+weakShort: "{count, plural, other {# 文字未満}}"
+weakPattern: 連続文字や繰り返しが多い
+weakOneClass: 1 種類の文字のみ使用
+weakGuessable: 推測されやすい
+cardExpired: "{expiry} に期限切れ"
+cardExpires: "{expiry} に期限切れ予定"
+
+# Backup and import
+
+backupPasswordTitle: バックアップパスワード
+protectBackupTitle: バックアップを保護
+backupPasswordPrompt: このバックアップのエクスポート時に設定したパスワードを入力してください。
+protectBackupPrompt: 暗号化バックアップ用のパスワードを設定してください。忘れると復元できません。
+backupPassword: バックアップパスワード
+confirmPassword: パスワードを確認
+export: エクスポート
+decrypt: 復号
+backupPasswordTooShort: "{count, plural, other {# 文字以上で入力してください。}}"
+backupPasswordsDiffer: パスワードが一致しません。
+backupIncomplete: "{count, plural, other {GoVault で読み取れない形式の個人アイテムが # 件あるため、バックアップが不完全になります。代わりに Bitwarden のウェブ保管庫からエクスポートしてください。}}"
+exportFailed: エクスポートに失敗しました
+backupSaved: 暗号化バックアップを保存しました
+backupSavedDetail: バックアップパスワードは安全に保管してください。忘れると復元できません。
+importBackupTitle: バックアップをインポート
+importButton: インポート
+importFailed: インポートに失敗しました
+backupFileTooLarge: "ファイルサイズが {size, number, integer} MiB を超えています。"
+backupPasswordRequired: バックアップパスワードを入力してください。
+incorrectBackupPassword: バックアップパスワードが正しくありません。
+notBitwardenExport: Bitwarden JSON エクスポートファイルではありません。
+backupAccountRestricted: このバックアップは元のアカウントに制限されています。パスワード保護ファイルとして再エクスポートしてください。
+importResult: "インポート完了：新規 {created, number, integer} 件、更新 {updated, number, integer} 件"
+importSomeFailed: "{count, plural, other {# 件失敗：{reason}}}"
+importSkipped: "{count, number, integer} 件スキップ"
+importCreate: 新規作成
+importCreateCopy: コピーを作成
+importUpdate: 既存を更新
+importSkip: スキップ
+noImport: 進行中のインポートはありません
+noImportHint: 「設定」から「バックアップをインポート」を選ぶと内容を確認できます。
+reviewImport: インポートを確認
+importSummary: "{file} · 新規 {added, number, integer} 件、変更 {changed, number, integer} 件、同一 {identical, number, integer} 件。適用するまで何も変更されません。"
+selectAllNew: 新規をすべて選択
+skipAllConflicts: 競合をすべてスキップ
+copyAllConflicts: 競合をすべてコピー
+updateAllConflicts: 競合をすべて更新
+skipAll: すべてスキップ
+importGroupChanged: "変更あり（{count, number, integer}）"
+importGroupNew: "新規（{count, number, integer}）"
+importGroupIdentical: "同一（{count, number, integer}）"
+importApply: "適用：新規 {create, number, integer} 件、更新 {update, number, integer} 件、スキップ {skip, number, integer} 件"
+personalVault: 個人保管庫
+anOrganization: 組織
+sharedVaultOf: "{organization} の共有保管庫"
+organizationCollections: "{organization} · {collections}"
+showIdentical: "{count, plural, other {同一のアイテム # 件を表示}}"
+hideIdentical: "{count, plural, other {同一のアイテム # 件を非表示}}"
+importDiffers: "相違：{fields} · {destination}内"
+importCannotUpdateIncomplete: "更新不可：バックアップアイテムが不完全です"
+importCannotUpdateUnmatchable: "更新不可：フィールドまたはウェブサイトを安全に照合できません"
+importReadOnly: 既存のアイテムは読み取り専用です
+importProtected: "保護済み：更新にはマスターパスワードが必要です"
+importAlreadyIn: "{destination}に既存"
+importUnsupported: GoVault はこの種類のアイテムをまだ保存できないためスキップされました。
+importAmbiguous: 保管庫に同じ名前のアイテムが複数あるため一致させられません。新しいアイテムとして追加するには「新規作成」を選んでください。
+importArchivedNoPremium: バックアップではアーカイブ済みですが、アーカイブ機能にはプレミアムプランが必要なため通常の保管庫に作成されます。
+diffName: 名前
+diffNotes: メモ
+diffFolder: フォルダー
+diffFavorite: お気に入り
+diffReprompt: パスワード再要求
+diffUsername: ユーザー名
+diffPassword: パスワード
+diffTOTP: 認証コード
+diffWebsites: ウェブサイト
+diffPasskey: パスキー
+diffCard: カード
+diffIdentity: ID
+diffSSHKey: SSH キー
+diffCustomFields: カスタムフィールド
+
+# Settings
+
+general: 一般
+language: 言語
+languageDetail: GoVault の表示言語。「システム設定に従う」はシステムの言語を使用します。
+systemDefault: システム設定に従う
+account: アカウント
+syncNow: 今すぐ同期
+keyDerivation: 鍵導出
+kdfArgon2id: "Argon2id · {memory, number, integer} MiB · {iterations, plural, other {# 回反復}} · {threads, plural, other {# スレッド}}"
+kdfPBKDF2: "PBKDF2-SHA256 · {iterations, plural, other {# 回反復}}"
+lastSync: 最終同期
+notYetSynced: 未同期
+lastSyncAt: "{date, date, medium} {date, time, short}"
+logOutHint: ログアウトするとローカルの保管庫キャッシュが削除されます。
+security: セキュリティ
+autoLock: 自動ロック
+autoLockDetail: 一定時間操作がない場合に保管庫をロックします。
+afterMinutes: "{count, plural, other {# 分後}}"
+afterHours: "{count, plural, other {# 時間後}}"
+afterSeconds: "{count, plural, other {# 秒後}}"
+lockOnSleep: スリープまたは画面ロック時にロック
+lockOnSleepDetail: Mac がスリープするか画面がロックされたときに保管庫をロックします。
+backup: バックアップ
+exportBackup: 暗号化バックアップをエクスポート
+exportBackupDetail: 指定したパスワードで保護された Bitwarden 互換の JSON ファイル。
+exportEllipsis: エクスポート…
+importBackup: バックアップをインポート
+importBackupDetail: 暗号化または平文の Bitwarden JSON。変更前にすべてのアイテムを確認できます。
+importEllipsis: インポート…
+privacy: プライバシー
+showWebsiteIcons: ウェブサイトアイコンを表示
+showWebsiteIconsDetail: Vaultwarden サーバーからサイトアイコンを取得します。
+iconCache: アイコンキャッシュ
+iconCacheDetail: このデバイスにダウンロードされたサイトアイコンを削除します。
+clearIconCache: アイコンキャッシュを消去
+iconCacheCleared: アイコンキャッシュを消去しました
+iconCacheClearFailed: アイコンキャッシュを消去できませんでした
+clipboard: クリップボード
+clearCopiedSecrets: コピーしたシークレットを消去
+clearCopiedSecretsDetail: コピーした値がクリップボードに残っている場合に自動消去します。
+concealedClipboard: プライベートクリップボード
+concealedClipboardDetail: クリップボード管理アプリに記録されないようマークします。
+concealedActive: 有効
+macOSOnly: macOS のみ
+menuBar: メニューバー
+tray: トレイ
+showMenuBarIcon: メニューバーアイコンを表示
+showTrayIcon: トレイアイコンを表示
+menuBarIconDetail: メニューバーから GoVault を開く・同期・ロックできます。
+trayIconDetail: トレイから GoVault を開く・同期・ロックできます。
+launchAtLogin: ログイン時に起動
+launchAtLoginDetail: サインイン時に GoVault を自動で起動します。
+hideDockIcon: Dock アイコンを隠す
+hideDockIconDetail: GoVault をメニューバーのみに表示します。
+hideDockIconNeedsMenuBar: GoVault にアクセスできるよう、先にメニューバーアイコンをオンにしてください。
+about: このアプリについて
+appVersion: "GoVault {version}"
+developmentVersion: "{version} (開発版)"
+development: "(開発版)"
+updatesSigned: アップデートは署名され、自動的にインストールされます。
+checkForUpdates: アップデートを確認
+sshAgent: SSH エージェント
+enableSSHAgent: SSH エージェントを有効にする
+enableSSHAgentDetail: ロック解除中の保管庫から SSH キーを提供します。マスターパスワード再要求が設定されたキーは提供されません。
+socket: ソケット
+copySSHAuthSock: SSH_AUTH_SOCK をコピー
+sshAgentUnavailable: "エージェントを利用できません：{reason}"
+sshAgentInUse: 別のプロセスがこのソケットを使用中です。
+sshAgentNotSocket: このパスは既に存在し、ソケットではありません。
+sshAgentUnsupported: このシステムでは Unix ソケットがサポートされていません。
+biometricUnavailable: この Mac では Touch ID を利用できません。Touch ID 対応キーボードをペアリングするか、「システム設定」で登録してください。
+biometricDetail: すばやくロック解除できるよう、ラップされたキーをシステムキーチェーンに保存します。
+biometricHardware: ハードウェアレベルの保護：macOS は Touch ID 認証後にのみキーを解放します。
+biometricAppGated: "アプリレベルの認証：キーはログインキーチェーンに保存され、GoVault が読み取り前に {method} を要求します。"
+promptAutomatically: 自動で認証を求める
+promptAutomaticallyDetail: "ロック画面が開いたらすぐに {method} を要求します。"
+
+# Menus
+
+openGoVault: GoVault を開く
+checkForUpdatesMenu: アップデートを確認…
+syncNowMenu: 今すぐ同期
+lockNow: 今すぐロック
+quitGoVault: GoVault を終了
+editMenu: 編集
+windowMenu: ウインドウ
+
+# Errors from the vault
+
+errorTwoFactorRequired: このアカウントは2段階認証が必要です。
+errorUnauthorized: メールアドレスまたはマスターパスワードが無効です。
+errorOffline: サーバーに接続できません。接続とサーバー URL を確認してください。
+errorRedirect: サーバーが別のアドレスにリダイレクトしました。GoVault はリダイレクトを追従しません。
+errorNotFound: サーバー上でこのアイテムが見つかりませんでした。同期してからやり直してください。
+errorRevisionConflict: このアイテムは別のデバイスで変更されました。同期してからやり直してください。
+errorAttachmentTooLarge: 添付ファイルの上限は 100 MiB です。
+errorArchiveUnsupported: このサーバーはアーカイブに対応していません。Vaultwarden 1.36 以降が必要です。
+errorPremiumRequired: アーカイブにはプレミアムプランが必要です。
+errorAccountIDUnknown: サーバーでアカウント ID を確認できませんでした。同期してからやり直してください。
+errorArchiveNotConfirmed: サーバーが変更を確認できませんでした。現在の位置を表示するため同期しました。
+errorCipherInTrash: ごみ箱のアイテムはアーカイブできません。先に復元してください。
+errorLocked: 保管庫がロックされています。ロック解除してからやり直してください。
+errorLoggedOut: ログインしていません。
+errorCipherNotFound: このアイテムは保管庫にもう存在しません。
+errorFolderNotFound: このフォルダーは保管庫にもう存在しません。
+errorReadOnly: このアイテムは読み取り専用です。
+errorOrganizationKey: GoVault はこの組織のアイテムを読み取れません。同期してからやり直してください。
+errorAttachmentNotFound: この添付ファイルはアイテムにもう存在しません。
+errorHiddenByOrganization: 組織によってこのアイテムのシークレットが非表示になっています。
+errorUnsupportedUpload: サーバーが GoVault 未対応の添付ファイルアップロード方式を要求しました。
+errorServerMismatch: 保存されたログイン情報は、この保管庫コピーとは異なるサーバーのものです。再ログインしてください。
+errorSignInRequired: 同期するには再ログインしてください。それまではオフラインで保管庫を利用できます。
+errorDifferentAccount: このログインはこのデバイス上の保管庫とは別のアカウントです。別のアカウントを使うには先にログアウトしてください。
+errorAccountChanged: 確認後にアカウントが変更されました。やり直してください。
+errorSnapshotNotUpdated: サーバーには変更が保存されましたが、このデバイスのコピーを更新できませんでした。同期して更新してください。
+errorSealedField: このアイテムには、GoVault が新しい鍵へコピーできない暗号化データが含まれています。
+errorUnsupportedCipher: このアイテムは GoVault がまだ読み取れない形式です。
+errorChangedSinceReview: インポート確認後にアイテムが変更されました。もう一度確認してください。
+errorRepromptRequired: この保護されたアイテムを更新するにはマスターパスワードが必要です。
+errorUnsupportedType: GoVault はこの種類のアイテムをまだ保存できません。
+errorAmbiguousUpdate: バックアップアイテムがどの既存アイテムに対応するか判別できません。
+errorUnreadablePasskey: パスキーを復号できませんでした。
+errorWrongBackupPassword: バックアップパスワードが正しくありません。
+errorBackupTooLarge: 暗号化バックアップが大きすぎるため、GoVault で再インポートできません。
+errorServer: "サーバーエラー（{status}）：{detail}"
+errorWithDetail: "エラーが発生しました：{detail}"
+
+# NSGo catalogs
+
+github.com/nsgo-dev/nsgo/desktop/locales:
+  edit: 編集
+  window: ウインドウ
+  about: について
+  aboutApp: "{app} について"
+  hide: 非表示
+  hideApp: "{app} を非表示"
+  hideOthers: ほかを非表示
+  showAll: すべてを表示
+  quit: 終了
+  quitApp: "{app} を終了"
+  undo: 取り消す
+  redo: やり直す
+  cut: カット
+  copy: コピー
+  paste: ペースト
+  delete: 削除
+  selectAll: すべてを選択
+  minimize: しまう
+  zoom: 拡大/縮小
+  toggleFullScreen: フルスクリーンを切り替え
+  enterFullScreen: フルスクリーンにする
+  exitFullScreen: フルスクリーンを解除
+  close: 閉じる
+  guideDrag: "「{permission}」を許可するには、{app} を上のリストにドラッグしてください。"
+  guideDragHint: ドラッグ
+  permissionAccessibility: アクセシビリティ
+  permissionDeviceControl: デバイス制御とデータアクセス
+  permissionScreenRecording: 画面収録
+  permissionScreenAudioRecording: 画面収録とシステムオーディオ録音
+  permissionInputMonitoring: 入力監視
+  permissionFullDiskAccess: フルディスクアクセス
+  permissionAppManagement: アプリ管理
+  permissionDeveloperTools: デベロッパツール
+  permissionBluetooth: Bluetooth
+  permissionMediaLibrary: メディアと Apple Music
+  authSessionDone: このページを閉じてアプリに戻ることができます。
+  pasteAndMatchStyle: ペーストしてスタイルを合わせる
+  startSpeaking: 読み上げを開始
+  stopSpeaking: 読み上げを停止
+  bringAllToFront: すべてを手前に移動
+  services: サービス
+  help: ヘルプ
+  roleLink: リンク
+  roleTab: タブ
+  roleSearchBox: 検索フィールド
+  roleStatus: ステータス
+  roleMenu: メニュー
+  roleMenuItem: メニュー項目
+  roleDialog: ダイアログ
+  roleAlert: 警告
+  roleTable: テーブル
+  roleGrid: グリッド
+  roleRow: 行
+  roleColumnHeader: 列ヘッダー
+  roleCell: セル
+  statePartiallyChecked: 一部選択
+  stateExpanded: 展開済み
+  stateCollapsed: 折りたたみ済み
+  spokenSeparator: "、"
+
+github.com/nsgo-dev/nsgo/updater/locales:
+  updateAvailable: "{app} の新しいバージョンが利用可能です"
+  updateAvailableMessage: "{app} {version} が利用可能です。現在のバージョンは {current} です。"
+  update: アップデート
+  later: あとで
+  upToDate: 最新バージョンです
+  upToDateMessage: "{app} {version} は最新のバージョンです。"
+  updateError: アップデートを確認できません
+  updateErrorMessage: アップデートの確認中にエラーが発生しました。あとでもう一度お試しください。
+  installError: アップデートをインストールできません
+  installErrorMessage: "{app} {version} をダウンロードまたはインストールできませんでした。ページから直接入手できます。"
+  openPage: ページを開く
+  ok: OK
+
+github.com/nsgo-dev/nsgo/base/locales:
+  sortBy: "{column} で並べ替え"
+  diffUnchangedLines: "{n, plural, other {変更なしの # 行}}"
+  diffExpandAll: すべて展開
+  diffStage: ステージ
+  diffDiscardChanges: 変更を破棄…
+  collapseMerge: マージを折りたたむ
+  expandMerge: マージを展開
+  colorHue: 色相
+  colorAlpha: 不透明度
+  colorSaturationBrightness: 彩度と明度
+  colorHex: 16進カラー
+  colorEyeDropper: 画面から色を取得
+  colorFormat: カラー形式
+  colorCopy: 色をコピー
+  colorRed: 赤
+  colorGreen: 緑
+  colorBlue: 青
+  colorHueDegrees: 色相角度
+  colorSaturationPercent: 彩度パーセント
+  colorBrightnessPercent: 明度パーセント
+  colorLightnessPercent: 輝度パーセント
+  colorOpacityPercent: 不透明度パーセント
+  calendarPrevious: 前月
+  calendarNext: 翌月
+  listClear: クリア
+  listNothingFound: 見つかりません
+  listSearch: 検索
+  commandSearch: コマンドを検索
+  commandSearchPlaceholder: コマンドを検索…
+  commandNoMatches: 一致するコマンドがありません
+  commandLoading: 読み込み中…
+  commandList: コマンド
+  calendarMonth: "{d, date, ::yMMMM}"
+  calendarMonthName: "{d, date, ::MMM}"
+  calendarWeekday: "{d, date, ::EEEEE}"
+  breadcrumbsMore: その他
+  flowLabel: "{nodes, plural, other {# 個のノード}}、{edges, plural, other {# 本のエッジ}}"
+
+github.com/nsgo-dev/nsgo/base/textview/locales:
+  alertNote: 注記
+  alertTip: ヒント
+  alertImportant: 重要
+  alertWarning: 警告
+  alertCaution: 注意

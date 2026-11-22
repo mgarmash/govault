@@ -1,0 +1,806 @@
+# GoVault German (de) message catalog.
+
+# Common words
+
+cancel: Abbrechen
+save: Speichern
+delete: Löschen
+remove: Entfernen
+edit: Bearbeiten
+restore: Wiederherstellen
+verify: Prüfen
+copy: Kopieren
+undo: Rückgängig
+never: Nie
+notAvailable: "—"
+
+# Item types
+
+typeLogin: Zugangsdaten
+typeSecureNote: Sichere Notiz
+typeCard: Karte
+typeIdentity: Identität
+typeSSHKey: SSH-Schlüssel
+typeItem: Eintrag
+typeLogins: Zugangsdaten
+typeCards: Karten
+typeIdentities: Identitäten
+typeSecureNotes: Sichere Notizen
+typeSSHKeys: SSH-Schlüssel
+
+# Sign in
+
+signInTitle: Bei GoVault anmelden
+signInSubtitle: Mit deinem Bitwarden- oder Vaultwarden-Server verbinden.
+serverURL: Server-URL
+email: E-Mail
+masterPassword: Master-Passwort
+masterPasswordPlaceholder: Master-Passwort
+required: Erforderlich
+emailPlaceholder: name@example.com
+insecureServer: Dieser Server verwendet kein HTTPS. Dein Master-Passwort und deine Tresordaten werden unverschlüsselt übertragen; nutze ihn nur in einem vertrauenswürdigen Netzwerk.
+signIn: Anmelden
+backToUnlock: Zurück zum Entsperren
+signInFootnote: Ende-zu-Ende-verschlüsselt. Dein Master-Passwort verlässt dieses Gerät nie.
+signInFieldsRequired: Server-URL, E-Mail und Master-Passwort sind erforderlich.
+togglePasswordVisibility: Passwort ein- oder ausblenden
+
+# Two-step login
+
+twoFactorTitle: Bestätigung in zwei Schritten
+twoFactorEnterEmailCodeTo: "Gib den Code ein, der an {email} gesendet wurde."
+twoFactorEnterEmailCode: Gib den Code ein, der an deine E-Mail gesendet wurde.
+twoFactorEnterAuthenticatorCode: Gib den 6-stelligen Code aus deiner Authenticator-App ein.
+twoFactorMethod: Bestätigungsmethode
+twoFactorAuthenticator: Authenticator-App
+twoFactorEmail: E-Mail
+twoFactorYubiKey: YubiKey
+twoFactorDuo: Duo
+twoFactorOrganizationDuo: Duo (Organisation)
+twoFactorU2F: FIDO U2F
+twoFactorWebAuthn: Passkey / WebAuthn
+twoFactorRememberedDevice: Gemerktes Gerät
+twoFactorOtherProvider: "Methode {number, number, integer}"
+verificationCode: Verifizierungscode
+rememberDevice: Dieses Gerät merken
+backToSignIn: Zurück zur Anmeldung
+sendCode: Code senden
+resendCode: Code erneut senden
+twoFactorFootnote: Die Zwei-Faktor-Authentifizierung schützt deinen Tresor selbst bei einem Passwortleck.
+twoFactorCodeRequired: Gib den Verifizierungscode ein.
+twoFactorCodeInvalid: Ungültiger Verifizierungscode. Prüfe den Code und versuche es erneut.
+twoFactorUnsupported: "Dieses Konto erfordert Zwei-Faktor-Authentifizierung über {methods}, was GoVault noch nicht unterstützt. Aktiviere Authenticator-App oder E-Mail in den Web-Tresor-Einstellungen, um dich hier anzumelden."
+twoFactorEmailFailed: "Verifizierungs-E-Mail konnte nicht gesendet werden. {reason}"
+twoFactorEmailSentTo: "Ein Verifizierungscode wurde an {email} gesendet."
+twoFactorEmailSent: Ein Verifizierungscode wurde an deine E-Mail gesendet.
+
+# Lock screen
+
+lockedTitle: GoVault ist gesperrt
+unlock: Entsperren
+unlockWith: "Mit {method} entsperren"
+orUseMasterPassword: oder Master-Passwort verwenden
+logOutOrSwitchAccount: Abmelden oder Konto wechseln…
+logOutOrSwitchAccountLabel: Abmelden oder Konto wechseln
+lockFootnote: Gesperrte Tresore bleiben auf diesem Gerät verschlüsselt.
+masterPasswordRequired: Gib dein Master-Passwort ein.
+biometricGeneric: Biometrie
+biometricUnlockReason: GoVault entsperren
+biometricEnableReason: "{method} für GoVault aktivieren"
+keychainPromptReason: GoVault zu entsperren
+biometricKeyUnavailable: Gespeicherter biometrischer Schlüssel nicht verfügbar. Mit Master-Passwort entsperren.
+biometricKeyCorrupt: Beschädigter biometrischer Schlüssel. Mit Master-Passwort entsperren.
+biometricKeyInvalid: Ungültiger biometrischer Schlüssel. Mit Master-Passwort entsperren.
+biometricFailed: Biometrische Authentifizierung fehlgeschlagen. Master-Passwort eingeben.
+keychainUnavailable: Schlüsselbund nicht verfügbar
+keychainUnavailableDetail: Kein Zugriff auf den System-Schlüsselbund.
+biometricDisableFailed: Biometrisches Entsperren konnte nicht deaktiviert werden
+biometricEnableFailed: Biometrisches Entsperren konnte nicht aktiviert werden
+biometricDisabled: "{method} deaktiviert"
+biometricEnabled: "{method} aktiviert"
+biometricEnabledDetail: "Du kannst GoVault jetzt mit {method} entsperren."
+vaultLocked: Tresor gesperrt
+vaultLockedInactivity: Automatisch wegen Inaktivität gesperrt.
+
+# Log out
+
+logOutTitle: Von GoVault abmelden?
+logOutMessage: Dein lokaler verschlüsselter Tresor-Cache und der gespeicherte biometrische Schlüssel werden von diesem Gerät entfernt.
+logOut: Abmelden
+loggedOut: Abgemeldet
+logOutSecretsLeft: "Einige gespeicherte Geheimnisse konnten nicht entfernt werden: {reason}"
+
+# Toolbar and sidebar
+
+back: Zurück
+forward: Vorwärts
+searchVault: Tresor durchsuchen
+clearSearch: Suche löschen
+offline: Offline
+syncNowLabel: Jetzt synchronisieren
+lockVault: Tresor sperren
+newItem: Neu
+allItems: Alle Einträge
+favorites: Favoriten
+categories: Kategorien
+folders: Ordner
+newFolder: Neuer Ordner
+collections: Sammlungen
+tools: Werkzeuge
+generator: Generator
+vaultHealth: Tresor-Check
+archive: Archiv
+trash: Papierkorb
+settings: Einstellungen
+importTitle: Import
+noFolder: Kein Ordner
+collection: Sammlung
+folder: Ordner
+folderActions: Ordneraktionen
+renameFolderMenu: Ordner umbenennen…
+deleteFolder: Ordner löschen
+resizePane: Bereichsgröße ändern
+syncing: Synchronisiere…
+syncPending: Sync ausstehend
+syncOfflineCached: Offline · lokaler Tresor
+sessionExpired: Sitzung abgelaufen
+synced: Synchronisiert
+syncedWhen: "Synchronisiert {when}"
+justNow: gerade eben
+minutesAgo: "{count, plural, one {vor # Minute} other {vor # Minuten}}"
+hoursAgo: "{count, plural, one {vor # Stunde} other {vor # Stunden}}"
+daysAgo: "{count, plural, one {vor # Tag} other {vor # Tagen}}"
+shortDate: "{date, date, ::MMMd}"
+signInAgainToSync: Zum Synchronisieren erneut anmelden. Bis dahin ist dein Tresor offline verfügbar.
+sessionExpiredBanner: Sitzung abgelaufen – dein lokaler Tresor ist weiter lesbar. Melde dich erneut an, um wieder zu synchronisieren.
+signInNotSaved: Deine Anmeldung konnte nicht gespeichert werden. Melde dich erneut an, damit GoVault nach dem Sperren weiter synchronisieren kann.
+signInAgain: Erneut anmelden
+
+# Item list
+
+itemCount: "{count, plural, one {# Eintrag} other {# Einträge}}"
+trashCanRestore: Einträge im Papierkorb können wiederhergestellt werden.
+emptyTrash: Papierkorb leeren
+searchInAllItems: In „Alle Einträge“
+searchIn: "In „{section}“"
+searchOnlyIn: "Nur „{section}“"
+searchAllItems: Alle Einträge durchsuchen
+noResults: Keine Treffer
+trashIsEmpty: Papierkorb ist leer
+noItems: Keine Einträge
+nothingInSectionMatches: "Keine Treffer für „{query}“ in „{section}“."
+nothingMatches: "Keine Treffer für „{query}“."
+trashEmptyHint: Gelöschte Einträge erscheinen hier.
+noItemsHint: Wähle „Neu“, um deinen ersten Eintrag anzulegen.
+noItemSelected: Kein Eintrag ausgewählt
+noItemSelectedHint: Wähle einen Eintrag aus der Liste, um Details zu sehen.
+shortcutSearch: Suchen
+shortcutNewItem: Neu
+shortcutLock: Sperren
+
+# Item context menu
+
+copyUsernameMenu: Nutzername kopieren
+copyPasswordMenu: Passwort kopieren
+copyVerificationCodeMenu: Verifizierungscode kopieren
+copyPublicKeyMenu: Öffentlichen Schlüssel kopieren
+deletePermanentlyMenu: Dauerhaft löschen…
+addToFavorites: Zu Favoriten hinzufügen
+removeFromFavorites: Aus Favoriten entfernen
+clone: Duplizieren
+archiveAction: Archivieren
+unarchiveAction: Dearchivieren
+moveToTrash: In Papierkorb
+
+# Item details
+
+username: Nutzername
+password: Passwort
+hiddenByOrganization: Von deiner Organisation ausgeblendet
+revealPassword: Passwort anzeigen
+copyPassword: Passwort kopieren
+copyUsername: Nutzername kopieren
+credentials: Zugangsdaten
+website: Website
+websiteNumbered: "Website {number, number, integer}"
+openWebsite: Website öffnen
+copyWebsite: Website kopieren
+websites: Websites
+cardholderName: Karteninhaber
+copyCardholder: Karteninhaber kopieren
+cardNumber: Kartennummer
+revealCardNumber: Kartennummer anzeigen
+copyCardNumber: Kartennummer kopieren
+expiration: Gültig bis
+copyExpiration: Ablaufdatum kopieren
+securityCode: Sicherheitscode
+brand: Marke
+cardDetails: Kartendetails
+fullName: Vollständiger Name
+company: Unternehmen
+phone: Telefon
+personal: Persönlich
+address: Adresse
+copyAddress: Adresse kopieren
+socialSecurityNumber: Sozialversicherungsnummer
+passportNumber: Reisepassnummer
+copyPassportNumber: Reisepassnummer kopieren
+licenseNumber: Führerscheinnummer
+copyLicenseNumber: Führerscheinnummer kopieren
+documents: Dokumente
+customFields: Benutzerdefinierte Felder
+notes: Notizen
+fingerprint: Fingerabdruck
+copyFingerprint: Fingerabdruck kopieren
+publicKey: Öffentlicher Schlüssel
+copyPublicKey: Öffentlichen Schlüssel kopieren
+privateKey: Privater Schlüssel
+revealField: "{field} anzeigen"
+copyField: "{field} kopieren"
+passwordHistory: "Passwortverlauf ({count, number, integer})"
+usedUntil: "Verwendet bis {date, date, medium} um {date, time, short}"
+oldPassword: Altes Passwort
+viewOnly: Nur lesen
+passwordReprompt: Passwort-Abfrage
+inTrash: Im Papierkorb
+archived: Archiviert
+deletePermanently: Dauerhaft löschen
+toggleFavorite: Favorit umschalten
+cloneItem: Eintrag duplizieren
+timeRemaining: Verbleibende Zeit
+secondsLeft: "{seconds, plural, one {# s} other {# s}}"
+revealVerificationCode: Verifizierungscode anzeigen
+copyVerificationCode: Verifizierungscode kopieren
+cardPictureBrand: KARTE
+cardPictureCardholder: INHABER
+cardPictureExpires: GÜLTIG BIS
+updatedOn: "Aktualisiert am {date, date, medium} um {date, time, short}"
+createdOn: "Erstellt am {date, date, medium}"
+deletedWhen: "Gelöscht {when}"
+
+# Copying
+
+copied: "{field} kopiert"
+passwordCopied: Passwort kopiert
+usernameCopied: Nutzername kopiert
+verificationCodeCopied: Verifizierungscode kopiert
+publicKeyCopied: Öffentlicher Schlüssel kopiert
+websiteCopied: Website kopiert
+cardholderNameCopied: Karteninhaber kopiert
+cardNumberCopied: Kartennummer kopiert
+expirationCopied: Ablaufdatum kopiert
+securityCodeCopied: Sicherheitscode kopiert
+fullNameCopied: Name kopiert
+companyCopied: Unternehmen kopiert
+emailCopied: E-Mail kopiert
+phoneCopied: Telefon kopiert
+addressCopied: Adresse kopiert
+ssnCopied: Sozialversicherungsnummer kopiert
+passportNumberCopied: Reisepassnummer kopiert
+licenseNumberCopied: Führerscheinnummer kopiert
+fingerprintCopied: Fingerabdruck kopiert
+privateKeyCopied: Privater Schlüssel kopiert
+oldPasswordCopied: Altes Passwort kopiert
+generatedCopied: Generiertes Passwort kopiert
+copyFailed: Kopieren fehlgeschlagen
+clearsInConcealed: "Privat · wird in {seconds, plural, one {# Sekunde} other {# Sekunden}} gelöscht"
+clearsIn: "Wird in {seconds, plural, one {# Sekunde} other {# Sekunden}} gelöscht"
+concealedFromHistory: Vor dem Zwischenablageverlauf verborgen
+
+# Master password reprompt
+
+repromptTitle: Master-Passwort-Prüfung
+repromptPrompt: "{action, select, copyPassword {Gib dein Master-Passwort ein, um das Passwort zu kopieren.} copyTOTP {Gib dein Master-Passwort ein, um den Verifizierungscode zu kopieren.} revealTOTP {Gib dein Master-Passwort ein, um den Verifizierungscode anzuzeigen.} revealPassword {Gib dein Master-Passwort ein, um das Passwort anzuzeigen.} revealCardNumber {Gib dein Master-Passwort ein, um die Kartennummer anzuzeigen.} copyCardNumber {Gib dein Master-Passwort ein, um die Kartennummer zu kopieren.} revealSecurityCode {Gib dein Master-Passwort ein, um den Sicherheitscode anzuzeigen.} copySecurityCode {Gib dein Master-Passwort ein, um den Sicherheitscode zu kopieren.} revealSSN {Gib dein Master-Passwort ein, um die Sozialversicherungsnummer anzuzeigen.} copySSN {Gib dein Master-Passwort ein, um die Sozialversicherungsnummer zu kopieren.} revealField {Gib dein Master-Passwort ein, um das benutzerdefinierte Feld anzuzeigen.} copyField {Gib dein Master-Passwort ein, um das benutzerdefinierte Feld zu kopieren.} revealPrivateKey {Gib dein Master-Passwort ein, um den privaten Schlüssel anzuzeigen.} copyPrivateKey {Gib dein Master-Passwort ein, um den privaten Schlüssel zu kopieren.} revealOldPassword {Gib dein Master-Passwort ein, um das alte Passwort anzuzeigen.} copyOldPassword {Gib dein Master-Passwort ein, um das alte Passwort zu kopieren.} editItem {Gib dein Master-Passwort ein, um den Eintrag zu bearbeiten.} cloneItem {Gib dein Master-Passwort ein, um den Eintrag zu duplizieren.} archiveItem {Gib dein Master-Passwort ein, um den Eintrag zu archivieren.} unarchiveItem {Gib dein Master-Passwort ein, um den Eintrag zu dearchivieren.} downloadAttachment {Gib dein Master-Passwort ein, um den Anhang herunterzuladen.} exportVault {Gib dein Master-Passwort ein, um deinen Tresor zu exportieren.} updateProtectedItem {Gib dein Master-Passwort ein, um einen geschützten Eintrag zu aktualisieren.} other {Gib dein Master-Passwort ein, um fortzufahren.}}"
+repromptBiometricReason: "{action, select, copyPassword {Zum Kopieren des Passworts bestätigen} copyTOTP {Zum Kopieren des Verifizierungscodes bestätigen} revealTOTP {Zum Anzeigen des Verifizierungscodes bestätigen} revealPassword {Zum Anzeigen des Passworts bestätigen} revealCardNumber {Zum Anzeigen der Kartennummer bestätigen} copyCardNumber {Zum Kopieren der Kartennummer bestätigen} revealSecurityCode {Zum Anzeigen des Sicherheitscodes bestätigen} copySecurityCode {Zum Kopieren des Sicherheitscodes bestätigen} revealSSN {Zum Anzeigen der Sozialversicherungsnummer bestätigen} copySSN {Zum Kopieren der Sozialversicherungsnummer bestätigen} revealField {Zum Anzeigen des benutzerdefinierten Felds bestätigen} copyField {Zum Kopieren des benutzerdefinierten Felds bestätigen} revealPrivateKey {Zum Anzeigen des privaten Schlüssels bestätigen} copyPrivateKey {Zum Kopieren des privaten Schlüssels bestätigen} revealOldPassword {Zum Anzeigen des alten Passworts bestätigen} copyOldPassword {Zum Kopieren des alten Passworts bestätigen} editItem {Zum Bearbeiten des Eintrags bestätigen} cloneItem {Zum Duplizieren des Eintrags bestätigen} archiveItem {Zum Archivieren des Eintrags bestätigen} unarchiveItem {Zum Dearchivieren des Eintrags bestätigen} downloadAttachment {Zum Herunterladen des Anhangs bestätigen} exportVault {Zum Exportieren des Tresors bestätigen} updateProtectedItem {Zum Aktualisieren eines geschützten Eintrags bestätigen} other {Zum Fortfahren bestätigen}}"
+repromptUnavailable: Master-Passwort-Prüfung nicht verfügbar.
+incorrectMasterPassword: Falsches Master-Passwort.
+
+# Saving, trash and folders
+
+discardChangesTitle: Ungespeicherte Änderungen verwerfen?
+discardChangesMessage: Deine Änderungen an diesem Eintrag wurden noch nicht gespeichert.
+keepEditing: Weiter bearbeiten
+discard: Verwerfen
+nameRequired: Name ist erforderlich.
+cannotSaveOffline: Offline kann nicht gespeichert werden.
+itemSaved: Eintrag gespeichert
+saveFailed: Speichern fehlgeschlagen
+itemChangedTitle: Eintrag auf anderem Gerät geändert
+itemChangedMessage: Dieser Eintrag wurde seit der letzten Synchronisierung anderswo aktualisiert. Lade die neueste Version, um nichts zu überschreiben.
+reloadLatest: Neu laden
+localCopyNotUpdated: Auf dem Server gespeichert, aber die lokale Kopie konnte nicht aktualisiert werden.
+syncNowAction: Jetzt synchronisieren
+updateFailed: Aktualisierung fehlgeschlagen
+favoriteUpdated: Favorit aktualisiert
+moveToTrashFailed: Verschieben in Papierkorb fehlgeschlagen
+movedToTrash: In Papierkorb verschoben
+archiveFailed: Archivieren fehlgeschlagen
+unarchiveFailed: Dearchivieren fehlgeschlagen
+itemArchived: Eintrag archiviert
+itemUnarchived: Eintrag dearchiviert
+restoreFailed: Wiederherstellen fehlgeschlagen
+itemRestored: Eintrag wiederhergestellt
+deletePermanentlyTitle: Dauerhaft löschen?
+deletePermanentlyMessage: "„{name}“ wird dauerhaft gelöscht und kann nicht wiederhergestellt werden."
+deleteFailed: Löschen fehlgeschlagen
+permanentlyDeleted: Dauerhaft gelöscht
+emptyTrashTitle: Papierkorb leeren?
+emptyTrashMessage: "{count, plural, one {# Eintrag wird dauerhaft gelöscht und kann nicht wiederhergestellt werden.} other {# Einträge werden dauerhaft gelöscht und können nicht wiederhergestellt werden.}}"
+emptyTrashFailed: Papierkorb konnte nicht geleert werden
+trashEmptied: Papierkorb geleert
+trashReadOnlyKept: "{count, plural, one {# schreibgeschützter Eintrag blieb im Papierkorb.} other {# schreibgeschützte Einträge blieben im Papierkorb.}}"
+trashChangedKept: "{count, plural, one {# Eintrag wurde auf einem anderen Gerät geändert und behalten.} other {# Einträge wurden auf einem anderen Gerät geändert und behalten.}}"
+trashPartlyDeleted: "{count, plural, one {# Eintrag gelöscht} other {# Einträge gelöscht}}"
+trashSomeNotDeleted: "Einige Einträge konnten nicht gelöscht werden: {reason}"
+passkeysNotCopied: Passkeys werden nicht kopiert
+passkeysNotCopiedDetail: Die Kopie enthält die Zugangsdaten ohne den Passkey.
+cloneName: "{name} (Kopie)"
+newFolderTitle: Neuer Ordner
+renameFolderTitle: Ordner umbenennen
+folderName: Ordnername
+folderNameRequired: Ordnername ist erforderlich.
+folderSaved: Ordner gespeichert
+deleteFolderTitle: Ordner löschen?
+deleteFolderMessage: "Einträge in „{name}“ werden nach „Kein Ordner“ verschoben."
+deleteFolderFailed: Ordner konnte nicht gelöscht werden
+folderDeleted: Ordner gelöscht
+
+# Sync
+
+sessionExpiredToast: Sitzung abgelaufen
+sessionExpiredToastDetail: Melde dich erneut an, um wieder zu synchronisieren.
+offlineToastDetail: Lokaler Tresor wird angezeigt.
+syncFailed: Synchronisierung fehlgeschlagen
+vaultSynced: Tresor synchronisiert
+
+# Editor
+
+newItemOfType: "{kind, select, login {Neue Zugangsdaten} secureNote {Neue sichere Notiz} card {Neue Karte} identity {Neue Identität} sshKey {Neuer SSH-Schlüssel} other {Neuer Eintrag}}"
+editItemOfType: "{kind, select, login {Zugangsdaten bearbeiten} secureNote {Sichere Notiz bearbeiten} card {Karte bearbeiten} identity {Identität bearbeiten} sshKey {SSH-Schlüssel bearbeiten} other {Eintrag bearbeiten}}"
+unsavedChanges: Ungespeicherte Änderungen
+noChanges: Keine Änderungen
+itemSection: Eintrag
+type: Typ
+name: Name
+favorite: Favorit
+masterPasswordReprompt: Master-Passwort erneut abfragen
+addNote: Notiz hinzufügen
+generatePassword: Passwort generieren
+authenticatorKey: Authenticator
+authenticatorKeyPlaceholder: otpauth://-URI oder Einrichtungsschlüssel
+removeWebsite: Website entfernen
+addWebsite: Website hinzufügen
+cardholder: Karteninhaber
+nameOnCard: Name auf der Karte
+brandPlaceholder: Visa, Mastercard, Amex…
+cardNumberLabel: Nummer
+expiryMonthPlaceholder: MM
+expiryYearPlaceholder: JJJJ
+securityCodePlaceholder: CVV
+firstName: Vorname
+lastName: Nachname
+phonePlaceholder: "+49 30 123456"
+street: Straße
+streetPlaceholder: Hauptstraße 12
+city: Ort
+stateZip: Bundesland / PLZ
+stateRegion: Bundesland
+postalCode: PLZ
+country: Land
+generateSSHKey: Ed25519-Schlüssel erzeugen
+sshKeyGenerateFailed: "SSH-Schlüssel konnte nicht erzeugt werden: {reason}"
+fieldTypeText: Text
+fieldTypeHidden: Verdeckt
+fieldName: Feldname
+fieldValue: Wert
+removeField: Feld entfernen
+addField: Feld hinzufügen
+passkey: Passkey
+removedWhenSaved: Beim Speichern entfernt
+removePasskey: Passkey entfernen
+removePasskeyTitle: Passkey entfernen?
+removePasskeyMessage: Du kannst dich mit diesem Passkey nicht mehr anmelden.
+passkeySiteCreated: "{site} · Erstellt am {date, date, medium}"
+passkeyCreated: "Erstellt am {date, date, medium}"
+passkeyStored: In diesem Eintrag gespeichert
+
+# Attachments
+
+attachments: Anhänge
+attachFile: Datei anhängen
+attachFileTitle: Datei anhängen
+attachButton: Anhängen
+downloadFile: "{file} herunterladen"
+deleteFile: "{file} löschen"
+saveAttachmentTitle: Anhang speichern
+saveHere: Hier speichern
+downloadFailed: Download fehlgeschlagen
+attachmentSaved: Anhang gespeichert
+couldNotOpenFile: Datei konnte nicht geöffnet werden
+fileTooLarge: Datei zu groß
+attachmentLimit: Anhänge dürfen höchstens 100 MiB groß sein.
+uploadFailed: Upload fehlgeschlagen
+fileAttached: Datei angehängt
+deleteAttachmentTitle: Anhang löschen?
+deleteAttachmentMessage: "„{file}“ wird dauerhaft gelöscht."
+attachmentDeleted: Anhang gelöscht
+bytes: "{count, number, integer} B"
+kilobytes: "{size, number, ::.0} KB"
+megabytes: "{size, number, ::.0} MB"
+gigabytes: "{size, number, ::.0} GB"
+terabytes: "{size, number, ::.0} TB"
+
+# Generator
+
+passwordMode: Passwort
+passphraseMode: Passphrase
+strengthWeak: Schwach
+strengthFair: Mittel
+strengthStrong: Stark
+strengthVeryStrong: Sehr stark
+entropyBits: "{bits, plural, one {≈ # Bit Entropie} other {≈ # Bit Entropie}}"
+regenerate: Neu generieren
+length: Länge
+characters: Zeichen
+uppercase: Großbuchstaben
+lowercase: Kleinbuchstaben
+numbers: Ziffern
+symbols: Sonderzeichen
+avoidAmbiguous: Verwechselbare Zeichen vermeiden
+avoidAmbiguousDetail: Schließt l, 1, I, O und 0 aus
+words: Wörter
+options: Optionen
+wordSeparator: Worttrennzeichen
+wordSeparatorDetail: Wird zwischen den Wörtern eingefügt
+capitalizeWords: Großschreibung
+capitalizeWordsExample: Correct-Horse-Battery
+includeNumber: Zahl einschließen
+includeNumberDetail: Hängt eine Ziffer an ein Wort an
+
+# Vault Health
+
+healthReused: Wiederverwendet
+healthWeak: Schwach
+healthExpiringCards: Ablaufende Karten
+healthUnsecured: Unsicheres HTTP
+healthFilterEmpty: Keine Probleme in dieser Kategorie.
+healthAllClear: Alles in Ordnung
+healthAllClearDetail: Keine wiederverwendeten oder schwachen Passwörter, ablaufenden Karten oder unsicheren Websites.
+reusedPasswords: Wiederverwendete Passwörter
+weakPasswords: Schwache Passwörter
+unsecuredWebsites: Unsichere Websites
+healthLocalOnly: Wird nur auf diesem Gerät geprüft. Nichts wird an einen Server gesendet.
+openItem: "{name} öffnen"
+usedInItems: "{count, plural, one {In # Eintrag verwendet} other {In # Einträgen verwendet}}"
+weakCommon: Häufiges Passwort
+weakShort: "{count, plural, one {Kürzer als # Zeichen} other {Kürzer als # Zeichen}}"
+weakPattern: Überwiegend Zeichenfolge oder Wiederholungen
+weakOneClass: Verwendet nur einen Zeichentyp
+weakGuessable: Leicht zu erraten
+cardExpired: "Abgelaufen {expiry}"
+cardExpires: "Läuft ab {expiry}"
+
+# Backup and import
+
+backupPasswordTitle: Backup-Passwort
+protectBackupTitle: Backup schützen
+backupPasswordPrompt: Gib das Passwort ein, mit dem dieses Backup exportiert wurde.
+protectBackupPrompt: Wähle ein Passwort für das verschlüsselte Backup. Es kann bei Verlust nicht wiederhergestellt werden.
+backupPassword: Backup-Passwort
+confirmPassword: Passwort bestätigen
+export: Exportieren
+decrypt: Entschlüsseln
+backupPasswordTooShort: "{count, plural, one {Mindestens # Zeichen verwenden.} other {Mindestens # Zeichen verwenden.}}"
+backupPasswordsDiffer: Die Passwörter stimmen nicht überein.
+backupIncomplete: "{count, plural, one {# persönlicher Eintrag hat ein Format, das GoVault nicht lesen kann, sodass das Backup unvollständig wäre. Exportiere stattdessen aus dem Bitwarden-Web-Tresor.} other {# persönliche Einträge haben ein Format, das GoVault nicht lesen kann, sodass das Backup unvollständig wäre. Exportiere stattdessen aus dem Bitwarden-Web-Tresor.}}"
+exportFailed: Export fehlgeschlagen
+backupSaved: Verschlüsseltes Backup gespeichert
+backupSavedDetail: Bewahre das Backup-Passwort sicher auf; es kann nicht wiederhergestellt werden.
+importBackupTitle: Backup importieren
+importButton: Importieren
+importFailed: Import fehlgeschlagen
+backupFileTooLarge: "Die Datei ist größer als {size, number, integer} MiB."
+backupPasswordRequired: Gib das Backup-Passwort ein.
+incorrectBackupPassword: Falsches Backup-Passwort.
+notBitwardenExport: Dies ist kein Bitwarden-JSON-Export.
+backupAccountRestricted: Dieses Backup ist an sein Konto gebunden. Exportiere es erneut als passwortgeschützte Datei.
+importResult: "Importiert: {created, number, integer} erstellt, {updated, number, integer} aktualisiert"
+importSomeFailed: "{count, plural, one {# Eintrag fehlgeschlagen: {reason}} other {# Einträge fehlgeschlagen: {reason}}}"
+importSkipped: "{count, number, integer} übersprungen"
+importCreate: Erstellen
+importCreateCopy: Kopie erstellen
+importUpdate: Vorhandenen aktualisieren
+importSkip: Überspringen
+noImport: Kein Import aktiv
+noImportHint: Wähle in den Einstellungen „Backup importieren“, um ein Backup zu prüfen.
+reviewImport: Import prüfen
+importSummary: "{file} · {added, number, integer} neu, {changed, number, integer} geändert, {identical, number, integer} identisch. Nichts wird geändert, bis du anwendest."
+selectAllNew: Alle neuen wählen
+skipAllConflicts: Alle Konflikte überspringen
+copyAllConflicts: Alle Konflikte kopieren
+updateAllConflicts: Alle Konflikte aktualisieren
+skipAll: Alle überspringen
+importGroupChanged: "Geändert ({count, number, integer})"
+importGroupNew: "Neu ({count, number, integer})"
+importGroupIdentical: "Identisch ({count, number, integer})"
+importApply: "Anwenden: {create, number, integer} erstellen, {update, number, integer} aktualisieren, {skip, number, integer} überspringen"
+personalVault: deinem persönlichen Tresor
+anOrganization: einer Organisation
+sharedVaultOf: "dem gemeinsamen Tresor von {organization}"
+organizationCollections: "{organization} · {collections}"
+showIdentical: "{count, plural, one {# identischen Eintrag anzeigen} other {# identische Einträge anzeigen}}"
+hideIdentical: "{count, plural, one {# identischen Eintrag ausblenden} other {# identische Einträge ausblenden}}"
+importDiffers: "Abweichend: {fields} · in {destination}"
+importCannotUpdateIncomplete: "Aktualisierung nicht möglich: Der Backup-Eintrag ist unvollständig"
+importCannotUpdateUnmatchable: "Aktualisierung nicht möglich: Felder oder Websites lassen sich nicht sicher zuordnen"
+importReadOnly: Vorhandener Eintrag ist schreibgeschützt
+importProtected: "Geschützt: Aktualisieren fragt dein Master-Passwort ab"
+importAlreadyIn: "Bereits in {destination}"
+importUnsupported: GoVault kann diesen Eintragstyp noch nicht speichern, daher wird er übersprungen.
+importAmbiguous: Mehrere Einträge tragen diesen Namen, daher keine automatische Zuordnung. Wähle „Erstellen“, um ihn neu anzulegen.
+importArchivedNoPremium: Im Backup archiviert; wird im Tresor erstellt, da Archiv Premium erfordert.
+diffName: Name
+diffNotes: Notizen
+diffFolder: Ordner
+diffFavorite: Favorit
+diffReprompt: Passwort-Abfrage
+diffUsername: Nutzername
+diffPassword: Passwort
+diffTOTP: Verifizierungscode
+diffWebsites: Websites
+diffPasskey: Passkey
+diffCard: Karte
+diffIdentity: Identität
+diffSSHKey: SSH-Schlüssel
+diffCustomFields: Benutzerdefinierte Felder
+
+# Settings
+
+general: Allgemein
+language: Sprache
+languageDetail: Die Anzeigesprache von GoVault. „Systemstandard“ folgt der Systemsprache.
+systemDefault: Systemstandard
+account: Konto
+syncNow: Jetzt synchronisieren
+keyDerivation: Schlüsselableitung
+kdfArgon2id: "Argon2id · {memory, number, integer} MiB · {iterations, plural, one {# Iteration} other {# Iterationen}} · {threads, plural, one {# Thread} other {# Threads}}"
+kdfPBKDF2: "PBKDF2-SHA256 · {iterations, plural, one {# Iteration} other {# Iterationen}}"
+lastSync: Letzte Synchronisierung
+notYetSynced: Noch nicht synchronisiert
+lastSyncAt: "{date, date, medium} um {date, time, short}"
+logOutHint: Durch Abmelden wird der lokale Tresor-Cache entfernt.
+security: Sicherheit
+autoLock: Automatisch sperren
+autoLockDetail: Sperrt den Tresor nach einer Zeit ohne Aktivität.
+afterMinutes: "{count, plural, one {Nach # Minute} other {Nach # Minuten}}"
+afterHours: "{count, plural, one {Nach # Stunde} other {Nach # Stunden}}"
+afterSeconds: "{count, plural, one {Nach # Sekunde} other {Nach # Sekunden}}"
+lockOnSleep: Bei Ruhezustand oder Bildschirmsperre sperren
+lockOnSleepDetail: Sperrt den Tresor, wenn dein Mac in den Ruhezustand geht oder der Bildschirm gesperrt wird.
+backup: Backup
+exportBackup: Verschlüsseltes Backup exportieren
+exportBackupDetail: Eine Bitwarden-kompatible JSON-Datei, geschützt durch ein eigenes Passwort.
+exportEllipsis: Exportieren…
+importBackup: Backup importieren
+importBackupDetail: Bitwarden-JSON, verschlüsselt oder unverschlüsselt. Prüfe jeden Eintrag vor Änderungen.
+importEllipsis: Importieren…
+privacy: Datenschutz
+showWebsiteIcons: Website-Symbole anzeigen
+showWebsiteIconsDetail: Lädt Website-Symbole von deinem Vaultwarden-Server.
+iconCache: Symbol-Cache
+iconCacheDetail: Entfernt heruntergeladene Website-Symbole von diesem Gerät.
+clearIconCache: Symbol-Cache leeren
+iconCacheCleared: Symbol-Cache geleert
+iconCacheClearFailed: Symbol-Cache konnte nicht geleert werden
+clipboard: Zwischenablage
+clearCopiedSecrets: Kopierte Geheimnisse löschen
+clearCopiedSecretsDetail: Leert die Zwischenablage, wenn sie den kopierten Wert noch enthält.
+concealedClipboard: Private Zwischenablage
+concealedClipboardDetail: Markiert Geheimnisse, sodass Zwischenablage-Manager sie überspringen.
+concealedActive: Aktiv
+macOSOnly: Nur macOS
+menuBar: Menüleiste
+tray: Infoleiste
+showMenuBarIcon: Menüleisten-Symbol anzeigen
+showTrayIcon: Infoleisten-Symbol anzeigen
+menuBarIconDetail: GoVault über die Menüleiste öffnen, synchronisieren oder sperren.
+trayIconDetail: GoVault über die Infoleiste öffnen, synchronisieren oder sperren.
+launchAtLogin: Bei Anmeldung starten
+launchAtLoginDetail: Startet GoVault automatisch beim Anmelden.
+hideDockIcon: Dock-Symbol ausblenden
+hideDockIconDetail: GoVault nur in der Menüleiste anzeigen.
+hideDockIconNeedsMenuBar: Aktiviere zuerst das Menüleisten-Symbol, damit GoVault erreichbar bleibt.
+about: Über
+appVersion: "GoVault {version}"
+developmentVersion: "{version} (Entwicklung)"
+development: "(Entwicklung)"
+updatesSigned: Updates sind signiert und werden automatisch installiert.
+checkForUpdates: Nach Updates suchen
+sshAgent: SSH-Agent
+enableSSHAgent: SSH-Agent aktivieren
+enableSSHAgentDetail: Stellt SSH-Schlüssel aus dem entsperrten Tresor bereit. Schlüssel mit Master-Passwort-Abfrage werden nicht bereitgestellt.
+socket: Socket
+copySSHAuthSock: SSH_AUTH_SOCK kopieren
+sshAgentUnavailable: "Agent nicht verfügbar: {reason}"
+sshAgentInUse: Ein anderer Prozess verwendet diesen Socket bereits.
+sshAgentNotSocket: Der Socket-Pfad existiert und ist kein Socket.
+sshAgentUnsupported: Unix-Sockets werden auf diesem System nicht unterstützt.
+biometricUnavailable: Touch ID auf diesem Mac nicht verfügbar – kopple eine Touch ID-Tastatur oder richte es in den Systemeinstellungen ein.
+biometricDetail: Speichert einen geschützten Schlüssel im System-Schlüsselbund zum schnellen Entsperren.
+biometricHardware: "Hardware-Schutz: macOS gibt den Schlüssel erst nach Touch ID frei."
+biometricAppGated: "App-Verifizierung: Der Schlüssel liegt im Anmelde-Schlüsselbund und GoVault fragt vor dem Lesen nach {method}."
+promptAutomatically: Automatisch abfragen
+promptAutomaticallyDetail: "Fragt {method} sofort beim Öffnen des gesperrten Fensters ab."
+
+# Menus
+
+openGoVault: GoVault öffnen
+checkForUpdatesMenu: Nach Updates suchen…
+syncNowMenu: Jetzt synchronisieren
+lockNow: Jetzt sperren
+quitGoVault: GoVault beenden
+editMenu: Bearbeiten
+windowMenu: Fenster
+
+# Errors from the vault
+
+errorTwoFactorRequired: Dieses Konto erfordert Zwei-Faktor-Authentifizierung.
+errorUnauthorized: Ungültige E-Mail oder falsches Master-Passwort.
+errorOffline: Server nicht erreichbar. Prüfe Verbindung und Server-URL.
+errorRedirect: Der Server hat auf eine andere Adresse weitergeleitet; GoVault folgt keinen Weiterleitungen.
+errorNotFound: Der Server konnte diesen Eintrag nicht finden. Synchronisiere und versuche es erneut.
+errorRevisionConflict: Dieser Eintrag wurde auf einem anderen Gerät geändert. Synchronisiere und versuche es erneut.
+errorAttachmentTooLarge: Anhänge dürfen höchstens 100 MiB groß sein.
+errorArchiveUnsupported: Dieser Server unterstützt kein Archiv. Erfordert Vaultwarden 1.36 oder neuer.
+errorPremiumRequired: Das Archiv erfordert eine Premium-Mitgliedschaft.
+errorAccountIDUnknown: Deine Konto-ID konnte vom Server nicht bestätigt werden. Synchronisiere und versuche es erneut.
+errorArchiveNotConfirmed: Der Server hat die Änderung nicht bestätigt. GoVault hat synchronisiert, um den aktuellen Stand anzuzeigen.
+errorCipherInTrash: Einträge im Papierkorb können nicht archiviert werden. Stelle den Eintrag zuerst wieder her.
+errorLocked: Der Tresor ist gesperrt. Entsperre ihn und versuche es erneut.
+errorLoggedOut: Du bist nicht angemeldet.
+errorCipherNotFound: Dieser Eintrag ist nicht mehr in deinem Tresor.
+errorFolderNotFound: Dieser Ordner ist nicht mehr in deinem Tresor.
+errorReadOnly: Dieser Eintrag ist schreibgeschützt.
+errorOrganizationKey: GoVault kann die Einträge dieser Organisation nicht lesen. Synchronisiere und versuche es erneut.
+errorAttachmentNotFound: Dieser Anhang ist nicht mehr im Eintrag vorhanden.
+errorHiddenByOrganization: Deine Organisation blendet die Geheimnisse dieses Eintrags aus.
+errorUnsupportedUpload: Der Server verlangt einen Anhang-Upload, den GoVault nicht unterstützt.
+errorServerMismatch: Die gespeicherte Anmeldung gehört zu einem anderen Server als diese Tresorkopie. Melde dich erneut an.
+errorSignInRequired: Zum Synchronisieren erneut anmelden. Bis dahin ist dein Tresor offline verfügbar.
+errorDifferentAccount: Diese Anmeldung gehört zu einem anderen Konto als der Tresor auf diesem Gerät. Melde dich zuerst ab, um das Konto zu wechseln.
+errorAccountChanged: Das Konto hat sich seit der Bestätigung geändert. Versuche es erneut.
+errorSnapshotNotUpdated: Der Server hat die Änderung, aber die lokale Kopie konnte nicht aktualisiert werden. Synchronisiere zum Aktualisieren.
+errorSealedField: Dieser Eintrag enthält verschlüsselte Daten, die GoVault nicht auf einen neuen Schlüssel kopieren kann.
+errorUnsupportedCipher: Dieser Eintrag hat ein Format, das GoVault noch nicht lesen kann.
+errorChangedSinceReview: Der Eintrag wurde nach der Importprüfung geändert. Prüfe ihn erneut.
+errorRepromptRequired: Zum Aktualisieren dieses geschützten Eintrags ist dein Master-Passwort erforderlich.
+errorUnsupportedType: GoVault kann diesen Eintragstyp noch nicht speichern.
+errorAmbiguousUpdate: GoVault kann nicht erkennen, welchen vorhandenen Einträgen die Backup-Einträge entsprechen.
+errorUnreadablePasskey: Ein Passkey konnte nicht entschlüsselt werden.
+errorWrongBackupPassword: Das Backup-Passwort ist falsch.
+errorBackupTooLarge: Das verschlüsselte Backup wäre zu groß für den erneuten Import in GoVault.
+errorServer: "Der Server meldete einen Fehler ({status}): {detail}"
+errorWithDetail: "Etwas ist schiefgelaufen: {detail}"
+
+# NSGo catalogs
+
+github.com/nsgo-dev/nsgo/desktop/locales:
+  edit: Bearbeiten
+  window: Fenster
+  about: Über
+  aboutApp: "Über {app}"
+  hide: Ausblenden
+  hideApp: "{app} ausblenden"
+  hideOthers: Andere ausblenden
+  showAll: Alle einblenden
+  quit: Beenden
+  quitApp: "{app} beenden"
+  undo: Widerrufen
+  redo: Wiederholen
+  cut: Ausschneiden
+  copy: Kopieren
+  paste: Einsetzen
+  delete: Löschen
+  selectAll: Alles auswählen
+  minimize: Im Dock ablegen
+  zoom: Zoomen
+  toggleFullScreen: Vollbild umschalten
+  enterFullScreen: Vollbild ein
+  exitFullScreen: Vollbild aus
+  close: Schließen
+  guideDrag: "Ziehe {app} in die Liste oben, um „{permission}“ zu erlauben."
+  guideDragHint: Ziehen
+  permissionAccessibility: Bedienungshilfen
+  permissionDeviceControl: Gerätesteuerung und Datenzugriff
+  permissionScreenRecording: Bildschirmaufnahme
+  permissionScreenAudioRecording: Bildschirm- & Systemaudioaufnahme
+  permissionInputMonitoring: Eingabeüberwachung
+  permissionFullDiskAccess: Festplattenvollzugriff
+  permissionAppManagement: App-Verwaltung
+  permissionDeveloperTools: Entwicklerwerkzeuge
+  permissionBluetooth: Bluetooth
+  permissionMediaLibrary: Medien & Apple Music
+  authSessionDone: Du kannst diese Seite schließen und zur App zurückkehren.
+  pasteAndMatchStyle: Einsetzen und Stil anpassen
+  startSpeaking: Sprachausgabe starten
+  stopSpeaking: Sprachausgabe stoppen
+  bringAllToFront: Alle nach vorne bringen
+  services: Dienste
+  help: Hilfe
+  roleLink: Link
+  roleTab: Tab
+  roleSearchBox: Suchfeld
+  roleStatus: Status
+  roleMenu: Menü
+  roleMenuItem: Menüpunkt
+  roleDialog: Dialog
+  roleAlert: Hinweis
+  roleTable: Tabelle
+  roleGrid: Raster
+  roleRow: Zeile
+  roleColumnHeader: Spaltenkopf
+  roleCell: Zelle
+  statePartiallyChecked: teilweise ausgewählt
+  stateExpanded: aufgeklappt
+  stateCollapsed: zugeklappt
+  spokenSeparator: ", "
+
+github.com/nsgo-dev/nsgo/updater/locales:
+  updateAvailable: "Eine neue Version von {app} ist verfügbar"
+  updateAvailableMessage: "{app} {version} ist verfügbar. Du hast {current}."
+  update: Aktualisieren
+  later: Später
+  upToDate: Auf dem neuesten Stand
+  upToDateMessage: "{app} {version} ist die neueste verfügbare Version."
+  updateError: Update-Prüfung fehlgeschlagen
+  updateErrorMessage: Beim Prüfen auf Updates ist ein Fehler aufgetreten. Versuche es später erneut.
+  installError: Update konnte nicht installiert werden
+  installErrorMessage: "{app} {version} konnte nicht geladen oder installiert werden. Du kannst es stattdessen von der Website laden."
+  openPage: Seite öffnen
+  ok: OK
+
+github.com/nsgo-dev/nsgo/base/locales:
+  sortBy: "Nach {column} sortieren"
+  diffUnchangedLines: "{n, plural, one {# unveränderte Zeile} other {# unveränderte Zeilen}}"
+  diffExpandAll: Alle aufklappen
+  diffStage: Bereitstellen
+  diffDiscardChanges: Änderungen verwerfen…
+  collapseMerge: Merge zuklappen
+  expandMerge: Merge aufklappen
+  colorHue: Farbton
+  colorAlpha: Deckkraft
+  colorSaturationBrightness: Sättigung und Helligkeit
+  colorHex: Hex-Farbe
+  colorEyeDropper: Farbe vom Bildschirm aufnehmen
+  colorFormat: Farbformat
+  colorCopy: Farbe kopieren
+  colorRed: Rot
+  colorGreen: Grün
+  colorBlue: Blau
+  colorHueDegrees: Farbton in Grad
+  colorSaturationPercent: Sättigung in Prozent
+  colorBrightnessPercent: Helligkeit in Prozent
+  colorLightnessPercent: Lichtwert in Prozent
+  colorOpacityPercent: Deckkraft in Prozent
+  calendarPrevious: Vorheriger Monat
+  calendarNext: Nächster Monat
+  listClear: Leeren
+  listNothingFound: Nichts gefunden
+  listSearch: Suchen
+  commandSearch: Befehle suchen
+  commandSearchPlaceholder: Befehle suchen…
+  commandNoMatches: Keine passenden Befehle
+  commandLoading: Laden…
+  commandList: Befehle
+  calendarMonth: "{d, date, ::yMMMM}"
+  calendarMonthName: "{d, date, ::MMM}"
+  calendarWeekday: "{d, date, ::EEEEE}"
+  breadcrumbsMore: Mehr
+  flowLabel: "{nodes, plural, one {# Knoten} other {# Knoten}}, {edges, plural, one {# Kante} other {# Kanten}}"
+
+github.com/nsgo-dev/nsgo/base/textview/locales:
+  alertNote: Hinweis
+  alertTip: Tipp
+  alertImportant: Wichtig
+  alertWarning: Warnung
+  alertCaution: Vorsicht

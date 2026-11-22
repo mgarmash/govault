@@ -1,0 +1,806 @@
+# GoVault Korean (ko) message catalog.
+
+# Common words
+
+cancel: 취소
+save: 저장
+delete: 삭제
+remove: 제거
+edit: 편집
+restore: 복원
+verify: 확인
+copy: 복사
+undo: 실행 취소
+never: 안 함
+notAvailable: "—"
+
+# Item types
+
+typeLogin: 로그인
+typeSecureNote: 보안 메모
+typeCard: 카드
+typeIdentity: 신원
+typeSSHKey: SSH 키
+typeItem: 항목
+typeLogins: 로그인
+typeCards: 카드
+typeIdentities: 신원
+typeSecureNotes: 보안 메모
+typeSSHKeys: SSH 키
+
+# Sign in
+
+signInTitle: GoVault 로그인
+signInSubtitle: Bitwarden 또는 Vaultwarden 서버에 연결합니다.
+serverURL: 서버 URL
+email: 이메일
+masterPassword: 마스터 비밀번호
+masterPasswordPlaceholder: 마스터 비밀번호
+required: 필수
+emailPlaceholder: name@example.com
+insecureServer: 이 서버는 HTTPS를 사용하지 않습니다. 마스터 비밀번호와 보관함 데이터가 암호화되지 않은 상태로 전송되므로 신뢰할 수 있는 네트워크에서만 사용하세요.
+signIn: 로그인
+backToUnlock: 잠금 해제로 돌아가기
+signInFootnote: 종단간 암호화. 마스터 비밀번호는 이 기기를 떠나지 않습니다.
+signInFieldsRequired: 서버 URL, 이메일, 마스터 비밀번호를 모두 입력하세요.
+togglePasswordVisibility: 비밀번호 표시 전환
+
+# Two-step login
+
+twoFactorTitle: 2단계 인증
+twoFactorEnterEmailCodeTo: "{email}(으)로 전송된 인증 코드를 입력하세요."
+twoFactorEnterEmailCode: 이메일로 전송된 인증 코드를 입력하세요.
+twoFactorEnterAuthenticatorCode: 인증 앱의 6자리 코드를 입력하세요.
+twoFactorMethod: 인증 방법
+twoFactorAuthenticator: 인증 앱
+twoFactorEmail: 이메일
+twoFactorYubiKey: YubiKey
+twoFactorDuo: Duo
+twoFactorOrganizationDuo: Duo(조직)
+twoFactorU2F: FIDO U2F
+twoFactorWebAuthn: 패스키 / WebAuthn
+twoFactorRememberedDevice: 기억된 기기
+twoFactorOtherProvider: "방법 {number, number, integer}"
+verificationCode: 인증 코드
+rememberDevice: 이 기기 기억
+backToSignIn: 로그인으로 돌아가기
+sendCode: 코드 전송
+resendCode: 코드 재전송
+twoFactorFootnote: 비밀번호가 유출되더라도 2단계 인증으로 보관함을 안전하게 보호합니다.
+twoFactorCodeRequired: 인증 코드를 입력하세요.
+twoFactorCodeInvalid: 인증 코드가 올바르지 않습니다. 확인 후 다시 시도하세요.
+twoFactorUnsupported: "이 계정은 {methods} 2단계 인증이 필요하지만 GoVault에서 아직 지원하지 않습니다. 여기서 로그인하려면 웹 보관함 설정에서 인증 앱 또는 이메일 2단계 인증을 활성화하세요."
+twoFactorEmailFailed: "인증 이메일을 보낼 수 없습니다. {reason}"
+twoFactorEmailSentTo: "{email}(으)로 인증 코드를 보냈습니다."
+twoFactorEmailSent: 이메일로 인증 코드를 보냈습니다.
+
+# Lock screen
+
+lockedTitle: GoVault 잠김
+unlock: 잠금 해제
+unlockWith: "{method}(으)로 잠금 해제"
+orUseMasterPassword: 또는 마스터 비밀번호 사용
+logOutOrSwitchAccount: 로그아웃 또는 계정 전환…
+logOutOrSwitchAccountLabel: 로그아웃 또는 계정 전환
+lockFootnote: 잠긴 보관함은 이 기기에 암호화된 상태로 보관됩니다.
+masterPasswordRequired: 마스터 비밀번호를 입력하세요.
+biometricGeneric: 생체 인식
+biometricUnlockReason: GoVault 잠금 해제
+biometricEnableReason: "GoVault에서 {method} 활성화"
+keychainPromptReason: GoVault 잠금 해제
+biometricKeyUnavailable: 저장된 생체 인식 키를 사용할 수 없습니다. 마스터 비밀번호로 잠금을 해제하세요.
+biometricKeyCorrupt: 생체 인식 키가 손상되었습니다. 마스터 비밀번호로 잠금을 해제하세요.
+biometricKeyInvalid: 생체 인식 키가 유효하지 않습니다. 마스터 비밀번호로 잠금을 해제하세요.
+biometricFailed: 생체 인식 인증에 실패했습니다. 마스터 비밀번호를 입력하세요.
+keychainUnavailable: 키체인을 사용할 수 없음
+keychainUnavailableDetail: 시스템 키체인에 접근할 수 없습니다.
+biometricDisableFailed: 생체 인식 잠금 해제를 끌 수 없습니다
+biometricEnableFailed: 생체 인식 잠금 해제를 켤 수 없습니다
+biometricDisabled: "{method} 꺼짐"
+biometricEnabled: "{method} 켜짐"
+biometricEnabledDetail: "이제 {method}(으)로 GoVault 잠금을 해제할 수 있습니다."
+vaultLocked: 보관함 잠김
+vaultLockedInactivity: 일정 시간 활동이 없어 자동으로 잠겼습니다.
+
+# Log out
+
+logOutTitle: GoVault에서 로그아웃할까요?
+logOutMessage: 이 기기에 저장된 암호화된 보관함 캐시와 생체 인식 키가 제거됩니다.
+logOut: 로그아웃
+loggedOut: 로그아웃됨
+logOutSecretsLeft: "일부 저장된 비밀 정보를 제거할 수 없습니다: {reason}"
+
+# Toolbar and sidebar
+
+back: 뒤로
+forward: 앞으로
+searchVault: 보관함 검색
+clearSearch: 검색 지우기
+offline: 오프라인
+syncNowLabel: 지금 동기화
+lockVault: 보관함 잠금
+newItem: 새 항목
+allItems: 모든 항목
+favorites: 즐겨찾기
+categories: 카테고리
+folders: 폴더
+newFolder: 새 폴더
+collections: 컬렉션
+tools: 도구
+generator: 생성기
+vaultHealth: 보관함 상태
+archive: 아카이브
+trash: 휴지통
+settings: 설정
+importTitle: 가져오기
+noFolder: 폴더 없음
+collection: 컬렉션
+folder: 폴더
+folderActions: 폴더 작업
+renameFolderMenu: 폴더 이름 변경…
+deleteFolder: 폴더 삭제
+resizePane: 창 크기 조절
+syncing: 동기화 중…
+syncPending: 동기화 대기 중
+syncOfflineCached: 오프라인 · 캐시된 보관함
+sessionExpired: 세션 만료됨
+synced: 동기화됨
+syncedWhen: "{when} 동기화됨"
+justNow: 방금
+minutesAgo: "{count, plural, other {#분 전}}"
+hoursAgo: "{count, plural, other {#시간 전}}"
+daysAgo: "{count, plural, other {#일 전}}"
+shortDate: "{date, date, ::MMMd}"
+signInAgainToSync: 동기화하려면 다시 로그인하세요. 그전까지 보관함을 오프라인으로 사용할 수 있습니다.
+sessionExpiredBanner: 세션이 만료되었습니다. 캐시된 보관함은 계속 볼 수 있습니다. 동기화를 재개하려면 다시 로그인하세요.
+signInNotSaved: 로그인 정보를 저장할 수 없습니다. 잠금 후에도 동기화할 수 있도록 다시 로그인하세요.
+signInAgain: 다시 로그인
+
+# Item list
+
+itemCount: "{count, plural, other {#개 항목}}"
+trashCanRestore: 휴지통의 항목은 복원할 수 있습니다.
+emptyTrash: 휴지통 비우기
+searchInAllItems: 모든 항목에서
+searchIn: "“{section}”에서"
+searchOnlyIn: "“{section}”만"
+searchAllItems: 모든 항목 검색
+noResults: 결과 없음
+trashIsEmpty: 휴지통이 비어 있음
+noItems: 항목 없음
+nothingInSectionMatches: "“{section}”에서 “{query}”와(과) 일치하는 항목이 없습니다."
+nothingMatches: "“{query}”와(과) 일치하는 항목이 없습니다."
+trashEmptyHint: 삭제한 항목이 여기에 표시됩니다.
+noItemsHint: “새 항목”을 선택해 첫 번째 항목을 추가하세요.
+noItemSelected: 선택된 항목 없음
+noItemSelectedHint: 목록에서 항목을 선택하면 세부 정보가 표시됩니다.
+shortcutSearch: 검색
+shortcutNewItem: 새 항목
+shortcutLock: 잠금
+
+# Item context menu
+
+copyUsernameMenu: 사용자 이름 복사
+copyPasswordMenu: 비밀번호 복사
+copyVerificationCodeMenu: 인증 코드 복사
+copyPublicKeyMenu: 공개 키 복사
+deletePermanentlyMenu: 영구 삭제…
+addToFavorites: 즐겨찾기에 추가
+removeFromFavorites: 즐겨찾기에서 제거
+clone: 복제
+archiveAction: 아카이브에 보관
+unarchiveAction: 보관 해제
+moveToTrash: 휴지통으로 이동
+
+# Item details
+
+username: 사용자 이름
+password: 비밀번호
+hiddenByOrganization: 조직에서 숨김
+revealPassword: 비밀번호 표시
+copyPassword: 비밀번호 복사
+copyUsername: 사용자 이름 복사
+credentials: 자격 증명
+website: 웹사이트
+websiteNumbered: "웹사이트 {number, number, integer}"
+openWebsite: 웹사이트 열기
+copyWebsite: 웹사이트 복사
+websites: 웹사이트
+cardholderName: 카드 소유자 이름
+copyCardholder: 카드 소유자 이름 복사
+cardNumber: 카드 번호
+revealCardNumber: 카드 번호 표시
+copyCardNumber: 카드 번호 복사
+expiration: 만료일
+copyExpiration: 만료일 복사
+securityCode: 보안 코드
+brand: 브랜드
+cardDetails: 카드 세부 정보
+fullName: 이름
+company: 회사
+phone: 전화번호
+personal: 개인 정보
+address: 주소
+copyAddress: 주소 복사
+socialSecurityNumber: 주민등록번호
+passportNumber: 여권 번호
+copyPassportNumber: 여권 번호 복사
+licenseNumber: 면허 번호
+copyLicenseNumber: 면허 번호 복사
+documents: 신분증
+customFields: 사용자 지정 필드
+notes: 메모
+fingerprint: 지문
+copyFingerprint: 지문 복사
+publicKey: 공개 키
+copyPublicKey: 공개 키 복사
+privateKey: 비공개 키
+revealField: "{field} 표시"
+copyField: "{field} 복사"
+passwordHistory: "비밀번호 기록 ({count, number, integer})"
+usedUntil: "{date, date, medium} {date, time, short}까지 사용됨"
+oldPassword: 이전 비밀번호
+viewOnly: 보기 전용
+passwordReprompt: 마스터 비밀번호 재확인
+inTrash: 휴지통에 있음
+archived: 보관됨
+deletePermanently: 영구 삭제
+toggleFavorite: 즐겨찾기 전환
+cloneItem: 항목 복제
+timeRemaining: 남은 시간
+secondsLeft: "{seconds, plural, other {#초}}"
+revealVerificationCode: 인증 코드 표시
+copyVerificationCode: 인증 코드 복사
+cardPictureBrand: CARD
+cardPictureCardholder: 카드 소유자
+cardPictureExpires: 만료일
+updatedOn: "수정: {date, date, medium} {date, time, short}"
+createdOn: "생성: {date, date, medium}"
+deletedWhen: "삭제: {when}"
+
+# Copying
+
+copied: "{field} 복사됨"
+passwordCopied: 비밀번호 복사됨
+usernameCopied: 사용자 이름 복사됨
+verificationCodeCopied: 인증 코드 복사됨
+publicKeyCopied: 공개 키 복사됨
+websiteCopied: 웹사이트 복사됨
+cardholderNameCopied: 카드 소유자 이름 복사됨
+cardNumberCopied: 카드 번호 복사됨
+expirationCopied: 만료일 복사됨
+securityCodeCopied: 보안 코드 복사됨
+fullNameCopied: 이름 복사됨
+companyCopied: 회사 복사됨
+emailCopied: 이메일 복사됨
+phoneCopied: 전화번호 복사됨
+addressCopied: 주소 복사됨
+ssnCopied: 주민등록번호 복사됨
+passportNumberCopied: 여권 번호 복사됨
+licenseNumberCopied: 면허 번호 복사됨
+fingerprintCopied: 지문 복사됨
+privateKeyCopied: 비공개 키 복사됨
+oldPasswordCopied: 이전 비밀번호 복사됨
+generatedCopied: 생성된 비밀번호 복사됨
+copyFailed: 복사 실패
+clearsInConcealed: "숨김 · {seconds, plural, other {#초 후 지워짐}}"
+clearsIn: "{seconds, plural, other {#초 후 지워짐}}"
+concealedFromHistory: 클립보드 기록에서 숨겨짐
+
+# Master password reprompt
+
+repromptTitle: 마스터 비밀번호 확인
+repromptPrompt: "{action, select, copyPassword {비밀번호를 복사하려면 마스터 비밀번호를 입력하세요.} copyTOTP {인증 코드를 복사하려면 마스터 비밀번호를 입력하세요.} revealTOTP {인증 코드를 표시하려면 마스터 비밀번호를 입력하세요.} revealPassword {비밀번호를 표시하려면 마스터 비밀번호를 입력하세요.} revealCardNumber {카드 번호를 표시하려면 마스터 비밀번호를 입력하세요.} copyCardNumber {카드 번호를 복사하려면 마스터 비밀번호를 입력하세요.} revealSecurityCode {보안 코드를 표시하려면 마스터 비밀번호를 입력하세요.} copySecurityCode {보안 코드를 복사하려면 마스터 비밀번호를 입력하세요.} revealSSN {주민등록번호를 표시하려면 마스터 비밀번호를 입력하세요.} copySSN {주민등록번호를 복사하려면 마스터 비밀번호를 입력하세요.} revealField {사용자 지정 필드를 표시하려면 마스터 비밀번호를 입력하세요.} copyField {사용자 지정 필드를 복사하려면 마스터 비밀번호를 입력하세요.} revealPrivateKey {비공개 키를 표시하려면 마스터 비밀번호를 입력하세요.} copyPrivateKey {비공개 키를 복사하려면 마스터 비밀번호를 입력하세요.} revealOldPassword {이전 비밀번호를 표시하려면 마스터 비밀번호를 입력하세요.} copyOldPassword {이전 비밀번호를 복사하려면 마스터 비밀번호를 입력하세요.} editItem {항목을 편집하려면 마스터 비밀번호를 입력하세요.} cloneItem {항목을 복제하려면 마스터 비밀번호를 입력하세요.} archiveItem {항목을 아카이브에 보관하려면 마스터 비밀번호를 입력하세요.} unarchiveItem {항목 보관을 해제하려면 마스터 비밀번호를 입력하세요.} downloadAttachment {첨부 파일을 다운로드하려면 마스터 비밀번호를 입력하세요.} exportVault {보관함을 내보내려면 마스터 비밀번호를 입력하세요.} updateProtectedItem {보호된 항목을 업데이트하려면 마스터 비밀번호를 입력하세요.} other {계속하려면 마스터 비밀번호를 입력하세요.}}"
+repromptBiometricReason: "{action, select, copyPassword {비밀번호 복사를 위해 인증} copyTOTP {인증 코드 복사를 위해 인증} revealTOTP {인증 코드 표시를 위해 인증} revealPassword {비밀번호 표시를 위해 인증} revealCardNumber {카드 번호 표시를 위해 인증} copyCardNumber {카드 번호 복사를 위해 인증} revealSecurityCode {보안 코드 표시를 위해 인증} copySecurityCode {보안 코드 복사를 위해 인증} revealSSN {주민등록번호 표시를 위해 인증} copySSN {주민등록번호 복사를 위해 인증} revealField {사용자 지정 필드 표시를 위해 인증} copyField {사용자 지정 필드 복사를 위해 인증} revealPrivateKey {비공개 키 표시를 위해 인증} copyPrivateKey {비공개 키 복사를 위해 인증} revealOldPassword {이전 비밀번호 표시를 위해 인증} copyOldPassword {이전 비밀번호 복사를 위해 인증} editItem {항목 편집을 위해 인증} cloneItem {항목 복제를 위해 인증} archiveItem {항목 보관을 위해 인증} unarchiveItem {항목 보관 해제를 위해 인증} downloadAttachment {첨부 파일 다운로드를 위해 인증} exportVault {보관함 내보내기를 위해 인증} updateProtectedItem {보호된 항목 업데이트를 위해 인증} other {계속하려면 인증}}"
+repromptUnavailable: 마스터 비밀번호 확인을 사용할 수 없습니다.
+incorrectMasterPassword: 마스터 비밀번호가 올바르지 않습니다.
+
+# Saving, trash and folders
+
+discardChangesTitle: 저장하지 않은 변경 사항을 버릴까요?
+discardChangesMessage: 이 항목에 대한 편집 내용이 아직 저장되지 않았습니다.
+keepEditing: 계속 편집
+discard: 버리기
+nameRequired: 이름을 입력하세요.
+cannotSaveOffline: 오프라인 상태에서는 저장할 수 없습니다.
+itemSaved: 항목 저장됨
+saveFailed: 저장 실패
+itemChangedTitle: 다른 기기에서 항목이 변경됨
+itemChangedMessage: 마지막 동기화 이후 다른 곳에서 이 항목이 업데이트되었습니다. 변경 사항을 덮어쓰지 않도록 최신 버전을 다시 불러오세요.
+reloadLatest: 최신 버전 불러오기
+localCopyNotUpdated: 서버에 저장되었지만 이 기기의 사본을 업데이트하지 못했습니다.
+syncNowAction: 지금 동기화
+updateFailed: 업데이트 실패
+favoriteUpdated: 즐겨찾기 업데이트됨
+moveToTrashFailed: 휴지통으로 이동 실패
+movedToTrash: 휴지통으로 이동됨
+archiveFailed: 보관 실패
+unarchiveFailed: 보관 해제 실패
+itemArchived: 항목이 보관됨
+itemUnarchived: 항목 보관 해제됨
+restoreFailed: 복원 실패
+itemRestored: 항목 복원됨
+deletePermanentlyTitle: 영구 삭제할까요?
+deletePermanentlyMessage: "“{name}” 항목이 영구 삭제되며 복구할 수 없습니다."
+deleteFailed: 삭제 실패
+permanentlyDeleted: 영구 삭제됨
+emptyTrashTitle: 휴지통을 비울까요?
+emptyTrashMessage: "{count, plural, other {#개 항목이 영구 삭제되며 복구할 수 없습니다.}}"
+emptyTrashFailed: 휴지통 비우기 실패
+trashEmptied: 휴지통 비워짐
+trashReadOnlyKept: "{count, plural, other {읽기 전용 항목 #개가 휴지통에 남아 있습니다.}}"
+trashChangedKept: "{count, plural, other {다른 기기에서 변경된 항목 #개가 유지되었습니다.}}"
+trashPartlyDeleted: "{count, plural, other {#개 항목 삭제됨}}"
+trashSomeNotDeleted: "일부 항목을 삭제할 수 없습니다: {reason}"
+passkeysNotCopied: 패스키는 복사되지 않습니다
+passkeysNotCopiedDetail: 복제본에는 패스키를 제외한 로그인 정보만 포함됩니다.
+cloneName: "{name} (복사본)"
+newFolderTitle: 새 폴더
+renameFolderTitle: 폴더 이름 변경
+folderName: 폴더 이름
+folderNameRequired: 폴더 이름을 입력하세요.
+folderSaved: 폴더 저장됨
+deleteFolderTitle: 폴더를 삭제할까요?
+deleteFolderMessage: "“{name}” 안의 항목은 “폴더 없음”으로 이동됩니다."
+deleteFolderFailed: 폴더 삭제 실패
+folderDeleted: 폴더 삭제됨
+
+# Sync
+
+sessionExpiredToast: 세션 만료됨
+sessionExpiredToastDetail: 동기화를 재개하려면 다시 로그인하세요.
+offlineToastDetail: 캐시된 보관함을 표시하고 있습니다.
+syncFailed: 동기화 실패
+vaultSynced: 보관함 동기화됨
+
+# Editor
+
+newItemOfType: "{kind, select, login {새 로그인} secureNote {새 보안 메모} card {새 카드} identity {새 신원} sshKey {새 SSH 키} other {새 항목}}"
+editItemOfType: "{kind, select, login {로그인 편집} secureNote {보안 메모 편집} card {카드 편집} identity {신원 편집} sshKey {SSH 키 편집} other {항목 편집}}"
+unsavedChanges: 저장되지 않은 변경 사항
+noChanges: 변경 사항 없음
+itemSection: 항목
+type: 유형
+name: 이름
+favorite: 즐겨찾기
+masterPasswordReprompt: 마스터 비밀번호 재확인
+addNote: 메모 추가
+generatePassword: 비밀번호 생성
+authenticatorKey: 인증기
+authenticatorKeyPlaceholder: otpauth:// URI 또는 설정 키
+removeWebsite: 웹사이트 제거
+addWebsite: 웹사이트 추가
+cardholder: 카드 소유자
+nameOnCard: 카드에 표시된 이름
+brandPlaceholder: Visa, Mastercard, Amex…
+cardNumberLabel: 번호
+expiryMonthPlaceholder: MM
+expiryYearPlaceholder: YYYY
+securityCodePlaceholder: CVV
+firstName: 이름
+lastName: 성
+phonePlaceholder: "+82 10-1234-5678"
+street: 도로명 주소
+streetPlaceholder: 세종대로 110
+city: 시/군/구
+stateZip: 시/도 / 우편번호
+stateRegion: 시/도
+postalCode: 우편번호
+country: 국가/지역
+generateSSHKey: Ed25519 키 생성
+sshKeyGenerateFailed: "SSH 키를 생성할 수 없습니다: {reason}"
+fieldTypeText: 텍스트
+fieldTypeHidden: 숨김
+fieldName: 필드 이름
+fieldValue: 값
+removeField: 필드 제거
+addField: 필드 추가
+passkey: 패스키
+removedWhenSaved: 저장 시 제거됨
+removePasskey: 패스키 제거
+removePasskeyTitle: 패스키를 제거할까요?
+removePasskeyMessage: 제거하면 더 이상 이 패스키로 로그인할 수 없습니다.
+passkeySiteCreated: "{site} · {date, date, medium} 생성"
+passkeyCreated: "{date, date, medium} 생성"
+passkeyStored: 이 항목에 저장됨
+
+# Attachments
+
+attachments: 첨부 파일
+attachFile: 파일 첨부
+attachFileTitle: 파일 첨부
+attachButton: 첨부
+downloadFile: "{file} 다운로드"
+deleteFile: "{file} 삭제"
+saveAttachmentTitle: 첨부 파일 저장
+saveHere: 여기에 저장
+downloadFailed: 다운로드 실패
+attachmentSaved: 첨부 파일 저장됨
+couldNotOpenFile: 파일을 열 수 없습니다
+fileTooLarge: 파일이 너무 큼
+attachmentLimit: 첨부 파일은 최대 100 MiB까지 가능합니다.
+uploadFailed: 업로드 실패
+fileAttached: 파일 첨부됨
+deleteAttachmentTitle: 첨부 파일을 삭제할까요?
+deleteAttachmentMessage: "“{file}” 파일이 영구 삭제됩니다."
+attachmentDeleted: 첨부 파일 삭제됨
+bytes: "{count, number, integer} B"
+kilobytes: "{size, number, ::.0} KB"
+megabytes: "{size, number, ::.0} MB"
+gigabytes: "{size, number, ::.0} GB"
+terabytes: "{size, number, ::.0} TB"
+
+# Generator
+
+passwordMode: 비밀번호
+passphraseMode: 패스프레이즈
+strengthWeak: 약함
+strengthFair: 보통
+strengthStrong: 강함
+strengthVeryStrong: 매우 강함
+entropyBits: "{bits, plural, other {≈ #비트 엔트로피}}"
+regenerate: 다시 생성
+length: 길이
+characters: 문자
+uppercase: 대문자
+lowercase: 소문자
+numbers: 숫자
+symbols: 특수문자
+avoidAmbiguous: 혼동하기 쉬운 문자 제외
+avoidAmbiguousDetail: l, 1, I, O, 0 제외
+words: 단어 수
+options: 옵션
+wordSeparator: 단어 구분 기호
+wordSeparatorDetail: 각 단어 사이에 삽입
+capitalizeWords: 첫 글자 대문자
+capitalizeWordsExample: Correct-Horse-Battery
+includeNumber: 숫자 포함
+includeNumberDetail: 단어 하나에 숫자 추가
+
+# Vault Health
+
+healthReused: 중복 사용
+healthWeak: 취약한 비밀번호
+healthExpiringCards: 만료 예정 카드
+healthUnsecured: 안전하지 않은 HTTP
+healthFilterEmpty: 이 카테고리에 문제가 없습니다.
+healthAllClear: 모두 안전함
+healthAllClearDetail: 중복되거나 취약한 비밀번호, 만료 예정 카드 또는 안전하지 않은 웹사이트가 없습니다.
+reusedPasswords: 중복 사용된 비밀번호
+weakPasswords: 취약한 비밀번호
+unsecuredWebsites: 안전하지 않은 웹사이트
+healthLocalOnly: 이 기기에서만 검사됩니다. 서버로 아무것도 전송되지 않습니다.
+openItem: "{name} 열기"
+usedInItems: "{count, plural, other {#개 항목에서 사용}}"
+weakCommon: 흔한 비밀번호
+weakShort: "{count, plural, other {#자 미만}}"
+weakPattern: 주로 연속되거나 반복되는 문자
+weakOneClass: 한 가지 문자 유형만 사용
+weakGuessable: 추측하기 쉬움
+cardExpired: "{expiry} 만료됨"
+cardExpires: "{expiry} 만료 예정"
+
+# Backup and import
+
+backupPasswordTitle: 백업 비밀번호
+protectBackupTitle: 백업 보호
+backupPasswordPrompt: 이 백업을 내보낼 때 설정한 비밀번호를 입력하세요.
+protectBackupPrompt: 암호화된 백업에 사용할 비밀번호를 입력하세요. 잊어버리면 복구할 수 없습니다.
+backupPassword: 백업 비밀번호
+confirmPassword: 비밀번호 확인
+export: 내보내기
+decrypt: 복호화
+backupPasswordTooShort: "{count, plural, other {#자 이상 입력하세요.}}"
+backupPasswordsDiffer: 비밀번호가 일치하지 않습니다.
+backupIncomplete: "{count, plural, other {GoVault가 읽을 수 없는 형식의 개인 항목이 #개 있어 백업이 불완전합니다. 대신 Bitwarden 웹 보관함에서 내보내세요.}}"
+exportFailed: 내보내기 실패
+backupSaved: 암호화된 백업 저장됨
+backupSavedDetail: 백업 비밀번호를 안전하게 보관하세요. 잊어버리면 복구할 수 없습니다.
+importBackupTitle: 백업 가져오기
+importButton: 가져오기
+importFailed: 가져오기 실패
+backupFileTooLarge: "파일 크기가 {size, number, integer} MiB를 초과합니다."
+backupPasswordRequired: 백업 비밀번호를 입력하세요.
+incorrectBackupPassword: 백업 비밀번호가 올바르지 않습니다.
+notBitwardenExport: Bitwarden JSON 내보내기 파일이 아닙니다.
+backupAccountRestricted: 이 백업은 원래 계정에 잠겨 있습니다. 비밀번호로 보호된 파일로 다시 내보내세요.
+importResult: "가져오기 완료: {created, number, integer}개 생성, {updated, number, integer}개 업데이트"
+importSomeFailed: "{count, plural, other {#개 항목 실패: {reason}}}"
+importSkipped: "{count, number, integer}개 건너뜀"
+importCreate: 새로 만들기
+importCreateCopy: 사본 만들기
+importUpdate: 기존 항목 업데이트
+importSkip: 건너뛰기
+noImport: 진행 중인 가져오기 없음
+noImportHint: “설정”에서 “백업 가져오기”를 선택해 백업을 검토하세요.
+reviewImport: 가져오기 검토
+importSummary: "{file} · 새로 추가 {added, number, integer}개, 변경 {changed, number, integer}개, 동일 {identical, number, integer}개. 적용하기 전까지는 아무것도 변경되지 않습니다."
+selectAllNew: 새 항목 모두 선택
+skipAllConflicts: 모든 충돌 건너뛰기
+copyAllConflicts: 모든 충돌 사본 만들기
+updateAllConflicts: 모든 충돌 업데이트
+skipAll: 모두 건너뛰기
+importGroupChanged: "변경됨 ({count, number, integer})"
+importGroupNew: "새 항목 ({count, number, integer})"
+importGroupIdentical: "동일함 ({count, number, integer})"
+importApply: "적용: 생성 {create, number, integer}개, 업데이트 {update, number, integer}개, 건너뜀 {skip, number, integer}개"
+personalVault: 개인 보관함
+anOrganization: 조직
+sharedVaultOf: "{organization}의 공유 보관함"
+organizationCollections: "{organization} · {collections}"
+showIdentical: "{count, plural, other {동일한 항목 #개 표시}}"
+hideIdentical: "{count, plural, other {동일한 항목 #개 숨기기}}"
+importDiffers: "차이점: {fields} · 위치: {destination}"
+importCannotUpdateIncomplete: "업데이트 불가: 백업 항목이 불완전함"
+importCannotUpdateUnmatchable: "업데이트 불가: 필드나 웹사이트를 안전하게 일치시킬 수 없음"
+importReadOnly: 기존 항목이 읽기 전용임
+importProtected: "보호됨: 업데이트 시 마스터 비밀번호 필요"
+importAlreadyIn: "{destination}에 이미 있음"
+importUnsupported: GoVault가 아직 이 유형의 항목을 저장할 수 없어 건너뛰었습니다.
+importAmbiguous: 같은 이름의 항목이 여러 개 있어 자동으로 일치시킬 수 없습니다. 새 항목으로 추가하려면 “새로 만들기”를 선택하세요.
+importArchivedNoPremium: 백업에서 보관된 항목이지만 아카이브 기능은 프리미엄 멤버십이 필요하므로 보관함에 바로 생성됩니다.
+diffName: 이름
+diffNotes: 메모
+diffFolder: 폴더
+diffFavorite: 즐겨찾기
+diffReprompt: 비밀번호 재확인
+diffUsername: 사용자 이름
+diffPassword: 비밀번호
+diffTOTP: 인증 코드
+diffWebsites: 웹사이트
+diffPasskey: 패스키
+diffCard: 카드
+diffIdentity: 신원
+diffSSHKey: SSH 키
+diffCustomFields: 사용자 지정 필드
+
+# Settings
+
+general: 일반
+language: 언어
+languageDetail: GoVault에 표시되는 언어입니다. “시스템 기본값”은 시스템 언어를 따릅니다.
+systemDefault: 시스템 기본값
+account: 계정
+syncNow: 지금 동기화
+keyDerivation: 키 파생
+kdfArgon2id: "Argon2id · {memory, number, integer} MiB · {iterations, plural, other {#회 반복}} · {threads, plural, other {#스레드}}"
+kdfPBKDF2: "PBKDF2-SHA256 · {iterations, plural, other {#회 반복}}"
+lastSync: 마지막 동기화
+notYetSynced: 아직 동기화 안 됨
+lastSyncAt: "{date, date, medium} {date, time, short}"
+logOutHint: 로그아웃하면 로컬 보관함 캐시가 제거됩니다.
+security: 보안
+autoLock: 자동 잠금
+autoLockDetail: 일정 시간 활동이 없으면 보관함을 자동으로 잠급니다.
+afterMinutes: "{count, plural, other {#분 후}}"
+afterHours: "{count, plural, other {#시간 후}}"
+afterSeconds: "{count, plural, other {#초 후}}"
+lockOnSleep: 잠자기 또는 화면 잠금 시 잠금
+lockOnSleepDetail: Mac이 잠자기 상태가 되거나 화면이 잠길 때 보관함을 잠급니다.
+backup: 백업
+exportBackup: 암호화된 백업 내보내기
+exportBackupDetail: 지정한 비밀번호로 보호되는 Bitwarden 호환 JSON 파일입니다.
+exportEllipsis: 내보내기…
+importBackup: 백업 가져오기
+importBackupDetail: 암호화되거나 일반 텍스트인 Bitwarden JSON 파일. 변경 전에 모든 항목을 검토할 수 있습니다.
+importEllipsis: 가져오기…
+privacy: 개인정보 보호
+showWebsiteIcons: 웹사이트 아이콘 표시
+showWebsiteIconsDetail: Vaultwarden 서버에서 사이트 아이콘을 가져옵니다.
+iconCache: 아이콘 캐시
+iconCacheDetail: 이 기기에 다운로드된 사이트 아이콘을 제거합니다.
+clearIconCache: 아이콘 캐시 지우기
+iconCacheCleared: 아이콘 캐시 지워짐
+iconCacheClearFailed: 아이콘 캐시를 지울 수 없습니다
+clipboard: 클립보드
+clearCopiedSecrets: 복사한 비밀 정보 지우기
+clearCopiedSecretsDetail: 복사한 값이 클립보드에 그대로 남아 있으면 자동으로 지웁니다.
+concealedClipboard: 비공개 클립보드
+concealedClipboardDetail: 클립보드 관리자가 기록하지 않도록 비밀 정보를 표시합니다.
+concealedActive: 활성
+macOSOnly: macOS 전용
+menuBar: 메뉴 막대
+tray: 트레이
+showMenuBarIcon: 메뉴 막대 아이콘 표시
+showTrayIcon: 트레이 아이콘 표시
+menuBarIconDetail: 메뉴 막대에서 GoVault 열기, 동기화 또는 잠금을 실행합니다.
+trayIconDetail: 트레이에서 GoVault 열기, 동기화 또는 잠금을 실행합니다.
+launchAtLogin: 로그인 시 시작
+launchAtLoginDetail: 시스템에 로그인할 때 GoVault를 자동으로 실행합니다.
+hideDockIcon: Dock 아이콘 숨기기
+hideDockIconDetail: GoVault를 메뉴 막대에만 표시합니다.
+hideDockIconNeedsMenuBar: GoVault에 접근할 수 있도록 먼저 메뉴 막대 아이콘을 켜세요.
+about: 정보
+appVersion: "GoVault {version}"
+developmentVersion: "{version} (개발 버전)"
+development: "(개발 버전)"
+updatesSigned: 업데이트는 서명되어 자동으로 설치됩니다.
+checkForUpdates: 업데이트 확인
+sshAgent: SSH 에이전트
+enableSSHAgent: SSH 에이전트 활성화
+enableSSHAgentDetail: 잠금 해제된 보관함에서 SSH 키를 제공합니다. 마스터 비밀번호 재확인이 설정된 키는 제공되지 않습니다.
+socket: 소켓
+copySSHAuthSock: SSH_AUTH_SOCK 복사
+sshAgentUnavailable: "에이전트를 사용할 수 없음: {reason}"
+sshAgentInUse: 다른 프로세스가 이미 이 소켓을 사용 중입니다.
+sshAgentNotSocket: 해당 경로가 이미 존재하며 소켓이 아닙니다.
+sshAgentUnsupported: 이 시스템에서는 Unix 소켓이 지원되지 않습니다.
+biometricUnavailable: 이 Mac에서 Touch ID를 사용할 수 없습니다. Touch ID 키보드를 페어링하거나 “시스템 설정”에서 등록하세요.
+biometricDetail: 빠른 잠금 해제를 위해 래핑된 키를 시스템 키체인에 보관합니다.
+biometricHardware: "하드웨어 수준 보호: macOS는 Touch ID 인증 후에만 키를 해제합니다."
+biometricAppGated: "앱 수준 인증: 키가 로그인 키체인에 저장되며 GoVault가 읽기 전에 {method} 인증을 요청합니다."
+promptAutomatically: 자동으로 요청
+promptAutomaticallyDetail: "잠금 창이 열리면 즉시 {method} 인증을 요청합니다."
+
+# Menus
+
+openGoVault: GoVault 열기
+checkForUpdatesMenu: 업데이트 확인…
+syncNowMenu: 지금 동기화
+lockNow: 지금 잠금
+quitGoVault: GoVault 종료
+editMenu: 편집
+windowMenu: 윈도우
+
+# Errors from the vault
+
+errorTwoFactorRequired: 이 계정은 2단계 인증이 필요합니다.
+errorUnauthorized: 이메일 또는 마스터 비밀번호가 올바르지 않습니다.
+errorOffline: 서버에 연결할 수 없습니다. 네트워크 연결과 서버 URL을 확인하세요.
+errorRedirect: 서버가 다른 주소로 리디렉션했습니다. GoVault는 리디렉션을 따르지 않습니다.
+errorNotFound: 서버에서 이 항목을 찾을 수 없습니다. 동기화한 후 다시 시도하세요.
+errorRevisionConflict: 다른 기기에서 이 항목이 변경되었습니다. 동기화한 후 다시 시도하세요.
+errorAttachmentTooLarge: 첨부 파일은 최대 100 MiB까지 가능합니다.
+errorArchiveUnsupported: 이 서버는 아카이브를 지원하지 않습니다. Vaultwarden 1.36 이상이 필요합니다.
+errorPremiumRequired: 아카이브 기능은 프리미엄 멤버십이 필요합니다.
+errorAccountIDUnknown: 서버에서 계정 ID를 확인할 수 없습니다. 동기화한 후 다시 시도하세요.
+errorArchiveNotConfirmed: 서버가 변경 사항을 확인하지 못했습니다. 현재 위치를 표시하기 위해 다시 동기화했습니다.
+errorCipherInTrash: 휴지통의 항목은 보관할 수 없습니다. 먼저 항목을 복원하세요.
+errorLocked: 보관함이 잠겨 있습니다. 잠금을 해제한 후 다시 시도하세요.
+errorLoggedOut: 로그인되어 있지 않습니다.
+errorCipherNotFound: 이 항목은 더 이상 보관함에 없습니다.
+errorFolderNotFound: 이 폴더는 더 이상 보관함에 없습니다.
+errorReadOnly: 이 항목은 읽기 전용입니다.
+errorOrganizationKey: GoVault가 이 조직의 항목을 읽을 수 없습니다. 동기화한 후 다시 시도하세요.
+errorAttachmentNotFound: 이 첨부 파일은 더 이상 항목에 없습니다.
+errorHiddenByOrganization: 조직에서 이 항목의 비밀 정보를 숨겼습니다.
+errorUnsupportedUpload: 서버가 GoVault에서 지원하지 않는 첨부 파일 업로드 방식을 요청했습니다.
+errorServerMismatch: 저장된 로그인 정보가 이 보관함 사본과 다른 서버의 것입니다. 다시 로그인하세요.
+errorSignInRequired: 동기화하려면 다시 로그인하세요. 그전까지 보관함을 오프라인으로 사용할 수 있습니다.
+errorDifferentAccount: 이 기기의 보관함과 다른 계정으로 로그인했습니다. 다른 계정을 사용하려면 먼저 로그아웃하세요.
+errorAccountChanged: 확인 이후 계정이 변경되었습니다. 다시 시도하세요.
+errorSnapshotNotUpdated: 서버에는 변경 사항이 저장되었지만 이 기기의 사본을 업데이트하지 못했습니다. 동기화하여 새로 고치세요.
+errorSealedField: 이 항목에는 GoVault가 새 키로 복사할 수 없는 암호화 데이터가 포함되어 있습니다.
+errorUnsupportedCipher: 이 항목은 GoVault가 아직 읽을 수 없는 형식입니다.
+errorChangedSinceReview: 가져오기를 검토한 후 항목이 변경되었습니다. 다시 검토하세요.
+errorRepromptRequired: 이 보호된 항목을 업데이트하려면 마스터 비밀번호가 필요합니다.
+errorUnsupportedType: GoVault는 아직 이 유형의 항목을 저장할 수 없습니다.
+errorAmbiguousUpdate: 백업 항목이 어떤 기존 항목에 해당하는지 판단할 수 없습니다.
+errorUnreadablePasskey: 패스키를 복호화할 수 없습니다.
+errorWrongBackupPassword: 백업 비밀번호가 올바르지 않습니다.
+errorBackupTooLarge: 암호화된 백업이 너무 커서 GoVault에서 다시 가져올 수 없습니다.
+errorServer: "서버 오류 ({status}): {detail}"
+errorWithDetail: "오류가 발생했습니다: {detail}"
+
+# NSGo catalogs
+
+github.com/nsgo-dev/nsgo/desktop/locales:
+  edit: 편집
+  window: 윈도우
+  about: 정보
+  aboutApp: "{app}에 관하여"
+  hide: 가리기
+  hideApp: "{app} 가리기"
+  hideOthers: 기타 가리기
+  showAll: 모두 보기
+  quit: 종료
+  quitApp: "{app} 종료"
+  undo: 실행 취소
+  redo: 실행 복귀
+  cut: 오려두기
+  copy: 복사하기
+  paste: 붙여넣기
+  delete: 삭제
+  selectAll: 전체 선택
+  minimize: 최소화
+  zoom: 확대/축소
+  toggleFullScreen: 전체 화면 전환
+  enterFullScreen: 전체 화면 시작
+  exitFullScreen: 전체 화면 종료
+  close: 닫기
+  guideDrag: "“{permission}”을(를) 허용하려면 {app}을(를) 위 목록으로 드래그하세요."
+  guideDragHint: 드래그
+  permissionAccessibility: 손쉬운 사용
+  permissionDeviceControl: 기기 제어 및 데이터 접근
+  permissionScreenRecording: 화면 기록
+  permissionScreenAudioRecording: 화면 및 시스템 오디오 녹음
+  permissionInputMonitoring: 입력 모니터링
+  permissionFullDiskAccess: 전체 디스크 접근 권한
+  permissionAppManagement: 앱 관리
+  permissionDeveloperTools: 개발자 도구
+  permissionBluetooth: Bluetooth
+  permissionMediaLibrary: 미디어 및 Apple Music
+  authSessionDone: 이제 이 페이지를 닫고 앱으로 돌아갈 수 있습니다.
+  pasteAndMatchStyle: 붙여넣고 스타일 일치시키기
+  startSpeaking: 말하기 시작
+  stopSpeaking: 말하기 중단
+  bringAllToFront: 모두 앞으로 가져오기
+  services: 서비스
+  help: 도움말
+  roleLink: 링크
+  roleTab: 탭
+  roleSearchBox: 검색 상자
+  roleStatus: 상태
+  roleMenu: 메뉴
+  roleMenuItem: 메뉴 항목
+  roleDialog: 대화 상자
+  roleAlert: 알림
+  roleTable: 표
+  roleGrid: 그리드
+  roleRow: 행
+  roleColumnHeader: 열 머리글
+  roleCell: 셀
+  statePartiallyChecked: 부분 선택됨
+  stateExpanded: 펼쳐짐
+  stateCollapsed: 접힘
+  spokenSeparator: ", "
+
+github.com/nsgo-dev/nsgo/updater/locales:
+  updateAvailable: "{app}의 새 버전을 사용할 수 있습니다"
+  updateAvailableMessage: "{app} {version} 버전을 사용할 수 있습니다. 현재 버전은 {current}입니다."
+  update: 업데이트
+  later: 나중에
+  upToDate: 최신 버전입니다
+  upToDateMessage: "{app} {version} 버전이 최신 버전입니다."
+  updateError: 업데이트를 확인할 수 없습니다
+  updateErrorMessage: 업데이트를 확인하는 중 문제가 발생했습니다. 나중에 다시 시도하세요.
+  installError: 업데이트를 설치할 수 없습니다
+  installErrorMessage: "{app} {version} 버전을 다운로드하거나 설치할 수 없습니다. 대신 해당 페이지에서 받을 수 있습니다."
+  openPage: 페이지 열기
+  ok: 확인
+
+github.com/nsgo-dev/nsgo/base/locales:
+  sortBy: "{column} 기준 정렬"
+  diffUnchangedLines: "{n, plural, other {변경되지 않은 #줄}}"
+  diffExpandAll: 모두 펼치기
+  diffStage: 스테이지
+  diffDiscardChanges: 변경 사항 버리기…
+  collapseMerge: 병합 접기
+  expandMerge: 병합 펼치기
+  colorHue: 색조
+  colorAlpha: 불투명도
+  colorSaturationBrightness: 채도 및 밝기
+  colorHex: 16진수 색상
+  colorEyeDropper: 화면에서 색상 선택
+  colorFormat: 색상 형식
+  colorCopy: 색상 복사
+  colorRed: 빨강
+  colorGreen: 초록
+  colorBlue: 파랑
+  colorHueDegrees: 색조 각도
+  colorSaturationPercent: 채도 백분율
+  colorBrightnessPercent: 밝기 백분율
+  colorLightnessPercent: 명도 백분율
+  colorOpacityPercent: 불투명도 백분율
+  calendarPrevious: 이전 달
+  calendarNext: 다음 달
+  listClear: 지우기
+  listNothingFound: 결과 없음
+  listSearch: 검색
+  commandSearch: 명령 검색
+  commandSearchPlaceholder: 명령 검색…
+  commandNoMatches: 일치하는 명령 없음
+  commandLoading: 불러오는 중…
+  commandList: 명령
+  calendarMonth: "{d, date, ::yMMMM}"
+  calendarMonthName: "{d, date, ::MMM}"
+  calendarWeekday: "{d, date, ::EEEEE}"
+  breadcrumbsMore: 더 보기
+  flowLabel: "{nodes, plural, other {노드 #개}}, {edges, plural, other {간선 #개}}"
+
+github.com/nsgo-dev/nsgo/base/textview/locales:
+  alertNote: 참고
+  alertTip: 팁
+  alertImportant: 중요
+  alertWarning: 경고
+  alertCaution: 주의

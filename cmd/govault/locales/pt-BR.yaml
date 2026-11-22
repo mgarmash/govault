@@ -1,0 +1,806 @@
+# GoVault Brazilian Portuguese (pt-BR) message catalog.
+
+# Common words
+
+cancel: Cancelar
+save: Salvar
+delete: Excluir
+remove: Remover
+edit: Editar
+restore: Restaurar
+verify: Verificar
+copy: Copiar
+undo: Desfazer
+never: Nunca
+notAvailable: "—"
+
+# Item types
+
+typeLogin: Credencial
+typeSecureNote: Anotação segura
+typeCard: Cartão
+typeIdentity: Identidade
+typeSSHKey: Chave SSH
+typeItem: Item
+typeLogins: Credenciais
+typeCards: Cartões
+typeIdentities: Identidades
+typeSecureNotes: Anotações seguras
+typeSSHKeys: Chaves SSH
+
+# Sign in
+
+signInTitle: Entrar no GoVault
+signInSubtitle: Conecte-se ao seu servidor Bitwarden ou Vaultwarden.
+serverURL: URL do servidor
+email: E-mail
+masterPassword: Senha principal
+masterPasswordPlaceholder: Senha principal
+required: Obrigatório
+emailPlaceholder: nome@exemplo.com.br
+insecureServer: Este servidor não usa HTTPS. Sua senha principal e os dados do cofre serão enviados sem criptografia; use-o apenas em uma rede confiável.
+signIn: Entrar
+backToUnlock: Voltar ao desbloqueio
+signInFootnote: Criptografia de ponta a ponta. Sua senha principal nunca sai deste dispositivo.
+signInFieldsRequired: URL do servidor, e-mail e senha principal são obrigatórios.
+togglePasswordVisibility: Mostrar ou ocultar senha
+
+# Two-step login
+
+twoFactorTitle: Verificação em duas etapas
+twoFactorEnterEmailCodeTo: "Digite o código enviado para {email}."
+twoFactorEnterEmailCode: Digite o código enviado para seu e-mail.
+twoFactorEnterAuthenticatorCode: Digite o código de 6 dígitos do seu aplicativo autenticador.
+twoFactorMethod: Método de verificação
+twoFactorAuthenticator: Aplicativo autenticador
+twoFactorEmail: E-mail
+twoFactorYubiKey: YubiKey
+twoFactorDuo: Duo
+twoFactorOrganizationDuo: Duo (Organização)
+twoFactorU2F: FIDO U2F
+twoFactorWebAuthn: Chave de acesso / WebAuthn
+twoFactorRememberedDevice: Dispositivo lembrado
+twoFactorOtherProvider: "Método {number, number, integer}"
+verificationCode: Código de verificação
+rememberDevice: Lembrar este dispositivo
+backToSignIn: Voltar ao login
+sendCode: Enviar código
+resendCode: Reenviar código
+twoFactorFootnote: A autenticação em duas etapas mantém seu cofre seguro mesmo se sua senha vazar.
+twoFactorCodeRequired: Digite o código de verificação.
+twoFactorCodeInvalid: Código de verificação inválido. Verifique e tente novamente.
+twoFactorUnsupported: "Esta conta exige autenticação em duas etapas com {methods}, ainda não suportada pelo GoVault. Ative Aplicativo autenticador ou E-mail nas configurações web do seu cofre para entrar aqui."
+twoFactorEmailFailed: "Não foi possível enviar o e-mail de verificação. {reason}"
+twoFactorEmailSentTo: "Um código de verificação foi enviado para {email}."
+twoFactorEmailSent: Um código de verificação foi enviado para seu e-mail.
+
+# Lock screen
+
+lockedTitle: O GoVault está bloqueado
+unlock: Desbloquear
+unlockWith: "Desbloquear com {method}"
+orUseMasterPassword: ou use sua senha principal
+logOutOrSwitchAccount: Sair ou trocar de conta…
+logOutOrSwitchAccountLabel: Sair ou trocar de conta
+lockFootnote: Cofres bloqueados permanecem criptografados neste dispositivo.
+masterPasswordRequired: Digite sua senha principal.
+biometricGeneric: Biometria
+biometricUnlockReason: Desbloquear o GoVault
+biometricEnableReason: "Ativar {method} para o GoVault"
+keychainPromptReason: desbloquear o GoVault
+biometricKeyUnavailable: Chave biométrica salva indisponível. Desbloqueie com sua senha principal.
+biometricKeyCorrupt: Chave biométrica corrompida. Desbloqueie com sua senha principal.
+biometricKeyInvalid: Chave biométrica inválida. Desbloqueie com sua senha principal.
+biometricFailed: Falha na autenticação biométrica. Digite sua senha principal.
+keychainUnavailable: Chaves indisponíveis
+keychainUnavailableDetail: Não foi possível acessar as chaves do sistema.
+biometricDisableFailed: Não foi possível desativar o desbloqueio biométrico
+biometricEnableFailed: Não foi possível ativar o desbloqueio biométrico
+biometricDisabled: "{method} desativado"
+biometricEnabled: "{method} ativado"
+biometricEnabledDetail: "Agora você pode desbloquear o GoVault com {method}."
+vaultLocked: Cofre bloqueado
+vaultLockedInactivity: Bloqueado automaticamente por inatividade.
+
+# Log out
+
+logOutTitle: Sair do GoVault?
+logOutMessage: O cache local criptografado do cofre e a chave biométrica salva serão removidos deste dispositivo.
+logOut: Sair
+loggedOut: Desconectado
+logOutSecretsLeft: "Alguns segredos salvos não puderam ser removidos: {reason}"
+
+# Toolbar and sidebar
+
+back: Voltar
+forward: Avançar
+searchVault: Pesquisar no cofre
+clearSearch: Limpar pesquisa
+offline: Offline
+syncNowLabel: Sincronizar agora
+lockVault: Bloquear cofre
+newItem: Novo item
+allItems: Todos os itens
+favorites: Favoritos
+categories: Categorias
+folders: Pastas
+newFolder: Nova pasta
+collections: Conjuntos
+tools: Ferramentas
+generator: Gerador
+vaultHealth: Saúde do cofre
+archive: Arquivo
+trash: Lixeira
+settings: Configurações
+importTitle: Importar
+noFolder: Sem pasta
+collection: Conjunto
+folder: Pasta
+folderActions: Ações da pasta
+renameFolderMenu: Renomear pasta…
+deleteFolder: Excluir pasta
+resizePane: Redimensionar painel
+syncing: Sincronizando…
+syncPending: Sync pendente
+syncOfflineCached: Offline · cofre em cache
+sessionExpired: Sessão expirada
+synced: Sincronizado
+syncedWhen: "Sincronizado {when}"
+justNow: agora mesmo
+minutesAgo: "{count, plural, one {há # minuto} other {há # minutos}}"
+hoursAgo: "{count, plural, one {há # hora} other {há # horas}}"
+daysAgo: "{count, plural, one {há # dia} other {há # dias}}"
+shortDate: "{date, date, ::MMMd}"
+signInAgainToSync: Entre novamente para sincronizar. Até lá, seu cofre continua disponível offline.
+sessionExpiredBanner: Sessão expirada — seu cofre em cache continua legível. Entre novamente para retomar a sincronização.
+signInNotSaved: Não foi possível salvar seu login. Entre novamente para que o GoVault possa sincronizar após o bloqueio.
+signInAgain: Entrar novamente
+
+# Item list
+
+itemCount: "{count, plural, one {# item} other {# itens}}"
+trashCanRestore: Itens na lixeira podem ser restaurados.
+emptyTrash: Esvaziar lixeira
+searchInAllItems: Em Todos os itens
+searchIn: "Em “{section}”"
+searchOnlyIn: "Apenas “{section}”"
+searchAllItems: Pesquisar em tudo
+noResults: Sem resultados
+trashIsEmpty: A lixeira está vazia
+noItems: Nenhum item
+nothingInSectionMatches: "Nada em “{section}” corresponde a “{query}”."
+nothingMatches: "Nada corresponde a “{query}”."
+trashEmptyHint: Itens excluídos aparecem aqui.
+noItemsHint: Escolha “Novo item” para adicionar sua primeira entrada.
+noItemSelected: Nenhum item selecionado
+noItemSelectedHint: Escolha um item da lista para ver seus detalhes.
+shortcutSearch: Pesquisar
+shortcutNewItem: Novo item
+shortcutLock: Bloquear
+
+# Item context menu
+
+copyUsernameMenu: Copiar usuário
+copyPasswordMenu: Copiar senha
+copyVerificationCodeMenu: Copiar código de verificação
+copyPublicKeyMenu: Copiar chave pública
+deletePermanentlyMenu: Excluir permanentemente…
+addToFavorites: Adicionar aos favoritos
+removeFromFavorites: Remover dos favoritos
+clone: Clonar
+archiveAction: Arquivar
+unarchiveAction: Desarquivar
+moveToTrash: Mover para a lixeira
+
+# Item details
+
+username: Nome de usuário
+password: Senha
+hiddenByOrganization: Oculto pela sua organização
+revealPassword: Mostrar senha
+copyPassword: Copiar senha
+copyUsername: Copiar usuário
+credentials: Credenciais
+website: Site
+websiteNumbered: "Site {number, number, integer}"
+openWebsite: Abrir site
+copyWebsite: Copiar site
+websites: Sites
+cardholderName: Nome do titular
+copyCardholder: Copiar titular
+cardNumber: Número do cartão
+revealCardNumber: Mostrar número do cartão
+copyCardNumber: Copiar número do cartão
+expiration: Vencimento
+copyExpiration: Copiar vencimento
+securityCode: Código de segurança
+brand: Bandeira
+cardDetails: Detalhes do cartão
+fullName: Nome completo
+company: Empresa
+phone: Telefone
+personal: Pessoal
+address: Endereço
+copyAddress: Copiar endereço
+socialSecurityNumber: Número de CPF
+passportNumber: Número do passaporte
+copyPassportNumber: Copiar número do passaporte
+licenseNumber: Número da CNH
+copyLicenseNumber: Copiar número da CNH
+documents: Documentos
+customFields: Campos personalizados
+notes: Anotações
+fingerprint: Impressão digital
+copyFingerprint: Copiar impressão digital
+publicKey: Chave pública
+copyPublicKey: Copiar chave pública
+privateKey: Chave privada
+revealField: "Mostrar {field}"
+copyField: "Copiar {field}"
+passwordHistory: "Histórico de senhas ({count, number, integer})"
+usedUntil: "Usada até {date, date, medium} às {date, time, short}"
+oldPassword: senha antiga
+viewOnly: Somente leitura
+passwordReprompt: Pedir senha
+inTrash: Na lixeira
+archived: Arquivado
+deletePermanently: Excluir permanentemente
+toggleFavorite: Alternar favorito
+cloneItem: Clonar item
+timeRemaining: Tempo restante
+secondsLeft: "{seconds, plural, one {# s} other {# s}}"
+revealVerificationCode: Mostrar código de verificação
+copyVerificationCode: Copiar código de verificação
+cardPictureBrand: CARTÃO
+cardPictureCardholder: TITULAR
+cardPictureExpires: VALIDADE
+updatedOn: "Atualizado em {date, date, medium} às {date, time, short}"
+createdOn: "Criado em {date, date, medium}"
+deletedWhen: "Excluído {when}"
+
+# Copying
+
+copied: "{field} copiado"
+passwordCopied: Senha copiada
+usernameCopied: Nome de usuário copiado
+verificationCodeCopied: Código de verificação copiado
+publicKeyCopied: Chave pública copiada
+websiteCopied: Site copiado
+cardholderNameCopied: Titular copiado
+cardNumberCopied: Número do cartão copiado
+expirationCopied: Vencimento copiado
+securityCodeCopied: Código de segurança copiado
+fullNameCopied: Nome completo copiado
+companyCopied: Empresa copiada
+emailCopied: E-mail copiado
+phoneCopied: Telefone copiado
+addressCopied: Endereço copiado
+ssnCopied: Número de CPF copiado
+passportNumberCopied: Número do passaporte copiado
+licenseNumberCopied: Número da CNH copiado
+fingerprintCopied: Impressão digital copiada
+privateKeyCopied: Chave privada copiada
+oldPasswordCopied: Senha antiga copiada
+generatedCopied: Senha gerada copiada
+copyFailed: Falha ao copiar
+clearsInConcealed: "Privado · limpa em {seconds, plural, one {# segundo} other {# segundos}}"
+clearsIn: "Limpa em {seconds, plural, one {# segundo} other {# segundos}}"
+concealedFromHistory: Oculto do histórico da área de transferência
+
+# Master password reprompt
+
+repromptTitle: Verificação de senha principal
+repromptPrompt: "{action, select, copyPassword {Digite sua senha principal para copiar a senha.} copyTOTP {Digite sua senha principal para copiar o código de verificação.} revealTOTP {Digite sua senha principal para mostrar o código de verificação.} revealPassword {Digite sua senha principal para mostrar a senha.} revealCardNumber {Digite sua senha principal para mostrar o número do cartão.} copyCardNumber {Digite sua senha principal para copiar o número do cartão.} revealSecurityCode {Digite sua senha principal para mostrar o código de segurança.} copySecurityCode {Digite sua senha principal para copiar o código de segurança.} revealSSN {Digite sua senha principal para mostrar o número de CPF.} copySSN {Digite sua senha principal para copiar o número de CPF.} revealField {Digite sua senha principal para mostrar o campo personalizado.} copyField {Digite sua senha principal para copiar o campo personalizado.} revealPrivateKey {Digite sua senha principal para mostrar a chave privada.} copyPrivateKey {Digite sua senha principal para copiar a chave privada.} revealOldPassword {Digite sua senha principal para mostrar a senha antiga.} copyOldPassword {Digite sua senha principal para copiar a senha antiga.} editItem {Digite sua senha principal para editar o item.} cloneItem {Digite sua senha principal para clonar o item.} archiveItem {Digite sua senha principal para arquivar o item.} unarchiveItem {Digite sua senha principal para desarquivar o item.} downloadAttachment {Digite sua senha principal para baixar o anexo.} exportVault {Digite sua senha principal para exportar seu cofre.} updateProtectedItem {Digite sua senha principal para atualizar um item protegido.} other {Digite sua senha principal para continuar.}}"
+repromptBiometricReason: "{action, select, copyPassword {Verificar para copiar a senha} copyTOTP {Verificar para copiar o código de verificação} revealTOTP {Verificar para mostrar o código de verificação} revealPassword {Verificar para mostrar a senha} revealCardNumber {Verificar para mostrar o número do cartão} copyCardNumber {Verificar para copiar o número do cartão} revealSecurityCode {Verificar para mostrar o código de segurança} copySecurityCode {Verificar para copiar o código de segurança} revealSSN {Verificar para mostrar o número de CPF} copySSN {Verificar para copiar o número de CPF} revealField {Verificar para mostrar o campo personalizado} copyField {Verificar para copiar o campo personalizado} revealPrivateKey {Verificar para mostrar a chave privada} copyPrivateKey {Verificar para copiar a chave privada} revealOldPassword {Verificar para mostrar a senha antiga} copyOldPassword {Verificar para copiar a senha antiga} editItem {Verificar para editar o item} cloneItem {Verificar para clonar o item} archiveItem {Verificar para arquivar o item} unarchiveItem {Verificar para desarquivar o item} downloadAttachment {Verificar para baixar o anexo} exportVault {Verificar para exportar seu cofre} updateProtectedItem {Verificar para atualizar um item protegido} other {Verificar para continuar}}"
+repromptUnavailable: A verificação de senha principal não está disponível.
+incorrectMasterPassword: Senha principal incorreta.
+
+# Saving, trash and folders
+
+discardChangesTitle: Descartar alterações não salvas?
+discardChangesMessage: Suas edições neste item ainda não foram salvas.
+keepEditing: Continuar editando
+discard: Descartar
+nameRequired: O nome é obrigatório.
+cannotSaveOffline: Não é possível salvar offline.
+itemSaved: Item salvo
+saveFailed: Falha ao salvar
+itemChangedTitle: Item alterado em outro dispositivo
+itemChangedMessage: Este item foi atualizado em outro lugar desde a última sincronização. Recarregue a versão mais recente para não sobrescrever alterações.
+reloadLatest: Recarregar versão
+localCopyNotUpdated: Salvo no servidor, mas a cópia neste dispositivo não pôde ser atualizada.
+syncNowAction: Sincronizar
+updateFailed: Falha ao atualizar
+favoriteUpdated: Favorito atualizado
+moveToTrashFailed: Falha ao mover para a lixeira
+movedToTrash: Movido para a lixeira
+archiveFailed: Falha ao arquivar
+unarchiveFailed: Falha ao desarquivar
+itemArchived: Item arquivado
+itemUnarchived: Item desarquivado
+restoreFailed: Falha ao restaurar
+itemRestored: Item restaurado
+deletePermanentlyTitle: Excluir permanentemente?
+deletePermanentlyMessage: "“{name}” será excluído permanentemente e não poderá ser recuperado."
+deleteFailed: Falha ao excluir
+permanentlyDeleted: Excluído permanentemente
+emptyTrashTitle: Esvaziar a lixeira?
+emptyTrashMessage: "{count, plural, one {# item será excluído permanentemente e não poderá ser recuperado.} other {# itens serão excluídos permanentemente e não poderão ser recuperados.}}"
+emptyTrashFailed: Falha ao esvaziar a lixeira
+trashEmptied: Lixeira esvaziada
+trashReadOnlyKept: "{count, plural, one {# item somente leitura permaneceu na lixeira.} other {# itens somente leitura permaneceram na lixeira.}}"
+trashChangedKept: "{count, plural, one {# item foi alterado em outro dispositivo e mantido.} other {# itens foram alterados em outro dispositivo e mantidos.}}"
+trashPartlyDeleted: "{count, plural, one {# item excluído} other {# itens excluídos}}"
+trashSomeNotDeleted: "Alguns itens não puderam ser excluídos: {reason}"
+passkeysNotCopied: Chaves de acesso não são copiadas
+passkeysNotCopiedDetail: A cópia contém os dados de login sem a chave de acesso.
+cloneName: "{name} (Cópia)"
+newFolderTitle: Nova pasta
+renameFolderTitle: Renomear pasta
+folderName: Nome da pasta
+folderNameRequired: O nome da pasta é obrigatório.
+folderSaved: Pasta salva
+deleteFolderTitle: Excluir pasta?
+deleteFolderMessage: "Os itens dentro de “{name}” serão movidos para “Sem pasta”."
+deleteFolderFailed: Falha ao excluir pasta
+folderDeleted: Pasta excluída
+
+# Sync
+
+sessionExpiredToast: Sessão expirada
+sessionExpiredToastDetail: Entre novamente para retomar a sincronização.
+offlineToastDetail: Exibindo cofre em cache.
+syncFailed: Falha na sincronização
+vaultSynced: Cofre sincronizado
+
+# Editor
+
+newItemOfType: "{kind, select, login {Nova credencial} secureNote {Nova anotação segura} card {Novo cartão} identity {Nova identidade} sshKey {Nova chave SSH} other {Novo item}}"
+editItemOfType: "{kind, select, login {Editar credencial} secureNote {Editar anotação segura} card {Editar cartão} identity {Editar identidade} sshKey {Editar chave SSH} other {Editar item}}"
+unsavedChanges: Alterações não salvas
+noChanges: Sem alterações
+itemSection: Item
+type: Tipo
+name: Nome
+favorite: Favorito
+masterPasswordReprompt: Resolicitar senha principal
+addNote: Adicionar uma anotação
+generatePassword: Gerar senha
+authenticatorKey: Autenticador
+authenticatorKeyPlaceholder: URI otpauth:// ou chave de configuração
+removeWebsite: Remover site
+addWebsite: Adicionar site
+cardholder: Titular
+nameOnCard: Nome no cartão
+brandPlaceholder: Visa, Mastercard, Amex…
+cardNumberLabel: Número
+expiryMonthPlaceholder: MM
+expiryYearPlaceholder: AAAA
+securityCodePlaceholder: CVV
+firstName: Nome
+lastName: Sobrenome
+phonePlaceholder: "+55 11 91234-5678"
+street: Endereço
+streetPlaceholder: Av. Paulista, 1000
+city: Cidade
+stateZip: Estado / CEP
+stateRegion: Estado
+postalCode: CEP
+country: País
+generateSSHKey: Gerar chave Ed25519
+sshKeyGenerateFailed: "Não foi possível gerar a chave SSH: {reason}"
+fieldTypeText: Texto
+fieldTypeHidden: Oculto
+fieldName: Nome do campo
+fieldValue: Valor
+removeField: Remover campo
+addField: Adicionar campo
+passkey: Chave de acesso
+removedWhenSaved: Removida ao salvar
+removePasskey: Remover chave de acesso
+removePasskeyTitle: Remover chave de acesso?
+removePasskeyMessage: Você não poderá mais entrar com esta chave de acesso.
+passkeySiteCreated: "{site} · Criada em {date, date, medium}"
+passkeyCreated: "Criada em {date, date, medium}"
+passkeyStored: Armazenada neste item
+
+# Attachments
+
+attachments: Anexos
+attachFile: Anexar arquivo
+attachFileTitle: Anexar arquivo
+attachButton: Anexar
+downloadFile: "Baixar {file}"
+deleteFile: "Excluir {file}"
+saveAttachmentTitle: Salvar anexo
+saveHere: Salvar aqui
+downloadFailed: Falha no download
+attachmentSaved: Anexo salvo
+couldNotOpenFile: Não foi possível abrir o arquivo
+fileTooLarge: Arquivo muito grande
+attachmentLimit: Os anexos têm limite de 100 MiB.
+uploadFailed: Falha no envio
+fileAttached: Arquivo anexado
+deleteAttachmentTitle: Excluir anexo?
+deleteAttachmentMessage: "“{file}” será excluído permanentemente."
+attachmentDeleted: Anexo excluído
+bytes: "{count, number, integer} B"
+kilobytes: "{size, number, ::.0} KB"
+megabytes: "{size, number, ::.0} MB"
+gigabytes: "{size, number, ::.0} GB"
+terabytes: "{size, number, ::.0} TB"
+
+# Generator
+
+passwordMode: Senha
+passphraseMode: Frase secreta
+strengthWeak: Fraca
+strengthFair: Razoável
+strengthStrong: Forte
+strengthVeryStrong: Muito forte
+entropyBits: "{bits, plural, one {≈ # bit de entropia} other {≈ # bits de entropia}}"
+regenerate: Regerar
+length: Comprimento
+characters: Caracteres
+uppercase: Maiúsculas
+lowercase: Minúsculas
+numbers: Números
+symbols: Símbolos
+avoidAmbiguous: Evitar caracteres ambíguos
+avoidAmbiguousDetail: Exclui l, 1, I, O e 0
+words: Palavras
+options: Opções
+wordSeparator: Separador de palavras
+wordSeparatorDetail: Colocado entre cada palavra
+capitalizeWords: Inicial maiúscula
+capitalizeWordsExample: Correct-Horse-Battery
+includeNumber: Incluir um número
+includeNumberDetail: Adiciona um dígito a uma palavra
+
+# Vault Health
+
+healthReused: Reutilizadas
+healthWeak: Fracas
+healthExpiringCards: Cartões vencendo
+healthUnsecured: HTTP inseguro
+healthFilterEmpty: Nenhum problema nesta categoria.
+healthAllClear: Tudo certo
+healthAllClearDetail: Nenhuma senha reutilizada ou fraca, cartão vencendo ou site inseguro.
+reusedPasswords: Senhas reutilizadas
+weakPasswords: Senhas fracas
+unsecuredWebsites: Sites inseguros
+healthLocalOnly: Verificado apenas neste dispositivo. Nada é enviado a servidores.
+openItem: "Abrir {name}"
+usedInItems: "{count, plural, one {Usada em # item} other {Usada em # itens}}"
+weakCommon: Senha comum
+weakShort: "{count, plural, one {Menos de # caractere} other {Menos de # caracteres}}"
+weakPattern: Maioria em sequência ou caracteres repetidos
+weakOneClass: Usa apenas um tipo de caractere
+weakGuessable: Fácil de adivinhar
+cardExpired: "Vencido {expiry}"
+cardExpires: "Vence {expiry}"
+
+# Backup and import
+
+backupPasswordTitle: Senha do backup
+protectBackupTitle: Proteger seu backup
+backupPasswordPrompt: Digite a senha usada para exportar este backup.
+protectBackupPrompt: Escolha uma senha para o backup criptografado. Ela não pode ser recuperada se você esquecer.
+backupPassword: Senha do backup
+confirmPassword: Confirmar senha
+export: Exportar
+decrypt: Descriptografar
+backupPasswordTooShort: "{count, plural, one {Use pelo menos # caractere.} other {Use pelo menos # caracteres.}}"
+backupPasswordsDiffer: As senhas não coincidem.
+backupIncomplete: "{count, plural, one {# item pessoal está em um formato que o GoVault não consegue ler, então o backup ficaria incompleto. Exporte pelo cofre web do Bitwarden.} other {# itens pessoais estão em um formato que o GoVault não consegue ler, então o backup ficaria incompleto. Exporte pelo cofre web do Bitwarden.}}"
+exportFailed: Falha ao exportar
+backupSaved: Backup criptografado salvo
+backupSavedDetail: Guarde a senha do backup em segurança; ela não pode ser recuperada.
+importBackupTitle: Importar backup
+importButton: Importar
+importFailed: Falha ao importar
+backupFileTooLarge: "O arquivo é maior que {size, number, integer} MiB."
+backupPasswordRequired: Digite a senha do backup.
+incorrectBackupPassword: Senha do backup incorreta.
+notBitwardenExport: Este não é um arquivo JSON exportado do Bitwarden.
+backupAccountRestricted: Este backup está vinculado à sua conta. Exporte-o novamente como arquivo protegido por senha.
+importResult: "Importado: {created, number, integer} criados, {updated, number, integer} atualizados"
+importSomeFailed: "{count, plural, one {# item falhou: {reason}} other {# itens falharam: {reason}}}"
+importSkipped: "{count, number, integer} ignorados"
+importCreate: Criar
+importCreateCopy: Criar cópia
+importUpdate: Atualizar existente
+importSkip: Ignorar
+noImport: Nenhuma importação em andamento
+noImportHint: Escolha “Importar backup” em Configurações para revisar um backup.
+reviewImport: Revisar importação
+importSummary: "{file} · {added, number, integer} novos, {changed, number, integer} alterados, {identical, number, integer} idênticos. Nada muda até você aplicar."
+selectAllNew: Selecionar novos
+skipAllConflicts: Ignorar conflitos
+copyAllConflicts: Copiar conflitos
+updateAllConflicts: Atualizar conflitos
+skipAll: Ignorar tudo
+importGroupChanged: "Alterados ({count, number, integer})"
+importGroupNew: "Novos ({count, number, integer})"
+importGroupIdentical: "Idênticos ({count, number, integer})"
+importApply: "Aplicar: {create, number, integer} criar, {update, number, integer} atualizar, {skip, number, integer} ignorar"
+personalVault: seu cofre pessoal
+anOrganization: uma organização
+sharedVaultOf: "o cofre compartilhado de {organization}"
+organizationCollections: "{organization} · {collections}"
+showIdentical: "{count, plural, one {Mostrar # item idêntico} other {Mostrar # itens idênticos}}"
+hideIdentical: "{count, plural, one {Ocultar # item idêntico} other {Ocultar # itens idênticos}}"
+importDiffers: "Diferenças: {fields} · em {destination}"
+importCannotUpdateIncomplete: "não pode atualizar: o item do backup está incompleto"
+importCannotUpdateUnmatchable: "não pode atualizar: seus campos ou sites não podem ser combinados com segurança"
+importReadOnly: o item existente é somente leitura
+importProtected: "protegido: atualizar solicita sua senha principal"
+importAlreadyIn: "Já está em {destination}"
+importUnsupported: O GoVault ainda não pode salvar este tipo de item, portanto foi ignorado.
+importAmbiguous: Vários itens do cofre têm este nome, sem correspondência segura. Escolha “Criar” para adicioná-lo como novo item.
+importArchivedNoPremium: Arquivado no backup; será criado no seu cofre porque o Arquivo exige assinatura Premium.
+diffName: Nome
+diffNotes: Anotações
+diffFolder: Pasta
+diffFavorite: Favorito
+diffReprompt: Pedir senha
+diffUsername: Usuário
+diffPassword: Senha
+diffTOTP: Código de verificação
+diffWebsites: Sites
+diffPasskey: Chave de acesso
+diffCard: Cartão
+diffIdentity: Identidade
+diffSSHKey: Chave SSH
+diffCustomFields: Campos personalizados
+
+# Settings
+
+general: Geral
+language: Idioma
+languageDetail: Idioma exibido pelo GoVault. “Padrão do sistema” segue o idioma do sistema.
+systemDefault: Padrão do sistema
+account: Conta
+syncNow: Sincronizar agora
+keyDerivation: Derivação de chave
+kdfArgon2id: "Argon2id · {memory, number, integer} MiB · {iterations, plural, one {# iteração} other {# iterações}} · {threads, plural, one {# thread} other {# threads}}"
+kdfPBKDF2: "PBKDF2-SHA256 · {iterations, plural, one {# iteração} other {# iterações}}"
+lastSync: Última sincronização
+notYetSynced: Ainda não sincronizado
+lastSyncAt: "{date, date, medium} às {date, time, short}"
+logOutHint: Sair remove o cache local do cofre.
+security: Segurança
+autoLock: Bloqueio automático
+autoLockDetail: Bloqueia o cofre após um período de inatividade.
+afterMinutes: "{count, plural, one {Após # minuto} other {Após # minutos}}"
+afterHours: "{count, plural, one {Após # hora} other {Após # horas}}"
+afterSeconds: "{count, plural, one {Após # segundo} other {Após # segundos}}"
+lockOnSleep: Bloquear ao repousar ou bloquear tela
+lockOnSleepDetail: Bloqueia o cofre quando seu Mac entra em repouso ou a tela é bloqueada.
+backup: Backup
+exportBackup: Exportar backup criptografado
+exportBackupDetail: Arquivo JSON compatível com Bitwarden protegido por uma senha de sua escolha.
+exportEllipsis: Exportar…
+importBackup: Importar backup
+importBackupDetail: JSON do Bitwarden, criptografado ou simples. Revise cada item antes de alterar qualquer coisa.
+importEllipsis: Importar…
+privacy: Privacidade
+showWebsiteIcons: Mostrar ícones de sites
+showWebsiteIconsDetail: Obtém ícones de sites do seu servidor Vaultwarden.
+iconCache: Cache de ícones
+iconCacheDetail: Remove ícones de sites baixados deste dispositivo.
+clearIconCache: Limpar cache de ícones
+iconCacheCleared: Cache de ícones limpo
+iconCacheClearFailed: Não foi possível limpar o cache de ícones
+clipboard: Área de transferência
+clearCopiedSecrets: Limpar segredos copiados
+clearCopiedSecretsDetail: Limpa a área de transferência se ainda contiver o valor copiado.
+concealedClipboard: Área de transferência privada
+concealedClipboardDetail: Marca segredos para que gerenciadores de área de transferência os ignorem.
+concealedActive: Ativo
+macOSOnly: Apenas macOS
+menuBar: Barra de menus
+tray: Bandeja
+showMenuBarIcon: Mostrar ícone na barra de menus
+showTrayIcon: Mostrar ícone na bandeja
+menuBarIconDetail: Abra, sincronize ou bloqueie o GoVault pela barra de menus.
+trayIconDetail: Abra, sincronize ou bloqueie o GoVault pela bandeja do sistema.
+launchAtLogin: Iniciar no login
+launchAtLoginDetail: Inicia o GoVault automaticamente ao iniciar sessão.
+hideDockIcon: Ocultar ícone no Dock
+hideDockIconDetail: Manter o GoVault apenas na barra de menus.
+hideDockIconNeedsMenuBar: Ative primeiro o ícone da barra de menus para manter o GoVault acessível.
+about: Sobre
+appVersion: "GoVault {version}"
+developmentVersion: "{version} (desenvolvimento)"
+development: "(desenvolvimento)"
+updatesSigned: As atualizações são assinadas e instaladas automaticamente.
+checkForUpdates: Verificar atualizações
+sshAgent: Agente SSH
+enableSSHAgent: Ativar agente SSH
+enableSSHAgentDetail: Fornece chaves SSH do cofre desbloqueado. Chaves com resolicitação de senha principal não são fornecidas.
+socket: Socket
+copySSHAuthSock: Copiar SSH_AUTH_SOCK
+sshAgentUnavailable: "Agente indisponível: {reason}"
+sshAgentInUse: Outro processo já está usando este socket.
+sshAgentNotSocket: O caminho do socket existe e não é um socket.
+sshAgentUnsupported: Sockets Unix não são suportados neste sistema.
+biometricUnavailable: Touch ID indisponível neste Mac — emparelhe um teclado com Touch ID ou configure nos Ajustes do Sistema.
+biometricDetail: Mantém uma chave protegida nas chaves do sistema para desbloqueio rápido.
+biometricHardware: "Proteção por hardware: o macOS libera a chave somente após Touch ID."
+biometricAppGated: "Verificação pelo app: a chave fica nas suas chaves de início de sessão e o GoVault pede {method} antes de lê-la."
+promptAutomatically: Solicitar automaticamente
+promptAutomaticallyDetail: "Solicitar {method} assim que a janela bloqueada abrir."
+
+# Menus
+
+openGoVault: Abrir GoVault
+checkForUpdatesMenu: Verificar atualizações…
+syncNowMenu: Sincronizar agora
+lockNow: Bloquear agora
+quitGoVault: Encerrar GoVault
+editMenu: Editar
+windowMenu: Janela
+
+# Errors from the vault
+
+errorTwoFactorRequired: Esta conta exige autenticação em duas etapas.
+errorUnauthorized: E-mail ou senha principal inválidos.
+errorOffline: Servidor inacessível. Verifique sua conexão e a URL do servidor.
+errorRedirect: O servidor redirecionou para outro endereço; o GoVault não segue redirecionamentos.
+errorNotFound: O servidor não encontrou este item. Sincronize e tente novamente.
+errorRevisionConflict: Este item foi alterado em outro dispositivo. Sincronize e tente novamente.
+errorAttachmentTooLarge: Os anexos têm limite de 100 MiB.
+errorArchiveUnsupported: Este servidor não suporta Arquivo. Requer Vaultwarden 1.36 ou posterior.
+errorPremiumRequired: O Arquivo exige uma assinatura Premium.
+errorAccountIDUnknown: Não foi possível confirmar seu ID de conta com o servidor. Sincronize e tente novamente.
+errorArchiveNotConfirmed: O servidor não confirmou a alteração. O GoVault sincronizou para mostrar onde o item está.
+errorCipherInTrash: Itens na lixeira não podem ser arquivados. Restaure o item primeiro.
+errorLocked: O cofre está bloqueado. Desbloqueie e tente novamente.
+errorLoggedOut: Você não está conectado.
+errorCipherNotFound: Este item não está mais no seu cofre.
+errorFolderNotFound: Esta pasta não está mais no seu cofre.
+errorReadOnly: Este item é somente leitura.
+errorOrganizationKey: O GoVault não consegue ler os itens desta organização. Sincronize e tente novamente.
+errorAttachmentNotFound: Este anexo não está mais no item.
+errorHiddenByOrganization: Sua organização oculta os segredos deste item.
+errorUnsupportedUpload: O servidor solicitou um envio de anexo não suportado pelo GoVault.
+errorServerMismatch: O login salvo pertence a um servidor diferente desta cópia do cofre. Entre novamente.
+errorSignInRequired: Entre novamente para sincronizar. Até lá, seu cofre continua disponível offline.
+errorDifferentAccount: Este login é de uma conta diferente da do cofre neste dispositivo. Para trocar de conta, saia primeiro.
+errorAccountChanged: A conta mudou desde a confirmação. Tente novamente.
+errorSnapshotNotUpdated: O servidor tem a alteração, mas a cópia neste dispositivo não pôde ser atualizada. Sincronize para atualizar.
+errorSealedField: Este item contém dados criptografados que o GoVault não pode copiar para uma nova chave.
+errorUnsupportedCipher: Este item está em um formato que o GoVault ainda não consegue ler.
+errorChangedSinceReview: O item mudou depois que você revisou a importação. Revise novamente.
+errorRepromptRequired: Atualizar este item protegido exige sua senha principal.
+errorUnsupportedType: O GoVault ainda não pode salvar este tipo de item.
+errorAmbiguousUpdate: O GoVault não consegue identificar a quais itens existentes correspondem os itens do backup.
+errorUnreadablePasskey: Não foi possível descriptografar uma chave de acesso.
+errorWrongBackupPassword: A senha do backup está incorreta.
+errorBackupTooLarge: O backup criptografado seria grande demais para o GoVault reimportar.
+errorServer: "O servidor retornou um erro ({status}): {detail}"
+errorWithDetail: "Algo deu errado: {detail}"
+
+# NSGo catalogs
+
+github.com/nsgo-dev/nsgo/desktop/locales:
+  edit: Editar
+  window: Janela
+  about: Sobre
+  aboutApp: "Sobre {app}"
+  hide: Ocultar
+  hideApp: "Ocultar {app}"
+  hideOthers: Ocultar Outros
+  showAll: Mostrar Tudo
+  quit: Encerrar
+  quitApp: "Encerrar {app}"
+  undo: Desfazer
+  redo: Refazer
+  cut: Cortar
+  copy: Copiar
+  paste: Colar
+  delete: Apagar
+  selectAll: Selecionar Tudo
+  minimize: Minimizar
+  zoom: Ampliar/Reduzir
+  toggleFullScreen: Tela Cheia
+  enterFullScreen: Entrar em Tela Cheia
+  exitFullScreen: Sair da Tela Cheia
+  close: Fechar
+  guideDrag: "Arraste {app} para a lista acima para permitir “{permission}”."
+  guideDragHint: Arrastar
+  permissionAccessibility: Acessibilidade
+  permissionDeviceControl: Controle de Dispositivo e Acesso a Dados
+  permissionScreenRecording: Gravação de Tela
+  permissionScreenAudioRecording: Gravação de Tela e Áudio do Sistema
+  permissionInputMonitoring: Monitoramento de Entrada
+  permissionFullDiskAccess: Acesso Total ao Disco
+  permissionAppManagement: Gerenciamento de Apps
+  permissionDeveloperTools: Ferramentas de Desenvolvedor
+  permissionBluetooth: Bluetooth
+  permissionMediaLibrary: Mídia e Apple Music
+  authSessionDone: Você pode fechar esta página e voltar ao aplicativo.
+  pasteAndMatchStyle: Colar e Combinar Estilo
+  startSpeaking: Iniciar Fala
+  stopSpeaking: Parar Fala
+  bringAllToFront: Trazer Todas para a Frente
+  services: Serviços
+  help: Ajuda
+  roleLink: link
+  roleTab: aba
+  roleSearchBox: campo de busca
+  roleStatus: status
+  roleMenu: menu
+  roleMenuItem: item de menu
+  roleDialog: caixa de diálogo
+  roleAlert: alerta
+  roleTable: tabela
+  roleGrid: grade
+  roleRow: linha
+  roleColumnHeader: cabeçalho de coluna
+  roleCell: célula
+  statePartiallyChecked: parcialmente marcado
+  stateExpanded: expandido
+  stateCollapsed: recolhido
+  spokenSeparator: ", "
+
+github.com/nsgo-dev/nsgo/updater/locales:
+  updateAvailable: "Uma nova versão do {app} está disponível"
+  updateAvailableMessage: "{app} {version} está disponível. Você tem {current}."
+  update: Atualizar
+  later: Mais tarde
+  upToDate: Você está atualizado
+  upToDateMessage: "{app} {version} é a versão mais recente disponível."
+  updateError: Não foi possível verificar atualizações
+  updateErrorMessage: Algo deu errado ao verificar atualizações. Tente novamente mais tarde.
+  installError: Não foi possível instalar a atualização
+  installErrorMessage: "Não foi possível baixar ou instalar {app} {version}. Você pode obtê-lo na página do app."
+  openPage: Abrir página
+  ok: OK
+
+github.com/nsgo-dev/nsgo/base/locales:
+  sortBy: "Ordenar por {column}"
+  diffUnchangedLines: "{n, plural, one {# linha inalterada} other {# linhas inalteradas}}"
+  diffExpandAll: Expandir tudo
+  diffStage: Preparar
+  diffDiscardChanges: Descartar alterações…
+  collapseMerge: Recolher mesclagem
+  expandMerge: Expandir mesclagem
+  colorHue: Matiz
+  colorAlpha: Opacidade
+  colorSaturationBrightness: Saturação e brilho
+  colorHex: Cor hexadecimal
+  colorEyeDropper: Capturar cor da tela
+  colorFormat: Formato de cor
+  colorCopy: Copiar cor
+  colorRed: Vermelho
+  colorGreen: Verde
+  colorBlue: Azul
+  colorHueDegrees: Graus de matiz
+  colorSaturationPercent: Porcentagem de saturação
+  colorBrightnessPercent: Porcentagem de brilho
+  colorLightnessPercent: Porcentagem de luminosidade
+  colorOpacityPercent: Porcentagem de opacidade
+  calendarPrevious: Mês anterior
+  calendarNext: Próximo mês
+  listClear: Limpar
+  listNothingFound: Nada encontrado
+  listSearch: Buscar
+  commandSearch: Buscar comandos
+  commandSearchPlaceholder: Buscar comandos…
+  commandNoMatches: Nenhum comando correspondente
+  commandLoading: Carregando…
+  commandList: Comandos
+  calendarMonth: "{d, date, ::yMMMM}"
+  calendarMonthName: "{d, date, ::MMM}"
+  calendarWeekday: "{d, date, ::EEEEE}"
+  breadcrumbsMore: Mais
+  flowLabel: "{nodes, plural, one {# nó} other {# nós}}, {edges, plural, one {# aresta} other {# arestas}}"
+
+github.com/nsgo-dev/nsgo/base/textview/locales:
+  alertNote: Nota
+  alertTip: Dica
+  alertImportant: Importante
+  alertWarning: Aviso
+  alertCaution: Cuidado

@@ -3,8 +3,12 @@
 package locales
 
 import (
+	baselocales "github.com/nsgo-dev/nsgo/base/locales"
+	textviewlocales "github.com/nsgo-dev/nsgo/base/textview/locales"
 	"github.com/nsgo-dev/nsgo/core"
+	desktoplocales "github.com/nsgo-dev/nsgo/desktop/locales"
 	"github.com/nsgo-dev/nsgo/i18n"
+	updaterlocales "github.com/nsgo-dev/nsgo/updater/locales"
 	"strings"
 	"time"
 )
@@ -12,12 +16,1507 @@ import (
 // Source is the language the messages are written in.
 const Source = "en"
 
-// Catalog holds the messages' languages: en, the source, zh-Hans, and those other packages supply.
-var Catalog = i18n.NewCatalog("en", "zh-Hans")
+// Catalog holds the messages' languages: en, the source, de, es, fr, ja, ko, pt-BR, ru, zh-Hans, zh-Hant, and those other packages supply.
+var Catalog = i18n.NewCatalog("en", "de", "es", "fr", "ja", "ko", "pt-BR", "ru", "zh-Hans", "zh-Hant")
 
 // The catalog's languages are the app's: those it shows.
 func init() {
 	i18n.SetApp(Catalog)
+}
+
+// The messages this package supplies to others.
+func init() {
+	baselocales.Supply("de", baselocales.Translation{
+		Texts: map[string]string{
+			"diffExpandAll":             "Alle aufklappen",
+			"diffStage":                 "Bereitstellen",
+			"diffDiscardChanges":        "Änderungen verwerfen…",
+			"collapseMerge":             "Merge zuklappen",
+			"expandMerge":               "Merge aufklappen",
+			"colorHue":                  "Farbton",
+			"colorAlpha":                "Deckkraft",
+			"colorSaturationBrightness": "Sättigung und Helligkeit",
+			"colorHex":                  "Hex-Farbe",
+			"colorEyeDropper":           "Farbe vom Bildschirm aufnehmen",
+			"colorFormat":               "Farbformat",
+			"colorCopy":                 "Farbe kopieren",
+			"colorRed":                  "Rot",
+			"colorGreen":                "Grün",
+			"colorBlue":                 "Blau",
+			"colorHueDegrees":           "Farbton in Grad",
+			"colorSaturationPercent":    "Sättigung in Prozent",
+			"colorBrightnessPercent":    "Helligkeit in Prozent",
+			"colorLightnessPercent":     "Lichtwert in Prozent",
+			"colorOpacityPercent":       "Deckkraft in Prozent",
+			"calendarPrevious":          "Vorheriger Monat",
+			"calendarNext":              "Nächster Monat",
+			"listClear":                 "Leeren",
+			"listNothingFound":          "Nichts gefunden",
+			"listSearch":                "Suchen",
+			"commandSearch":             "Befehle suchen",
+			"commandSearchPlaceholder":  "Befehle suchen…",
+			"commandNoMatches":          "Keine passenden Befehle",
+			"commandLoading":            "Laden…",
+			"commandList":               "Befehle",
+			"breadcrumbsMore":           "Mehr",
+		},
+		SortBy: func(column string) string {
+			return "Nach " + column + " sortieren"
+		},
+		DiffUnchangedLines: func(n int) string {
+			var b strings.Builder
+			switch i18n.Cardinal("de", float64(n)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("de", float64(n)))
+				b.WriteString(" unveränderte Zeile")
+			default:
+				b.WriteString(i18n.FormatNumber("de", float64(n)))
+				b.WriteString(" unveränderte Zeilen")
+			}
+			return b.String()
+		},
+		CalendarMonth: func(hc string, d time.Time) string {
+			msgs := Messages{hc: hc}
+			return i18n.FormatDate(msgs.dated("de"), d, i18n.DateOptions{Skeleton: "yMMMM"})
+		},
+		CalendarMonthName: func(hc string, d time.Time) string {
+			msgs := Messages{hc: hc}
+			return i18n.FormatDate(msgs.dated("de"), d, i18n.DateOptions{Skeleton: "MMM"})
+		},
+		CalendarWeekday: func(hc string, d time.Time) string {
+			msgs := Messages{hc: hc}
+			return i18n.FormatDate(msgs.dated("de"), d, i18n.DateOptions{Skeleton: "EEEEE"})
+		},
+		FlowLabel: func(nodes int, edges int) string {
+			var b strings.Builder
+			switch i18n.Cardinal("de", float64(nodes)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("de", float64(nodes)))
+				b.WriteString(" Knoten")
+			default:
+				b.WriteString(i18n.FormatNumber("de", float64(nodes)))
+				b.WriteString(" Knoten")
+			}
+			b.WriteString(", ")
+			switch i18n.Cardinal("de", float64(edges)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("de", float64(edges)))
+				b.WriteString(" Kante")
+			default:
+				b.WriteString(i18n.FormatNumber("de", float64(edges)))
+				b.WriteString(" Kanten")
+			}
+			return b.String()
+		},
+	})
+	baselocales.Supply("es", baselocales.Translation{
+		Texts: map[string]string{
+			"diffExpandAll":             "Expandir todo",
+			"diffStage":                 "Preparar",
+			"diffDiscardChanges":        "Descartar cambios…",
+			"collapseMerge":             "Contraer fusión",
+			"expandMerge":               "Expandir fusión",
+			"colorHue":                  "Tono",
+			"colorAlpha":                "Opacidad",
+			"colorSaturationBrightness": "Saturación y brillo",
+			"colorHex":                  "Color hexadecimal",
+			"colorEyeDropper":           "Seleccionar un color de la pantalla",
+			"colorFormat":               "Formato de color",
+			"colorCopy":                 "Copiar color",
+			"colorRed":                  "Rojo",
+			"colorGreen":                "Verde",
+			"colorBlue":                 "Azul",
+			"colorHueDegrees":           "Grados de tono",
+			"colorSaturationPercent":    "Porcentaje de saturación",
+			"colorBrightnessPercent":    "Porcentaje de brillo",
+			"colorLightnessPercent":     "Porcentaje de luminosidad",
+			"colorOpacityPercent":       "Porcentaje de opacidad",
+			"calendarPrevious":          "Mes anterior",
+			"calendarNext":              "Mes siguiente",
+			"listClear":                 "Borrar",
+			"listNothingFound":          "No se encontró nada",
+			"listSearch":                "Buscar",
+			"commandSearch":             "Buscar comandos",
+			"commandSearchPlaceholder":  "Buscar comandos…",
+			"commandNoMatches":          "No hay comandos coincidentes",
+			"commandLoading":            "Cargando…",
+			"commandList":               "Comandos",
+			"breadcrumbsMore":           "Más",
+		},
+		SortBy: func(column string) string {
+			return "Ordenar por " + column
+		},
+		DiffUnchangedLines: func(n int) string {
+			var b strings.Builder
+			switch i18n.Cardinal("es", float64(n)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("es", float64(n)))
+				b.WriteString(" línea sin cambios")
+			default:
+				b.WriteString(i18n.FormatNumber("es", float64(n)))
+				b.WriteString(" líneas sin cambios")
+			}
+			return b.String()
+		},
+		CalendarMonth: func(hc string, d time.Time) string {
+			msgs := Messages{hc: hc}
+			return i18n.FormatDate(msgs.dated("es"), d, i18n.DateOptions{Skeleton: "yMMMM"})
+		},
+		CalendarMonthName: func(hc string, d time.Time) string {
+			msgs := Messages{hc: hc}
+			return i18n.FormatDate(msgs.dated("es"), d, i18n.DateOptions{Skeleton: "MMM"})
+		},
+		CalendarWeekday: func(hc string, d time.Time) string {
+			msgs := Messages{hc: hc}
+			return i18n.FormatDate(msgs.dated("es"), d, i18n.DateOptions{Skeleton: "EEEEE"})
+		},
+		FlowLabel: func(nodes int, edges int) string {
+			var b strings.Builder
+			switch i18n.Cardinal("es", float64(nodes)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("es", float64(nodes)))
+				b.WriteString(" nodo")
+			default:
+				b.WriteString(i18n.FormatNumber("es", float64(nodes)))
+				b.WriteString(" nodos")
+			}
+			b.WriteString(", ")
+			switch i18n.Cardinal("es", float64(edges)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("es", float64(edges)))
+				b.WriteString(" arista")
+			default:
+				b.WriteString(i18n.FormatNumber("es", float64(edges)))
+				b.WriteString(" aristas")
+			}
+			return b.String()
+		},
+	})
+	baselocales.Supply("fr", baselocales.Translation{
+		Texts: map[string]string{
+			"diffExpandAll":             "Tout développer",
+			"diffStage":                 "Indexer",
+			"diffDiscardChanges":        "Ignorer les modifications…",
+			"collapseMerge":             "Réduire la fusion",
+			"expandMerge":               "Développer la fusion",
+			"colorHue":                  "Teinte",
+			"colorAlpha":                "Opacité",
+			"colorSaturationBrightness": "Saturation et luminosité",
+			"colorHex":                  "Couleur hexadécimale",
+			"colorEyeDropper":           "Choisir une couleur à l’écran",
+			"colorFormat":               "Format de couleur",
+			"colorCopy":                 "Copier la couleur",
+			"colorRed":                  "Rouge",
+			"colorGreen":                "Vert",
+			"colorBlue":                 "Bleu",
+			"colorHueDegrees":           "Teinte en degrés",
+			"colorSaturationPercent":    "Saturation en pourcentage",
+			"colorBrightnessPercent":    "Luminosité en pourcentage",
+			"colorLightnessPercent":     "Clarté en pourcentage",
+			"colorOpacityPercent":       "Opacité en pourcentage",
+			"calendarPrevious":          "Mois précédent",
+			"calendarNext":              "Mois suivant",
+			"listClear":                 "Effacer",
+			"listNothingFound":          "Aucun résultat",
+			"listSearch":                "Rechercher",
+			"commandSearch":             "Rechercher des commandes",
+			"commandSearchPlaceholder":  "Rechercher des commandes…",
+			"commandNoMatches":          "Aucune commande correspondante",
+			"commandLoading":            "Chargement…",
+			"commandList":               "Commandes",
+			"breadcrumbsMore":           "Plus",
+		},
+		SortBy: func(column string) string {
+			return "Trier par " + column
+		},
+		DiffUnchangedLines: func(n int) string {
+			var b strings.Builder
+			switch i18n.Cardinal("fr", float64(n)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("fr", float64(n)))
+				b.WriteString(" ligne inchangée")
+			default:
+				b.WriteString(i18n.FormatNumber("fr", float64(n)))
+				b.WriteString(" lignes inchangées")
+			}
+			return b.String()
+		},
+		CalendarMonth: func(hc string, d time.Time) string {
+			msgs := Messages{hc: hc}
+			return i18n.FormatDate(msgs.dated("fr"), d, i18n.DateOptions{Skeleton: "yMMMM"})
+		},
+		CalendarMonthName: func(hc string, d time.Time) string {
+			msgs := Messages{hc: hc}
+			return i18n.FormatDate(msgs.dated("fr"), d, i18n.DateOptions{Skeleton: "MMM"})
+		},
+		CalendarWeekday: func(hc string, d time.Time) string {
+			msgs := Messages{hc: hc}
+			return i18n.FormatDate(msgs.dated("fr"), d, i18n.DateOptions{Skeleton: "EEEEE"})
+		},
+		FlowLabel: func(nodes int, edges int) string {
+			var b strings.Builder
+			switch i18n.Cardinal("fr", float64(nodes)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("fr", float64(nodes)))
+				b.WriteString(" nœud")
+			default:
+				b.WriteString(i18n.FormatNumber("fr", float64(nodes)))
+				b.WriteString(" nœuds")
+			}
+			b.WriteString(", ")
+			switch i18n.Cardinal("fr", float64(edges)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("fr", float64(edges)))
+				b.WriteString(" arête")
+			default:
+				b.WriteString(i18n.FormatNumber("fr", float64(edges)))
+				b.WriteString(" arêtes")
+			}
+			return b.String()
+		},
+	})
+	baselocales.Supply("ja", baselocales.Translation{
+		Texts: map[string]string{
+			"diffExpandAll":             "すべて展開",
+			"diffStage":                 "ステージ",
+			"diffDiscardChanges":        "変更を破棄…",
+			"collapseMerge":             "マージを折りたたむ",
+			"expandMerge":               "マージを展開",
+			"colorHue":                  "色相",
+			"colorAlpha":                "不透明度",
+			"colorSaturationBrightness": "彩度と明度",
+			"colorHex":                  "16進カラー",
+			"colorEyeDropper":           "画面から色を取得",
+			"colorFormat":               "カラー形式",
+			"colorCopy":                 "色をコピー",
+			"colorRed":                  "赤",
+			"colorGreen":                "緑",
+			"colorBlue":                 "青",
+			"colorHueDegrees":           "色相角度",
+			"colorSaturationPercent":    "彩度パーセント",
+			"colorBrightnessPercent":    "明度パーセント",
+			"colorLightnessPercent":     "輝度パーセント",
+			"colorOpacityPercent":       "不透明度パーセント",
+			"calendarPrevious":          "前月",
+			"calendarNext":              "翌月",
+			"listClear":                 "クリア",
+			"listNothingFound":          "見つかりません",
+			"listSearch":                "検索",
+			"commandSearch":             "コマンドを検索",
+			"commandSearchPlaceholder":  "コマンドを検索…",
+			"commandNoMatches":          "一致するコマンドがありません",
+			"commandLoading":            "読み込み中…",
+			"commandList":               "コマンド",
+			"breadcrumbsMore":           "その他",
+		},
+		SortBy: func(column string) string {
+			return column + " で並べ替え"
+		},
+		DiffUnchangedLines: func(n int) string {
+			var b strings.Builder
+			switch i18n.Cardinal("ja", float64(n)) {
+			default:
+				b.WriteString("変更なしの ")
+				b.WriteString(i18n.FormatNumber("ja", float64(n)))
+				b.WriteString(" 行")
+			}
+			return b.String()
+		},
+		CalendarMonth: func(hc string, d time.Time) string {
+			msgs := Messages{hc: hc}
+			return i18n.FormatDate(msgs.dated("ja"), d, i18n.DateOptions{Skeleton: "yMMMM"})
+		},
+		CalendarMonthName: func(hc string, d time.Time) string {
+			msgs := Messages{hc: hc}
+			return i18n.FormatDate(msgs.dated("ja"), d, i18n.DateOptions{Skeleton: "MMM"})
+		},
+		CalendarWeekday: func(hc string, d time.Time) string {
+			msgs := Messages{hc: hc}
+			return i18n.FormatDate(msgs.dated("ja"), d, i18n.DateOptions{Skeleton: "EEEEE"})
+		},
+		FlowLabel: func(nodes int, edges int) string {
+			var b strings.Builder
+			switch i18n.Cardinal("ja", float64(nodes)) {
+			default:
+				b.WriteString(i18n.FormatNumber("ja", float64(nodes)))
+				b.WriteString(" 個のノード")
+			}
+			b.WriteString("、")
+			switch i18n.Cardinal("ja", float64(edges)) {
+			default:
+				b.WriteString(i18n.FormatNumber("ja", float64(edges)))
+				b.WriteString(" 本のエッジ")
+			}
+			return b.String()
+		},
+	})
+	baselocales.Supply("ko", baselocales.Translation{
+		Texts: map[string]string{
+			"diffExpandAll":             "모두 펼치기",
+			"diffStage":                 "스테이지",
+			"diffDiscardChanges":        "변경 사항 버리기…",
+			"collapseMerge":             "병합 접기",
+			"expandMerge":               "병합 펼치기",
+			"colorHue":                  "색조",
+			"colorAlpha":                "불투명도",
+			"colorSaturationBrightness": "채도 및 밝기",
+			"colorHex":                  "16진수 색상",
+			"colorEyeDropper":           "화면에서 색상 선택",
+			"colorFormat":               "색상 형식",
+			"colorCopy":                 "색상 복사",
+			"colorRed":                  "빨강",
+			"colorGreen":                "초록",
+			"colorBlue":                 "파랑",
+			"colorHueDegrees":           "색조 각도",
+			"colorSaturationPercent":    "채도 백분율",
+			"colorBrightnessPercent":    "밝기 백분율",
+			"colorLightnessPercent":     "명도 백분율",
+			"colorOpacityPercent":       "불투명도 백분율",
+			"calendarPrevious":          "이전 달",
+			"calendarNext":              "다음 달",
+			"listClear":                 "지우기",
+			"listNothingFound":          "결과 없음",
+			"listSearch":                "검색",
+			"commandSearch":             "명령 검색",
+			"commandSearchPlaceholder":  "명령 검색…",
+			"commandNoMatches":          "일치하는 명령 없음",
+			"commandLoading":            "불러오는 중…",
+			"commandList":               "명령",
+			"breadcrumbsMore":           "더 보기",
+		},
+		SortBy: func(column string) string {
+			return column + " 기준 정렬"
+		},
+		DiffUnchangedLines: func(n int) string {
+			var b strings.Builder
+			switch i18n.Cardinal("ko", float64(n)) {
+			default:
+				b.WriteString("변경되지 않은 ")
+				b.WriteString(i18n.FormatNumber("ko", float64(n)))
+				b.WriteString("줄")
+			}
+			return b.String()
+		},
+		CalendarMonth: func(hc string, d time.Time) string {
+			msgs := Messages{hc: hc}
+			return i18n.FormatDate(msgs.dated("ko"), d, i18n.DateOptions{Skeleton: "yMMMM"})
+		},
+		CalendarMonthName: func(hc string, d time.Time) string {
+			msgs := Messages{hc: hc}
+			return i18n.FormatDate(msgs.dated("ko"), d, i18n.DateOptions{Skeleton: "MMM"})
+		},
+		CalendarWeekday: func(hc string, d time.Time) string {
+			msgs := Messages{hc: hc}
+			return i18n.FormatDate(msgs.dated("ko"), d, i18n.DateOptions{Skeleton: "EEEEE"})
+		},
+		FlowLabel: func(nodes int, edges int) string {
+			var b strings.Builder
+			switch i18n.Cardinal("ko", float64(nodes)) {
+			default:
+				b.WriteString("노드 ")
+				b.WriteString(i18n.FormatNumber("ko", float64(nodes)))
+				b.WriteString("개")
+			}
+			b.WriteString(", ")
+			switch i18n.Cardinal("ko", float64(edges)) {
+			default:
+				b.WriteString("간선 ")
+				b.WriteString(i18n.FormatNumber("ko", float64(edges)))
+				b.WriteString("개")
+			}
+			return b.String()
+		},
+	})
+	baselocales.Supply("pt-BR", baselocales.Translation{
+		Texts: map[string]string{
+			"diffExpandAll":             "Expandir tudo",
+			"diffStage":                 "Preparar",
+			"diffDiscardChanges":        "Descartar alterações…",
+			"collapseMerge":             "Recolher mesclagem",
+			"expandMerge":               "Expandir mesclagem",
+			"colorHue":                  "Matiz",
+			"colorAlpha":                "Opacidade",
+			"colorSaturationBrightness": "Saturação e brilho",
+			"colorHex":                  "Cor hexadecimal",
+			"colorEyeDropper":           "Capturar cor da tela",
+			"colorFormat":               "Formato de cor",
+			"colorCopy":                 "Copiar cor",
+			"colorRed":                  "Vermelho",
+			"colorGreen":                "Verde",
+			"colorBlue":                 "Azul",
+			"colorHueDegrees":           "Graus de matiz",
+			"colorSaturationPercent":    "Porcentagem de saturação",
+			"colorBrightnessPercent":    "Porcentagem de brilho",
+			"colorLightnessPercent":     "Porcentagem de luminosidade",
+			"colorOpacityPercent":       "Porcentagem de opacidade",
+			"calendarPrevious":          "Mês anterior",
+			"calendarNext":              "Próximo mês",
+			"listClear":                 "Limpar",
+			"listNothingFound":          "Nada encontrado",
+			"listSearch":                "Buscar",
+			"commandSearch":             "Buscar comandos",
+			"commandSearchPlaceholder":  "Buscar comandos…",
+			"commandNoMatches":          "Nenhum comando correspondente",
+			"commandLoading":            "Carregando…",
+			"commandList":               "Comandos",
+			"breadcrumbsMore":           "Mais",
+		},
+		SortBy: func(column string) string {
+			return "Ordenar por " + column
+		},
+		DiffUnchangedLines: func(n int) string {
+			var b strings.Builder
+			switch i18n.Cardinal("pt-BR", float64(n)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("pt-BR", float64(n)))
+				b.WriteString(" linha inalterada")
+			default:
+				b.WriteString(i18n.FormatNumber("pt-BR", float64(n)))
+				b.WriteString(" linhas inalteradas")
+			}
+			return b.String()
+		},
+		CalendarMonth: func(hc string, d time.Time) string {
+			msgs := Messages{hc: hc}
+			return i18n.FormatDate(msgs.dated("pt-BR"), d, i18n.DateOptions{Skeleton: "yMMMM"})
+		},
+		CalendarMonthName: func(hc string, d time.Time) string {
+			msgs := Messages{hc: hc}
+			return i18n.FormatDate(msgs.dated("pt-BR"), d, i18n.DateOptions{Skeleton: "MMM"})
+		},
+		CalendarWeekday: func(hc string, d time.Time) string {
+			msgs := Messages{hc: hc}
+			return i18n.FormatDate(msgs.dated("pt-BR"), d, i18n.DateOptions{Skeleton: "EEEEE"})
+		},
+		FlowLabel: func(nodes int, edges int) string {
+			var b strings.Builder
+			switch i18n.Cardinal("pt-BR", float64(nodes)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("pt-BR", float64(nodes)))
+				b.WriteString(" nó")
+			default:
+				b.WriteString(i18n.FormatNumber("pt-BR", float64(nodes)))
+				b.WriteString(" nós")
+			}
+			b.WriteString(", ")
+			switch i18n.Cardinal("pt-BR", float64(edges)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("pt-BR", float64(edges)))
+				b.WriteString(" aresta")
+			default:
+				b.WriteString(i18n.FormatNumber("pt-BR", float64(edges)))
+				b.WriteString(" arestas")
+			}
+			return b.String()
+		},
+	})
+	baselocales.Supply("ru", baselocales.Translation{
+		Texts: map[string]string{
+			"diffExpandAll":             "Развернуть все",
+			"diffStage":                 "Индексировать",
+			"diffDiscardChanges":        "Отменить изменения…",
+			"collapseMerge":             "Свернуть слияние",
+			"expandMerge":               "Развернуть слияние",
+			"colorHue":                  "Оттенок",
+			"colorAlpha":                "Непрозрачность",
+			"colorSaturationBrightness": "Насыщенность и яркость",
+			"colorHex":                  "HEX-цвет",
+			"colorEyeDropper":           "Выбрать цвет с экрана",
+			"colorFormat":               "Формат цвета",
+			"colorCopy":                 "Копировать цвет",
+			"colorRed":                  "Красный",
+			"colorGreen":                "Зелёный",
+			"colorBlue":                 "Синий",
+			"colorHueDegrees":           "Оттенок в градусах",
+			"colorSaturationPercent":    "Насыщенность в процентах",
+			"colorBrightnessPercent":    "Яркость в процентах",
+			"colorLightnessPercent":     "Светлота в процентах",
+			"colorOpacityPercent":       "Непрозрачность в процентах",
+			"calendarPrevious":          "Предыдущий месяц",
+			"calendarNext":              "Следующий месяц",
+			"listClear":                 "Очистить",
+			"listNothingFound":          "Ничего не найдено",
+			"listSearch":                "Поиск",
+			"commandSearch":             "Поиск команд",
+			"commandSearchPlaceholder":  "Поиск команд…",
+			"commandNoMatches":          "Подходящих команд нет",
+			"commandLoading":            "Загрузка…",
+			"commandList":               "Команды",
+			"breadcrumbsMore":           "Ещё",
+		},
+		SortBy: func(column string) string {
+			return "Сортировать по: " + column
+		},
+		DiffUnchangedLines: func(n int) string {
+			var b strings.Builder
+			switch i18n.Cardinal("ru", float64(n)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("ru", float64(n)))
+				b.WriteString(" неизменённая строка")
+			case i18n.Few:
+				b.WriteString(i18n.FormatNumber("ru", float64(n)))
+				b.WriteString(" неизменённые строки")
+			case i18n.Many:
+				b.WriteString(i18n.FormatNumber("ru", float64(n)))
+				b.WriteString(" неизменённых строк")
+			default:
+				b.WriteString(i18n.FormatNumber("ru", float64(n)))
+				b.WriteString(" неизменённой строки")
+			}
+			return b.String()
+		},
+		CalendarMonth: func(hc string, d time.Time) string {
+			msgs := Messages{hc: hc}
+			return i18n.FormatDate(msgs.dated("ru"), d, i18n.DateOptions{Skeleton: "yMMMM"})
+		},
+		CalendarMonthName: func(hc string, d time.Time) string {
+			msgs := Messages{hc: hc}
+			return i18n.FormatDate(msgs.dated("ru"), d, i18n.DateOptions{Skeleton: "MMM"})
+		},
+		CalendarWeekday: func(hc string, d time.Time) string {
+			msgs := Messages{hc: hc}
+			return i18n.FormatDate(msgs.dated("ru"), d, i18n.DateOptions{Skeleton: "EEEEE"})
+		},
+		FlowLabel: func(nodes int, edges int) string {
+			var b strings.Builder
+			switch i18n.Cardinal("ru", float64(nodes)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("ru", float64(nodes)))
+				b.WriteString(" узел")
+			case i18n.Few:
+				b.WriteString(i18n.FormatNumber("ru", float64(nodes)))
+				b.WriteString(" узла")
+			case i18n.Many:
+				b.WriteString(i18n.FormatNumber("ru", float64(nodes)))
+				b.WriteString(" узлов")
+			default:
+				b.WriteString(i18n.FormatNumber("ru", float64(nodes)))
+				b.WriteString(" узла")
+			}
+			b.WriteString(", ")
+			switch i18n.Cardinal("ru", float64(edges)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("ru", float64(edges)))
+				b.WriteString(" ребро")
+			case i18n.Few:
+				b.WriteString(i18n.FormatNumber("ru", float64(edges)))
+				b.WriteString(" ребра")
+			case i18n.Many:
+				b.WriteString(i18n.FormatNumber("ru", float64(edges)))
+				b.WriteString(" рёбер")
+			default:
+				b.WriteString(i18n.FormatNumber("ru", float64(edges)))
+				b.WriteString(" ребра")
+			}
+			return b.String()
+		},
+	})
+	baselocales.Supply("zh-Hant", baselocales.Translation{
+		Texts: map[string]string{
+			"diffExpandAll":             "全部展開",
+			"diffStage":                 "暫存",
+			"diffDiscardChanges":        "捨棄變更…",
+			"collapseMerge":             "收合合併",
+			"expandMerge":               "展開合併",
+			"colorHue":                  "色相",
+			"colorAlpha":                "不透明度",
+			"colorSaturationBrightness": "飽和度與亮度",
+			"colorHex":                  "十六進位色碼",
+			"colorEyeDropper":           "從螢幕取色",
+			"colorFormat":               "色彩格式",
+			"colorCopy":                 "複製色彩",
+			"colorRed":                  "紅",
+			"colorGreen":                "綠",
+			"colorBlue":                 "藍",
+			"colorHueDegrees":           "色相角度",
+			"colorSaturationPercent":    "飽和度百分比",
+			"colorBrightnessPercent":    "亮度百分比",
+			"colorLightnessPercent":     "明度百分比",
+			"colorOpacityPercent":       "不透明度百分比",
+			"calendarPrevious":          "上個月",
+			"calendarNext":              "下個月",
+			"listClear":                 "清除",
+			"listNothingFound":          "找不到結果",
+			"listSearch":                "搜尋",
+			"commandSearch":             "搜尋指令",
+			"commandSearchPlaceholder":  "搜尋指令…",
+			"commandNoMatches":          "沒有符合的指令",
+			"commandLoading":            "載入中…",
+			"commandList":               "指令",
+			"breadcrumbsMore":           "更多",
+		},
+		SortBy: func(column string) string {
+			return "依 " + column + " 排序"
+		},
+		DiffUnchangedLines: func(n int) string {
+			var b strings.Builder
+			switch i18n.Cardinal("zh-Hant", float64(n)) {
+			default:
+				b.WriteString(i18n.FormatNumber("zh-Hant", float64(n)))
+				b.WriteString(" 行未變更")
+			}
+			return b.String()
+		},
+		CalendarMonth: func(hc string, d time.Time) string {
+			msgs := Messages{hc: hc}
+			return i18n.FormatDate(msgs.dated("zh-Hant"), d, i18n.DateOptions{Skeleton: "yMMMM"})
+		},
+		CalendarMonthName: func(hc string, d time.Time) string {
+			msgs := Messages{hc: hc}
+			return i18n.FormatDate(msgs.dated("zh-Hant"), d, i18n.DateOptions{Skeleton: "MMM"})
+		},
+		CalendarWeekday: func(hc string, d time.Time) string {
+			msgs := Messages{hc: hc}
+			return i18n.FormatDate(msgs.dated("zh-Hant"), d, i18n.DateOptions{Skeleton: "EEEEE"})
+		},
+		FlowLabel: func(nodes int, edges int) string {
+			var b strings.Builder
+			switch i18n.Cardinal("zh-Hant", float64(nodes)) {
+			default:
+				b.WriteString(i18n.FormatNumber("zh-Hant", float64(nodes)))
+				b.WriteString(" 個節點")
+			}
+			b.WriteString("、")
+			switch i18n.Cardinal("zh-Hant", float64(edges)) {
+			default:
+				b.WriteString(i18n.FormatNumber("zh-Hant", float64(edges)))
+				b.WriteString(" 條連線")
+			}
+			return b.String()
+		},
+	})
+	textviewlocales.Supply("de", textviewlocales.Translation{
+		Texts: map[string]string{
+			"alertNote":      "Hinweis",
+			"alertTip":       "Tipp",
+			"alertImportant": "Wichtig",
+			"alertWarning":   "Warnung",
+			"alertCaution":   "Vorsicht",
+		},
+	})
+	textviewlocales.Supply("es", textviewlocales.Translation{
+		Texts: map[string]string{
+			"alertNote":      "Nota",
+			"alertTip":       "Consejo",
+			"alertImportant": "Importante",
+			"alertWarning":   "Advertencia",
+			"alertCaution":   "Precaución",
+		},
+	})
+	textviewlocales.Supply("fr", textviewlocales.Translation{
+		Texts: map[string]string{
+			"alertNote":      "Note",
+			"alertTip":       "Conseil",
+			"alertImportant": "Important",
+			"alertWarning":   "Avertissement",
+			"alertCaution":   "Prudence",
+		},
+	})
+	textviewlocales.Supply("ja", textviewlocales.Translation{
+		Texts: map[string]string{
+			"alertNote":      "注記",
+			"alertTip":       "ヒント",
+			"alertImportant": "重要",
+			"alertWarning":   "警告",
+			"alertCaution":   "注意",
+		},
+	})
+	textviewlocales.Supply("ko", textviewlocales.Translation{
+		Texts: map[string]string{
+			"alertNote":      "참고",
+			"alertTip":       "팁",
+			"alertImportant": "중요",
+			"alertWarning":   "경고",
+			"alertCaution":   "주의",
+		},
+	})
+	textviewlocales.Supply("pt-BR", textviewlocales.Translation{
+		Texts: map[string]string{
+			"alertNote":      "Nota",
+			"alertTip":       "Dica",
+			"alertImportant": "Importante",
+			"alertWarning":   "Aviso",
+			"alertCaution":   "Cuidado",
+		},
+	})
+	textviewlocales.Supply("ru", textviewlocales.Translation{
+		Texts: map[string]string{
+			"alertNote":      "Примечание",
+			"alertTip":       "Совет",
+			"alertImportant": "Важно",
+			"alertWarning":   "Предупреждение",
+			"alertCaution":   "Внимание",
+		},
+	})
+	textviewlocales.Supply("zh-Hant", textviewlocales.Translation{
+		Texts: map[string]string{
+			"alertNote":      "備註",
+			"alertTip":       "提示",
+			"alertImportant": "重要",
+			"alertWarning":   "警告",
+			"alertCaution":   "注意",
+		},
+	})
+	desktoplocales.Supply("de", desktoplocales.Translation{
+		Texts: map[string]string{
+			"edit":                           "Bearbeiten",
+			"window":                         "Fenster",
+			"about":                          "Über",
+			"hide":                           "Ausblenden",
+			"hideOthers":                     "Andere ausblenden",
+			"showAll":                        "Alle einblenden",
+			"quit":                           "Beenden",
+			"undo":                           "Widerrufen",
+			"redo":                           "Wiederholen",
+			"cut":                            "Ausschneiden",
+			"copy":                           "Kopieren",
+			"paste":                          "Einsetzen",
+			"delete":                         "Löschen",
+			"selectAll":                      "Alles auswählen",
+			"minimize":                       "Im Dock ablegen",
+			"zoom":                           "Zoomen",
+			"toggleFullScreen":               "Vollbild umschalten",
+			"enterFullScreen":                "Vollbild ein",
+			"exitFullScreen":                 "Vollbild aus",
+			"close":                          "Schließen",
+			"guideDragHint":                  "Ziehen",
+			"permissionAccessibility":        "Bedienungshilfen",
+			"permissionDeviceControl":        "Gerätesteuerung und Datenzugriff",
+			"permissionScreenRecording":      "Bildschirmaufnahme",
+			"permissionScreenAudioRecording": "Bildschirm- & Systemaudioaufnahme",
+			"permissionInputMonitoring":      "Eingabeüberwachung",
+			"permissionFullDiskAccess":       "Festplattenvollzugriff",
+			"permissionAppManagement":        "App-Verwaltung",
+			"permissionDeveloperTools":       "Entwicklerwerkzeuge",
+			"permissionBluetooth":            "Bluetooth",
+			"permissionMediaLibrary":         "Medien & Apple Music",
+			"authSessionDone":                "Du kannst diese Seite schließen und zur App zurückkehren.",
+			"pasteAndMatchStyle":             "Einsetzen und Stil anpassen",
+			"startSpeaking":                  "Sprachausgabe starten",
+			"stopSpeaking":                   "Sprachausgabe stoppen",
+			"bringAllToFront":                "Alle nach vorne bringen",
+			"services":                       "Dienste",
+			"help":                           "Hilfe",
+			"roleLink":                       "Link",
+			"roleTab":                        "Tab",
+			"roleSearchBox":                  "Suchfeld",
+			"roleStatus":                     "Status",
+			"roleMenu":                       "Menü",
+			"roleMenuItem":                   "Menüpunkt",
+			"roleDialog":                     "Dialog",
+			"roleAlert":                      "Hinweis",
+			"roleTable":                      "Tabelle",
+			"roleGrid":                       "Raster",
+			"roleRow":                        "Zeile",
+			"roleColumnHeader":               "Spaltenkopf",
+			"roleCell":                       "Zelle",
+			"statePartiallyChecked":          "teilweise ausgewählt",
+			"stateExpanded":                  "aufgeklappt",
+			"stateCollapsed":                 "zugeklappt",
+			"spokenSeparator":                ", ",
+		},
+		AboutApp: func(app string) string {
+			return "Über " + app
+		},
+		HideApp: func(app string) string {
+			return app + " ausblenden"
+		},
+		QuitApp: func(app string) string {
+			return app + " beenden"
+		},
+		GuideDrag: func(app string, permission string) string {
+			return "Ziehe " + app + " in die Liste oben, um „" + permission + "“ zu erlauben."
+		},
+	})
+	desktoplocales.Supply("es", desktoplocales.Translation{
+		Texts: map[string]string{
+			"edit":                           "Edición",
+			"window":                         "Ventana",
+			"about":                          "Acerca de",
+			"hide":                           "Ocultar",
+			"hideOthers":                     "Ocultar otros",
+			"showAll":                        "Mostrar todo",
+			"quit":                           "Salir",
+			"undo":                           "Deshacer",
+			"redo":                           "Rehacer",
+			"cut":                            "Cortar",
+			"copy":                           "Copiar",
+			"paste":                          "Pegar",
+			"delete":                         "Eliminar",
+			"selectAll":                      "Seleccionar todo",
+			"minimize":                       "Minimizar",
+			"zoom":                           "Zoom",
+			"toggleFullScreen":               "Pantalla completa",
+			"enterFullScreen":                "Usar pantalla completa",
+			"exitFullScreen":                 "Salir de pantalla completa",
+			"close":                          "Cerrar",
+			"guideDragHint":                  "Arrastrar",
+			"permissionAccessibility":        "Accesibilidad",
+			"permissionDeviceControl":        "Control del dispositivo y acceso a datos",
+			"permissionScreenRecording":      "Grabación de pantalla",
+			"permissionScreenAudioRecording": "Grabación de pantalla y audio del sistema",
+			"permissionInputMonitoring":      "Monitorización de entrada",
+			"permissionFullDiskAccess":       "Acceso total al disco",
+			"permissionAppManagement":        "Gestión de apps",
+			"permissionDeveloperTools":       "Herramientas para desarrolladores",
+			"permissionBluetooth":            "Bluetooth",
+			"permissionMediaLibrary":         "Contenido multimedia y Apple Music",
+			"authSessionDone":                "Puedes cerrar esta página y volver a la app.",
+			"pasteAndMatchStyle":             "Pegar con el mismo estilo",
+			"startSpeaking":                  "Iniciar locución",
+			"stopSpeaking":                   "Detener locución",
+			"bringAllToFront":                "Traer todo al frente",
+			"services":                       "Servicios",
+			"help":                           "Ayuda",
+			"roleLink":                       "enlace",
+			"roleTab":                        "pestaña",
+			"roleSearchBox":                  "cuadro de búsqueda",
+			"roleStatus":                     "estado",
+			"roleMenu":                       "menú",
+			"roleMenuItem":                   "elemento de menú",
+			"roleDialog":                     "cuadro de diálogo",
+			"roleAlert":                      "alerta",
+			"roleTable":                      "tabla",
+			"roleGrid":                       "cuadrícula",
+			"roleRow":                        "fila",
+			"roleColumnHeader":               "encabezado de columna",
+			"roleCell":                       "celda",
+			"statePartiallyChecked":          "parcialmente marcado",
+			"stateExpanded":                  "desplegado",
+			"stateCollapsed":                 "contraído",
+			"spokenSeparator":                ", ",
+		},
+		AboutApp: func(app string) string {
+			return "Acerca de " + app
+		},
+		HideApp: func(app string) string {
+			return "Ocultar " + app
+		},
+		QuitApp: func(app string) string {
+			return "Salir de " + app
+		},
+		GuideDrag: func(app string, permission string) string {
+			return "Arrastra " + app + " a la lista de arriba para permitir “" + permission + "”."
+		},
+	})
+	desktoplocales.Supply("fr", desktoplocales.Translation{
+		Texts: map[string]string{
+			"edit":                           "Édition",
+			"window":                         "Fenêtre",
+			"about":                          "À propos",
+			"hide":                           "Masquer",
+			"hideOthers":                     "Masquer les autres",
+			"showAll":                        "Tout afficher",
+			"quit":                           "Quitter",
+			"undo":                           "Annuler",
+			"redo":                           "Rétablir",
+			"cut":                            "Couper",
+			"copy":                           "Copier",
+			"paste":                          "Coller",
+			"delete":                         "Supprimer",
+			"selectAll":                      "Tout sélectionner",
+			"minimize":                       "Réduire",
+			"zoom":                           "Agrandir",
+			"toggleFullScreen":               "Mode plein écran",
+			"enterFullScreen":                "Activer le mode plein écran",
+			"exitFullScreen":                 "Quitter le mode plein écran",
+			"close":                          "Fermer",
+			"guideDragHint":                  "Glisser",
+			"permissionAccessibility":        "Accessibilité",
+			"permissionDeviceControl":        "Contrôle de l’appareil et accès aux données",
+			"permissionScreenRecording":      "Enregistrement de l’écran",
+			"permissionScreenAudioRecording": "Enregistrement de l’écran et audio système",
+			"permissionInputMonitoring":      "Surveillance de l’entrée",
+			"permissionFullDiskAccess":       "Accès complet au disque",
+			"permissionAppManagement":        "Gestion d’apps",
+			"permissionDeveloperTools":       "Outils de développement",
+			"permissionBluetooth":            "Bluetooth",
+			"permissionMediaLibrary":         "Multimédia et Apple Music",
+			"authSessionDone":                "Vous pouvez fermer cette page et revenir à l’application.",
+			"pasteAndMatchStyle":             "Coller et adapter le style",
+			"startSpeaking":                  "Commencer la lecture",
+			"stopSpeaking":                   "Arrêter la lecture",
+			"bringAllToFront":                "Tout ramener au premier plan",
+			"services":                       "Services",
+			"help":                           "Aide",
+			"roleLink":                       "lien",
+			"roleTab":                        "onglet",
+			"roleSearchBox":                  "champ de recherche",
+			"roleStatus":                     "état",
+			"roleMenu":                       "menu",
+			"roleMenuItem":                   "élément de menu",
+			"roleDialog":                     "boîte de dialogue",
+			"roleAlert":                      "alerte",
+			"roleTable":                      "tableau",
+			"roleGrid":                       "grille",
+			"roleRow":                        "ligne",
+			"roleColumnHeader":               "en-tête de colonne",
+			"roleCell":                       "cellule",
+			"statePartiallyChecked":          "partiellement coché",
+			"stateExpanded":                  "développé",
+			"stateCollapsed":                 "réduit",
+			"spokenSeparator":                ", ",
+		},
+		AboutApp: func(app string) string {
+			return "À propos de " + app
+		},
+		HideApp: func(app string) string {
+			return "Masquer " + app
+		},
+		QuitApp: func(app string) string {
+			return "Quitter " + app
+		},
+		GuideDrag: func(app string, permission string) string {
+			return "Faites glisser " + app + " dans la liste ci-dessus pour autoriser « " + permission + " »."
+		},
+	})
+	desktoplocales.Supply("ja", desktoplocales.Translation{
+		Texts: map[string]string{
+			"edit":                           "編集",
+			"window":                         "ウインドウ",
+			"about":                          "について",
+			"hide":                           "非表示",
+			"hideOthers":                     "ほかを非表示",
+			"showAll":                        "すべてを表示",
+			"quit":                           "終了",
+			"undo":                           "取り消す",
+			"redo":                           "やり直す",
+			"cut":                            "カット",
+			"copy":                           "コピー",
+			"paste":                          "ペースト",
+			"delete":                         "削除",
+			"selectAll":                      "すべてを選択",
+			"minimize":                       "しまう",
+			"zoom":                           "拡大/縮小",
+			"toggleFullScreen":               "フルスクリーンを切り替え",
+			"enterFullScreen":                "フルスクリーンにする",
+			"exitFullScreen":                 "フルスクリーンを解除",
+			"close":                          "閉じる",
+			"guideDragHint":                  "ドラッグ",
+			"permissionAccessibility":        "アクセシビリティ",
+			"permissionDeviceControl":        "デバイス制御とデータアクセス",
+			"permissionScreenRecording":      "画面収録",
+			"permissionScreenAudioRecording": "画面収録とシステムオーディオ録音",
+			"permissionInputMonitoring":      "入力監視",
+			"permissionFullDiskAccess":       "フルディスクアクセス",
+			"permissionAppManagement":        "アプリ管理",
+			"permissionDeveloperTools":       "デベロッパツール",
+			"permissionBluetooth":            "Bluetooth",
+			"permissionMediaLibrary":         "メディアと Apple Music",
+			"authSessionDone":                "このページを閉じてアプリに戻ることができます。",
+			"pasteAndMatchStyle":             "ペーストしてスタイルを合わせる",
+			"startSpeaking":                  "読み上げを開始",
+			"stopSpeaking":                   "読み上げを停止",
+			"bringAllToFront":                "すべてを手前に移動",
+			"services":                       "サービス",
+			"help":                           "ヘルプ",
+			"roleLink":                       "リンク",
+			"roleTab":                        "タブ",
+			"roleSearchBox":                  "検索フィールド",
+			"roleStatus":                     "ステータス",
+			"roleMenu":                       "メニュー",
+			"roleMenuItem":                   "メニュー項目",
+			"roleDialog":                     "ダイアログ",
+			"roleAlert":                      "警告",
+			"roleTable":                      "テーブル",
+			"roleGrid":                       "グリッド",
+			"roleRow":                        "行",
+			"roleColumnHeader":               "列ヘッダー",
+			"roleCell":                       "セル",
+			"statePartiallyChecked":          "一部選択",
+			"stateExpanded":                  "展開済み",
+			"stateCollapsed":                 "折りたたみ済み",
+			"spokenSeparator":                "、",
+		},
+		AboutApp: func(app string) string {
+			return app + " について"
+		},
+		HideApp: func(app string) string {
+			return app + " を非表示"
+		},
+		QuitApp: func(app string) string {
+			return app + " を終了"
+		},
+		GuideDrag: func(app string, permission string) string {
+			return "「" + permission + "」を許可するには、" + app + " を上のリストにドラッグしてください。"
+		},
+	})
+	desktoplocales.Supply("ko", desktoplocales.Translation{
+		Texts: map[string]string{
+			"edit":                           "편집",
+			"window":                         "윈도우",
+			"about":                          "정보",
+			"hide":                           "가리기",
+			"hideOthers":                     "기타 가리기",
+			"showAll":                        "모두 보기",
+			"quit":                           "종료",
+			"undo":                           "실행 취소",
+			"redo":                           "실행 복귀",
+			"cut":                            "오려두기",
+			"copy":                           "복사하기",
+			"paste":                          "붙여넣기",
+			"delete":                         "삭제",
+			"selectAll":                      "전체 선택",
+			"minimize":                       "최소화",
+			"zoom":                           "확대/축소",
+			"toggleFullScreen":               "전체 화면 전환",
+			"enterFullScreen":                "전체 화면 시작",
+			"exitFullScreen":                 "전체 화면 종료",
+			"close":                          "닫기",
+			"guideDragHint":                  "드래그",
+			"permissionAccessibility":        "손쉬운 사용",
+			"permissionDeviceControl":        "기기 제어 및 데이터 접근",
+			"permissionScreenRecording":      "화면 기록",
+			"permissionScreenAudioRecording": "화면 및 시스템 오디오 녹음",
+			"permissionInputMonitoring":      "입력 모니터링",
+			"permissionFullDiskAccess":       "전체 디스크 접근 권한",
+			"permissionAppManagement":        "앱 관리",
+			"permissionDeveloperTools":       "개발자 도구",
+			"permissionBluetooth":            "Bluetooth",
+			"permissionMediaLibrary":         "미디어 및 Apple Music",
+			"authSessionDone":                "이제 이 페이지를 닫고 앱으로 돌아갈 수 있습니다.",
+			"pasteAndMatchStyle":             "붙여넣고 스타일 일치시키기",
+			"startSpeaking":                  "말하기 시작",
+			"stopSpeaking":                   "말하기 중단",
+			"bringAllToFront":                "모두 앞으로 가져오기",
+			"services":                       "서비스",
+			"help":                           "도움말",
+			"roleLink":                       "링크",
+			"roleTab":                        "탭",
+			"roleSearchBox":                  "검색 상자",
+			"roleStatus":                     "상태",
+			"roleMenu":                       "메뉴",
+			"roleMenuItem":                   "메뉴 항목",
+			"roleDialog":                     "대화 상자",
+			"roleAlert":                      "알림",
+			"roleTable":                      "표",
+			"roleGrid":                       "그리드",
+			"roleRow":                        "행",
+			"roleColumnHeader":               "열 머리글",
+			"roleCell":                       "셀",
+			"statePartiallyChecked":          "부분 선택됨",
+			"stateExpanded":                  "펼쳐짐",
+			"stateCollapsed":                 "접힘",
+			"spokenSeparator":                ", ",
+		},
+		AboutApp: func(app string) string {
+			return app + "에 관하여"
+		},
+		HideApp: func(app string) string {
+			return app + " 가리기"
+		},
+		QuitApp: func(app string) string {
+			return app + " 종료"
+		},
+		GuideDrag: func(app string, permission string) string {
+			return "“" + permission + "”을(를) 허용하려면 " + app + "을(를) 위 목록으로 드래그하세요."
+		},
+	})
+	desktoplocales.Supply("pt-BR", desktoplocales.Translation{
+		Texts: map[string]string{
+			"edit":                           "Editar",
+			"window":                         "Janela",
+			"about":                          "Sobre",
+			"hide":                           "Ocultar",
+			"hideOthers":                     "Ocultar Outros",
+			"showAll":                        "Mostrar Tudo",
+			"quit":                           "Encerrar",
+			"undo":                           "Desfazer",
+			"redo":                           "Refazer",
+			"cut":                            "Cortar",
+			"copy":                           "Copiar",
+			"paste":                          "Colar",
+			"delete":                         "Apagar",
+			"selectAll":                      "Selecionar Tudo",
+			"minimize":                       "Minimizar",
+			"zoom":                           "Ampliar/Reduzir",
+			"toggleFullScreen":               "Tela Cheia",
+			"enterFullScreen":                "Entrar em Tela Cheia",
+			"exitFullScreen":                 "Sair da Tela Cheia",
+			"close":                          "Fechar",
+			"guideDragHint":                  "Arrastar",
+			"permissionAccessibility":        "Acessibilidade",
+			"permissionDeviceControl":        "Controle de Dispositivo e Acesso a Dados",
+			"permissionScreenRecording":      "Gravação de Tela",
+			"permissionScreenAudioRecording": "Gravação de Tela e Áudio do Sistema",
+			"permissionInputMonitoring":      "Monitoramento de Entrada",
+			"permissionFullDiskAccess":       "Acesso Total ao Disco",
+			"permissionAppManagement":        "Gerenciamento de Apps",
+			"permissionDeveloperTools":       "Ferramentas de Desenvolvedor",
+			"permissionBluetooth":            "Bluetooth",
+			"permissionMediaLibrary":         "Mídia e Apple Music",
+			"authSessionDone":                "Você pode fechar esta página e voltar ao aplicativo.",
+			"pasteAndMatchStyle":             "Colar e Combinar Estilo",
+			"startSpeaking":                  "Iniciar Fala",
+			"stopSpeaking":                   "Parar Fala",
+			"bringAllToFront":                "Trazer Todas para a Frente",
+			"services":                       "Serviços",
+			"help":                           "Ajuda",
+			"roleLink":                       "link",
+			"roleTab":                        "aba",
+			"roleSearchBox":                  "campo de busca",
+			"roleStatus":                     "status",
+			"roleMenu":                       "menu",
+			"roleMenuItem":                   "item de menu",
+			"roleDialog":                     "caixa de diálogo",
+			"roleAlert":                      "alerta",
+			"roleTable":                      "tabela",
+			"roleGrid":                       "grade",
+			"roleRow":                        "linha",
+			"roleColumnHeader":               "cabeçalho de coluna",
+			"roleCell":                       "célula",
+			"statePartiallyChecked":          "parcialmente marcado",
+			"stateExpanded":                  "expandido",
+			"stateCollapsed":                 "recolhido",
+			"spokenSeparator":                ", ",
+		},
+		AboutApp: func(app string) string {
+			return "Sobre " + app
+		},
+		HideApp: func(app string) string {
+			return "Ocultar " + app
+		},
+		QuitApp: func(app string) string {
+			return "Encerrar " + app
+		},
+		GuideDrag: func(app string, permission string) string {
+			return "Arraste " + app + " para a lista acima para permitir “" + permission + "”."
+		},
+	})
+	desktoplocales.Supply("ru", desktoplocales.Translation{
+		Texts: map[string]string{
+			"edit":                           "Правка",
+			"window":                         "Окно",
+			"about":                          "О программе",
+			"hide":                           "Скрыть",
+			"hideOthers":                     "Скрыть остальные",
+			"showAll":                        "Показать все",
+			"quit":                           "Завершить",
+			"undo":                           "Отменить",
+			"redo":                           "Повторить",
+			"cut":                            "Вырезать",
+			"copy":                           "Скопировать",
+			"paste":                          "Вставить",
+			"delete":                         "Удалить",
+			"selectAll":                      "Выбрать все",
+			"minimize":                       "Свернуть",
+			"zoom":                           "Изменить масштаб",
+			"toggleFullScreen":               "Полноэкранный режим",
+			"enterFullScreen":                "Перейти в полноэкранный режим",
+			"exitFullScreen":                 "Выйти из полноэкранного режима",
+			"close":                          "Закрыть",
+			"guideDragHint":                  "Перетащить",
+			"permissionAccessibility":        "Универсальный доступ",
+			"permissionDeviceControl":        "Управление устройством и доступ к данным",
+			"permissionScreenRecording":      "Запись экрана",
+			"permissionScreenAudioRecording": "Запись экрана и системного аудио",
+			"permissionInputMonitoring":      "Мониторинг ввода",
+			"permissionFullDiskAccess":       "Доступ ко всему диску",
+			"permissionAppManagement":        "Управление приложениями",
+			"permissionDeveloperTools":       "Инструменты разработчика",
+			"permissionBluetooth":            "Bluetooth",
+			"permissionMediaLibrary":         "Медиатека и Apple Music",
+			"authSessionDone":                "Вы можете закрыть эту страницу и вернуться в приложение.",
+			"pasteAndMatchStyle":             "Вставить и согласовать стиль",
+			"startSpeaking":                  "Начать чтение",
+			"stopSpeaking":                   "Остановить чтение",
+			"bringAllToFront":                "Все окна — на передний план",
+			"services":                       "Службы",
+			"help":                           "Справка",
+			"roleLink":                       "ссылка",
+			"roleTab":                        "вкладка",
+			"roleSearchBox":                  "поле поиска",
+			"roleStatus":                     "статус",
+			"roleMenu":                       "меню",
+			"roleMenuItem":                   "пункт меню",
+			"roleDialog":                     "диалог",
+			"roleAlert":                      "оповещение",
+			"roleTable":                      "таблица",
+			"roleGrid":                       "сетка",
+			"roleRow":                        "строка",
+			"roleColumnHeader":               "заголовок столбца",
+			"roleCell":                       "ячейка",
+			"statePartiallyChecked":          "частично выбрано",
+			"stateExpanded":                  "развёрнуто",
+			"stateCollapsed":                 "свёрнуто",
+			"spokenSeparator":                ", ",
+		},
+		AboutApp: func(app string) string {
+			return "О " + app
+		},
+		HideApp: func(app string) string {
+			return "Скрыть " + app
+		},
+		QuitApp: func(app string) string {
+			return "Завершить " + app
+		},
+		GuideDrag: func(app string, permission string) string {
+			return "Перетащите " + app + " в список выше, чтобы разрешить «" + permission + "»."
+		},
+	})
+	desktoplocales.Supply("zh-Hant", desktoplocales.Translation{
+		Texts: map[string]string{
+			"edit":                           "編輯",
+			"window":                         "視窗",
+			"about":                          "關於",
+			"hide":                           "隱藏",
+			"hideOthers":                     "隱藏其他",
+			"showAll":                        "全部顯示",
+			"quit":                           "結束",
+			"undo":                           "還原",
+			"redo":                           "重做",
+			"cut":                            "剪下",
+			"copy":                           "拷貝",
+			"paste":                          "貼上",
+			"delete":                         "刪除",
+			"selectAll":                      "全選",
+			"minimize":                       "縮到最小",
+			"zoom":                           "縮放",
+			"toggleFullScreen":               "切換全螢幕",
+			"enterFullScreen":                "進入全螢幕",
+			"exitFullScreen":                 "離開全螢幕",
+			"close":                          "關閉",
+			"guideDragHint":                  "拖移",
+			"permissionAccessibility":        "輔助使用",
+			"permissionDeviceControl":        "裝置控制與資料取用",
+			"permissionScreenRecording":      "螢幕錄製",
+			"permissionScreenAudioRecording": "螢幕與系統音訊錄製",
+			"permissionInputMonitoring":      "輸入監控",
+			"permissionFullDiskAccess":       "完全取用磁碟",
+			"permissionAppManagement":        "App 管理",
+			"permissionDeveloperTools":       "開發者工具",
+			"permissionBluetooth":            "藍牙",
+			"permissionMediaLibrary":         "媒體與 Apple Music",
+			"authSessionDone":                "現在可以關閉此頁面並返回應用程式。",
+			"pasteAndMatchStyle":             "貼上並符合樣式",
+			"startSpeaking":                  "開始朗讀",
+			"stopSpeaking":                   "停止朗讀",
+			"bringAllToFront":                "將此程式所有視窗移至最前",
+			"services":                       "服務",
+			"help":                           "輔助說明",
+			"roleLink":                       "連結",
+			"roleTab":                        "分頁",
+			"roleSearchBox":                  "搜尋欄位",
+			"roleStatus":                     "狀態",
+			"roleMenu":                       "選單",
+			"roleMenuItem":                   "選單項目",
+			"roleDialog":                     "對話框",
+			"roleAlert":                      "提示",
+			"roleTable":                      "表格",
+			"roleGrid":                       "格線",
+			"roleRow":                        "列",
+			"roleColumnHeader":               "欄標題",
+			"roleCell":                       "儲存格",
+			"statePartiallyChecked":          "部分勾選",
+			"stateExpanded":                  "已展開",
+			"stateCollapsed":                 "已收合",
+			"spokenSeparator":                "、",
+		},
+		AboutApp: func(app string) string {
+			return "關於 " + app
+		},
+		HideApp: func(app string) string {
+			return "隱藏 " + app
+		},
+		QuitApp: func(app string) string {
+			return "結束 " + app
+		},
+		GuideDrag: func(app string, permission string) string {
+			return "將 " + app + " 拖移至上方列表以允許「" + permission + "」。"
+		},
+	})
+	updaterlocales.Supply("de", updaterlocales.Translation{
+		Texts: map[string]string{
+			"update":             "Aktualisieren",
+			"later":              "Später",
+			"upToDate":           "Auf dem neuesten Stand",
+			"updateError":        "Update-Prüfung fehlgeschlagen",
+			"updateErrorMessage": "Beim Prüfen auf Updates ist ein Fehler aufgetreten. Versuche es später erneut.",
+			"installError":       "Update konnte nicht installiert werden",
+			"openPage":           "Seite öffnen",
+			"ok":                 "OK",
+		},
+		UpdateAvailable: func(app string) string {
+			return "Eine neue Version von " + app + " ist verfügbar"
+		},
+		UpdateAvailableMessage: func(app string, version string, current string) string {
+			return app + " " + version + " ist verfügbar. Du hast " + current + "."
+		},
+		UpToDateMessage: func(app string, version string) string {
+			return app + " " + version + " ist die neueste verfügbare Version."
+		},
+		InstallErrorMessage: func(app string, version string) string {
+			return app + " " + version + " konnte nicht geladen oder installiert werden. Du kannst es stattdessen von der Website laden."
+		},
+	})
+	updaterlocales.Supply("es", updaterlocales.Translation{
+		Texts: map[string]string{
+			"update":             "Actualizar",
+			"later":              "Más tarde",
+			"upToDate":           "Estás al día",
+			"updateError":        "No se pueden buscar actualizaciones",
+			"updateErrorMessage": "Se produjo un error al buscar actualizaciones. Inténtalo más tarde.",
+			"installError":       "No se puede instalar la actualización",
+			"openPage":           "Abrir página",
+			"ok":                 "Aceptar",
+		},
+		UpdateAvailable: func(app string) string {
+			return "Hay una nueva versión de " + app + " disponible"
+		},
+		UpdateAvailableMessage: func(app string, version string, current string) string {
+			return app + " " + version + " está disponible. Tienes " + current + "."
+		},
+		UpToDateMessage: func(app string, version string) string {
+			return app + " " + version + " es la versión más reciente disponible."
+		},
+		InstallErrorMessage: func(app string, version string) string {
+			return "No se pudo descargar o instalar " + app + " " + version + ". Puedes obtenerlo desde su página."
+		},
+	})
+	updaterlocales.Supply("fr", updaterlocales.Translation{
+		Texts: map[string]string{
+			"update":             "Mettre à jour",
+			"later":              "Plus tard",
+			"upToDate":           "Vous êtes à jour",
+			"updateError":        "Vérification impossible",
+			"updateErrorMessage": "Une erreur s’est produite lors de la recherche de mises à jour. Réessayez plus tard.",
+			"installError":       "Installation impossible",
+			"openPage":           "Ouvrir la page",
+			"ok":                 "OK",
+		},
+		UpdateAvailable: func(app string) string {
+			return "Une nouvelle version de " + app + " est disponible"
+		},
+		UpdateAvailableMessage: func(app string, version string, current string) string {
+			return app + " " + version + " est disponible. Vous disposez de " + current + "."
+		},
+		UpToDateMessage: func(app string, version string) string {
+			return app + " " + version + " est la version la plus récente."
+		},
+		InstallErrorMessage: func(app string, version string) string {
+			return app + " " + version + " n’a pas pu être téléchargé ou installé. Vous pouvez l’obtenir depuis sa page."
+		},
+	})
+	updaterlocales.Supply("ja", updaterlocales.Translation{
+		Texts: map[string]string{
+			"update":             "アップデート",
+			"later":              "あとで",
+			"upToDate":           "最新バージョンです",
+			"updateError":        "アップデートを確認できません",
+			"updateErrorMessage": "アップデートの確認中にエラーが発生しました。あとでもう一度お試しください。",
+			"installError":       "アップデートをインストールできません",
+			"openPage":           "ページを開く",
+			"ok":                 "OK",
+		},
+		UpdateAvailable: func(app string) string {
+			return app + " の新しいバージョンが利用可能です"
+		},
+		UpdateAvailableMessage: func(app string, version string, current string) string {
+			return app + " " + version + " が利用可能です。現在のバージョンは " + current + " です。"
+		},
+		UpToDateMessage: func(app string, version string) string {
+			return app + " " + version + " は最新のバージョンです。"
+		},
+		InstallErrorMessage: func(app string, version string) string {
+			return app + " " + version + " をダウンロードまたはインストールできませんでした。ページから直接入手できます。"
+		},
+	})
+	updaterlocales.Supply("ko", updaterlocales.Translation{
+		Texts: map[string]string{
+			"update":             "업데이트",
+			"later":              "나중에",
+			"upToDate":           "최신 버전입니다",
+			"updateError":        "업데이트를 확인할 수 없습니다",
+			"updateErrorMessage": "업데이트를 확인하는 중 문제가 발생했습니다. 나중에 다시 시도하세요.",
+			"installError":       "업데이트를 설치할 수 없습니다",
+			"openPage":           "페이지 열기",
+			"ok":                 "확인",
+		},
+		UpdateAvailable: func(app string) string {
+			return app + "의 새 버전을 사용할 수 있습니다"
+		},
+		UpdateAvailableMessage: func(app string, version string, current string) string {
+			return app + " " + version + " 버전을 사용할 수 있습니다. 현재 버전은 " + current + "입니다."
+		},
+		UpToDateMessage: func(app string, version string) string {
+			return app + " " + version + " 버전이 최신 버전입니다."
+		},
+		InstallErrorMessage: func(app string, version string) string {
+			return app + " " + version + " 버전을 다운로드하거나 설치할 수 없습니다. 대신 해당 페이지에서 받을 수 있습니다."
+		},
+	})
+	updaterlocales.Supply("pt-BR", updaterlocales.Translation{
+		Texts: map[string]string{
+			"update":             "Atualizar",
+			"later":              "Mais tarde",
+			"upToDate":           "Você está atualizado",
+			"updateError":        "Não foi possível verificar atualizações",
+			"updateErrorMessage": "Algo deu errado ao verificar atualizações. Tente novamente mais tarde.",
+			"installError":       "Não foi possível instalar a atualização",
+			"openPage":           "Abrir página",
+			"ok":                 "OK",
+		},
+		UpdateAvailable: func(app string) string {
+			return "Uma nova versão do " + app + " está disponível"
+		},
+		UpdateAvailableMessage: func(app string, version string, current string) string {
+			return app + " " + version + " está disponível. Você tem " + current + "."
+		},
+		UpToDateMessage: func(app string, version string) string {
+			return app + " " + version + " é a versão mais recente disponível."
+		},
+		InstallErrorMessage: func(app string, version string) string {
+			return "Não foi possível baixar ou instalar " + app + " " + version + ". Você pode obtê-lo na página do app."
+		},
+	})
+	updaterlocales.Supply("ru", updaterlocales.Translation{
+		Texts: map[string]string{
+			"update":             "Обновить",
+			"later":              "Позже",
+			"upToDate":           "Установлена последняя версия",
+			"updateError":        "Не удалось проверить обновления",
+			"updateErrorMessage": "При проверке обновлений произошла ошибка. Попробуйте позже.",
+			"installError":       "Не удалось установить обновление",
+			"openPage":           "Открыть страницу",
+			"ok":                 "ОК",
+		},
+		UpdateAvailable: func(app string) string {
+			return "Доступна новая версия " + app
+		},
+		UpdateAvailableMessage: func(app string, version string, current string) string {
+			return "Доступна версия " + app + " " + version + ". У вас установлена " + current + "."
+		},
+		UpToDateMessage: func(app string, version string) string {
+			return app + " " + version + " — самая новая доступная версия."
+		},
+		InstallErrorMessage: func(app string, version string) string {
+			return "Не удалось загрузить или установить " + app + " " + version + ". Вы можете скачать его со страницы приложения."
+		},
+	})
+	updaterlocales.Supply("zh-Hant", updaterlocales.Translation{
+		Texts: map[string]string{
+			"update":             "更新",
+			"later":              "稍後",
+			"upToDate":           "已是最新版本",
+			"updateError":        "無法檢查更新",
+			"updateErrorMessage": "檢查更新時發生錯誤，請稍後再試。",
+			"installError":       "無法安裝更新",
+			"openPage":           "開啟頁面",
+			"ok":                 "好",
+		},
+		UpdateAvailable: func(app string) string {
+			return app + " 有新版本可用"
+		},
+		UpdateAvailableMessage: func(app string, version string, current string) string {
+			return app + " " + version + " 現已推出，您目前的版本是 " + current + "。"
+		},
+		UpToDateMessage: func(app string, version string) string {
+			return app + " " + version + " 是目前最新的版本。"
+		},
+		InstallErrorMessage: func(app string, version string) string {
+			return app + " " + version + " 下載或安裝失敗，您可以改從其頁面取得。"
+		},
+	})
 }
 
 // Messages say the messages in one language, their times in the hour
@@ -2352,6 +3851,7377 @@ var textsEn = i18n.NewTexts(""+
 		67,
 	})
 
+// textsDe are the messages without arguments in de.
+var textsDe = i18n.NewTexts(""+
+	"Abbrechen"+
+	"Speichern"+
+	"Löschen"+
+	"Entfernen"+
+	"Bearbeiten"+
+	"Wiederherstellen"+
+	"Prüfen"+
+	"Kopieren"+
+	"Rückgängig"+
+	"Nie"+
+	"—"+
+	"Zugangsdaten"+
+	"Sichere Notiz"+
+	"Karte"+
+	"Identität"+
+	"SSH-Schlüssel"+
+	"Eintrag"+
+	"Zugangsdaten"+
+	"Karten"+
+	"Identitäten"+
+	"Sichere Notizen"+
+	"SSH-Schlüssel"+
+	"Bei GoVault anmelden"+
+	"Mit deinem Bitwarden- oder Vaultwarden-Server verbinden."+
+	"Server-URL"+
+	"E-Mail"+
+	"Master-Passwort"+
+	"Master-Passwort"+
+	"Erforderlich"+
+	"name@example.com"+
+	"Dieser Server verwendet kein HTTPS. Dein Master-Passwort und deine Tresordaten werden unverschlüsselt übertragen; nutze ihn nur in einem vertrauenswürdigen Netzwerk."+
+	"Anmelden"+
+	"Zurück zum Entsperren"+
+	"Ende-zu-Ende-verschlüsselt. Dein Master-Passwort verlässt dieses Gerät nie."+
+	"Server-URL, E-Mail und Master-Passwort sind erforderlich."+
+	"Passwort ein- oder ausblenden"+
+	"Bestätigung in zwei Schritten"+
+	"Gib den Code ein, der an deine E-Mail gesendet wurde."+
+	"Gib den 6-stelligen Code aus deiner Authenticator-App ein."+
+	"Bestätigungsmethode"+
+	"Authenticator-App"+
+	"E-Mail"+
+	"YubiKey"+
+	"Duo"+
+	"Duo (Organisation)"+
+	"FIDO U2F"+
+	"Passkey / WebAuthn"+
+	"Gemerktes Gerät"+
+	"Verifizierungscode"+
+	"Dieses Gerät merken"+
+	"Zurück zur Anmeldung"+
+	"Code senden"+
+	"Code erneut senden"+
+	"Die Zwei-Faktor-Authentifizierung schützt deinen Tresor selbst bei einem Passwortleck."+
+	"Gib den Verifizierungscode ein."+
+	"Ungültiger Verifizierungscode. Prüfe den Code und versuche es erneut."+
+	"Ein Verifizierungscode wurde an deine E-Mail gesendet."+
+	"GoVault ist gesperrt"+
+	"Entsperren"+
+	"oder Master-Passwort verwenden"+
+	"Abmelden oder Konto wechseln…"+
+	"Abmelden oder Konto wechseln"+
+	"Gesperrte Tresore bleiben auf diesem Gerät verschlüsselt."+
+	"Gib dein Master-Passwort ein."+
+	"Biometrie"+
+	"GoVault entsperren"+
+	"GoVault zu entsperren"+
+	"Gespeicherter biometrischer Schlüssel nicht verfügbar. Mit Master-Passwort entsperren."+
+	"Beschädigter biometrischer Schlüssel. Mit Master-Passwort entsperren."+
+	"Ungültiger biometrischer Schlüssel. Mit Master-Passwort entsperren."+
+	"Biometrische Authentifizierung fehlgeschlagen. Master-Passwort eingeben."+
+	"Schlüsselbund nicht verfügbar"+
+	"Kein Zugriff auf den System-Schlüsselbund."+
+	"Biometrisches Entsperren konnte nicht deaktiviert werden"+
+	"Biometrisches Entsperren konnte nicht aktiviert werden"+
+	"Tresor gesperrt"+
+	"Automatisch wegen Inaktivität gesperrt."+
+	"Von GoVault abmelden?"+
+	"Dein lokaler verschlüsselter Tresor-Cache und der gespeicherte biometrische Schlüssel werden von diesem Gerät entfernt."+
+	"Abmelden"+
+	"Abgemeldet"+
+	"Zurück"+
+	"Vorwärts"+
+	"Tresor durchsuchen"+
+	"Suche löschen"+
+	"Offline"+
+	"Jetzt synchronisieren"+
+	"Tresor sperren"+
+	"Neu"+
+	"Alle Einträge"+
+	"Favoriten"+
+	"Kategorien"+
+	"Ordner"+
+	"Neuer Ordner"+
+	"Sammlungen"+
+	"Werkzeuge"+
+	"Generator"+
+	"Tresor-Check"+
+	"Archiv"+
+	"Papierkorb"+
+	"Einstellungen"+
+	"Import"+
+	"Kein Ordner"+
+	"Sammlung"+
+	"Ordner"+
+	"Ordneraktionen"+
+	"Ordner umbenennen…"+
+	"Ordner löschen"+
+	"Bereichsgröße ändern"+
+	"Synchronisiere…"+
+	"Sync ausstehend"+
+	"Offline · lokaler Tresor"+
+	"Sitzung abgelaufen"+
+	"Synchronisiert"+
+	"gerade eben"+
+	"Zum Synchronisieren erneut anmelden. Bis dahin ist dein Tresor offline verfügbar."+
+	"Sitzung abgelaufen – dein lokaler Tresor ist weiter lesbar. Melde dich erneut an, um wieder zu synchronisieren."+
+	"Deine Anmeldung konnte nicht gespeichert werden. Melde dich erneut an, damit GoVault nach dem Sperren weiter synchronisieren kann."+
+	"Erneut anmelden"+
+	"Einträge im Papierkorb können wiederhergestellt werden."+
+	"Papierkorb leeren"+
+	"In „Alle Einträge“"+
+	"Alle Einträge durchsuchen"+
+	"Keine Treffer"+
+	"Papierkorb ist leer"+
+	"Keine Einträge"+
+	"Gelöschte Einträge erscheinen hier."+
+	"Wähle „Neu“, um deinen ersten Eintrag anzulegen."+
+	"Kein Eintrag ausgewählt"+
+	"Wähle einen Eintrag aus der Liste, um Details zu sehen."+
+	"Suchen"+
+	"Neu"+
+	"Sperren"+
+	"Nutzername kopieren"+
+	"Passwort kopieren"+
+	"Verifizierungscode kopieren"+
+	"Öffentlichen Schlüssel kopieren"+
+	"Dauerhaft löschen…"+
+	"Zu Favoriten hinzufügen"+
+	"Aus Favoriten entfernen"+
+	"Duplizieren"+
+	"Archivieren"+
+	"Dearchivieren"+
+	"In Papierkorb"+
+	"Nutzername"+
+	"Passwort"+
+	"Von deiner Organisation ausgeblendet"+
+	"Passwort anzeigen"+
+	"Passwort kopieren"+
+	"Nutzername kopieren"+
+	"Zugangsdaten"+
+	"Website"+
+	"Website öffnen"+
+	"Website kopieren"+
+	"Websites"+
+	"Karteninhaber"+
+	"Karteninhaber kopieren"+
+	"Kartennummer"+
+	"Kartennummer anzeigen"+
+	"Kartennummer kopieren"+
+	"Gültig bis"+
+	"Ablaufdatum kopieren"+
+	"Sicherheitscode"+
+	"Marke"+
+	"Kartendetails"+
+	"Vollständiger Name"+
+	"Unternehmen"+
+	"Telefon"+
+	"Persönlich"+
+	"Adresse"+
+	"Adresse kopieren"+
+	"Sozialversicherungsnummer"+
+	"Reisepassnummer"+
+	"Reisepassnummer kopieren"+
+	"Führerscheinnummer"+
+	"Führerscheinnummer kopieren"+
+	"Dokumente"+
+	"Benutzerdefinierte Felder"+
+	"Notizen"+
+	"Fingerabdruck"+
+	"Fingerabdruck kopieren"+
+	"Öffentlicher Schlüssel"+
+	"Öffentlichen Schlüssel kopieren"+
+	"Privater Schlüssel"+
+	"Altes Passwort"+
+	"Nur lesen"+
+	"Passwort-Abfrage"+
+	"Im Papierkorb"+
+	"Archiviert"+
+	"Dauerhaft löschen"+
+	"Favorit umschalten"+
+	"Eintrag duplizieren"+
+	"Verbleibende Zeit"+
+	"Verifizierungscode anzeigen"+
+	"Verifizierungscode kopieren"+
+	"KARTE"+
+	"INHABER"+
+	"GÜLTIG BIS"+
+	"Passwort kopiert"+
+	"Nutzername kopiert"+
+	"Verifizierungscode kopiert"+
+	"Öffentlicher Schlüssel kopiert"+
+	"Website kopiert"+
+	"Karteninhaber kopiert"+
+	"Kartennummer kopiert"+
+	"Ablaufdatum kopiert"+
+	"Sicherheitscode kopiert"+
+	"Name kopiert"+
+	"Unternehmen kopiert"+
+	"E-Mail kopiert"+
+	"Telefon kopiert"+
+	"Adresse kopiert"+
+	"Sozialversicherungsnummer kopiert"+
+	"Reisepassnummer kopiert"+
+	"Führerscheinnummer kopiert"+
+	"Fingerabdruck kopiert"+
+	"Privater Schlüssel kopiert"+
+	"Altes Passwort kopiert"+
+	"Generiertes Passwort kopiert"+
+	"Kopieren fehlgeschlagen"+
+	"Vor dem Zwischenablageverlauf verborgen"+
+	"Master-Passwort-Prüfung"+
+	"Master-Passwort-Prüfung nicht verfügbar."+
+	"Falsches Master-Passwort."+
+	"Ungespeicherte Änderungen verwerfen?"+
+	"Deine Änderungen an diesem Eintrag wurden noch nicht gespeichert."+
+	"Weiter bearbeiten"+
+	"Verwerfen"+
+	"Name ist erforderlich."+
+	"Offline kann nicht gespeichert werden."+
+	"Eintrag gespeichert"+
+	"Speichern fehlgeschlagen"+
+	"Eintrag auf anderem Gerät geändert"+
+	"Dieser Eintrag wurde seit der letzten Synchronisierung anderswo aktualisiert. Lade die neueste Version, um nichts zu überschreiben."+
+	"Neu laden"+
+	"Auf dem Server gespeichert, aber die lokale Kopie konnte nicht aktualisiert werden."+
+	"Jetzt synchronisieren"+
+	"Aktualisierung fehlgeschlagen"+
+	"Favorit aktualisiert"+
+	"Verschieben in Papierkorb fehlgeschlagen"+
+	"In Papierkorb verschoben"+
+	"Archivieren fehlgeschlagen"+
+	"Dearchivieren fehlgeschlagen"+
+	"Eintrag archiviert"+
+	"Eintrag dearchiviert"+
+	"Wiederherstellen fehlgeschlagen"+
+	"Eintrag wiederhergestellt"+
+	"Dauerhaft löschen?"+
+	"Löschen fehlgeschlagen"+
+	"Dauerhaft gelöscht"+
+	"Papierkorb leeren?"+
+	"Papierkorb konnte nicht geleert werden"+
+	"Papierkorb geleert"+
+	"Passkeys werden nicht kopiert"+
+	"Die Kopie enthält die Zugangsdaten ohne den Passkey."+
+	"Neuer Ordner"+
+	"Ordner umbenennen"+
+	"Ordnername"+
+	"Ordnername ist erforderlich."+
+	"Ordner gespeichert"+
+	"Ordner löschen?"+
+	"Ordner konnte nicht gelöscht werden"+
+	"Ordner gelöscht"+
+	"Sitzung abgelaufen"+
+	"Melde dich erneut an, um wieder zu synchronisieren."+
+	"Lokaler Tresor wird angezeigt."+
+	"Synchronisierung fehlgeschlagen"+
+	"Tresor synchronisiert"+
+	"Ungespeicherte Änderungen"+
+	"Keine Änderungen"+
+	"Eintrag"+
+	"Typ"+
+	"Name"+
+	"Favorit"+
+	"Master-Passwort erneut abfragen"+
+	"Notiz hinzufügen"+
+	"Passwort generieren"+
+	"Authenticator"+
+	"otpauth://-URI oder Einrichtungsschlüssel"+
+	"Website entfernen"+
+	"Website hinzufügen"+
+	"Karteninhaber"+
+	"Name auf der Karte"+
+	"Visa, Mastercard, Amex…"+
+	"Nummer"+
+	"MM"+
+	"JJJJ"+
+	"CVV"+
+	"Vorname"+
+	"Nachname"+
+	"+49 30 123456"+
+	"Straße"+
+	"Hauptstraße 12"+
+	"Ort"+
+	"Bundesland / PLZ"+
+	"Bundesland"+
+	"PLZ"+
+	"Land"+
+	"Ed25519-Schlüssel erzeugen"+
+	"Text"+
+	"Verdeckt"+
+	"Feldname"+
+	"Wert"+
+	"Feld entfernen"+
+	"Feld hinzufügen"+
+	"Passkey"+
+	"Beim Speichern entfernt"+
+	"Passkey entfernen"+
+	"Passkey entfernen?"+
+	"Du kannst dich mit diesem Passkey nicht mehr anmelden."+
+	"In diesem Eintrag gespeichert"+
+	"Anhänge"+
+	"Datei anhängen"+
+	"Datei anhängen"+
+	"Anhängen"+
+	"Anhang speichern"+
+	"Hier speichern"+
+	"Download fehlgeschlagen"+
+	"Anhang gespeichert"+
+	"Datei konnte nicht geöffnet werden"+
+	"Datei zu groß"+
+	"Anhänge dürfen höchstens 100 MiB groß sein."+
+	"Upload fehlgeschlagen"+
+	"Datei angehängt"+
+	"Anhang löschen?"+
+	"Anhang gelöscht"+
+	"Passwort"+
+	"Passphrase"+
+	"Schwach"+
+	"Mittel"+
+	"Stark"+
+	"Sehr stark"+
+	"Neu generieren"+
+	"Länge"+
+	"Zeichen"+
+	"Großbuchstaben"+
+	"Kleinbuchstaben"+
+	"Ziffern"+
+	"Sonderzeichen"+
+	"Verwechselbare Zeichen vermeiden"+
+	"Schließt l, 1, I, O und 0 aus"+
+	"Wörter"+
+	"Optionen"+
+	"Worttrennzeichen"+
+	"Wird zwischen den Wörtern eingefügt"+
+	"Großschreibung"+
+	"Correct-Horse-Battery"+
+	"Zahl einschließen"+
+	"Hängt eine Ziffer an ein Wort an"+
+	"Wiederverwendet"+
+	"Schwach"+
+	"Ablaufende Karten"+
+	"Unsicheres HTTP"+
+	"Keine Probleme in dieser Kategorie."+
+	"Alles in Ordnung"+
+	"Keine wiederverwendeten oder schwachen Passwörter, ablaufenden Karten oder unsicheren Websites."+
+	"Wiederverwendete Passwörter"+
+	"Schwache Passwörter"+
+	"Unsichere Websites"+
+	"Wird nur auf diesem Gerät geprüft. Nichts wird an einen Server gesendet."+
+	"Häufiges Passwort"+
+	"Überwiegend Zeichenfolge oder Wiederholungen"+
+	"Verwendet nur einen Zeichentyp"+
+	"Leicht zu erraten"+
+	"Backup-Passwort"+
+	"Backup schützen"+
+	"Gib das Passwort ein, mit dem dieses Backup exportiert wurde."+
+	"Wähle ein Passwort für das verschlüsselte Backup. Es kann bei Verlust nicht wiederhergestellt werden."+
+	"Backup-Passwort"+
+	"Passwort bestätigen"+
+	"Exportieren"+
+	"Entschlüsseln"+
+	"Die Passwörter stimmen nicht überein."+
+	"Export fehlgeschlagen"+
+	"Verschlüsseltes Backup gespeichert"+
+	"Bewahre das Backup-Passwort sicher auf; es kann nicht wiederhergestellt werden."+
+	"Backup importieren"+
+	"Importieren"+
+	"Import fehlgeschlagen"+
+	"Gib das Backup-Passwort ein."+
+	"Falsches Backup-Passwort."+
+	"Dies ist kein Bitwarden-JSON-Export."+
+	"Dieses Backup ist an sein Konto gebunden. Exportiere es erneut als passwortgeschützte Datei."+
+	"Erstellen"+
+	"Kopie erstellen"+
+	"Vorhandenen aktualisieren"+
+	"Überspringen"+
+	"Kein Import aktiv"+
+	"Wähle in den Einstellungen „Backup importieren“, um ein Backup zu prüfen."+
+	"Import prüfen"+
+	"Alle neuen wählen"+
+	"Alle Konflikte überspringen"+
+	"Alle Konflikte kopieren"+
+	"Alle Konflikte aktualisieren"+
+	"Alle überspringen"+
+	"deinem persönlichen Tresor"+
+	"einer Organisation"+
+	"Aktualisierung nicht möglich: Der Backup-Eintrag ist unvollständig"+
+	"Aktualisierung nicht möglich: Felder oder Websites lassen sich nicht sicher zuordnen"+
+	"Vorhandener Eintrag ist schreibgeschützt"+
+	"Geschützt: Aktualisieren fragt dein Master-Passwort ab"+
+	"GoVault kann diesen Eintragstyp noch nicht speichern, daher wird er übersprungen."+
+	"Mehrere Einträge tragen diesen Namen, daher keine automatische Zuordnung. Wähle „Erstellen“, um ihn neu anzulegen."+
+	"Im Backup archiviert; wird im Tresor erstellt, da Archiv Premium erfordert."+
+	"Name"+
+	"Notizen"+
+	"Ordner"+
+	"Favorit"+
+	"Passwort-Abfrage"+
+	"Nutzername"+
+	"Passwort"+
+	"Verifizierungscode"+
+	"Websites"+
+	"Passkey"+
+	"Karte"+
+	"Identität"+
+	"SSH-Schlüssel"+
+	"Benutzerdefinierte Felder"+
+	"Allgemein"+
+	"Sprache"+
+	"Die Anzeigesprache von GoVault. „Systemstandard“ folgt der Systemsprache."+
+	"Systemstandard"+
+	"Konto"+
+	"Jetzt synchronisieren"+
+	"Schlüsselableitung"+
+	"Letzte Synchronisierung"+
+	"Noch nicht synchronisiert"+
+	"Durch Abmelden wird der lokale Tresor-Cache entfernt."+
+	"Sicherheit"+
+	"Automatisch sperren"+
+	"Sperrt den Tresor nach einer Zeit ohne Aktivität."+
+	"Bei Ruhezustand oder Bildschirmsperre sperren"+
+	"Sperrt den Tresor, wenn dein Mac in den Ruhezustand geht oder der Bildschirm gesperrt wird."+
+	"Backup"+
+	"Verschlüsseltes Backup exportieren"+
+	"Eine Bitwarden-kompatible JSON-Datei, geschützt durch ein eigenes Passwort."+
+	"Exportieren…"+
+	"Backup importieren"+
+	"Bitwarden-JSON, verschlüsselt oder unverschlüsselt. Prüfe jeden Eintrag vor Änderungen."+
+	"Importieren…"+
+	"Datenschutz"+
+	"Website-Symbole anzeigen"+
+	"Lädt Website-Symbole von deinem Vaultwarden-Server."+
+	"Symbol-Cache"+
+	"Entfernt heruntergeladene Website-Symbole von diesem Gerät."+
+	"Symbol-Cache leeren"+
+	"Symbol-Cache geleert"+
+	"Symbol-Cache konnte nicht geleert werden"+
+	"Zwischenablage"+
+	"Kopierte Geheimnisse löschen"+
+	"Leert die Zwischenablage, wenn sie den kopierten Wert noch enthält."+
+	"Private Zwischenablage"+
+	"Markiert Geheimnisse, sodass Zwischenablage-Manager sie überspringen."+
+	"Aktiv"+
+	"Nur macOS"+
+	"Menüleiste"+
+	"Infoleiste"+
+	"Menüleisten-Symbol anzeigen"+
+	"Infoleisten-Symbol anzeigen"+
+	"GoVault über die Menüleiste öffnen, synchronisieren oder sperren."+
+	"GoVault über die Infoleiste öffnen, synchronisieren oder sperren."+
+	"Bei Anmeldung starten"+
+	"Startet GoVault automatisch beim Anmelden."+
+	"Dock-Symbol ausblenden"+
+	"GoVault nur in der Menüleiste anzeigen."+
+	"Aktiviere zuerst das Menüleisten-Symbol, damit GoVault erreichbar bleibt."+
+	"Über"+
+	"(Entwicklung)"+
+	"Updates sind signiert und werden automatisch installiert."+
+	"Nach Updates suchen"+
+	"SSH-Agent"+
+	"SSH-Agent aktivieren"+
+	"Stellt SSH-Schlüssel aus dem entsperrten Tresor bereit. Schlüssel mit Master-Passwort-Abfrage werden nicht bereitgestellt."+
+	"Socket"+
+	"SSH_AUTH_SOCK kopieren"+
+	"Ein anderer Prozess verwendet diesen Socket bereits."+
+	"Der Socket-Pfad existiert und ist kein Socket."+
+	"Unix-Sockets werden auf diesem System nicht unterstützt."+
+	"Touch ID auf diesem Mac nicht verfügbar – kopple eine Touch ID-Tastatur oder richte es in den Systemeinstellungen ein."+
+	"Speichert einen geschützten Schlüssel im System-Schlüsselbund zum schnellen Entsperren."+
+	"Hardware-Schutz: macOS gibt den Schlüssel erst nach Touch ID frei."+
+	"Automatisch abfragen"+
+	"GoVault öffnen"+
+	"Nach Updates suchen…"+
+	"Jetzt synchronisieren"+
+	"Jetzt sperren"+
+	"GoVault beenden"+
+	"Bearbeiten"+
+	"Fenster"+
+	"Dieses Konto erfordert Zwei-Faktor-Authentifizierung."+
+	"Ungültige E-Mail oder falsches Master-Passwort."+
+	"Server nicht erreichbar. Prüfe Verbindung und Server-URL."+
+	"Der Server hat auf eine andere Adresse weitergeleitet; GoVault folgt keinen Weiterleitungen."+
+	"Der Server konnte diesen Eintrag nicht finden. Synchronisiere und versuche es erneut."+
+	"Dieser Eintrag wurde auf einem anderen Gerät geändert. Synchronisiere und versuche es erneut."+
+	"Anhänge dürfen höchstens 100 MiB groß sein."+
+	"Dieser Server unterstützt kein Archiv. Erfordert Vaultwarden 1.36 oder neuer."+
+	"Das Archiv erfordert eine Premium-Mitgliedschaft."+
+	"Deine Konto-ID konnte vom Server nicht bestätigt werden. Synchronisiere und versuche es erneut."+
+	"Der Server hat die Änderung nicht bestätigt. GoVault hat synchronisiert, um den aktuellen Stand anzuzeigen."+
+	"Einträge im Papierkorb können nicht archiviert werden. Stelle den Eintrag zuerst wieder her."+
+	"Der Tresor ist gesperrt. Entsperre ihn und versuche es erneut."+
+	"Du bist nicht angemeldet."+
+	"Dieser Eintrag ist nicht mehr in deinem Tresor."+
+	"Dieser Ordner ist nicht mehr in deinem Tresor."+
+	"Dieser Eintrag ist schreibgeschützt."+
+	"GoVault kann die Einträge dieser Organisation nicht lesen. Synchronisiere und versuche es erneut."+
+	"Dieser Anhang ist nicht mehr im Eintrag vorhanden."+
+	"Deine Organisation blendet die Geheimnisse dieses Eintrags aus."+
+	"Der Server verlangt einen Anhang-Upload, den GoVault nicht unterstützt."+
+	"Die gespeicherte Anmeldung gehört zu einem anderen Server als diese Tresorkopie. Melde dich erneut an."+
+	"Zum Synchronisieren erneut anmelden. Bis dahin ist dein Tresor offline verfügbar."+
+	"Diese Anmeldung gehört zu einem anderen Konto als der Tresor auf diesem Gerät. Melde dich zuerst ab, um das Konto zu wechseln."+
+	"Das Konto hat sich seit der Bestätigung geändert. Versuche es erneut."+
+	"Der Server hat die Änderung, aber die lokale Kopie konnte nicht aktualisiert werden. Synchronisiere zum Aktualisieren."+
+	"Dieser Eintrag enthält verschlüsselte Daten, die GoVault nicht auf einen neuen Schlüssel kopieren kann."+
+	"Dieser Eintrag hat ein Format, das GoVault noch nicht lesen kann."+
+	"Der Eintrag wurde nach der Importprüfung geändert. Prüfe ihn erneut."+
+	"Zum Aktualisieren dieses geschützten Eintrags ist dein Master-Passwort erforderlich."+
+	"GoVault kann diesen Eintragstyp noch nicht speichern."+
+	"GoVault kann nicht erkennen, welchen vorhandenen Einträgen die Backup-Einträge entsprechen."+
+	"Ein Passkey konnte nicht entschlüsselt werden."+
+	"Das Backup-Passwort ist falsch."+
+	"Das verschlüsselte Backup wäre zu groß für den erneuten Import in GoVault.",
+	[]uint16{
+		9,
+		9,
+		8,
+		9,
+		10,
+		16,
+		7,
+		8,
+		12,
+		3,
+		3,
+		12,
+		13,
+		5,
+		10,
+		14,
+		7,
+		12,
+		6,
+		12,
+		15,
+		14,
+		20,
+		56,
+		10,
+		6,
+		15,
+		15,
+		12,
+		16,
+		168,
+		8,
+		22,
+		78,
+		57,
+		29,
+		30,
+		53,
+		58,
+		20,
+		17,
+		6,
+		7,
+		3,
+		18,
+		8,
+		18,
+		16,
+		18,
+		20,
+		21,
+		11,
+		18,
+		87,
+		31,
+		71,
+		54,
+		20,
+		10,
+		30,
+		31,
+		28,
+		59,
+		29,
+		9,
+		18,
+		21,
+		88,
+		71,
+		69,
+		72,
+		31,
+		43,
+		56,
+		54,
+		15,
+		40,
+		21,
+		122,
+		8,
+		10,
+		7,
+		9,
+		18,
+		14,
+		7,
+		21,
+		14,
+		3,
+		14,
+		9,
+		10,
+		6,
+		12,
+		10,
+		9,
+		9,
+		12,
+		6,
+		10,
+		13,
+		6,
+		11,
+		8,
+		6,
+		14,
+		20,
+		15,
+		23,
+		17,
+		15,
+		25,
+		18,
+		14,
+		11,
+		82,
+		113,
+		130,
+		15,
+		57,
+		17,
+		23,
+		26,
+		13,
+		19,
+		15,
+		37,
+		53,
+		24,
+		56,
+		6,
+		3,
+		7,
+		19,
+		17,
+		27,
+		33,
+		21,
+		24,
+		23,
+		11,
+		11,
+		13,
+		13,
+		10,
+		8,
+		36,
+		17,
+		17,
+		19,
+		12,
+		7,
+		15,
+		16,
+		8,
+		13,
+		22,
+		12,
+		21,
+		21,
+		11,
+		20,
+		15,
+		5,
+		13,
+		19,
+		11,
+		7,
+		11,
+		7,
+		16,
+		25,
+		15,
+		24,
+		19,
+		28,
+		9,
+		25,
+		7,
+		13,
+		22,
+		24,
+		33,
+		19,
+		14,
+		9,
+		16,
+		13,
+		10,
+		18,
+		18,
+		19,
+		17,
+		27,
+		27,
+		5,
+		7,
+		11,
+		16,
+		18,
+		26,
+		32,
+		15,
+		21,
+		20,
+		19,
+		23,
+		12,
+		19,
+		14,
+		15,
+		15,
+		33,
+		23,
+		27,
+		21,
+		27,
+		22,
+		28,
+		23,
+		39,
+		24,
+		42,
+		25,
+		37,
+		66,
+		17,
+		9,
+		22,
+		38,
+		19,
+		24,
+		36,
+		132,
+		9,
+		83,
+		21,
+		29,
+		20,
+		40,
+		24,
+		26,
+		28,
+		18,
+		20,
+		31,
+		25,
+		19,
+		23,
+		19,
+		18,
+		38,
+		18,
+		29,
+		53,
+		12,
+		17,
+		10,
+		28,
+		18,
+		16,
+		36,
+		16,
+		18,
+		51,
+		30,
+		31,
+		21,
+		26,
+		17,
+		7,
+		3,
+		4,
+		7,
+		31,
+		17,
+		19,
+		13,
+		42,
+		17,
+		19,
+		13,
+		18,
+		25,
+		6,
+		2,
+		4,
+		3,
+		7,
+		8,
+		13,
+		7,
+		15,
+		3,
+		16,
+		10,
+		3,
+		4,
+		27,
+		4,
+		8,
+		8,
+		4,
+		14,
+		16,
+		7,
+		23,
+		17,
+		18,
+		54,
+		29,
+		8,
+		15,
+		15,
+		9,
+		16,
+		14,
+		23,
+		18,
+		35,
+		14,
+		47,
+		21,
+		16,
+		16,
+		16,
+		8,
+		10,
+		7,
+		6,
+		5,
+		10,
+		14,
+		6,
+		7,
+		15,
+		15,
+		7,
+		13,
+		32,
+		30,
+		7,
+		8,
+		16,
+		37,
+		15,
+		21,
+		18,
+		33,
+		15,
+		7,
+		17,
+		15,
+		35,
+		16,
+		96,
+		28,
+		20,
+		18,
+		74,
+		18,
+		45,
+		30,
+		17,
+		15,
+		16,
+		61,
+		104,
+		15,
+		20,
+		11,
+		14,
+		39,
+		21,
+		35,
+		79,
+		18,
+		11,
+		21,
+		28,
+		25,
+		36,
+		93,
+		9,
+		15,
+		25,
+		13,
+		17,
+		79,
+		14,
+		18,
+		28,
+		23,
+		28,
+		18,
+		27,
+		18,
+		68,
+		85,
+		41,
+		55,
+		82,
+		120,
+		75,
+		4,
+		7,
+		6,
+		7,
+		16,
+		10,
+		8,
+		18,
+		8,
+		7,
+		5,
+		10,
+		14,
+		25,
+		9,
+		7,
+		77,
+		14,
+		5,
+		21,
+		19,
+		23,
+		25,
+		53,
+		10,
+		19,
+		50,
+		45,
+		91,
+		6,
+		35,
+		76,
+		14,
+		18,
+		91,
+		14,
+		11,
+		24,
+		52,
+		12,
+		60,
+		19,
+		20,
+		40,
+		14,
+		29,
+		68,
+		22,
+		70,
+		5,
+		9,
+		11,
+		10,
+		28,
+		27,
+		68,
+		67,
+		21,
+		42,
+		22,
+		40,
+		74,
+		5,
+		13,
+		57,
+		19,
+		9,
+		20,
+		124,
+		6,
+		22,
+		52,
+		46,
+		57,
+		121,
+		90,
+		67,
+		20,
+		15,
+		22,
+		21,
+		13,
+		15,
+		10,
+		7,
+		53,
+		48,
+		58,
+		92,
+		85,
+		95,
+		47,
+		78,
+		49,
+		96,
+		109,
+		94,
+		62,
+		25,
+		47,
+		46,
+		37,
+		98,
+		50,
+		63,
+		72,
+		103,
+		82,
+		128,
+		71,
+		119,
+		106,
+		65,
+		71,
+		85,
+		53,
+		93,
+		47,
+		31,
+		78,
+	})
+
+// textsEs are the messages without arguments in es.
+var textsEs = i18n.NewTexts(""+
+	"Cancelar"+
+	"Guardar"+
+	"Eliminar"+
+	"Quitar"+
+	"Editar"+
+	"Restaurar"+
+	"Verificar"+
+	"Copiar"+
+	"Deshacer"+
+	"Nunca"+
+	"—"+
+	"Entrada"+
+	"Nota segura"+
+	"Tarjeta"+
+	"Identidad"+
+	"Clave SSH"+
+	"Elemento"+
+	"Entradas"+
+	"Tarjetas"+
+	"Identidades"+
+	"Notas seguras"+
+	"Claves SSH"+
+	"Iniciar sesión en GoVault"+
+	"Conéctate a tu servidor Bitwarden o Vaultwarden."+
+	"URL del servidor"+
+	"Correo electrónico"+
+	"Contraseña maestra"+
+	"Contraseña maestra"+
+	"Obligatorio"+
+	"nombre@ejemplo.com"+
+	"Este servidor no usa HTTPS. Tu contraseña maestra y los datos de tu caja fuerte se envían sin cifrar; úsalo solo en una red de confianza."+
+	"Iniciar sesión"+
+	"Volver a desbloquear"+
+	"Cifrado de extremo a extremo. Tu contraseña maestra nunca sale de este dispositivo."+
+	"La URL del servidor, el correo electrónico y la contraseña maestra son obligatorios."+
+	"Mostrar u ocultar contraseña"+
+	"Verificación en dos pasos"+
+	"Introduce el código enviado a tu correo electrónico."+
+	"Introduce el código de 6 dígitos de tu app de autenticación."+
+	"Método de verificación"+
+	"App de autenticación"+
+	"Correo electrónico"+
+	"YubiKey"+
+	"Duo"+
+	"Duo (Organización)"+
+	"FIDO U2F"+
+	"Clave de acceso / WebAuthn"+
+	"Dispositivo recordado"+
+	"Código de verificación"+
+	"Recordar este dispositivo"+
+	"Volver a iniciar sesión"+
+	"Enviar código"+
+	"Reenviar código"+
+	"La autenticación en dos pasos protege tu caja fuerte incluso si se filtra tu contraseña."+
+	"Introduce el código de verificación."+
+	"Código de verificación no válido. Compruébalo e inténtalo de nuevo."+
+	"Se envió un código de verificación a tu correo electrónico."+
+	"GoVault está bloqueado"+
+	"Desbloquear"+
+	"o usa tu contraseña maestra"+
+	"Cerrar sesión o cambiar cuenta…"+
+	"Cerrar sesión o cambiar cuenta"+
+	"Las cajas fuertes bloqueadas permanecen cifradas en este dispositivo."+
+	"Introduce tu contraseña maestra."+
+	"Biometría"+
+	"Desbloquear GoVault"+
+	"desbloquear GoVault"+
+	"Clave biométrica guardada no disponible. Desbloquea con tu contraseña maestra."+
+	"Clave biométrica dañada. Desbloquea con tu contraseña maestra."+
+	"Clave biométrica no válida. Desbloquea con tu contraseña maestra."+
+	"Error de autenticación biométrica. Introduce tu contraseña maestra."+
+	"Llavero no disponible"+
+	"No se puede acceder al llavero del sistema."+
+	"No se pudo desactivar el desbloqueo biométrico"+
+	"No se pudo activar el desbloqueo biométrico"+
+	"Caja fuerte bloqueada"+
+	"Bloqueado automáticamente por inactividad."+
+	"¿Cerrar sesión en GoVault?"+
+	"Se eliminarán de este dispositivo la caché cifrada local de la caja fuerte y la clave biométrica guardada."+
+	"Cerrar sesión"+
+	"Sesión cerrada"+
+	"Atrás"+
+	"Adelante"+
+	"Buscar en la caja fuerte"+
+	"Borrar búsqueda"+
+	"Sin conexión"+
+	"Sincronizar ahora"+
+	"Bloquear caja fuerte"+
+	"Nuevo elemento"+
+	"Todos"+
+	"Favoritos"+
+	"Categorías"+
+	"Carpetas"+
+	"Nueva carpeta"+
+	"Colecciones"+
+	"Herramientas"+
+	"Generador"+
+	"Salud de la caja"+
+	"Archivo"+
+	"Papelera"+
+	"Ajustes"+
+	"Importar"+
+	"Sin carpeta"+
+	"Colección"+
+	"Carpeta"+
+	"Acciones de carpeta"+
+	"Renombrar carpeta…"+
+	"Eliminar carpeta"+
+	"Cambiar tamaño del panel"+
+	"Sincronizando…"+
+	"Sync pendiente"+
+	"Sin conexión · caché local"+
+	"Sesión caducada"+
+	"Sincronizado"+
+	"ahora mismo"+
+	"Inicia sesión de nuevo para sincronizar. Mientras tanto tu caja fuerte está disponible sin conexión."+
+	"Sesión caducada — tu caja fuerte en caché sigue siendo legible. Inicia sesión de nuevo para reanudar la sincronización."+
+	"No se pudo guardar tu inicio de sesión. Inicia sesión de nuevo para que GoVault pueda sincronizar tras bloquearse."+
+	"Iniciar sesión de nuevo"+
+	"Los elementos de la papelera se pueden restaurar."+
+	"Vaciar papelera"+
+	"En Todos"+
+	"Buscar en todo"+
+	"Sin resultados"+
+	"La papelera está vacía"+
+	"No hay elementos"+
+	"Los elementos que elimines aparecen aquí."+
+	"Elige “Nuevo elemento” para añadir tu primera entrada."+
+	"Ningún elemento seleccionado"+
+	"Elige un elemento de la lista para ver sus detalles."+
+	"Buscar"+
+	"Nuevo elemento"+
+	"Bloquear"+
+	"Copiar usuario"+
+	"Copiar contraseña"+
+	"Copiar código de verificación"+
+	"Copiar clave pública"+
+	"Eliminar permanentemente…"+
+	"Añadir a favoritos"+
+	"Quitar de favoritos"+
+	"Clonar"+
+	"Archivar"+
+	"Desarchivar"+
+	"Mover a la papelera"+
+	"Usuario"+
+	"Contraseña"+
+	"Oculto por tu organización"+
+	"Mostrar contraseña"+
+	"Copiar contraseña"+
+	"Copiar usuario"+
+	"Credenciales"+
+	"Sitio web"+
+	"Abrir sitio web"+
+	"Copiar sitio web"+
+	"Sitios web"+
+	"Titular de la tarjeta"+
+	"Copiar titular"+
+	"Número de tarjeta"+
+	"Mostrar número de tarjeta"+
+	"Copiar número de tarjeta"+
+	"Caducidad"+
+	"Copiar caducidad"+
+	"Código de seguridad"+
+	"Marca"+
+	"Detalles de la tarjeta"+
+	"Nombre completo"+
+	"Empresa"+
+	"Teléfono"+
+	"Personal"+
+	"Dirección"+
+	"Copiar dirección"+
+	"Nº de seguridad social"+
+	"Nº de pasaporte"+
+	"Copiar nº de pasaporte"+
+	"Número de licencia"+
+	"Copiar número de licencia"+
+	"Documentos"+
+	"Campos personalizados"+
+	"Notas"+
+	"Huella digital"+
+	"Copiar huella digital"+
+	"Clave pública"+
+	"Copiar clave pública"+
+	"Clave privada"+
+	"contraseña anterior"+
+	"Solo lectura"+
+	"Pedir contraseña"+
+	"En la papelera"+
+	"Archivado"+
+	"Eliminar permanentemente"+
+	"Alternar favorito"+
+	"Clonar elemento"+
+	"Tiempo restante"+
+	"Mostrar código de verificación"+
+	"Copiar código de verificación"+
+	"TARJETA"+
+	"TITULAR"+
+	"CADUCA"+
+	"Contraseña copiada"+
+	"Usuario copiado"+
+	"Código de verificación copiado"+
+	"Clave pública copiada"+
+	"Sitio web copiado"+
+	"Titular copiado"+
+	"Número de tarjeta copiado"+
+	"Caducidad copiada"+
+	"Código de seguridad copiado"+
+	"Nombre completo copiado"+
+	"Empresa copiada"+
+	"Correo electrónico copiado"+
+	"Teléfono copiado"+
+	"Dirección copiada"+
+	"Nº de seguridad social copiado"+
+	"Nº de pasaporte copiado"+
+	"Número de licencia copiado"+
+	"Huella digital copiada"+
+	"Clave privada copiada"+
+	"Contraseña anterior copiada"+
+	"Contraseña generada copiada"+
+	"Error al copiar"+
+	"Oculto del historial del portapapeles"+
+	"Verificación de contraseña maestra"+
+	"La verificación de contraseña maestra no está disponible."+
+	"Contraseña maestra incorrecta."+
+	"¿Descartar cambios sin guardar?"+
+	"Tus cambios en este elemento no se han guardado."+
+	"Seguir editando"+
+	"Descartar"+
+	"El nombre es obligatorio."+
+	"No se puede guardar sin conexión."+
+	"Elemento guardado"+
+	"Error al guardar"+
+	"Elemento modificado en otro dispositivo"+
+	"Este elemento se actualizó en otro lugar desde tu última sincronización. Recarga la última versión para evitar sobrescribir cambios."+
+	"Recargar versión"+
+	"Guardado en el servidor, pero no se pudo actualizar la copia en este dispositivo."+
+	"Sincronizar"+
+	"Error al actualizar"+
+	"Favorito actualizado"+
+	"Error al mover a la papelera"+
+	"Movido a la papelera"+
+	"Error al archivar"+
+	"Error al desarchivar"+
+	"Elemento archivado"+
+	"Elemento desarchivado"+
+	"Error al restaurar"+
+	"Elemento restaurado"+
+	"¿Eliminar permanentemente?"+
+	"Error al eliminar"+
+	"Eliminado permanentemente"+
+	"¿Vaciar la papelera?"+
+	"Error al vaciar la papelera"+
+	"Papelera vaciada"+
+	"Las claves de acceso no se copian"+
+	"La copia incluye los datos de acceso sin la clave de acceso."+
+	"Nueva carpeta"+
+	"Renombrar carpeta"+
+	"Nombre de la carpeta"+
+	"El nombre de la carpeta es obligatorio."+
+	"Carpeta guardada"+
+	"¿Eliminar carpeta?"+
+	"Error al eliminar la carpeta"+
+	"Carpeta eliminada"+
+	"Sesión caducada"+
+	"Inicia sesión de nuevo para reanudar la sincronización."+
+	"Mostrando caja fuerte en caché."+
+	"Error de sincronización"+
+	"Caja fuerte sincronizada"+
+	"Cambios sin guardar"+
+	"Sin cambios"+
+	"Elemento"+
+	"Tipo"+
+	"Nombre"+
+	"Favorito"+
+	"Volver a pedir contraseña maestra"+
+	"Añadir una nota"+
+	"Generar contraseña"+
+	"Autenticador"+
+	"URI otpauth:// o clave de configuración"+
+	"Quitar sitio web"+
+	"Añadir sitio web"+
+	"Titular"+
+	"Nombre en la tarjeta"+
+	"Visa, Mastercard, Amex…"+
+	"Número"+
+	"MM"+
+	"AAAA"+
+	"CVV"+
+	"Nombre"+
+	"Apellidos"+
+	"+34 612 345 678"+
+	"Calle"+
+	"Calle Mayor 12"+
+	"Ciudad"+
+	"Provincia / CP"+
+	"Provincia"+
+	"Código postal"+
+	"País"+
+	"Generar clave Ed25519"+
+	"Texto"+
+	"Oculto"+
+	"Nombre del campo"+
+	"Valor"+
+	"Quitar campo"+
+	"Añadir campo"+
+	"Clave de acceso"+
+	"Se quitará al guardar"+
+	"Quitar clave de acceso"+
+	"¿Quitar clave de acceso?"+
+	"Ya no podrás iniciar sesión con esta clave de acceso."+
+	"Guardada en este elemento"+
+	"Adjuntos"+
+	"Adjuntar archivo"+
+	"Adjuntar archivo"+
+	"Adjuntar"+
+	"Guardar adjunto"+
+	"Guardar aquí"+
+	"Error al descargar"+
+	"Adjunto guardado"+
+	"No se pudo abrir el archivo"+
+	"Archivo demasiado grande"+
+	"Los adjuntos tienen un límite de 100 MiB."+
+	"Error al subir"+
+	"Archivo adjuntado"+
+	"¿Eliminar adjunto?"+
+	"Adjunto eliminado"+
+	"Contraseña"+
+	"Frase de contraseña"+
+	"Débil"+
+	"Aceptable"+
+	"Fuerte"+
+	"Muy fuerte"+
+	"Regenerar"+
+	"Longitud"+
+	"Caracteres"+
+	"Mayúsculas"+
+	"Minúsculas"+
+	"Números"+
+	"Símbolos"+
+	"Evitar caracteres ambiguos"+
+	"Excluye l, 1, I, O y 0"+
+	"Palabras"+
+	"Opciones"+
+	"Separador de palabras"+
+	"Se coloca entre cada palabra"+
+	"Inicial en mayúscula"+
+	"Correct-Horse-Battery"+
+	"Incluir un número"+
+	"Añade un dígito a una palabra"+
+	"Reutilizadas"+
+	"Débiles"+
+	"Tarjetas por caducar"+
+	"HTTP inseguro"+
+	"No hay problemas en esta categoría."+
+	"Todo correcto"+
+	"No hay contraseñas reutilizadas o débiles, tarjetas por caducar ni sitios inseguros."+
+	"Contraseñas reutilizadas"+
+	"Contraseñas débiles"+
+	"Sitios web inseguros"+
+	"Comprobado solo en este dispositivo. No se envía nada a ningún servidor."+
+	"Contraseña común"+
+	"Sobre todo una secuencia o caracteres repetidos"+
+	"Usa un solo tipo de carácter"+
+	"Fácil de adivinar"+
+	"Contraseña de copia"+
+	"Proteger tu copia de seguridad"+
+	"Introduce la contraseña con la que se exportó esta copia de seguridad."+
+	"Elige una contraseña para la copia cifrada. No se podrá recuperar si la olvidas."+
+	"Contraseña de copia"+
+	"Confirmar contraseña"+
+	"Exportar"+
+	"Descifrar"+
+	"Las contraseñas no coinciden."+
+	"Error al exportar"+
+	"Copia cifrada guardada"+
+	"Guarda esta contraseña en un lugar seguro; no se puede recuperar."+
+	"Importar copia de seguridad"+
+	"Importar"+
+	"Error al importar"+
+	"Introduce la contraseña de la copia."+
+	"Contraseña de copia incorrecta."+
+	"Esto no es una exportación JSON de Bitwarden."+
+	"Esta copia está bloqueada a su cuenta. Expórtala de nuevo como archivo protegido con contraseña."+
+	"Crear"+
+	"Crear copia"+
+	"Actualizar existente"+
+	"Omitir"+
+	"Ninguna importación en curso"+
+	"Elige “Importar copia de seguridad” en Ajustes para revisar una copia."+
+	"Revisar importación"+
+	"Seleccionar nuevos"+
+	"Omitir conflictos"+
+	"Copiar conflictos"+
+	"Actualizar conflictos"+
+	"Omitir todo"+
+	"tu caja fuerte personal"+
+	"una organización"+
+	"no se puede actualizar: el elemento de copia está incompleto"+
+	"no se puede actualizar: sus campos o sitios web no pueden emparejarse con seguridad"+
+	"el elemento existente es de solo lectura"+
+	"protegido: actualizar solicita tu contraseña maestra"+
+	"GoVault aún no puede guardar este tipo de elemento, por lo que se omite."+
+	"Varios elementos tienen este nombre y no se puede emparejar con ninguno. Elige “Crear” para añadirlo como nuevo."+
+	"Archivado en la copia; se crea en tu caja fuerte porque el archivo requiere suscripción Premium."+
+	"Nombre"+
+	"Notas"+
+	"Carpeta"+
+	"Favorito"+
+	"Pedir contraseña"+
+	"Usuario"+
+	"Contraseña"+
+	"Código de verificación"+
+	"Sitios web"+
+	"Clave de acceso"+
+	"Tarjeta"+
+	"Identidad"+
+	"Clave SSH"+
+	"Campos personalizados"+
+	"General"+
+	"Idioma"+
+	"Idioma que muestra GoVault. “Predeterminado del sistema” sigue el idioma del sistema."+
+	"Predeterminado del sistema"+
+	"Cuenta"+
+	"Sincronizar ahora"+
+	"Derivación de clave"+
+	"Última sincronización"+
+	"Aún no sincronizado"+
+	"Cerrar sesión elimina la caché local de la caja fuerte."+
+	"Seguridad"+
+	"Bloqueo automático"+
+	"Bloquea la caja fuerte tras un periodo de inactividad."+
+	"Bloquear al reposar o bloquear pantalla"+
+	"Bloquea la caja fuerte cuando tu Mac entra en reposo o se bloquea la pantalla."+
+	"Copia de seguridad"+
+	"Exportar copia cifrada"+
+	"Archivo JSON compatible con Bitwarden protegido con una contraseña que elijas."+
+	"Exportar…"+
+	"Importar copia de seguridad"+
+	"JSON de Bitwarden, cifrado o sin cifrar. Revisa cada elemento antes de cambiar nada."+
+	"Importar…"+
+	"Privacidad"+
+	"Mostrar iconos de sitios web"+
+	"Obtiene iconos de sitios desde tu servidor Vaultwarden."+
+	"Caché de iconos"+
+	"Elimina los iconos de sitios descargados de este dispositivo."+
+	"Borrar caché de iconos"+
+	"Caché de iconos borrada"+
+	"No se pudo borrar la caché de iconos"+
+	"Portapapeles"+
+	"Borrar secretos copiados"+
+	"Borra el portapapeles si aún contiene el valor copiado."+
+	"Portapapeles privado"+
+	"Marca los secretos para que los gestores de portapapeles los omitan."+
+	"Activo"+
+	"Solo macOS"+
+	"Barra de menús"+
+	"Bandeja"+
+	"Mostrar icono en barra de menús"+
+	"Mostrar icono en bandeja"+
+	"Abre, sincroniza o bloquea GoVault desde la barra de menús."+
+	"Abre, sincroniza o bloquea GoVault desde la bandeja del sistema."+
+	"Abrir al iniciar sesión"+
+	"Inicia GoVault automáticamente al iniciar sesión."+
+	"Ocultar icono del Dock"+
+	"Mantener GoVault solo en la barra de menús."+
+	"Activa primero el icono de la barra de menús para mantener accesible GoVault."+
+	"Acerca de"+
+	"(desarrollo)"+
+	"Las actualizaciones están firmadas y se instalan automáticamente."+
+	"Buscar actualizaciones"+
+	"Agente SSH"+
+	"Activar agente SSH"+
+	"Sirve claves SSH desde la caja fuerte desbloqueada. Las claves con petición de contraseña maestra no se sirven."+
+	"Socket"+
+	"Copiar SSH_AUTH_SOCK"+
+	"Otro proceso ya está usando este socket."+
+	"La ruta del socket existe y no es un socket."+
+	"Los sockets Unix no son compatibles en este sistema."+
+	"Touch ID no está disponible en este Mac — enlaza un teclado con Touch ID o configúralo en Ajustes del Sistema."+
+	"Guarda una clave envuelta en el llavero del sistema para desbloquear rápido."+
+	"Protección por hardware: macOS solo libera la clave tras Touch ID."+
+	"Solicitar automáticamente"+
+	"Abrir GoVault"+
+	"Buscar actualizaciones…"+
+	"Sincronizar ahora"+
+	"Bloquear ahora"+
+	"Salir de GoVault"+
+	"Edición"+
+	"Ventana"+
+	"Esta cuenta requiere autenticación en dos pasos."+
+	"Correo electrónico o contraseña maestra no válidos."+
+	"Servidor inaccesible. Comprueba tu conexión y la URL del servidor."+
+	"El servidor redirigió a otra dirección; GoVault no sigue redirecciones."+
+	"El servidor no encontró este elemento. Sincroniza e inténtalo de nuevo."+
+	"Este elemento cambió en otro dispositivo. Sincroniza e inténtalo de nuevo."+
+	"Los adjuntos tienen un límite de 100 MiB."+
+	"Este servidor no admite Archivo. Requiere Vaultwarden 1.36 o posterior."+
+	"El archivo requiere una suscripción Premium."+
+	"No se pudo confirmar tu ID de cuenta con el servidor. Sincroniza e inténtalo de nuevo."+
+	"El servidor no confirmó el cambio. GoVault sincronizó para mostrar dónde está el elemento."+
+	"Los elementos de la papelera no pueden archivarse. Restaura el elemento primero."+
+	"La caja fuerte está bloqueada. Desbloquéala e inténtalo de nuevo."+
+	"No has iniciado sesión."+
+	"Este elemento ya no está en tu caja fuerte."+
+	"Esta carpeta ya no está en tu caja fuerte."+
+	"Este elemento es de solo lectura."+
+	"GoVault no puede leer los elementos de esta organización. Sincroniza e inténtalo de nuevo."+
+	"Este adjunto ya no está en el elemento."+
+	"Tu organización oculta los secretos de este elemento."+
+	"El servidor solicitó una carga de adjunto no compatible con GoVault."+
+	"El inicio de sesión guardado pertenece a un servidor distinto al de esta copia. Inicia sesión de nuevo."+
+	"Inicia sesión de nuevo para sincronizar. Mientras tanto tu caja fuerte está disponible sin conexión."+
+	"Esto inicia sesión en una cuenta distinta a la de la caja fuerte en este dispositivo. Para cambiar de cuenta, cierra sesión primero."+
+	"La cuenta cambió desde que se confirmó. Inténtalo de nuevo."+
+	"El servidor tiene el cambio, pero no se pudo actualizar la copia en este dispositivo. Sincroniza para actualizarla."+
+	"Este elemento contiene datos cifrados que GoVault no puede copiar a una nueva clave."+
+	"Este elemento tiene un formato que GoVault aún no puede leer."+
+	"El elemento cambió después de revisar la importación. Revísala de nuevo."+
+	"Actualizar este elemento protegido requiere tu contraseña maestra."+
+	"GoVault aún no puede guardar este tipo de elemento."+
+	"GoVault no puede determinar a qué elementos existentes corresponden los de la copia."+
+	"No se pudo descifrar una clave de acceso."+
+	"La contraseña de la copia de seguridad es incorrecta."+
+	"La copia cifrada sería demasiado grande para volver a importarla en GoVault.",
+	[]uint16{
+		8,
+		7,
+		8,
+		6,
+		6,
+		9,
+		9,
+		6,
+		8,
+		5,
+		3,
+		7,
+		11,
+		7,
+		9,
+		9,
+		8,
+		8,
+		8,
+		11,
+		13,
+		10,
+		26,
+		49,
+		16,
+		19,
+		19,
+		19,
+		11,
+		18,
+		140,
+		15,
+		20,
+		84,
+		86,
+		29,
+		26,
+		54,
+		63,
+		24,
+		21,
+		19,
+		7,
+		3,
+		19,
+		8,
+		26,
+		21,
+		24,
+		25,
+		24,
+		14,
+		16,
+		90,
+		38,
+		72,
+		63,
+		23,
+		11,
+		28,
+		34,
+		31,
+		69,
+		33,
+		10,
+		19,
+		19,
+		80,
+		65,
+		68,
+		70,
+		21,
+		43,
+		47,
+		44,
+		21,
+		43,
+		28,
+		109,
+		14,
+		15,
+		6,
+		8,
+		24,
+		16,
+		13,
+		17,
+		20,
+		14,
+		5,
+		9,
+		11,
+		8,
+		13,
+		11,
+		12,
+		9,
+		16,
+		7,
+		8,
+		7,
+		8,
+		11,
+		10,
+		7,
+		19,
+		20,
+		16,
+		25,
+		16,
+		14,
+		29,
+		16,
+		12,
+		11,
+		103,
+		125,
+		116,
+		24,
+		49,
+		15,
+		8,
+		14,
+		14,
+		24,
+		16,
+		42,
+		59,
+		29,
+		52,
+		6,
+		14,
+		8,
+		14,
+		18,
+		31,
+		21,
+		27,
+		19,
+		19,
+		6,
+		8,
+		11,
+		19,
+		7,
+		11,
+		27,
+		19,
+		18,
+		14,
+		12,
+		9,
+		15,
+		16,
+		10,
+		21,
+		14,
+		18,
+		26,
+		25,
+		9,
+		16,
+		20,
+		5,
+		22,
+		15,
+		7,
+		9,
+		8,
+		10,
+		17,
+		23,
+		16,
+		23,
+		19,
+		26,
+		10,
+		21,
+		5,
+		14,
+		21,
+		14,
+		21,
+		13,
+		20,
+		12,
+		17,
+		14,
+		9,
+		24,
+		17,
+		15,
+		15,
+		32,
+		31,
+		7,
+		7,
+		6,
+		19,
+		15,
+		32,
+		22,
+		17,
+		15,
+		26,
+		17,
+		28,
+		23,
+		15,
+		27,
+		17,
+		18,
+		31,
+		24,
+		27,
+		22,
+		21,
+		28,
+		28,
+		15,
+		37,
+		36,
+		60,
+		31,
+		32,
+		48,
+		15,
+		9,
+		25,
+		34,
+		17,
+		16,
+		39,
+		137,
+		17,
+		81,
+		11,
+		19,
+		20,
+		28,
+		20,
+		17,
+		20,
+		18,
+		21,
+		18,
+		19,
+		27,
+		17,
+		25,
+		21,
+		27,
+		16,
+		33,
+		60,
+		13,
+		17,
+		20,
+		39,
+		16,
+		19,
+		28,
+		17,
+		16,
+		57,
+		32,
+		24,
+		24,
+		19,
+		11,
+		8,
+		4,
+		6,
+		8,
+		34,
+		16,
+		19,
+		12,
+		40,
+		16,
+		17,
+		7,
+		20,
+		25,
+		7,
+		2,
+		4,
+		3,
+		6,
+		9,
+		15,
+		5,
+		14,
+		6,
+		14,
+		9,
+		14,
+		5,
+		21,
+		5,
+		6,
+		16,
+		5,
+		12,
+		13,
+		15,
+		22,
+		22,
+		25,
+		55,
+		25,
+		8,
+		16,
+		16,
+		8,
+		15,
+		13,
+		18,
+		16,
+		27,
+		24,
+		42,
+		14,
+		17,
+		19,
+		17,
+		11,
+		20,
+		6,
+		9,
+		6,
+		10,
+		9,
+		8,
+		10,
+		11,
+		11,
+		8,
+		9,
+		26,
+		22,
+		8,
+		8,
+		21,
+		28,
+		21,
+		21,
+		18,
+		31,
+		12,
+		8,
+		20,
+		13,
+		36,
+		13,
+		86,
+		25,
+		21,
+		20,
+		74,
+		18,
+		47,
+		29,
+		18,
+		20,
+		30,
+		72,
+		82,
+		20,
+		21,
+		8,
+		9,
+		30,
+		17,
+		22,
+		66,
+		27,
+		8,
+		17,
+		37,
+		32,
+		46,
+		99,
+		5,
+		11,
+		20,
+		6,
+		29,
+		74,
+		20,
+		18,
+		17,
+		17,
+		21,
+		11,
+		23,
+		17,
+		61,
+		83,
+		40,
+		53,
+		73,
+		117,
+		97,
+		6,
+		5,
+		7,
+		8,
+		17,
+		7,
+		11,
+		24,
+		10,
+		15,
+		7,
+		9,
+		9,
+		21,
+		7,
+		6,
+		89,
+		26,
+		6,
+		17,
+		20,
+		23,
+		20,
+		57,
+		9,
+		19,
+		54,
+		39,
+		78,
+		18,
+		22,
+		79,
+		11,
+		27,
+		84,
+		11,
+		10,
+		28,
+		55,
+		16,
+		61,
+		23,
+		24,
+		37,
+		12,
+		24,
+		56,
+		20,
+		68,
+		6,
+		10,
+		15,
+		7,
+		32,
+		24,
+		60,
+		64,
+		24,
+		51,
+		22,
+		44,
+		78,
+		9,
+		12,
+		67,
+		22,
+		10,
+		18,
+		113,
+		6,
+		20,
+		41,
+		44,
+		52,
+		114,
+		77,
+		67,
+		26,
+		13,
+		25,
+		17,
+		14,
+		16,
+		8,
+		7,
+		49,
+		54,
+		67,
+		73,
+		73,
+		76,
+		42,
+		71,
+		45,
+		87,
+		94,
+		80,
+		68,
+		24,
+		44,
+		43,
+		33,
+		92,
+		40,
+		54,
+		69,
+		105,
+		103,
+		134,
+		62,
+		115,
+		84,
+		62,
+		76,
+		67,
+		52,
+		85,
+		41,
+		54,
+		77,
+	})
+
+// textsFr are the messages without arguments in fr.
+var textsFr = i18n.NewTexts(""+
+	"Annuler"+
+	"Enregistrer"+
+	"Supprimer"+
+	"Retirer"+
+	"Modifier"+
+	"Restaurer"+
+	"Vérifier"+
+	"Copier"+
+	"Annuler"+
+	"Jamais"+
+	"—"+
+	"Identifiant"+
+	"Note sécurisée"+
+	"Carte"+
+	"Identité"+
+	"Clé SSH"+
+	"Élément"+
+	"Identifiants"+
+	"Cartes"+
+	"Identités"+
+	"Notes sécurisées"+
+	"Clés SSH"+
+	"Se connecter à GoVault"+
+	"Connectez-vous à votre serveur Bitwarden ou Vaultwarden."+
+	"URL du serveur"+
+	"Adresse e-mail"+
+	"Mot de passe principal"+
+	"Mot de passe principal"+
+	"Requis"+
+	"nom@exemple.fr"+
+	"Ce serveur n’utilise pas HTTPS. Votre mot de passe principal et vos données seront transmis en clair ; utilisez-le uniquement sur un réseau de confiance."+
+	"Se connecter"+
+	"Retour au déverrouillage"+
+	"Chiffrement de bout en bout. Votre mot de passe principal ne quitte jamais cet appareil."+
+	"L’URL du serveur, l’adresse e-mail et le mot de passe principal sont requis."+
+	"Afficher ou masquer le mot de passe"+
+	"Vérification en deux étapes"+
+	"Saisissez le code envoyé à votre adresse e-mail."+
+	"Saisissez le code à 6 chiffres de votre application d’authentification."+
+	"Méthode de vérification"+
+	"Application d’authentification"+
+	"E-mail"+
+	"YubiKey"+
+	"Duo"+
+	"Duo (Organisation)"+
+	"FIDO U2F"+
+	"Clé d’accès / WebAuthn"+
+	"Appareil mémorisé"+
+	"Code de vérification"+
+	"Mémoriser cet appareil"+
+	"Retour à la connexion"+
+	"Envoyer le code"+
+	"Renvoyer le code"+
+	"L’authentification à deux facteurs protège votre coffre même si votre mot de passe est compromis."+
+	"Saisissez le code de vérification."+
+	"Code de vérification invalide. Vérifiez-le et réessayez."+
+	"Un code de vérification a été envoyé à votre adresse e-mail."+
+	"GoVault est verrouillé"+
+	"Déverrouiller"+
+	"ou utiliser le mot de passe principal"+
+	"Se déconnecter ou changer de compte…"+
+	"Se déconnecter ou changer de compte"+
+	"Les coffres verrouillés restent chiffrés sur cet appareil."+
+	"Saisissez votre mot de passe principal."+
+	"Biométrie"+
+	"Déverrouiller GoVault"+
+	"déverrouiller GoVault"+
+	"Clé biométrique enregistrée indisponible. Déverrouillez avec le mot de passe principal."+
+	"Clé biométrique corrompue. Déverrouillez avec le mot de passe principal."+
+	"Clé biométrique invalide. Déverrouillez avec le mot de passe principal."+
+	"Échec de l’authentification biométrique. Saisissez le mot de passe principal."+
+	"Trousseau indisponible"+
+	"Impossible d’accéder au trousseau système."+
+	"Impossible de désactiver le déverrouillage biométrique"+
+	"Impossible d’activer le déverrouillage biométrique"+
+	"Coffre verrouillé"+
+	"Verrouillé automatiquement après inactivité."+
+	"Se déconnecter de GoVault ?"+
+	"Le cache chiffré local du coffre et la clé biométrique enregistrée seront supprimés de cet appareil."+
+	"Se déconnecter"+
+	"Déconnecté"+
+	"Précédent"+
+	"Suivant"+
+	"Rechercher dans le coffre"+
+	"Effacer la recherche"+
+	"Hors ligne"+
+	"Synchroniser maintenant"+
+	"Verrouiller le coffre"+
+	"Nouvel élément"+
+	"Tous les éléments"+
+	"Favoris"+
+	"Catégories"+
+	"Dossiers"+
+	"Nouveau dossier"+
+	"Collections"+
+	"Outils"+
+	"Générateur"+
+	"Santé du coffre"+
+	"Archive"+
+	"Corbeille"+
+	"Paramètres"+
+	"Importer"+
+	"Aucun dossier"+
+	"Collection"+
+	"Dossier"+
+	"Actions du dossier"+
+	"Renommer le dossier…"+
+	"Supprimer le dossier"+
+	"Redimensionner le panneau"+
+	"Synchronisation…"+
+	"Sync en attente"+
+	"Hors ligne · coffre en cache"+
+	"Session expirée"+
+	"Synchronisé"+
+	"à l’instant"+
+	"Reconnectez-vous pour synchroniser. Votre coffre reste accessible hors ligne en attendant."+
+	"Session expirée — votre coffre en cache reste lisible. Reconnectez-vous pour reprendre la synchronisation."+
+	"Votre connexion n’a pas pu être enregistrée. Reconnectez-vous afin que GoVault puisse synchroniser après le verrouillage."+
+	"Se reconnecter"+
+	"Les éléments de la corbeille peuvent être restaurés."+
+	"Vider la corbeille"+
+	"Dans tous les éléments"+
+	"Tout rechercher"+
+	"Aucun résultat"+
+	"Corbeille vide"+
+	"Aucun élément"+
+	"Les éléments supprimés apparaissent ici."+
+	"Choisissez « Nouvel élément » pour ajouter votre première entrée."+
+	"Aucun élément sélectionné"+
+	"Sélectionnez un élément dans la liste pour afficher ses détails."+
+	"Rechercher"+
+	"Nouvel élément"+
+	"Verrouiller"+
+	"Copier le nom d’utilisateur"+
+	"Copier le mot de passe"+
+	"Copier le code de vérification"+
+	"Copier la clé publique"+
+	"Supprimer définitivement…"+
+	"Ajouter aux favoris"+
+	"Retirer des favoris"+
+	"Cloner"+
+	"Archiver"+
+	"Désarchiver"+
+	"Mettre à la corbeille"+
+	"Nom d’utilisateur"+
+	"Mot de passe"+
+	"Masqué par votre organisation"+
+	"Afficher le mot de passe"+
+	"Copier le mot de passe"+
+	"Copier le nom d’utilisateur"+
+	"Identifiants"+
+	"Site web"+
+	"Ouvrir le site web"+
+	"Copier le site web"+
+	"Sites web"+
+	"Titulaire de la carte"+
+	"Copier le titulaire"+
+	"Numéro de carte"+
+	"Afficher le numéro de carte"+
+	"Copier le numéro de carte"+
+	"Expiration"+
+	"Copier l’expiration"+
+	"Code de sécurité"+
+	"Marque"+
+	"Détails de la carte"+
+	"Nom complet"+
+	"Entreprise"+
+	"Téléphone"+
+	"Personnel"+
+	"Adresse"+
+	"Copier l’adresse"+
+	"Numéro de sécurité sociale"+
+	"Numéro de passeport"+
+	"Copier le numéro de passeport"+
+	"Numéro de permis"+
+	"Copier le numéro de permis"+
+	"Documents"+
+	"Champs personnalisés"+
+	"Notes"+
+	"Empreinte"+
+	"Copier l’empreinte"+
+	"Clé publique"+
+	"Copier la clé publique"+
+	"Clé privée"+
+	"ancien mot de passe"+
+	"Lecture seule"+
+	"Ressaisie requise"+
+	"Dans la corbeille"+
+	"Archivé"+
+	"Supprimer définitivement"+
+	"Basculer en favori"+
+	"Cloner l’élément"+
+	"Temps restant"+
+	"Afficher le code de vérification"+
+	"Copier le code de vérification"+
+	"CARTE"+
+	"TITULAIRE"+
+	"EXPIRE"+
+	"Mot de passe copié"+
+	"Nom d’utilisateur copié"+
+	"Code de vérification copié"+
+	"Clé publique copiée"+
+	"Site web copié"+
+	"Titulaire copié"+
+	"Numéro de carte copié"+
+	"Expiration copiée"+
+	"Code de sécurité copié"+
+	"Nom complet copié"+
+	"Entreprise copiée"+
+	"Adresse e-mail copiée"+
+	"Téléphone copié"+
+	"Adresse copiée"+
+	"Numéro de sécurité sociale copié"+
+	"Numéro de passeport copié"+
+	"Numéro de permis copié"+
+	"Empreinte copiée"+
+	"Clé privée copiée"+
+	"Ancien mot de passe copié"+
+	"Mot de passe généré copié"+
+	"Échec de la copie"+
+	"Masqué de l’historique du presse-papiers"+
+	"Vérification du mot de passe principal"+
+	"Vérification du mot de passe principal indisponible."+
+	"Mot de passe principal incorrect."+
+	"Ignorer les modifications non enregistrées ?"+
+	"Vos modifications sur cet élément n’ont pas été enregistrées."+
+	"Continuer"+
+	"Ignorer"+
+	"Le nom est requis."+
+	"Impossible d’enregistrer hors ligne."+
+	"Élément enregistré"+
+	"Échec de l’enregistrement"+
+	"Élément modifié sur un autre appareil"+
+	"Cet élément a été mis à jour ailleurs depuis la dernière synchronisation. Rechargez la dernière version pour éviter d’écraser des modifications."+
+	"Recharger"+
+	"Enregistré sur le serveur, mais la copie sur cet appareil n’a pas pu être mise à jour."+
+	"Synchroniser"+
+	"Échec de la mise à jour"+
+	"Favori mis à jour"+
+	"Impossible de mettre à la corbeille"+
+	"Mis à la corbeille"+
+	"Échec de l’archivage"+
+	"Échec du désarchivage"+
+	"Élément archivé"+
+	"Élément désarchivé"+
+	"Échec de la restauration"+
+	"Élément restauré"+
+	"Supprimer définitivement ?"+
+	"Échec de la suppression"+
+	"Supprimé définitivement"+
+	"Vider la corbeille ?"+
+	"Impossible de vider la corbeille"+
+	"Corbeille vidée"+
+	"Les clés d’accès ne sont pas copiées"+
+	"La copie contient les identifiants sans la clé d’accès."+
+	"Nouveau dossier"+
+	"Renommer le dossier"+
+	"Nom du dossier"+
+	"Le nom du dossier est requis."+
+	"Dossier enregistré"+
+	"Supprimer le dossier ?"+
+	"Impossible de supprimer le dossier"+
+	"Dossier supprimé"+
+	"Session expirée"+
+	"Reconnectez-vous pour reprendre la synchronisation."+
+	"Affichage du coffre en cache."+
+	"Échec de la synchronisation"+
+	"Coffre synchronisé"+
+	"Modifications non enregistrées"+
+	"Aucune modification"+
+	"Élément"+
+	"Type"+
+	"Nom"+
+	"Favori"+
+	"Ressaisir le mot de passe principal"+
+	"Ajouter une note"+
+	"Générer un mot de passe"+
+	"Authentificateur"+
+	"URI otpauth:// ou clé de configuration"+
+	"Retirer le site web"+
+	"Ajouter un site web"+
+	"Titulaire"+
+	"Nom sur la carte"+
+	"Visa, Mastercard, Amex…"+
+	"Numéro"+
+	"MM"+
+	"AAAA"+
+	"CVV"+
+	"Prénom"+
+	"Nom"+
+	"+33 1 42 68 53 00"+
+	"Rue"+
+	"12 rue de Rivoli"+
+	"Ville"+
+	"Région / Code postal"+
+	"Région"+
+	"Code postal"+
+	"Pays"+
+	"Générer une clé Ed25519"+
+	"Texte"+
+	"Masqué"+
+	"Nom du champ"+
+	"Valeur"+
+	"Retirer le champ"+
+	"Ajouter un champ"+
+	"Clé d’accès"+
+	"Retirée à l’enregistrement"+
+	"Retirer la clé d’accès"+
+	"Retirer la clé d’accès ?"+
+	"Vous ne pourrez plus vous connecter avec cette clé d’accès."+
+	"Stockée dans cet élément"+
+	"Pièces jointes"+
+	"Joindre un fichier"+
+	"Joindre un fichier"+
+	"Joindre"+
+	"Enregistrer la pièce jointe"+
+	"Enregistrer ici"+
+	"Échec du téléchargement"+
+	"Pièce jointe enregistrée"+
+	"Impossible d’ouvrir le fichier"+
+	"Fichier trop volumineux"+
+	"Les pièces jointes sont limitées à 100 MiB."+
+	"Échec de l’envoi"+
+	"Fichier joint"+
+	"Supprimer la pièce jointe ?"+
+	"Pièce jointe supprimée"+
+	"Mot de passe"+
+	"Phrase de passe"+
+	"Faible"+
+	"Moyen"+
+	"Fort"+
+	"Très fort"+
+	"Régénérer"+
+	"Longueur"+
+	"Caractères"+
+	"Majuscules"+
+	"Minuscules"+
+	"Chiffres"+
+	"Symboles"+
+	"Éviter les caractères ambigus"+
+	"Exclut l, 1, I, O et 0"+
+	"Mots"+
+	"Options"+
+	"Séparateur de mots"+
+	"Placé entre chaque mot"+
+	"Majuscule initiale"+
+	"Correct-Horse-Battery"+
+	"Inclure un chiffre"+
+	"Ajoute un chiffre à un mot"+
+	"Réutilisés"+
+	"Faibles"+
+	"Cartes expirant bientôt"+
+	"HTTP non sécurisé"+
+	"Aucun problème dans cette catégorie."+
+	"Tout est en ordre"+
+	"Aucun mot de passe réutilisé ou faible, aucune carte expirant bientôt ni aucun site non sécurisé."+
+	"Mots de passe réutilisés"+
+	"Mots de passe faibles"+
+	"Sites web non sécurisés"+
+	"Vérifié uniquement sur cet appareil. Rien n’est envoyé au serveur."+
+	"Mot de passe courant"+
+	"Surtout une suite ou des répétitions"+
+	"N’utilise qu’un seul type de caractère"+
+	"Facile à deviner"+
+	"Mot de passe de sauvegarde"+
+	"Protéger votre sauvegarde"+
+	"Saisissez le mot de passe utilisé lors de l’export de cette sauvegarde."+
+	"Choisissez un mot de passe pour la sauvegarde chiffrée. Il ne pourra pas être récupéré en cas d’oubli."+
+	"Mot de passe de sauvegarde"+
+	"Confirmer le mot de passe"+
+	"Exporter"+
+	"Déchiffrer"+
+	"Les mots de passe ne correspondent pas."+
+	"Échec de l’export"+
+	"Sauvegarde chiffrée enregistrée"+
+	"Conservez ce mot de passe en lieu sûr ; il ne peut pas être récupéré."+
+	"Importer une sauvegarde"+
+	"Importer"+
+	"Échec de l’import"+
+	"Saisissez le mot de passe de sauvegarde."+
+	"Mot de passe de sauvegarde incorrect."+
+	"Ce fichier n’est pas un export JSON Bitwarden."+
+	"Cette sauvegarde est liée à son compte. Exportez-la à nouveau en fichier protégé par mot de passe."+
+	"Créer"+
+	"Créer une copie"+
+	"Mettre à jour"+
+	"Ignorer"+
+	"Aucun import en cours"+
+	"Choisissez « Importer une sauvegarde » dans Paramètres pour examiner un fichier."+
+	"Examiner l’import"+
+	"Tout sélectionner (nouveaux)"+
+	"Ignorer les conflits"+
+	"Copier les conflits"+
+	"Mettre à jour les conflits"+
+	"Tout ignorer"+
+	"votre coffre personnel"+
+	"une organisation"+
+	"Impossible de mettre à jour : l’élément de sauvegarde est incomplet"+
+	"Impossible de mettre à jour : ses champs ou sites web ne peuvent pas être associés de façon sûre"+
+	"l’élément existant est en lecture seule"+
+	"protégé : la mise à jour demande votre mot de passe principal"+
+	"GoVault ne peut pas encore enregistrer ce type d’élément ; il est ignoré."+
+	"Plusieurs éléments portent ce nom et aucune correspondance n’est sûre. Choisissez « Créer » pour l’ajouter comme nouvel élément."+
+	"Archivé dans la sauvegarde ; créé dans votre coffre car l’archive nécessite un abonnement Premium."+
+	"Nom"+
+	"Notes"+
+	"Dossier"+
+	"Favori"+
+	"Ressaisie"+
+	"Nom d’utilisateur"+
+	"Mot de passe"+
+	"Code de vérification"+
+	"Sites web"+
+	"Clé d’accès"+
+	"Carte"+
+	"Identité"+
+	"Clé SSH"+
+	"Champs personnalisés"+
+	"Général"+
+	"Langue"+
+	"Langue affichée par GoVault. « Langue du système » suit celle de votre appareil."+
+	"Langue du système"+
+	"Compte"+
+	"Synchroniser"+
+	"Dérivation de clé"+
+	"Dernière synchronisation"+
+	"Pas encore synchronisé"+
+	"La déconnexion supprime le cache local du coffre."+
+	"Sécurité"+
+	"Verrouillage automatique"+
+	"Verrouille le coffre après une période d’inactivité."+
+	"Verrouiller en veille ou écran verrouillé"+
+	"Verrouille le coffre lorsque votre Mac passe en veille ou que l’écran se verrouille."+
+	"Sauvegarde"+
+	"Exporter une sauvegarde chiffrée"+
+	"Fichier JSON compatible Bitwarden protégé par un mot de passe de votre choix."+
+	"Exporter…"+
+	"Importer une sauvegarde"+
+	"JSON Bitwarden, chiffré ou en clair. Examinez chaque élément avant toute modification."+
+	"Importer…"+
+	"Confidentialité"+
+	"Afficher les icônes des sites web"+
+	"Récupère les icônes depuis votre serveur Vaultwarden."+
+	"Cache des icônes"+
+	"Supprime les icônes de sites téléchargées sur cet appareil."+
+	"Vider le cache"+
+	"Cache des icônes vidé"+
+	"Impossible de vider le cache des icônes"+
+	"Presse-papiers"+
+	"Effacer les secrets copiés"+
+	"Efface le presse-papiers s’il contient encore la valeur copiée."+
+	"Presse-papiers privé"+
+	"Marque les secrets afin que les gestionnaires de presse-papiers les ignorent."+
+	"Actif"+
+	"macOS uniquement"+
+	"Barre des menus"+
+	"Zone de notification"+
+	"Afficher l’icône dans la barre des menus"+
+	"Afficher l’icône dans la zone de notification"+
+	"Ouvrir, synchroniser ou verrouiller GoVault depuis la barre des menus."+
+	"Ouvrir, synchroniser ou verrouiller GoVault depuis la zone de notification."+
+	"Lancer à la connexion"+
+	"Démarre GoVault automatiquement à l’ouverture de session."+
+	"Masquer l’icône du Dock"+
+	"Garder GoVault uniquement dans la barre des menus."+
+	"Activez d’abord l’icône de la barre des menus pour garder accès à GoVault."+
+	"À propos"+
+	"(développement)"+
+	"Les mises à jour sont signées et installées automatiquement."+
+	"Rechercher des mises à jour"+
+	"Agent SSH"+
+	"Activer l’agent SSH"+
+	"Sert les clés SSH du coffre déverrouillé. Les clés avec ressaisie du mot de passe principal ne sont pas servies."+
+	"Socket"+
+	"Copier SSH_AUTH_SOCK"+
+	"Un autre processus utilise déjà ce socket."+
+	"Ce chemin existe et n’est pas un socket."+
+	"Les sockets Unix ne sont pas pris en charge sur ce système."+
+	"Touch ID indisponible sur ce Mac — jumelez un clavier Touch ID ou configurez-le dans Réglages Système."+
+	"Conserve une clé chiffrée dans le trousseau système pour un déverrouillage rapide."+
+	"Protection matérielle : macOS ne libère la clé qu’après Touch ID."+
+	"Demander automatiquement"+
+	"Ouvrir GoVault"+
+	"Rechercher des mises à jour…"+
+	"Synchroniser maintenant"+
+	"Verrouiller maintenant"+
+	"Quitter GoVault"+
+	"Édition"+
+	"Fenêtre"+
+	"Ce compte nécessite une connexion en deux étapes."+
+	"Adresse e-mail ou mot de passe principal invalide."+
+	"Serveur inaccessible. Vérifiez votre connexion et l’URL du serveur."+
+	"Le serveur a redirigé vers une autre adresse ; GoVault ne suit pas les redirections."+
+	"Le serveur n’a pas trouvé cet élément. Synchronisez et réessayez."+
+	"Cet élément a été modifié sur un autre appareil. Synchronisez et réessayez."+
+	"Les pièces jointes sont limitées à 100 MiB."+
+	"Ce serveur ne prend pas en charge l’archive. Vaultwarden 1.36 ou supérieur est requis."+
+	"L’archive nécessite un abonnement Premium."+
+	"Impossible de confirmer votre identifiant de compte auprès du serveur. Synchronisez et réessayez."+
+	"Le serveur n’a pas confirmé la modification. GoVault a synchronisé pour afficher l’emplacement actuel."+
+	"Les éléments de la corbeille ne peuvent pas être archivés. Restaurez l’élément d’abord."+
+	"Le coffre est verrouillé. Déverrouillez-le et réessayez."+
+	"Vous n’êtes pas connecté."+
+	"Cet élément ne se trouve plus dans votre coffre."+
+	"Ce dossier ne se trouve plus dans votre coffre."+
+	"Cet élément est en lecture seule."+
+	"GoVault ne peut pas lire les éléments de cette organisation. Synchronisez et réessayez."+
+	"Cette pièce jointe ne figure plus dans l’élément."+
+	"Votre organisation masque les secrets de cet élément."+
+	"Le serveur a demandé un envoi de pièce jointe non pris en charge par GoVault."+
+	"La connexion enregistrée correspond à un autre serveur que cette copie du coffre. Reconnectez-vous."+
+	"Reconnectez-vous pour synchroniser. Votre coffre reste accessible hors ligne en attendant."+
+	"Cette connexion correspond à un autre compte que le coffre sur cet appareil. Déconnectez-vous d’abord pour changer de compte."+
+	"Le compte a changé depuis la confirmation. Réessayez."+
+	"Le serveur a enregistré la modification, mais la copie locale n’a pas pu être mise à jour. Synchronisez pour actualiser."+
+	"Cet élément contient des données chiffrées que GoVault ne peut pas copier vers une nouvelle clé."+
+	"Cet élément utilise un format que GoVault ne peut pas encore lire."+
+	"L’élément a changé après votre examen de l’import. Examinez-le à nouveau."+
+	"La mise à jour de cet élément protégé requiert votre mot de passe principal."+
+	"GoVault ne peut pas encore enregistrer ce type d’élément."+
+	"GoVault ne parvient pas à associer les éléments de la sauvegarde aux éléments existants."+
+	"Une clé d’accès n’a pas pu être déchiffrée."+
+	"Le mot de passe de sauvegarde est incorrect."+
+	"La sauvegarde chiffrée serait trop volumineuse pour être réimportée dans GoVault.",
+	[]uint16{
+		7,
+		11,
+		9,
+		7,
+		8,
+		9,
+		9,
+		6,
+		7,
+		6,
+		3,
+		11,
+		16,
+		5,
+		9,
+		8,
+		9,
+		12,
+		6,
+		10,
+		18,
+		9,
+		23,
+		57,
+		14,
+		14,
+		22,
+		22,
+		6,
+		14,
+		157,
+		12,
+		25,
+		88,
+		80,
+		35,
+		29,
+		50,
+		74,
+		25,
+		32,
+		6,
+		7,
+		3,
+		18,
+		8,
+		26,
+		19,
+		21,
+		23,
+		22,
+		15,
+		16,
+		102,
+		35,
+		59,
+		65,
+		23,
+		14,
+		37,
+		39,
+		36,
+		60,
+		39,
+		10,
+		22,
+		22,
+		91,
+		75,
+		74,
+		81,
+		22,
+		46,
+		57,
+		54,
+		18,
+		47,
+		28,
+		105,
+		15,
+		12,
+		11,
+		7,
+		25,
+		20,
+		10,
+		23,
+		21,
+		16,
+		19,
+		7,
+		11,
+		8,
+		15,
+		11,
+		6,
+		12,
+		16,
+		7,
+		9,
+		11,
+		8,
+		13,
+		10,
+		7,
+		18,
+		22,
+		20,
+		25,
+		18,
+		15,
+		29,
+		16,
+		12,
+		14,
+		90,
+		109,
+		126,
+		14,
+		56,
+		18,
+		24,
+		15,
+		15,
+		14,
+		15,
+		43,
+		71,
+		29,
+		68,
+		10,
+		16,
+		11,
+		29,
+		22,
+		31,
+		23,
+		28,
+		19,
+		19,
+		6,
+		8,
+		12,
+		22,
+		19,
+		12,
+		30,
+		24,
+		22,
+		29,
+		12,
+		8,
+		18,
+		18,
+		9,
+		21,
+		19,
+		16,
+		28,
+		26,
+		10,
+		21,
+		18,
+		6,
+		20,
+		11,
+		10,
+		11,
+		9,
+		7,
+		18,
+		29,
+		20,
+		30,
+		17,
+		27,
+		9,
+		21,
+		5,
+		9,
+		20,
+		13,
+		23,
+		12,
+		19,
+		13,
+		17,
+		17,
+		8,
+		25,
+		18,
+		20,
+		13,
+		33,
+		31,
+		5,
+		9,
+		6,
+		19,
+		26,
+		28,
+		21,
+		15,
+		16,
+		23,
+		18,
+		25,
+		18,
+		18,
+		22,
+		18,
+		15,
+		36,
+		27,
+		24,
+		17,
+		20,
+		26,
+		29,
+		18,
+		43,
+		39,
+		53,
+		33,
+		45,
+		68,
+		9,
+		7,
+		18,
+		38,
+		21,
+		28,
+		40,
+		155,
+		9,
+		91,
+		12,
+		25,
+		18,
+		36,
+		19,
+		23,
+		23,
+		18,
+		22,
+		25,
+		19,
+		27,
+		24,
+		25,
+		20,
+		32,
+		16,
+		41,
+		59,
+		15,
+		19,
+		14,
+		29,
+		19,
+		22,
+		34,
+		17,
+		16,
+		51,
+		29,
+		28,
+		19,
+		31,
+		19,
+		9,
+		4,
+		3,
+		6,
+		35,
+		16,
+		25,
+		16,
+		39,
+		19,
+		19,
+		9,
+		16,
+		25,
+		7,
+		2,
+		4,
+		3,
+		7,
+		3,
+		17,
+		3,
+		16,
+		5,
+		21,
+		7,
+		11,
+		4,
+		26,
+		5,
+		7,
+		12,
+		6,
+		16,
+		16,
+		15,
+		30,
+		26,
+		28,
+		63,
+		27,
+		15,
+		18,
+		18,
+		7,
+		28,
+		15,
+		26,
+		26,
+		32,
+		23,
+		46,
+		19,
+		13,
+		28,
+		24,
+		12,
+		15,
+		6,
+		5,
+		4,
+		10,
+		12,
+		8,
+		11,
+		10,
+		10,
+		8,
+		8,
+		31,
+		22,
+		4,
+		7,
+		19,
+		23,
+		18,
+		21,
+		18,
+		27,
+		12,
+		7,
+		24,
+		19,
+		38,
+		17,
+		102,
+		26,
+		21,
+		25,
+		71,
+		20,
+		38,
+		43,
+		17,
+		26,
+		26,
+		74,
+		109,
+		26,
+		25,
+		8,
+		11,
+		39,
+		20,
+		33,
+		74,
+		23,
+		8,
+		20,
+		40,
+		37,
+		48,
+		103,
+		6,
+		16,
+		14,
+		7,
+		21,
+		83,
+		19,
+		29,
+		20,
+		19,
+		27,
+		12,
+		22,
+		16,
+		72,
+		101,
+		43,
+		64,
+		78,
+		140,
+		104,
+		3,
+		5,
+		7,
+		6,
+		9,
+		19,
+		12,
+		21,
+		9,
+		15,
+		5,
+		9,
+		8,
+		21,
+		9,
+		6,
+		84,
+		18,
+		6,
+		12,
+		19,
+		25,
+		23,
+		50,
+		10,
+		24,
+		57,
+		43,
+		87,
+		10,
+		33,
+		79,
+		11,
+		23,
+		89,
+		11,
+		16,
+		34,
+		56,
+		17,
+		63,
+		14,
+		23,
+		40,
+		14,
+		27,
+		66,
+		21,
+		77,
+		5,
+		16,
+		15,
+		20,
+		43,
+		48,
+		70,
+		75,
+		22,
+		61,
+		26,
+		50,
+		81,
+		9,
+		16,
+		63,
+		28,
+		9,
+		21,
+		116,
+		6,
+		20,
+		44,
+		42,
+		60,
+		106,
+		86,
+		71,
+		24,
+		14,
+		31,
+		23,
+		22,
+		15,
+		8,
+		8,
+		51,
+		50,
+		70,
+		85,
+		71,
+		81,
+		46,
+		89,
+		45,
+		99,
+		108,
+		97,
+		59,
+		29,
+		50,
+		47,
+		35,
+		90,
+		54,
+		55,
+		79,
+		101,
+		90,
+		129,
+		55,
+		125,
+		101,
+		68,
+		82,
+		81,
+		61,
+		93,
+		52,
+		44,
+		85,
+	})
+
+// textsJa are the messages without arguments in ja.
+var textsJa = i18n.NewTexts(""+
+	"キャンセル"+
+	"保存"+
+	"削除"+
+	"削除"+
+	"編集"+
+	"復元"+
+	"確認"+
+	"コピー"+
+	"取り消す"+
+	"しない"+
+	"—"+
+	"ログイン"+
+	"セキュアメモ"+
+	"カード"+
+	"ID"+
+	"SSH キー"+
+	"アイテム"+
+	"ログイン"+
+	"カード"+
+	"ID"+
+	"セキュアメモ"+
+	"SSH キー"+
+	"GoVault にログイン"+
+	"Bitwarden または Vaultwarden サーバーに接続します。"+
+	"サーバー URL"+
+	"メールアドレス"+
+	"マスターパスワード"+
+	"マスターパスワード"+
+	"必須"+
+	"name@example.com"+
+	"このサーバーは HTTPS を使用していません。マスターパスワードと保管庫のデータが暗号化されずに送信されるため、信頼できるネットワークでのみ使用してください。"+
+	"ログイン"+
+	"ロック解除に戻る"+
+	"エンドツーエンド暗号化。マスターパスワードがこのデバイスから外部に送信されることはありません。"+
+	"サーバー URL、メールアドレス、マスターパスワードを入力してください。"+
+	"パスワードの表示を切り替え"+
+	"2段階認証"+
+	"メールで送信された認証コードを入力してください。"+
+	"認証アプリの 6 桁のコードを入力してください。"+
+	"認証方法"+
+	"認証アプリ"+
+	"メール"+
+	"YubiKey"+
+	"Duo"+
+	"Duo（組織）"+
+	"FIDO U2F"+
+	"パスキー / WebAuthn"+
+	"記憶済みデバイス"+
+	"認証コード"+
+	"このデバイスを記憶する"+
+	"ログインに戻る"+
+	"コードを送信"+
+	"コードを再送信"+
+	"パスワードが漏えいしても、2段階認証により保管庫を保護できます。"+
+	"認証コードを入力してください。"+
+	"認証コードが無効です。確認してもう一度お試しください。"+
+	"認証コードをメールで送信しました。"+
+	"GoVault はロックされています"+
+	"ロック解除"+
+	"またはマスターパスワードを使用"+
+	"ログアウトまたはアカウント切り替え…"+
+	"ログアウトまたはアカウント切り替え"+
+	"ロックされた保管庫はこのデバイス上で暗号化されたまま保存されます。"+
+	"マスターパスワードを入力してください。"+
+	"生体認証"+
+	"GoVault のロックを解除"+
+	"GoVault のロックを解除"+
+	"保存された生体認証キーを使用できません。マスターパスワードでロック解除してください。"+
+	"生体認証キーが破損しています。マスターパスワードでロック解除してください。"+
+	"生体認証キーが無効です。マスターパスワードでロック解除してください。"+
+	"生体認証に失敗しました。マスターパスワードを入力してください。"+
+	"キーチェーンを利用できません"+
+	"システムキーチェーンにアクセスできません。"+
+	"生体認証ロック解除をオフにできませんでした"+
+	"生体認証ロック解除をオンにできませんでした"+
+	"保管庫をロックしました"+
+	"一定時間操作がなかったため自動ロックされました。"+
+	"GoVault からログアウトしますか？"+
+	"このデバイスに保存されている暗号化済み保管庫キャッシュと生体認証キーが削除されます。"+
+	"ログアウト"+
+	"ログアウトしました"+
+	"戻る"+
+	"進む"+
+	"保管庫を検索"+
+	"検索をクリア"+
+	"オフライン"+
+	"今すぐ同期"+
+	"保管庫をロック"+
+	"新規アイテム"+
+	"すべてのアイテム"+
+	"お気に入り"+
+	"カテゴリー"+
+	"フォルダー"+
+	"新規フォルダー"+
+	"コレクション"+
+	"ツール"+
+	"ジェネレーター"+
+	"保管庫の健全性"+
+	"アーカイブ"+
+	"ごみ箱"+
+	"設定"+
+	"インポート"+
+	"フォルダーなし"+
+	"コレクション"+
+	"フォルダー"+
+	"フォルダー操作"+
+	"フォルダー名を変更…"+
+	"フォルダーを削除"+
+	"ペインのサイズを変更"+
+	"同期中…"+
+	"同期待ち"+
+	"オフライン · キャッシュ済み保管庫"+
+	"セッション期限切れ"+
+	"同期済み"+
+	"たった今"+
+	"同期するには再ログインしてください。それまではオフラインで保管庫を利用できます。"+
+	"セッションの有効期限が切れました。キャッシュ済みの保管庫は引き続き閲覧できます。同期を再開するには再ログインしてください。"+
+	"ログイン情報を保存できませんでした。ロック後も同期できるよう、もう一度ログインしてください。"+
+	"再ログイン"+
+	"ごみ箱のアイテムは復元できます。"+
+	"ごみ箱を空にする"+
+	"すべてのアイテム内"+
+	"すべてのアイテムを検索"+
+	"結果なし"+
+	"ごみ箱は空です"+
+	"アイテムがありません"+
+	"削除したアイテムがここに表示されます。"+
+	"「新規アイテム」から最初のアイテムを追加してください。"+
+	"アイテム未選択"+
+	"リストからアイテムを選択すると詳細が表示されます。"+
+	"検索"+
+	"新規アイテム"+
+	"ロック"+
+	"ユーザー名をコピー"+
+	"パスワードをコピー"+
+	"認証コードをコピー"+
+	"公開鍵をコピー"+
+	"完全に削除…"+
+	"お気に入りに追加"+
+	"お気に入りから削除"+
+	"複製"+
+	"アーカイブ"+
+	"アーカイブ解除"+
+	"ごみ箱に移動"+
+	"ユーザー名"+
+	"パスワード"+
+	"組織により非表示"+
+	"パスワードを表示"+
+	"パスワードをコピー"+
+	"ユーザー名をコピー"+
+	"認証情報"+
+	"ウェブサイト"+
+	"ウェブサイトを開く"+
+	"ウェブサイトをコピー"+
+	"ウェブサイト"+
+	"名義人名"+
+	"名義人名をコピー"+
+	"カード番号"+
+	"カード番号を表示"+
+	"カード番号をコピー"+
+	"有効期限"+
+	"有効期限をコピー"+
+	"セキュリティコード"+
+	"ブランド"+
+	"カード詳細"+
+	"氏名"+
+	"会社"+
+	"電話番号"+
+	"個人情報"+
+	"住所"+
+	"住所をコピー"+
+	"社会保障番号"+
+	"パスポート番号"+
+	"パスポート番号をコピー"+
+	"免許証番号"+
+	"免許証番号をコピー"+
+	"身分証明書"+
+	"カスタムフィールド"+
+	"メモ"+
+	"フィンガープリント"+
+	"フィンガープリントをコピー"+
+	"公開鍵"+
+	"公開鍵をコピー"+
+	"秘密鍵"+
+	"旧パスワード"+
+	"閲覧のみ"+
+	"マスターパスワードの再要求"+
+	"ごみ箱内"+
+	"アーカイブ済み"+
+	"完全に削除"+
+	"お気に入りを切り替え"+
+	"アイテムを複製"+
+	"残り時間"+
+	"認証コードを表示"+
+	"認証コードをコピー"+
+	"CARD"+
+	"名義人"+
+	"有効期限"+
+	"パスワードをコピーしました"+
+	"ユーザー名をコピーしました"+
+	"認証コードをコピーしました"+
+	"公開鍵をコピーしました"+
+	"ウェブサイトをコピーしました"+
+	"名義人名をコピーしました"+
+	"カード番号をコピーしました"+
+	"有効期限をコピーしました"+
+	"セキュリティコードをコピーしました"+
+	"氏名をコピーしました"+
+	"会社をコピーしました"+
+	"メールアドレスをコピーしました"+
+	"電話番号をコピーしました"+
+	"住所をコピーしました"+
+	"社会保障番号をコピーしました"+
+	"パスポート番号をコピーしました"+
+	"免許証番号をコピーしました"+
+	"フィンガープリントをコピーしました"+
+	"秘密鍵をコピーしました"+
+	"旧パスワードをコピーしました"+
+	"生成したパスワードをコピーしました"+
+	"コピーに失敗しました"+
+	"クリップボード履歴から非表示"+
+	"マスターパスワードの確認"+
+	"マスターパスワードの確認を利用できません。"+
+	"マスターパスワードが正しくありません。"+
+	"未保存の変更を破棄しますか？"+
+	"このアイテムの編集内容はまだ保存されていません。"+
+	"編集を続ける"+
+	"破棄"+
+	"名前を入力してください。"+
+	"オフライン時は保存できません。"+
+	"アイテムを保存しました"+
+	"保存に失敗しました"+
+	"別のデバイスでアイテムが変更されました"+
+	"前回の同期以降、このアイテムは別の場所で更新されました。変更を上書きしないよう最新バージョンを再読み込みしてください。"+
+	"最新を読み込む"+
+	"サーバーに保存されましたが、このデバイス上のコピーを更新できませんでした。"+
+	"今すぐ同期"+
+	"更新に失敗しました"+
+	"お気に入りを更新しました"+
+	"ごみ箱への移動に失敗しました"+
+	"ごみ箱に移動しました"+
+	"アーカイブに失敗しました"+
+	"アーカイブ解除に失敗しました"+
+	"アイテムをアーカイブしました"+
+	"アーカイブを解除しました"+
+	"復元に失敗しました"+
+	"アイテムを復元しました"+
+	"完全に削除しますか？"+
+	"削除に失敗しました"+
+	"完全に削除しました"+
+	"ごみ箱を空にしますか？"+
+	"ごみ箱を空にできませんでした"+
+	"ごみ箱を空にしました"+
+	"パスキーはコピーされません"+
+	"複製にはログイン情報のみ含まれ、パスキーは含まれません。"+
+	"新規フォルダー"+
+	"フォルダー名を変更"+
+	"フォルダー名"+
+	"フォルダー名を入力してください。"+
+	"フォルダーを保存しました"+
+	"フォルダーを削除しますか？"+
+	"フォルダーの削除に失敗しました"+
+	"フォルダーを削除しました"+
+	"セッション期限切れ"+
+	"同期を再開するには再ログインしてください。"+
+	"キャッシュ済みの保管庫を表示しています。"+
+	"同期に失敗しました"+
+	"保管庫を同期しました"+
+	"未保存の変更あり"+
+	"変更なし"+
+	"アイテム"+
+	"種類"+
+	"名前"+
+	"お気に入り"+
+	"マスターパスワードの再要求"+
+	"メモを追加"+
+	"パスワードを生成"+
+	"認証キー"+
+	"otpauth:// URI またはセットアップキー"+
+	"ウェブサイトを削除"+
+	"ウェブサイトを追加"+
+	"名義人"+
+	"カード記載の氏名"+
+	"Visa、Mastercard、Amex…"+
+	"番号"+
+	"MM"+
+	"YYYY"+
+	"CVV"+
+	"名"+
+	"姓"+
+	"+81 90-1234-5678"+
+	"番地・建物名"+
+	"丸の内 1-1-1"+
+	"市区町村"+
+	"都道府県 / 郵便番号"+
+	"都道府県"+
+	"郵便番号"+
+	"国/地域"+
+	"Ed25519 鍵を生成"+
+	"テキスト"+
+	"非表示"+
+	"フィールド名"+
+	"値"+
+	"フィールドを削除"+
+	"フィールドを追加"+
+	"パスキー"+
+	"保存時に削除"+
+	"パスキーを削除"+
+	"パスキーを削除しますか？"+
+	"削除すると、このパスキーではログインできなくなります。"+
+	"このアイテムに保存済み"+
+	"添付ファイル"+
+	"ファイルを添付"+
+	"ファイルを添付"+
+	"添付"+
+	"添付ファイルを保存"+
+	"ここに保存"+
+	"ダウンロードに失敗しました"+
+	"添付ファイルを保存しました"+
+	"ファイルを開けませんでした"+
+	"ファイルが大きすぎます"+
+	"添付ファイルの上限は 100 MiB です。"+
+	"アップロードに失敗しました"+
+	"ファイルを添付しました"+
+	"添付ファイルを削除しますか？"+
+	"添付ファイルを削除しました"+
+	"パスワード"+
+	"パスフレーズ"+
+	"弱い"+
+	"普通"+
+	"強い"+
+	"非常に強い"+
+	"再生成"+
+	"長さ"+
+	"文字種"+
+	"大文字"+
+	"小文字"+
+	"数字"+
+	"記号"+
+	"紛らわしい文字を除外"+
+	"l、1、I、O、0 を除外"+
+	"単語数"+
+	"オプション"+
+	"単語の区切り文字"+
+	"各単語の間に挿入"+
+	"先頭を大文字にする"+
+	"Correct-Horse-Battery"+
+	"数字を含める"+
+	"いずれかの単語の末尾に数字を追加"+
+	"使い回し"+
+	"弱いパスワード"+
+	"期限切れ間近のカード"+
+	"安全でない HTTP"+
+	"このカテゴリーに問題はありません。"+
+	"問題ありません"+
+	"使い回しや弱いパスワード、期限切れ間近のカード、安全でないウェブサイトはありません。"+
+	"使い回されたパスワード"+
+	"弱いパスワード"+
+	"安全でないウェブサイト"+
+	"このデバイス上でのみチェックされます。サーバーには何も送信されません。"+
+	"よくあるパスワード"+
+	"連続文字や繰り返しが多い"+
+	"1 種類の文字のみ使用"+
+	"推測されやすい"+
+	"バックアップパスワード"+
+	"バックアップを保護"+
+	"このバックアップのエクスポート時に設定したパスワードを入力してください。"+
+	"暗号化バックアップ用のパスワードを設定してください。忘れると復元できません。"+
+	"バックアップパスワード"+
+	"パスワードを確認"+
+	"エクスポート"+
+	"復号"+
+	"パスワードが一致しません。"+
+	"エクスポートに失敗しました"+
+	"暗号化バックアップを保存しました"+
+	"バックアップパスワードは安全に保管してください。忘れると復元できません。"+
+	"バックアップをインポート"+
+	"インポート"+
+	"インポートに失敗しました"+
+	"バックアップパスワードを入力してください。"+
+	"バックアップパスワードが正しくありません。"+
+	"Bitwarden JSON エクスポートファイルではありません。"+
+	"このバックアップは元のアカウントに制限されています。パスワード保護ファイルとして再エクスポートしてください。"+
+	"新規作成"+
+	"コピーを作成"+
+	"既存を更新"+
+	"スキップ"+
+	"進行中のインポートはありません"+
+	"「設定」から「バックアップをインポート」を選ぶと内容を確認できます。"+
+	"インポートを確認"+
+	"新規をすべて選択"+
+	"競合をすべてスキップ"+
+	"競合をすべてコピー"+
+	"競合をすべて更新"+
+	"すべてスキップ"+
+	"個人保管庫"+
+	"組織"+
+	"更新不可：バックアップアイテムが不完全です"+
+	"更新不可：フィールドまたはウェブサイトを安全に照合できません"+
+	"既存のアイテムは読み取り専用です"+
+	"保護済み：更新にはマスターパスワードが必要です"+
+	"GoVault はこの種類のアイテムをまだ保存できないためスキップされました。"+
+	"保管庫に同じ名前のアイテムが複数あるため一致させられません。新しいアイテムとして追加するには「新規作成」を選んでください。"+
+	"バックアップではアーカイブ済みですが、アーカイブ機能にはプレミアムプランが必要なため通常の保管庫に作成されます。"+
+	"名前"+
+	"メモ"+
+	"フォルダー"+
+	"お気に入り"+
+	"パスワード再要求"+
+	"ユーザー名"+
+	"パスワード"+
+	"認証コード"+
+	"ウェブサイト"+
+	"パスキー"+
+	"カード"+
+	"ID"+
+	"SSH キー"+
+	"カスタムフィールド"+
+	"一般"+
+	"言語"+
+	"GoVault の表示言語。「システム設定に従う」はシステムの言語を使用します。"+
+	"システム設定に従う"+
+	"アカウント"+
+	"今すぐ同期"+
+	"鍵導出"+
+	"最終同期"+
+	"未同期"+
+	"ログアウトするとローカルの保管庫キャッシュが削除されます。"+
+	"セキュリティ"+
+	"自動ロック"+
+	"一定時間操作がない場合に保管庫をロックします。"+
+	"スリープまたは画面ロック時にロック"+
+	"Mac がスリープするか画面がロックされたときに保管庫をロックします。"+
+	"バックアップ"+
+	"暗号化バックアップをエクスポート"+
+	"指定したパスワードで保護された Bitwarden 互換の JSON ファイル。"+
+	"エクスポート…"+
+	"バックアップをインポート"+
+	"暗号化または平文の Bitwarden JSON。変更前にすべてのアイテムを確認できます。"+
+	"インポート…"+
+	"プライバシー"+
+	"ウェブサイトアイコンを表示"+
+	"Vaultwarden サーバーからサイトアイコンを取得します。"+
+	"アイコンキャッシュ"+
+	"このデバイスにダウンロードされたサイトアイコンを削除します。"+
+	"アイコンキャッシュを消去"+
+	"アイコンキャッシュを消去しました"+
+	"アイコンキャッシュを消去できませんでした"+
+	"クリップボード"+
+	"コピーしたシークレットを消去"+
+	"コピーした値がクリップボードに残っている場合に自動消去します。"+
+	"プライベートクリップボード"+
+	"クリップボード管理アプリに記録されないようマークします。"+
+	"有効"+
+	"macOS のみ"+
+	"メニューバー"+
+	"トレイ"+
+	"メニューバーアイコンを表示"+
+	"トレイアイコンを表示"+
+	"メニューバーから GoVault を開く・同期・ロックできます。"+
+	"トレイから GoVault を開く・同期・ロックできます。"+
+	"ログイン時に起動"+
+	"サインイン時に GoVault を自動で起動します。"+
+	"Dock アイコンを隠す"+
+	"GoVault をメニューバーのみに表示します。"+
+	"GoVault にアクセスできるよう、先にメニューバーアイコンをオンにしてください。"+
+	"このアプリについて"+
+	"(開発版)"+
+	"アップデートは署名され、自動的にインストールされます。"+
+	"アップデートを確認"+
+	"SSH エージェント"+
+	"SSH エージェントを有効にする"+
+	"ロック解除中の保管庫から SSH キーを提供します。マスターパスワード再要求が設定されたキーは提供されません。"+
+	"ソケット"+
+	"SSH_AUTH_SOCK をコピー"+
+	"別のプロセスがこのソケットを使用中です。"+
+	"このパスは既に存在し、ソケットではありません。"+
+	"このシステムでは Unix ソケットがサポートされていません。"+
+	"この Mac では Touch ID を利用できません。Touch ID 対応キーボードをペアリングするか、「システム設定」で登録してください。"+
+	"すばやくロック解除できるよう、ラップされたキーをシステムキーチェーンに保存します。"+
+	"ハードウェアレベルの保護：macOS は Touch ID 認証後にのみキーを解放します。"+
+	"自動で認証を求める"+
+	"GoVault を開く"+
+	"アップデートを確認…"+
+	"今すぐ同期"+
+	"今すぐロック"+
+	"GoVault を終了"+
+	"編集"+
+	"ウインドウ"+
+	"このアカウントは2段階認証が必要です。"+
+	"メールアドレスまたはマスターパスワードが無効です。"+
+	"サーバーに接続できません。接続とサーバー URL を確認してください。"+
+	"サーバーが別のアドレスにリダイレクトしました。GoVault はリダイレクトを追従しません。"+
+	"サーバー上でこのアイテムが見つかりませんでした。同期してからやり直してください。"+
+	"このアイテムは別のデバイスで変更されました。同期してからやり直してください。"+
+	"添付ファイルの上限は 100 MiB です。"+
+	"このサーバーはアーカイブに対応していません。Vaultwarden 1.36 以降が必要です。"+
+	"アーカイブにはプレミアムプランが必要です。"+
+	"サーバーでアカウント ID を確認できませんでした。同期してからやり直してください。"+
+	"サーバーが変更を確認できませんでした。現在の位置を表示するため同期しました。"+
+	"ごみ箱のアイテムはアーカイブできません。先に復元してください。"+
+	"保管庫がロックされています。ロック解除してからやり直してください。"+
+	"ログインしていません。"+
+	"このアイテムは保管庫にもう存在しません。"+
+	"このフォルダーは保管庫にもう存在しません。"+
+	"このアイテムは読み取り専用です。"+
+	"GoVault はこの組織のアイテムを読み取れません。同期してからやり直してください。"+
+	"この添付ファイルはアイテムにもう存在しません。"+
+	"組織によってこのアイテムのシークレットが非表示になっています。"+
+	"サーバーが GoVault 未対応の添付ファイルアップロード方式を要求しました。"+
+	"保存されたログイン情報は、この保管庫コピーとは異なるサーバーのものです。再ログインしてください。"+
+	"同期するには再ログインしてください。それまではオフラインで保管庫を利用できます。"+
+	"このログインはこのデバイス上の保管庫とは別のアカウントです。別のアカウントを使うには先にログアウトしてください。"+
+	"確認後にアカウントが変更されました。やり直してください。"+
+	"サーバーには変更が保存されましたが、このデバイスのコピーを更新できませんでした。同期して更新してください。"+
+	"このアイテムには、GoVault が新しい鍵へコピーできない暗号化データが含まれています。"+
+	"このアイテムは GoVault がまだ読み取れない形式です。"+
+	"インポート確認後にアイテムが変更されました。もう一度確認してください。"+
+	"この保護されたアイテムを更新するにはマスターパスワードが必要です。"+
+	"GoVault はこの種類のアイテムをまだ保存できません。"+
+	"バックアップアイテムがどの既存アイテムに対応するか判別できません。"+
+	"パスキーを復号できませんでした。"+
+	"バックアップパスワードが正しくありません。"+
+	"暗号化バックアップが大きすぎるため、GoVault で再インポートできません。",
+	[]uint16{
+		15,
+		6,
+		6,
+		6,
+		6,
+		6,
+		6,
+		9,
+		12,
+		9,
+		3,
+		12,
+		18,
+		9,
+		2,
+		10,
+		12,
+		12,
+		9,
+		2,
+		18,
+		10,
+		23,
+		65,
+		16,
+		21,
+		27,
+		27,
+		6,
+		16,
+		226,
+		12,
+		24,
+		141,
+		100,
+		39,
+		13,
+		72,
+		66,
+		12,
+		15,
+		9,
+		7,
+		3,
+		15,
+		8,
+		23,
+		24,
+		15,
+		33,
+		21,
+		18,
+		21,
+		94,
+		45,
+		81,
+		51,
+		38,
+		15,
+		45,
+		54,
+		51,
+		99,
+		57,
+		12,
+		29,
+		29,
+		126,
+		111,
+		102,
+		93,
+		42,
+		63,
+		63,
+		63,
+		33,
+		72,
+		44,
+		126,
+		15,
+		27,
+		6,
+		6,
+		18,
+		18,
+		15,
+		15,
+		21,
+		18,
+		24,
+		15,
+		15,
+		15,
+		21,
+		18,
+		9,
+		21,
+		21,
+		15,
+		9,
+		6,
+		15,
+		21,
+		18,
+		15,
+		21,
+		30,
+		24,
+		30,
+		12,
+		12,
+		49,
+		27,
+		12,
+		12,
+		120,
+		183,
+		138,
+		15,
+		48,
+		24,
+		27,
+		33,
+		12,
+		21,
+		30,
+		57,
+		81,
+		21,
+		75,
+		6,
+		18,
+		9,
+		27,
+		27,
+		27,
+		21,
+		18,
+		24,
+		27,
+		6,
+		15,
+		21,
+		18,
+		15,
+		15,
+		24,
+		24,
+		27,
+		27,
+		12,
+		18,
+		27,
+		30,
+		18,
+		12,
+		24,
+		15,
+		24,
+		27,
+		12,
+		24,
+		27,
+		12,
+		15,
+		6,
+		6,
+		12,
+		12,
+		6,
+		18,
+		18,
+		21,
+		33,
+		15,
+		27,
+		15,
+		27,
+		6,
+		27,
+		39,
+		9,
+		21,
+		9,
+		18,
+		12,
+		39,
+		12,
+		21,
+		15,
+		30,
+		21,
+		12,
+		24,
+		27,
+		4,
+		9,
+		12,
+		39,
+		39,
+		39,
+		33,
+		42,
+		36,
+		39,
+		36,
+		51,
+		30,
+		30,
+		45,
+		36,
+		30,
+		42,
+		45,
+		39,
+		51,
+		33,
+		42,
+		51,
+		30,
+		42,
+		36,
+		63,
+		57,
+		42,
+		72,
+		18,
+		6,
+		36,
+		45,
+		33,
+		27,
+		57,
+		177,
+		21,
+		111,
+		15,
+		27,
+		36,
+		42,
+		30,
+		36,
+		42,
+		42,
+		36,
+		27,
+		33,
+		30,
+		27,
+		27,
+		33,
+		42,
+		30,
+		39,
+		84,
+		21,
+		27,
+		18,
+		48,
+		36,
+		39,
+		45,
+		36,
+		27,
+		63,
+		60,
+		27,
+		30,
+		24,
+		12,
+		12,
+		6,
+		6,
+		15,
+		39,
+		15,
+		24,
+		12,
+		48,
+		27,
+		27,
+		9,
+		24,
+		27,
+		6,
+		2,
+		4,
+		3,
+		3,
+		3,
+		16,
+		18,
+		15,
+		12,
+		27,
+		12,
+		12,
+		10,
+		20,
+		12,
+		9,
+		18,
+		3,
+		24,
+		24,
+		12,
+		18,
+		21,
+		36,
+		81,
+		33,
+		18,
+		21,
+		21,
+		6,
+		27,
+		15,
+		39,
+		39,
+		39,
+		33,
+		48,
+		39,
+		33,
+		42,
+		39,
+		15,
+		18,
+		6,
+		6,
+		6,
+		15,
+		9,
+		6,
+		9,
+		9,
+		9,
+		6,
+		6,
+		30,
+		27,
+		9,
+		15,
+		24,
+		24,
+		27,
+		21,
+		18,
+		48,
+		12,
+		21,
+		30,
+		20,
+		51,
+		21,
+		126,
+		33,
+		21,
+		33,
+		105,
+		27,
+		36,
+		29,
+		21,
+		33,
+		27,
+		108,
+		114,
+		33,
+		24,
+		18,
+		6,
+		39,
+		39,
+		48,
+		108,
+		36,
+		15,
+		36,
+		63,
+		63,
+		69,
+		162,
+		12,
+		18,
+		15,
+		12,
+		45,
+		102,
+		24,
+		24,
+		30,
+		27,
+		24,
+		21,
+		15,
+		6,
+		63,
+		90,
+		48,
+		69,
+		101,
+		183,
+		168,
+		6,
+		6,
+		15,
+		15,
+		24,
+		15,
+		15,
+		15,
+		18,
+		12,
+		9,
+		2,
+		10,
+		27,
+		6,
+		6,
+		104,
+		27,
+		15,
+		15,
+		9,
+		12,
+		9,
+		87,
+		18,
+		15,
+		69,
+		51,
+		97,
+		18,
+		48,
+		86,
+		21,
+		36,
+		105,
+		18,
+		18,
+		39,
+		72,
+		27,
+		90,
+		36,
+		48,
+		60,
+		21,
+		42,
+		93,
+		39,
+		84,
+		6,
+		12,
+		18,
+		9,
+		39,
+		30,
+		78,
+		69,
+		24,
+		60,
+		26,
+		56,
+		110,
+		27,
+		11,
+		81,
+		27,
+		22,
+		40,
+		155,
+		12,
+		26,
+		60,
+		69,
+		81,
+		168,
+		123,
+		103,
+		27,
+		17,
+		30,
+		15,
+		18,
+		17,
+		6,
+		15,
+		55,
+		75,
+		95,
+		122,
+		120,
+		114,
+		48,
+		107,
+		63,
+		118,
+		114,
+		93,
+		99,
+		33,
+		60,
+		63,
+		48,
+		113,
+		69,
+		93,
+		102,
+		144,
+		120,
+		168,
+		84,
+		159,
+		119,
+		72,
+		105,
+		99,
+		71,
+		99,
+		48,
+		63,
+		101,
+	})
+
+// textsKo are the messages without arguments in ko.
+var textsKo = i18n.NewTexts(""+
+	"취소"+
+	"저장"+
+	"삭제"+
+	"제거"+
+	"편집"+
+	"복원"+
+	"확인"+
+	"복사"+
+	"실행 취소"+
+	"안 함"+
+	"—"+
+	"로그인"+
+	"보안 메모"+
+	"카드"+
+	"신원"+
+	"SSH 키"+
+	"항목"+
+	"로그인"+
+	"카드"+
+	"신원"+
+	"보안 메모"+
+	"SSH 키"+
+	"GoVault 로그인"+
+	"Bitwarden 또는 Vaultwarden 서버에 연결합니다."+
+	"서버 URL"+
+	"이메일"+
+	"마스터 비밀번호"+
+	"마스터 비밀번호"+
+	"필수"+
+	"name@example.com"+
+	"이 서버는 HTTPS를 사용하지 않습니다. 마스터 비밀번호와 보관함 데이터가 암호화되지 않은 상태로 전송되므로 신뢰할 수 있는 네트워크에서만 사용하세요."+
+	"로그인"+
+	"잠금 해제로 돌아가기"+
+	"종단간 암호화. 마스터 비밀번호는 이 기기를 떠나지 않습니다."+
+	"서버 URL, 이메일, 마스터 비밀번호를 모두 입력하세요."+
+	"비밀번호 표시 전환"+
+	"2단계 인증"+
+	"이메일로 전송된 인증 코드를 입력하세요."+
+	"인증 앱의 6자리 코드를 입력하세요."+
+	"인증 방법"+
+	"인증 앱"+
+	"이메일"+
+	"YubiKey"+
+	"Duo"+
+	"Duo(조직)"+
+	"FIDO U2F"+
+	"패스키 / WebAuthn"+
+	"기억된 기기"+
+	"인증 코드"+
+	"이 기기 기억"+
+	"로그인으로 돌아가기"+
+	"코드 전송"+
+	"코드 재전송"+
+	"비밀번호가 유출되더라도 2단계 인증으로 보관함을 안전하게 보호합니다."+
+	"인증 코드를 입력하세요."+
+	"인증 코드가 올바르지 않습니다. 확인 후 다시 시도하세요."+
+	"이메일로 인증 코드를 보냈습니다."+
+	"GoVault 잠김"+
+	"잠금 해제"+
+	"또는 마스터 비밀번호 사용"+
+	"로그아웃 또는 계정 전환…"+
+	"로그아웃 또는 계정 전환"+
+	"잠긴 보관함은 이 기기에 암호화된 상태로 보관됩니다."+
+	"마스터 비밀번호를 입력하세요."+
+	"생체 인식"+
+	"GoVault 잠금 해제"+
+	"GoVault 잠금 해제"+
+	"저장된 생체 인식 키를 사용할 수 없습니다. 마스터 비밀번호로 잠금을 해제하세요."+
+	"생체 인식 키가 손상되었습니다. 마스터 비밀번호로 잠금을 해제하세요."+
+	"생체 인식 키가 유효하지 않습니다. 마스터 비밀번호로 잠금을 해제하세요."+
+	"생체 인식 인증에 실패했습니다. 마스터 비밀번호를 입력하세요."+
+	"키체인을 사용할 수 없음"+
+	"시스템 키체인에 접근할 수 없습니다."+
+	"생체 인식 잠금 해제를 끌 수 없습니다"+
+	"생체 인식 잠금 해제를 켤 수 없습니다"+
+	"보관함 잠김"+
+	"일정 시간 활동이 없어 자동으로 잠겼습니다."+
+	"GoVault에서 로그아웃할까요?"+
+	"이 기기에 저장된 암호화된 보관함 캐시와 생체 인식 키가 제거됩니다."+
+	"로그아웃"+
+	"로그아웃됨"+
+	"뒤로"+
+	"앞으로"+
+	"보관함 검색"+
+	"검색 지우기"+
+	"오프라인"+
+	"지금 동기화"+
+	"보관함 잠금"+
+	"새 항목"+
+	"모든 항목"+
+	"즐겨찾기"+
+	"카테고리"+
+	"폴더"+
+	"새 폴더"+
+	"컬렉션"+
+	"도구"+
+	"생성기"+
+	"보관함 상태"+
+	"아카이브"+
+	"휴지통"+
+	"설정"+
+	"가져오기"+
+	"폴더 없음"+
+	"컬렉션"+
+	"폴더"+
+	"폴더 작업"+
+	"폴더 이름 변경…"+
+	"폴더 삭제"+
+	"창 크기 조절"+
+	"동기화 중…"+
+	"동기화 대기 중"+
+	"오프라인 · 캐시된 보관함"+
+	"세션 만료됨"+
+	"동기화됨"+
+	"방금"+
+	"동기화하려면 다시 로그인하세요. 그전까지 보관함을 오프라인으로 사용할 수 있습니다."+
+	"세션이 만료되었습니다. 캐시된 보관함은 계속 볼 수 있습니다. 동기화를 재개하려면 다시 로그인하세요."+
+	"로그인 정보를 저장할 수 없습니다. 잠금 후에도 동기화할 수 있도록 다시 로그인하세요."+
+	"다시 로그인"+
+	"휴지통의 항목은 복원할 수 있습니다."+
+	"휴지통 비우기"+
+	"모든 항목에서"+
+	"모든 항목 검색"+
+	"결과 없음"+
+	"휴지통이 비어 있음"+
+	"항목 없음"+
+	"삭제한 항목이 여기에 표시됩니다."+
+	"“새 항목”을 선택해 첫 번째 항목을 추가하세요."+
+	"선택된 항목 없음"+
+	"목록에서 항목을 선택하면 세부 정보가 표시됩니다."+
+	"검색"+
+	"새 항목"+
+	"잠금"+
+	"사용자 이름 복사"+
+	"비밀번호 복사"+
+	"인증 코드 복사"+
+	"공개 키 복사"+
+	"영구 삭제…"+
+	"즐겨찾기에 추가"+
+	"즐겨찾기에서 제거"+
+	"복제"+
+	"아카이브에 보관"+
+	"보관 해제"+
+	"휴지통으로 이동"+
+	"사용자 이름"+
+	"비밀번호"+
+	"조직에서 숨김"+
+	"비밀번호 표시"+
+	"비밀번호 복사"+
+	"사용자 이름 복사"+
+	"자격 증명"+
+	"웹사이트"+
+	"웹사이트 열기"+
+	"웹사이트 복사"+
+	"웹사이트"+
+	"카드 소유자 이름"+
+	"카드 소유자 이름 복사"+
+	"카드 번호"+
+	"카드 번호 표시"+
+	"카드 번호 복사"+
+	"만료일"+
+	"만료일 복사"+
+	"보안 코드"+
+	"브랜드"+
+	"카드 세부 정보"+
+	"이름"+
+	"회사"+
+	"전화번호"+
+	"개인 정보"+
+	"주소"+
+	"주소 복사"+
+	"주민등록번호"+
+	"여권 번호"+
+	"여권 번호 복사"+
+	"면허 번호"+
+	"면허 번호 복사"+
+	"신분증"+
+	"사용자 지정 필드"+
+	"메모"+
+	"지문"+
+	"지문 복사"+
+	"공개 키"+
+	"공개 키 복사"+
+	"비공개 키"+
+	"이전 비밀번호"+
+	"보기 전용"+
+	"마스터 비밀번호 재확인"+
+	"휴지통에 있음"+
+	"보관됨"+
+	"영구 삭제"+
+	"즐겨찾기 전환"+
+	"항목 복제"+
+	"남은 시간"+
+	"인증 코드 표시"+
+	"인증 코드 복사"+
+	"CARD"+
+	"카드 소유자"+
+	"만료일"+
+	"비밀번호 복사됨"+
+	"사용자 이름 복사됨"+
+	"인증 코드 복사됨"+
+	"공개 키 복사됨"+
+	"웹사이트 복사됨"+
+	"카드 소유자 이름 복사됨"+
+	"카드 번호 복사됨"+
+	"만료일 복사됨"+
+	"보안 코드 복사됨"+
+	"이름 복사됨"+
+	"회사 복사됨"+
+	"이메일 복사됨"+
+	"전화번호 복사됨"+
+	"주소 복사됨"+
+	"주민등록번호 복사됨"+
+	"여권 번호 복사됨"+
+	"면허 번호 복사됨"+
+	"지문 복사됨"+
+	"비공개 키 복사됨"+
+	"이전 비밀번호 복사됨"+
+	"생성된 비밀번호 복사됨"+
+	"복사 실패"+
+	"클립보드 기록에서 숨겨짐"+
+	"마스터 비밀번호 확인"+
+	"마스터 비밀번호 확인을 사용할 수 없습니다."+
+	"마스터 비밀번호가 올바르지 않습니다."+
+	"저장하지 않은 변경 사항을 버릴까요?"+
+	"이 항목에 대한 편집 내용이 아직 저장되지 않았습니다."+
+	"계속 편집"+
+	"버리기"+
+	"이름을 입력하세요."+
+	"오프라인 상태에서는 저장할 수 없습니다."+
+	"항목 저장됨"+
+	"저장 실패"+
+	"다른 기기에서 항목이 변경됨"+
+	"마지막 동기화 이후 다른 곳에서 이 항목이 업데이트되었습니다. 변경 사항을 덮어쓰지 않도록 최신 버전을 다시 불러오세요."+
+	"최신 버전 불러오기"+
+	"서버에 저장되었지만 이 기기의 사본을 업데이트하지 못했습니다."+
+	"지금 동기화"+
+	"업데이트 실패"+
+	"즐겨찾기 업데이트됨"+
+	"휴지통으로 이동 실패"+
+	"휴지통으로 이동됨"+
+	"보관 실패"+
+	"보관 해제 실패"+
+	"항목이 보관됨"+
+	"항목 보관 해제됨"+
+	"복원 실패"+
+	"항목 복원됨"+
+	"영구 삭제할까요?"+
+	"삭제 실패"+
+	"영구 삭제됨"+
+	"휴지통을 비울까요?"+
+	"휴지통 비우기 실패"+
+	"휴지통 비워짐"+
+	"패스키는 복사되지 않습니다"+
+	"복제본에는 패스키를 제외한 로그인 정보만 포함됩니다."+
+	"새 폴더"+
+	"폴더 이름 변경"+
+	"폴더 이름"+
+	"폴더 이름을 입력하세요."+
+	"폴더 저장됨"+
+	"폴더를 삭제할까요?"+
+	"폴더 삭제 실패"+
+	"폴더 삭제됨"+
+	"세션 만료됨"+
+	"동기화를 재개하려면 다시 로그인하세요."+
+	"캐시된 보관함을 표시하고 있습니다."+
+	"동기화 실패"+
+	"보관함 동기화됨"+
+	"저장되지 않은 변경 사항"+
+	"변경 사항 없음"+
+	"항목"+
+	"유형"+
+	"이름"+
+	"즐겨찾기"+
+	"마스터 비밀번호 재확인"+
+	"메모 추가"+
+	"비밀번호 생성"+
+	"인증기"+
+	"otpauth:// URI 또는 설정 키"+
+	"웹사이트 제거"+
+	"웹사이트 추가"+
+	"카드 소유자"+
+	"카드에 표시된 이름"+
+	"Visa, Mastercard, Amex…"+
+	"번호"+
+	"MM"+
+	"YYYY"+
+	"CVV"+
+	"이름"+
+	"성"+
+	"+82 10-1234-5678"+
+	"도로명 주소"+
+	"세종대로 110"+
+	"시/군/구"+
+	"시/도 / 우편번호"+
+	"시/도"+
+	"우편번호"+
+	"국가/지역"+
+	"Ed25519 키 생성"+
+	"텍스트"+
+	"숨김"+
+	"필드 이름"+
+	"값"+
+	"필드 제거"+
+	"필드 추가"+
+	"패스키"+
+	"저장 시 제거됨"+
+	"패스키 제거"+
+	"패스키를 제거할까요?"+
+	"제거하면 더 이상 이 패스키로 로그인할 수 없습니다."+
+	"이 항목에 저장됨"+
+	"첨부 파일"+
+	"파일 첨부"+
+	"파일 첨부"+
+	"첨부"+
+	"첨부 파일 저장"+
+	"여기에 저장"+
+	"다운로드 실패"+
+	"첨부 파일 저장됨"+
+	"파일을 열 수 없습니다"+
+	"파일이 너무 큼"+
+	"첨부 파일은 최대 100 MiB까지 가능합니다."+
+	"업로드 실패"+
+	"파일 첨부됨"+
+	"첨부 파일을 삭제할까요?"+
+	"첨부 파일 삭제됨"+
+	"비밀번호"+
+	"패스프레이즈"+
+	"약함"+
+	"보통"+
+	"강함"+
+	"매우 강함"+
+	"다시 생성"+
+	"길이"+
+	"문자"+
+	"대문자"+
+	"소문자"+
+	"숫자"+
+	"특수문자"+
+	"혼동하기 쉬운 문자 제외"+
+	"l, 1, I, O, 0 제외"+
+	"단어 수"+
+	"옵션"+
+	"단어 구분 기호"+
+	"각 단어 사이에 삽입"+
+	"첫 글자 대문자"+
+	"Correct-Horse-Battery"+
+	"숫자 포함"+
+	"단어 하나에 숫자 추가"+
+	"중복 사용"+
+	"취약한 비밀번호"+
+	"만료 예정 카드"+
+	"안전하지 않은 HTTP"+
+	"이 카테고리에 문제가 없습니다."+
+	"모두 안전함"+
+	"중복되거나 취약한 비밀번호, 만료 예정 카드 또는 안전하지 않은 웹사이트가 없습니다."+
+	"중복 사용된 비밀번호"+
+	"취약한 비밀번호"+
+	"안전하지 않은 웹사이트"+
+	"이 기기에서만 검사됩니다. 서버로 아무것도 전송되지 않습니다."+
+	"흔한 비밀번호"+
+	"주로 연속되거나 반복되는 문자"+
+	"한 가지 문자 유형만 사용"+
+	"추측하기 쉬움"+
+	"백업 비밀번호"+
+	"백업 보호"+
+	"이 백업을 내보낼 때 설정한 비밀번호를 입력하세요."+
+	"암호화된 백업에 사용할 비밀번호를 입력하세요. 잊어버리면 복구할 수 없습니다."+
+	"백업 비밀번호"+
+	"비밀번호 확인"+
+	"내보내기"+
+	"복호화"+
+	"비밀번호가 일치하지 않습니다."+
+	"내보내기 실패"+
+	"암호화된 백업 저장됨"+
+	"백업 비밀번호를 안전하게 보관하세요. 잊어버리면 복구할 수 없습니다."+
+	"백업 가져오기"+
+	"가져오기"+
+	"가져오기 실패"+
+	"백업 비밀번호를 입력하세요."+
+	"백업 비밀번호가 올바르지 않습니다."+
+	"Bitwarden JSON 내보내기 파일이 아닙니다."+
+	"이 백업은 원래 계정에 잠겨 있습니다. 비밀번호로 보호된 파일로 다시 내보내세요."+
+	"새로 만들기"+
+	"사본 만들기"+
+	"기존 항목 업데이트"+
+	"건너뛰기"+
+	"진행 중인 가져오기 없음"+
+	"“설정”에서 “백업 가져오기”를 선택해 백업을 검토하세요."+
+	"가져오기 검토"+
+	"새 항목 모두 선택"+
+	"모든 충돌 건너뛰기"+
+	"모든 충돌 사본 만들기"+
+	"모든 충돌 업데이트"+
+	"모두 건너뛰기"+
+	"개인 보관함"+
+	"조직"+
+	"업데이트 불가: 백업 항목이 불완전함"+
+	"업데이트 불가: 필드나 웹사이트를 안전하게 일치시킬 수 없음"+
+	"기존 항목이 읽기 전용임"+
+	"보호됨: 업데이트 시 마스터 비밀번호 필요"+
+	"GoVault가 아직 이 유형의 항목을 저장할 수 없어 건너뛰었습니다."+
+	"같은 이름의 항목이 여러 개 있어 자동으로 일치시킬 수 없습니다. 새 항목으로 추가하려면 “새로 만들기”를 선택하세요."+
+	"백업에서 보관된 항목이지만 아카이브 기능은 프리미엄 멤버십이 필요하므로 보관함에 바로 생성됩니다."+
+	"이름"+
+	"메모"+
+	"폴더"+
+	"즐겨찾기"+
+	"비밀번호 재확인"+
+	"사용자 이름"+
+	"비밀번호"+
+	"인증 코드"+
+	"웹사이트"+
+	"패스키"+
+	"카드"+
+	"신원"+
+	"SSH 키"+
+	"사용자 지정 필드"+
+	"일반"+
+	"언어"+
+	"GoVault에 표시되는 언어입니다. “시스템 기본값”은 시스템 언어를 따릅니다."+
+	"시스템 기본값"+
+	"계정"+
+	"지금 동기화"+
+	"키 파생"+
+	"마지막 동기화"+
+	"아직 동기화 안 됨"+
+	"로그아웃하면 로컬 보관함 캐시가 제거됩니다."+
+	"보안"+
+	"자동 잠금"+
+	"일정 시간 활동이 없으면 보관함을 자동으로 잠급니다."+
+	"잠자기 또는 화면 잠금 시 잠금"+
+	"Mac이 잠자기 상태가 되거나 화면이 잠길 때 보관함을 잠급니다."+
+	"백업"+
+	"암호화된 백업 내보내기"+
+	"지정한 비밀번호로 보호되는 Bitwarden 호환 JSON 파일입니다."+
+	"내보내기…"+
+	"백업 가져오기"+
+	"암호화되거나 일반 텍스트인 Bitwarden JSON 파일. 변경 전에 모든 항목을 검토할 수 있습니다."+
+	"가져오기…"+
+	"개인정보 보호"+
+	"웹사이트 아이콘 표시"+
+	"Vaultwarden 서버에서 사이트 아이콘을 가져옵니다."+
+	"아이콘 캐시"+
+	"이 기기에 다운로드된 사이트 아이콘을 제거합니다."+
+	"아이콘 캐시 지우기"+
+	"아이콘 캐시 지워짐"+
+	"아이콘 캐시를 지울 수 없습니다"+
+	"클립보드"+
+	"복사한 비밀 정보 지우기"+
+	"복사한 값이 클립보드에 그대로 남아 있으면 자동으로 지웁니다."+
+	"비공개 클립보드"+
+	"클립보드 관리자가 기록하지 않도록 비밀 정보를 표시합니다."+
+	"활성"+
+	"macOS 전용"+
+	"메뉴 막대"+
+	"트레이"+
+	"메뉴 막대 아이콘 표시"+
+	"트레이 아이콘 표시"+
+	"메뉴 막대에서 GoVault 열기, 동기화 또는 잠금을 실행합니다."+
+	"트레이에서 GoVault 열기, 동기화 또는 잠금을 실행합니다."+
+	"로그인 시 시작"+
+	"시스템에 로그인할 때 GoVault를 자동으로 실행합니다."+
+	"Dock 아이콘 숨기기"+
+	"GoVault를 메뉴 막대에만 표시합니다."+
+	"GoVault에 접근할 수 있도록 먼저 메뉴 막대 아이콘을 켜세요."+
+	"정보"+
+	"(개발 버전)"+
+	"업데이트는 서명되어 자동으로 설치됩니다."+
+	"업데이트 확인"+
+	"SSH 에이전트"+
+	"SSH 에이전트 활성화"+
+	"잠금 해제된 보관함에서 SSH 키를 제공합니다. 마스터 비밀번호 재확인이 설정된 키는 제공되지 않습니다."+
+	"소켓"+
+	"SSH_AUTH_SOCK 복사"+
+	"다른 프로세스가 이미 이 소켓을 사용 중입니다."+
+	"해당 경로가 이미 존재하며 소켓이 아닙니다."+
+	"이 시스템에서는 Unix 소켓이 지원되지 않습니다."+
+	"이 Mac에서 Touch ID를 사용할 수 없습니다. Touch ID 키보드를 페어링하거나 “시스템 설정”에서 등록하세요."+
+	"빠른 잠금 해제를 위해 래핑된 키를 시스템 키체인에 보관합니다."+
+	"하드웨어 수준 보호: macOS는 Touch ID 인증 후에만 키를 해제합니다."+
+	"자동으로 요청"+
+	"GoVault 열기"+
+	"업데이트 확인…"+
+	"지금 동기화"+
+	"지금 잠금"+
+	"GoVault 종료"+
+	"편집"+
+	"윈도우"+
+	"이 계정은 2단계 인증이 필요합니다."+
+	"이메일 또는 마스터 비밀번호가 올바르지 않습니다."+
+	"서버에 연결할 수 없습니다. 네트워크 연결과 서버 URL을 확인하세요."+
+	"서버가 다른 주소로 리디렉션했습니다. GoVault는 리디렉션을 따르지 않습니다."+
+	"서버에서 이 항목을 찾을 수 없습니다. 동기화한 후 다시 시도하세요."+
+	"다른 기기에서 이 항목이 변경되었습니다. 동기화한 후 다시 시도하세요."+
+	"첨부 파일은 최대 100 MiB까지 가능합니다."+
+	"이 서버는 아카이브를 지원하지 않습니다. Vaultwarden 1.36 이상이 필요합니다."+
+	"아카이브 기능은 프리미엄 멤버십이 필요합니다."+
+	"서버에서 계정 ID를 확인할 수 없습니다. 동기화한 후 다시 시도하세요."+
+	"서버가 변경 사항을 확인하지 못했습니다. 현재 위치를 표시하기 위해 다시 동기화했습니다."+
+	"휴지통의 항목은 보관할 수 없습니다. 먼저 항목을 복원하세요."+
+	"보관함이 잠겨 있습니다. 잠금을 해제한 후 다시 시도하세요."+
+	"로그인되어 있지 않습니다."+
+	"이 항목은 더 이상 보관함에 없습니다."+
+	"이 폴더는 더 이상 보관함에 없습니다."+
+	"이 항목은 읽기 전용입니다."+
+	"GoVault가 이 조직의 항목을 읽을 수 없습니다. 동기화한 후 다시 시도하세요."+
+	"이 첨부 파일은 더 이상 항목에 없습니다."+
+	"조직에서 이 항목의 비밀 정보를 숨겼습니다."+
+	"서버가 GoVault에서 지원하지 않는 첨부 파일 업로드 방식을 요청했습니다."+
+	"저장된 로그인 정보가 이 보관함 사본과 다른 서버의 것입니다. 다시 로그인하세요."+
+	"동기화하려면 다시 로그인하세요. 그전까지 보관함을 오프라인으로 사용할 수 있습니다."+
+	"이 기기의 보관함과 다른 계정으로 로그인했습니다. 다른 계정을 사용하려면 먼저 로그아웃하세요."+
+	"확인 이후 계정이 변경되었습니다. 다시 시도하세요."+
+	"서버에는 변경 사항이 저장되었지만 이 기기의 사본을 업데이트하지 못했습니다. 동기화하여 새로 고치세요."+
+	"이 항목에는 GoVault가 새 키로 복사할 수 없는 암호화 데이터가 포함되어 있습니다."+
+	"이 항목은 GoVault가 아직 읽을 수 없는 형식입니다."+
+	"가져오기를 검토한 후 항목이 변경되었습니다. 다시 검토하세요."+
+	"이 보호된 항목을 업데이트하려면 마스터 비밀번호가 필요합니다."+
+	"GoVault는 아직 이 유형의 항목을 저장할 수 없습니다."+
+	"백업 항목이 어떤 기존 항목에 해당하는지 판단할 수 없습니다."+
+	"패스키를 복호화할 수 없습니다."+
+	"백업 비밀번호가 올바르지 않습니다."+
+	"암호화된 백업이 너무 커서 GoVault에서 다시 가져올 수 없습니다.",
+	[]uint16{
+		6,
+		6,
+		6,
+		6,
+		6,
+		6,
+		6,
+		6,
+		13,
+		7,
+		3,
+		9,
+		13,
+		6,
+		6,
+		7,
+		6,
+		9,
+		6,
+		6,
+		13,
+		7,
+		17,
+		55,
+		10,
+		9,
+		22,
+		22,
+		6,
+		16,
+		207,
+		9,
+		29,
+		84,
+		72,
+		26,
+		14,
+		56,
+		48,
+		13,
+		10,
+		9,
+		7,
+		3,
+		11,
+		8,
+		20,
+		16,
+		13,
+		17,
+		28,
+		13,
+		16,
+		98,
+		33,
+		78,
+		46,
+		14,
+		13,
+		36,
+		36,
+		33,
+		73,
+		42,
+		13,
+		21,
+		21,
+		111,
+		96,
+		100,
+		86,
+		33,
+		50,
+		51,
+		51,
+		16,
+		60,
+		36,
+		94,
+		12,
+		15,
+		6,
+		9,
+		16,
+		16,
+		12,
+		16,
+		16,
+		10,
+		13,
+		12,
+		12,
+		6,
+		10,
+		9,
+		6,
+		9,
+		16,
+		12,
+		9,
+		6,
+		12,
+		13,
+		9,
+		6,
+		13,
+		23,
+		13,
+		17,
+		16,
+		20,
+		35,
+		16,
+		12,
+		6,
+		118,
+		140,
+		118,
+		16,
+		50,
+		19,
+		19,
+		20,
+		13,
+		26,
+		13,
+		46,
+		67,
+		23,
+		69,
+		6,
+		10,
+		6,
+		23,
+		19,
+		20,
+		17,
+		16,
+		22,
+		25,
+		6,
+		22,
+		13,
+		22,
+		16,
+		12,
+		19,
+		19,
+		19,
+		23,
+		13,
+		12,
+		19,
+		19,
+		12,
+		23,
+		30,
+		13,
+		20,
+		20,
+		9,
+		16,
+		13,
+		9,
+		20,
+		6,
+		6,
+		12,
+		13,
+		6,
+		13,
+		18,
+		13,
+		20,
+		13,
+		20,
+		9,
+		23,
+		6,
+		6,
+		13,
+		10,
+		17,
+		13,
+		19,
+		13,
+		32,
+		19,
+		9,
+		13,
+		19,
+		13,
+		13,
+		20,
+		20,
+		4,
+		16,
+		9,
+		22,
+		26,
+		23,
+		20,
+		22,
+		33,
+		23,
+		19,
+		23,
+		16,
+		16,
+		19,
+		22,
+		16,
+		28,
+		23,
+		23,
+		16,
+		23,
+		29,
+		32,
+		13,
+		35,
+		29,
+		60,
+		52,
+		50,
+		74,
+		13,
+		9,
+		26,
+		56,
+		16,
+		13,
+		39,
+		167,
+		26,
+		88,
+		16,
+		19,
+		28,
+		29,
+		25,
+		13,
+		20,
+		19,
+		23,
+		13,
+		16,
+		23,
+		13,
+		16,
+		26,
+		26,
+		19,
+		38,
+		75,
+		10,
+		20,
+		13,
+		33,
+		16,
+		26,
+		20,
+		16,
+		16,
+		55,
+		49,
+		16,
+		22,
+		33,
+		20,
+		6,
+		6,
+		6,
+		12,
+		32,
+		13,
+		19,
+		9,
+		32,
+		19,
+		19,
+		16,
+		26,
+		25,
+		6,
+		2,
+		4,
+		3,
+		6,
+		3,
+		16,
+		16,
+		16,
+		11,
+		22,
+		7,
+		12,
+		13,
+		18,
+		9,
+		6,
+		13,
+		3,
+		13,
+		13,
+		9,
+		20,
+		16,
+		29,
+		71,
+		23,
+		13,
+		13,
+		13,
+		6,
+		20,
+		16,
+		19,
+		23,
+		30,
+		20,
+		54,
+		16,
+		16,
+		33,
+		23,
+		12,
+		18,
+		6,
+		6,
+		6,
+		13,
+		13,
+		6,
+		6,
+		9,
+		9,
+		6,
+		12,
+		33,
+		20,
+		10,
+		6,
+		20,
+		27,
+		20,
+		21,
+		13,
+		30,
+		13,
+		22,
+		20,
+		24,
+		43,
+		16,
+		117,
+		29,
+		22,
+		32,
+		86,
+		19,
+		42,
+		34,
+		19,
+		19,
+		13,
+		70,
+		109,
+		19,
+		19,
+		12,
+		9,
+		42,
+		19,
+		29,
+		96,
+		19,
+		12,
+		19,
+		39,
+		49,
+		51,
+		111,
+		16,
+		16,
+		26,
+		12,
+		33,
+		84,
+		19,
+		24,
+		26,
+		30,
+		26,
+		19,
+		16,
+		6,
+		50,
+		83,
+		33,
+		57,
+		85,
+		164,
+		140,
+		6,
+		6,
+		6,
+		12,
+		22,
+		16,
+		12,
+		13,
+		12,
+		9,
+		6,
+		6,
+		7,
+		23,
+		6,
+		6,
+		103,
+		19,
+		6,
+		16,
+		10,
+		19,
+		24,
+		62,
+		6,
+		13,
+		73,
+		41,
+		84,
+		6,
+		32,
+		77,
+		15,
+		19,
+		120,
+		15,
+		19,
+		29,
+		64,
+		16,
+		69,
+		26,
+		26,
+		43,
+		12,
+		33,
+		86,
+		22,
+		82,
+		6,
+		12,
+		13,
+		9,
+		30,
+		26,
+		79,
+		75,
+		20,
+		70,
+		24,
+		47,
+		79,
+		6,
+		15,
+		58,
+		19,
+		16,
+		26,
+		140,
+		6,
+		20,
+		64,
+		60,
+		64,
+		140,
+		87,
+		86,
+		19,
+		14,
+		22,
+		16,
+		13,
+		14,
+		6,
+		9,
+		48,
+		69,
+		91,
+		103,
+		92,
+		97,
+		54,
+		100,
+		65,
+		94,
+		123,
+		84,
+		81,
+		36,
+		51,
+		51,
+		37,
+		100,
+		55,
+		60,
+		97,
+		111,
+		118,
+		132,
+		70,
+		145,
+		109,
+		66,
+		86,
+		88,
+		69,
+		84,
+		43,
+		49,
+		85,
+	})
+
+// textsPtBR are the messages without arguments in pt-BR.
+var textsPtBR = i18n.NewTexts(""+
+	"Cancelar"+
+	"Salvar"+
+	"Excluir"+
+	"Remover"+
+	"Editar"+
+	"Restaurar"+
+	"Verificar"+
+	"Copiar"+
+	"Desfazer"+
+	"Nunca"+
+	"—"+
+	"Credencial"+
+	"Anotação segura"+
+	"Cartão"+
+	"Identidade"+
+	"Chave SSH"+
+	"Item"+
+	"Credenciais"+
+	"Cartões"+
+	"Identidades"+
+	"Anotações seguras"+
+	"Chaves SSH"+
+	"Entrar no GoVault"+
+	"Conecte-se ao seu servidor Bitwarden ou Vaultwarden."+
+	"URL do servidor"+
+	"E-mail"+
+	"Senha principal"+
+	"Senha principal"+
+	"Obrigatório"+
+	"nome@exemplo.com.br"+
+	"Este servidor não usa HTTPS. Sua senha principal e os dados do cofre serão enviados sem criptografia; use-o apenas em uma rede confiável."+
+	"Entrar"+
+	"Voltar ao desbloqueio"+
+	"Criptografia de ponta a ponta. Sua senha principal nunca sai deste dispositivo."+
+	"URL do servidor, e-mail e senha principal são obrigatórios."+
+	"Mostrar ou ocultar senha"+
+	"Verificação em duas etapas"+
+	"Digite o código enviado para seu e-mail."+
+	"Digite o código de 6 dígitos do seu aplicativo autenticador."+
+	"Método de verificação"+
+	"Aplicativo autenticador"+
+	"E-mail"+
+	"YubiKey"+
+	"Duo"+
+	"Duo (Organização)"+
+	"FIDO U2F"+
+	"Chave de acesso / WebAuthn"+
+	"Dispositivo lembrado"+
+	"Código de verificação"+
+	"Lembrar este dispositivo"+
+	"Voltar ao login"+
+	"Enviar código"+
+	"Reenviar código"+
+	"A autenticação em duas etapas mantém seu cofre seguro mesmo se sua senha vazar."+
+	"Digite o código de verificação."+
+	"Código de verificação inválido. Verifique e tente novamente."+
+	"Um código de verificação foi enviado para seu e-mail."+
+	"O GoVault está bloqueado"+
+	"Desbloquear"+
+	"ou use sua senha principal"+
+	"Sair ou trocar de conta…"+
+	"Sair ou trocar de conta"+
+	"Cofres bloqueados permanecem criptografados neste dispositivo."+
+	"Digite sua senha principal."+
+	"Biometria"+
+	"Desbloquear o GoVault"+
+	"desbloquear o GoVault"+
+	"Chave biométrica salva indisponível. Desbloqueie com sua senha principal."+
+	"Chave biométrica corrompida. Desbloqueie com sua senha principal."+
+	"Chave biométrica inválida. Desbloqueie com sua senha principal."+
+	"Falha na autenticação biométrica. Digite sua senha principal."+
+	"Chaves indisponíveis"+
+	"Não foi possível acessar as chaves do sistema."+
+	"Não foi possível desativar o desbloqueio biométrico"+
+	"Não foi possível ativar o desbloqueio biométrico"+
+	"Cofre bloqueado"+
+	"Bloqueado automaticamente por inatividade."+
+	"Sair do GoVault?"+
+	"O cache local criptografado do cofre e a chave biométrica salva serão removidos deste dispositivo."+
+	"Sair"+
+	"Desconectado"+
+	"Voltar"+
+	"Avançar"+
+	"Pesquisar no cofre"+
+	"Limpar pesquisa"+
+	"Offline"+
+	"Sincronizar agora"+
+	"Bloquear cofre"+
+	"Novo item"+
+	"Todos os itens"+
+	"Favoritos"+
+	"Categorias"+
+	"Pastas"+
+	"Nova pasta"+
+	"Conjuntos"+
+	"Ferramentas"+
+	"Gerador"+
+	"Saúde do cofre"+
+	"Arquivo"+
+	"Lixeira"+
+	"Configurações"+
+	"Importar"+
+	"Sem pasta"+
+	"Conjunto"+
+	"Pasta"+
+	"Ações da pasta"+
+	"Renomear pasta…"+
+	"Excluir pasta"+
+	"Redimensionar painel"+
+	"Sincronizando…"+
+	"Sync pendente"+
+	"Offline · cofre em cache"+
+	"Sessão expirada"+
+	"Sincronizado"+
+	"agora mesmo"+
+	"Entre novamente para sincronizar. Até lá, seu cofre continua disponível offline."+
+	"Sessão expirada — seu cofre em cache continua legível. Entre novamente para retomar a sincronização."+
+	"Não foi possível salvar seu login. Entre novamente para que o GoVault possa sincronizar após o bloqueio."+
+	"Entrar novamente"+
+	"Itens na lixeira podem ser restaurados."+
+	"Esvaziar lixeira"+
+	"Em Todos os itens"+
+	"Pesquisar em tudo"+
+	"Sem resultados"+
+	"A lixeira está vazia"+
+	"Nenhum item"+
+	"Itens excluídos aparecem aqui."+
+	"Escolha “Novo item” para adicionar sua primeira entrada."+
+	"Nenhum item selecionado"+
+	"Escolha um item da lista para ver seus detalhes."+
+	"Pesquisar"+
+	"Novo item"+
+	"Bloquear"+
+	"Copiar usuário"+
+	"Copiar senha"+
+	"Copiar código de verificação"+
+	"Copiar chave pública"+
+	"Excluir permanentemente…"+
+	"Adicionar aos favoritos"+
+	"Remover dos favoritos"+
+	"Clonar"+
+	"Arquivar"+
+	"Desarquivar"+
+	"Mover para a lixeira"+
+	"Nome de usuário"+
+	"Senha"+
+	"Oculto pela sua organização"+
+	"Mostrar senha"+
+	"Copiar senha"+
+	"Copiar usuário"+
+	"Credenciais"+
+	"Site"+
+	"Abrir site"+
+	"Copiar site"+
+	"Sites"+
+	"Nome do titular"+
+	"Copiar titular"+
+	"Número do cartão"+
+	"Mostrar número do cartão"+
+	"Copiar número do cartão"+
+	"Vencimento"+
+	"Copiar vencimento"+
+	"Código de segurança"+
+	"Bandeira"+
+	"Detalhes do cartão"+
+	"Nome completo"+
+	"Empresa"+
+	"Telefone"+
+	"Pessoal"+
+	"Endereço"+
+	"Copiar endereço"+
+	"Número de CPF"+
+	"Número do passaporte"+
+	"Copiar número do passaporte"+
+	"Número da CNH"+
+	"Copiar número da CNH"+
+	"Documentos"+
+	"Campos personalizados"+
+	"Anotações"+
+	"Impressão digital"+
+	"Copiar impressão digital"+
+	"Chave pública"+
+	"Copiar chave pública"+
+	"Chave privada"+
+	"senha antiga"+
+	"Somente leitura"+
+	"Pedir senha"+
+	"Na lixeira"+
+	"Arquivado"+
+	"Excluir permanentemente"+
+	"Alternar favorito"+
+	"Clonar item"+
+	"Tempo restante"+
+	"Mostrar código de verificação"+
+	"Copiar código de verificação"+
+	"CARTÃO"+
+	"TITULAR"+
+	"VALIDADE"+
+	"Senha copiada"+
+	"Nome de usuário copiado"+
+	"Código de verificação copiado"+
+	"Chave pública copiada"+
+	"Site copiado"+
+	"Titular copiado"+
+	"Número do cartão copiado"+
+	"Vencimento copiado"+
+	"Código de segurança copiado"+
+	"Nome completo copiado"+
+	"Empresa copiada"+
+	"E-mail copiado"+
+	"Telefone copiado"+
+	"Endereço copiado"+
+	"Número de CPF copiado"+
+	"Número do passaporte copiado"+
+	"Número da CNH copiado"+
+	"Impressão digital copiada"+
+	"Chave privada copiada"+
+	"Senha antiga copiada"+
+	"Senha gerada copiada"+
+	"Falha ao copiar"+
+	"Oculto do histórico da área de transferência"+
+	"Verificação de senha principal"+
+	"A verificação de senha principal não está disponível."+
+	"Senha principal incorreta."+
+	"Descartar alterações não salvas?"+
+	"Suas edições neste item ainda não foram salvas."+
+	"Continuar editando"+
+	"Descartar"+
+	"O nome é obrigatório."+
+	"Não é possível salvar offline."+
+	"Item salvo"+
+	"Falha ao salvar"+
+	"Item alterado em outro dispositivo"+
+	"Este item foi atualizado em outro lugar desde a última sincronização. Recarregue a versão mais recente para não sobrescrever alterações."+
+	"Recarregar versão"+
+	"Salvo no servidor, mas a cópia neste dispositivo não pôde ser atualizada."+
+	"Sincronizar"+
+	"Falha ao atualizar"+
+	"Favorito atualizado"+
+	"Falha ao mover para a lixeira"+
+	"Movido para a lixeira"+
+	"Falha ao arquivar"+
+	"Falha ao desarquivar"+
+	"Item arquivado"+
+	"Item desarquivado"+
+	"Falha ao restaurar"+
+	"Item restaurado"+
+	"Excluir permanentemente?"+
+	"Falha ao excluir"+
+	"Excluído permanentemente"+
+	"Esvaziar a lixeira?"+
+	"Falha ao esvaziar a lixeira"+
+	"Lixeira esvaziada"+
+	"Chaves de acesso não são copiadas"+
+	"A cópia contém os dados de login sem a chave de acesso."+
+	"Nova pasta"+
+	"Renomear pasta"+
+	"Nome da pasta"+
+	"O nome da pasta é obrigatório."+
+	"Pasta salva"+
+	"Excluir pasta?"+
+	"Falha ao excluir pasta"+
+	"Pasta excluída"+
+	"Sessão expirada"+
+	"Entre novamente para retomar a sincronização."+
+	"Exibindo cofre em cache."+
+	"Falha na sincronização"+
+	"Cofre sincronizado"+
+	"Alterações não salvas"+
+	"Sem alterações"+
+	"Item"+
+	"Tipo"+
+	"Nome"+
+	"Favorito"+
+	"Resolicitar senha principal"+
+	"Adicionar uma anotação"+
+	"Gerar senha"+
+	"Autenticador"+
+	"URI otpauth:// ou chave de configuração"+
+	"Remover site"+
+	"Adicionar site"+
+	"Titular"+
+	"Nome no cartão"+
+	"Visa, Mastercard, Amex…"+
+	"Número"+
+	"MM"+
+	"AAAA"+
+	"CVV"+
+	"Nome"+
+	"Sobrenome"+
+	"+55 11 91234-5678"+
+	"Endereço"+
+	"Av. Paulista, 1000"+
+	"Cidade"+
+	"Estado / CEP"+
+	"Estado"+
+	"CEP"+
+	"País"+
+	"Gerar chave Ed25519"+
+	"Texto"+
+	"Oculto"+
+	"Nome do campo"+
+	"Valor"+
+	"Remover campo"+
+	"Adicionar campo"+
+	"Chave de acesso"+
+	"Removida ao salvar"+
+	"Remover chave de acesso"+
+	"Remover chave de acesso?"+
+	"Você não poderá mais entrar com esta chave de acesso."+
+	"Armazenada neste item"+
+	"Anexos"+
+	"Anexar arquivo"+
+	"Anexar arquivo"+
+	"Anexar"+
+	"Salvar anexo"+
+	"Salvar aqui"+
+	"Falha no download"+
+	"Anexo salvo"+
+	"Não foi possível abrir o arquivo"+
+	"Arquivo muito grande"+
+	"Os anexos têm limite de 100 MiB."+
+	"Falha no envio"+
+	"Arquivo anexado"+
+	"Excluir anexo?"+
+	"Anexo excluído"+
+	"Senha"+
+	"Frase secreta"+
+	"Fraca"+
+	"Razoável"+
+	"Forte"+
+	"Muito forte"+
+	"Regerar"+
+	"Comprimento"+
+	"Caracteres"+
+	"Maiúsculas"+
+	"Minúsculas"+
+	"Números"+
+	"Símbolos"+
+	"Evitar caracteres ambíguos"+
+	"Exclui l, 1, I, O e 0"+
+	"Palavras"+
+	"Opções"+
+	"Separador de palavras"+
+	"Colocado entre cada palavra"+
+	"Inicial maiúscula"+
+	"Correct-Horse-Battery"+
+	"Incluir um número"+
+	"Adiciona um dígito a uma palavra"+
+	"Reutilizadas"+
+	"Fracas"+
+	"Cartões vencendo"+
+	"HTTP inseguro"+
+	"Nenhum problema nesta categoria."+
+	"Tudo certo"+
+	"Nenhuma senha reutilizada ou fraca, cartão vencendo ou site inseguro."+
+	"Senhas reutilizadas"+
+	"Senhas fracas"+
+	"Sites inseguros"+
+	"Verificado apenas neste dispositivo. Nada é enviado a servidores."+
+	"Senha comum"+
+	"Maioria em sequência ou caracteres repetidos"+
+	"Usa apenas um tipo de caractere"+
+	"Fácil de adivinhar"+
+	"Senha do backup"+
+	"Proteger seu backup"+
+	"Digite a senha usada para exportar este backup."+
+	"Escolha uma senha para o backup criptografado. Ela não pode ser recuperada se você esquecer."+
+	"Senha do backup"+
+	"Confirmar senha"+
+	"Exportar"+
+	"Descriptografar"+
+	"As senhas não coincidem."+
+	"Falha ao exportar"+
+	"Backup criptografado salvo"+
+	"Guarde a senha do backup em segurança; ela não pode ser recuperada."+
+	"Importar backup"+
+	"Importar"+
+	"Falha ao importar"+
+	"Digite a senha do backup."+
+	"Senha do backup incorreta."+
+	"Este não é um arquivo JSON exportado do Bitwarden."+
+	"Este backup está vinculado à sua conta. Exporte-o novamente como arquivo protegido por senha."+
+	"Criar"+
+	"Criar cópia"+
+	"Atualizar existente"+
+	"Ignorar"+
+	"Nenhuma importação em andamento"+
+	"Escolha “Importar backup” em Configurações para revisar um backup."+
+	"Revisar importação"+
+	"Selecionar novos"+
+	"Ignorar conflitos"+
+	"Copiar conflitos"+
+	"Atualizar conflitos"+
+	"Ignorar tudo"+
+	"seu cofre pessoal"+
+	"uma organização"+
+	"não pode atualizar: o item do backup está incompleto"+
+	"não pode atualizar: seus campos ou sites não podem ser combinados com segurança"+
+	"o item existente é somente leitura"+
+	"protegido: atualizar solicita sua senha principal"+
+	"O GoVault ainda não pode salvar este tipo de item, portanto foi ignorado."+
+	"Vários itens do cofre têm este nome, sem correspondência segura. Escolha “Criar” para adicioná-lo como novo item."+
+	"Arquivado no backup; será criado no seu cofre porque o Arquivo exige assinatura Premium."+
+	"Nome"+
+	"Anotações"+
+	"Pasta"+
+	"Favorito"+
+	"Pedir senha"+
+	"Usuário"+
+	"Senha"+
+	"Código de verificação"+
+	"Sites"+
+	"Chave de acesso"+
+	"Cartão"+
+	"Identidade"+
+	"Chave SSH"+
+	"Campos personalizados"+
+	"Geral"+
+	"Idioma"+
+	"Idioma exibido pelo GoVault. “Padrão do sistema” segue o idioma do sistema."+
+	"Padrão do sistema"+
+	"Conta"+
+	"Sincronizar agora"+
+	"Derivação de chave"+
+	"Última sincronização"+
+	"Ainda não sincronizado"+
+	"Sair remove o cache local do cofre."+
+	"Segurança"+
+	"Bloqueio automático"+
+	"Bloqueia o cofre após um período de inatividade."+
+	"Bloquear ao repousar ou bloquear tela"+
+	"Bloqueia o cofre quando seu Mac entra em repouso ou a tela é bloqueada."+
+	"Backup"+
+	"Exportar backup criptografado"+
+	"Arquivo JSON compatível com Bitwarden protegido por uma senha de sua escolha."+
+	"Exportar…"+
+	"Importar backup"+
+	"JSON do Bitwarden, criptografado ou simples. Revise cada item antes de alterar qualquer coisa."+
+	"Importar…"+
+	"Privacidade"+
+	"Mostrar ícones de sites"+
+	"Obtém ícones de sites do seu servidor Vaultwarden."+
+	"Cache de ícones"+
+	"Remove ícones de sites baixados deste dispositivo."+
+	"Limpar cache de ícones"+
+	"Cache de ícones limpo"+
+	"Não foi possível limpar o cache de ícones"+
+	"Área de transferência"+
+	"Limpar segredos copiados"+
+	"Limpa a área de transferência se ainda contiver o valor copiado."+
+	"Área de transferência privada"+
+	"Marca segredos para que gerenciadores de área de transferência os ignorem."+
+	"Ativo"+
+	"Apenas macOS"+
+	"Barra de menus"+
+	"Bandeja"+
+	"Mostrar ícone na barra de menus"+
+	"Mostrar ícone na bandeja"+
+	"Abra, sincronize ou bloqueie o GoVault pela barra de menus."+
+	"Abra, sincronize ou bloqueie o GoVault pela bandeja do sistema."+
+	"Iniciar no login"+
+	"Inicia o GoVault automaticamente ao iniciar sessão."+
+	"Ocultar ícone no Dock"+
+	"Manter o GoVault apenas na barra de menus."+
+	"Ative primeiro o ícone da barra de menus para manter o GoVault acessível."+
+	"Sobre"+
+	"(desenvolvimento)"+
+	"As atualizações são assinadas e instaladas automaticamente."+
+	"Verificar atualizações"+
+	"Agente SSH"+
+	"Ativar agente SSH"+
+	"Fornece chaves SSH do cofre desbloqueado. Chaves com resolicitação de senha principal não são fornecidas."+
+	"Socket"+
+	"Copiar SSH_AUTH_SOCK"+
+	"Outro processo já está usando este socket."+
+	"O caminho do socket existe e não é um socket."+
+	"Sockets Unix não são suportados neste sistema."+
+	"Touch ID indisponível neste Mac — emparelhe um teclado com Touch ID ou configure nos Ajustes do Sistema."+
+	"Mantém uma chave protegida nas chaves do sistema para desbloqueio rápido."+
+	"Proteção por hardware: o macOS libera a chave somente após Touch ID."+
+	"Solicitar automaticamente"+
+	"Abrir GoVault"+
+	"Verificar atualizações…"+
+	"Sincronizar agora"+
+	"Bloquear agora"+
+	"Encerrar GoVault"+
+	"Editar"+
+	"Janela"+
+	"Esta conta exige autenticação em duas etapas."+
+	"E-mail ou senha principal inválidos."+
+	"Servidor inacessível. Verifique sua conexão e a URL do servidor."+
+	"O servidor redirecionou para outro endereço; o GoVault não segue redirecionamentos."+
+	"O servidor não encontrou este item. Sincronize e tente novamente."+
+	"Este item foi alterado em outro dispositivo. Sincronize e tente novamente."+
+	"Os anexos têm limite de 100 MiB."+
+	"Este servidor não suporta Arquivo. Requer Vaultwarden 1.36 ou posterior."+
+	"O Arquivo exige uma assinatura Premium."+
+	"Não foi possível confirmar seu ID de conta com o servidor. Sincronize e tente novamente."+
+	"O servidor não confirmou a alteração. O GoVault sincronizou para mostrar onde o item está."+
+	"Itens na lixeira não podem ser arquivados. Restaure o item primeiro."+
+	"O cofre está bloqueado. Desbloqueie e tente novamente."+
+	"Você não está conectado."+
+	"Este item não está mais no seu cofre."+
+	"Esta pasta não está mais no seu cofre."+
+	"Este item é somente leitura."+
+	"O GoVault não consegue ler os itens desta organização. Sincronize e tente novamente."+
+	"Este anexo não está mais no item."+
+	"Sua organização oculta os segredos deste item."+
+	"O servidor solicitou um envio de anexo não suportado pelo GoVault."+
+	"O login salvo pertence a um servidor diferente desta cópia do cofre. Entre novamente."+
+	"Entre novamente para sincronizar. Até lá, seu cofre continua disponível offline."+
+	"Este login é de uma conta diferente da do cofre neste dispositivo. Para trocar de conta, saia primeiro."+
+	"A conta mudou desde a confirmação. Tente novamente."+
+	"O servidor tem a alteração, mas a cópia neste dispositivo não pôde ser atualizada. Sincronize para atualizar."+
+	"Este item contém dados criptografados que o GoVault não pode copiar para uma nova chave."+
+	"Este item está em um formato que o GoVault ainda não consegue ler."+
+	"O item mudou depois que você revisou a importação. Revise novamente."+
+	"Atualizar este item protegido exige sua senha principal."+
+	"O GoVault ainda não pode salvar este tipo de item."+
+	"O GoVault não consegue identificar a quais itens existentes correspondem os itens do backup."+
+	"Não foi possível descriptografar uma chave de acesso."+
+	"A senha do backup está incorreta."+
+	"O backup criptografado seria grande demais para o GoVault reimportar.",
+	[]uint16{
+		8,
+		6,
+		7,
+		7,
+		6,
+		9,
+		9,
+		6,
+		8,
+		5,
+		3,
+		10,
+		17,
+		7,
+		10,
+		9,
+		4,
+		11,
+		8,
+		11,
+		19,
+		10,
+		17,
+		52,
+		15,
+		6,
+		15,
+		15,
+		12,
+		19,
+		140,
+		6,
+		21,
+		79,
+		61,
+		24,
+		28,
+		41,
+		62,
+		24,
+		23,
+		6,
+		7,
+		3,
+		19,
+		8,
+		26,
+		20,
+		24,
+		24,
+		15,
+		14,
+		16,
+		82,
+		34,
+		64,
+		56,
+		25,
+		11,
+		26,
+		26,
+		23,
+		62,
+		27,
+		9,
+		21,
+		21,
+		75,
+		66,
+		65,
+		64,
+		21,
+		48,
+		54,
+		51,
+		15,
+		42,
+		16,
+		100,
+		4,
+		12,
+		6,
+		8,
+		18,
+		15,
+		7,
+		17,
+		14,
+		9,
+		14,
+		9,
+		10,
+		6,
+		10,
+		9,
+		11,
+		7,
+		15,
+		7,
+		7,
+		15,
+		8,
+		9,
+		8,
+		5,
+		16,
+		17,
+		13,
+		20,
+		16,
+		13,
+		25,
+		16,
+		12,
+		11,
+		83,
+		106,
+		107,
+		16,
+		39,
+		16,
+		17,
+		17,
+		14,
+		21,
+		11,
+		31,
+		60,
+		23,
+		48,
+		9,
+		9,
+		8,
+		15,
+		12,
+		31,
+		21,
+		26,
+		23,
+		21,
+		6,
+		8,
+		11,
+		20,
+		16,
+		5,
+		29,
+		13,
+		12,
+		15,
+		11,
+		4,
+		10,
+		11,
+		5,
+		15,
+		14,
+		18,
+		26,
+		25,
+		10,
+		17,
+		21,
+		8,
+		19,
+		13,
+		7,
+		8,
+		7,
+		9,
+		16,
+		14,
+		21,
+		28,
+		14,
+		21,
+		10,
+		21,
+		11,
+		18,
+		25,
+		14,
+		21,
+		13,
+		12,
+		15,
+		11,
+		10,
+		9,
+		23,
+		17,
+		11,
+		14,
+		32,
+		31,
+		7,
+		7,
+		8,
+		13,
+		24,
+		32,
+		22,
+		12,
+		15,
+		26,
+		18,
+		29,
+		21,
+		15,
+		14,
+		16,
+		17,
+		22,
+		29,
+		22,
+		26,
+		21,
+		20,
+		20,
+		15,
+		47,
+		32,
+		58,
+		26,
+		35,
+		50,
+		18,
+		9,
+		23,
+		33,
+		10,
+		15,
+		34,
+		143,
+		18,
+		76,
+		11,
+		18,
+		19,
+		29,
+		21,
+		17,
+		20,
+		14,
+		17,
+		18,
+		15,
+		24,
+		16,
+		25,
+		19,
+		27,
+		17,
+		35,
+		57,
+		10,
+		14,
+		13,
+		32,
+		11,
+		14,
+		22,
+		15,
+		16,
+		47,
+		24,
+		24,
+		18,
+		24,
+		16,
+		4,
+		4,
+		4,
+		8,
+		27,
+		24,
+		11,
+		12,
+		41,
+		12,
+		14,
+		7,
+		15,
+		25,
+		7,
+		2,
+		4,
+		3,
+		4,
+		9,
+		17,
+		9,
+		18,
+		6,
+		12,
+		6,
+		3,
+		5,
+		19,
+		5,
+		6,
+		13,
+		5,
+		13,
+		15,
+		15,
+		18,
+		23,
+		24,
+		56,
+		21,
+		6,
+		14,
+		14,
+		6,
+		12,
+		11,
+		17,
+		11,
+		34,
+		20,
+		33,
+		14,
+		15,
+		14,
+		15,
+		5,
+		13,
+		5,
+		9,
+		5,
+		11,
+		7,
+		11,
+		10,
+		11,
+		11,
+		8,
+		9,
+		27,
+		21,
+		8,
+		8,
+		21,
+		27,
+		18,
+		21,
+		18,
+		33,
+		12,
+		6,
+		17,
+		13,
+		32,
+		10,
+		70,
+		19,
+		13,
+		15,
+		66,
+		11,
+		45,
+		31,
+		19,
+		15,
+		19,
+		47,
+		94,
+		15,
+		15,
+		8,
+		15,
+		25,
+		17,
+		26,
+		69,
+		15,
+		8,
+		17,
+		25,
+		26,
+		52,
+		95,
+		5,
+		12,
+		19,
+		7,
+		33,
+		72,
+		20,
+		16,
+		17,
+		16,
+		19,
+		12,
+		17,
+		17,
+		54,
+		82,
+		35,
+		49,
+		74,
+		121,
+		89,
+		4,
+		11,
+		5,
+		8,
+		11,
+		8,
+		5,
+		24,
+		5,
+		15,
+		7,
+		10,
+		9,
+		21,
+		5,
+		6,
+		80,
+		18,
+		5,
+		17,
+		20,
+		23,
+		23,
+		35,
+		10,
+		20,
+		50,
+		37,
+		72,
+		6,
+		29,
+		78,
+		11,
+		15,
+		94,
+		11,
+		11,
+		24,
+		52,
+		16,
+		51,
+		23,
+		22,
+		44,
+		23,
+		24,
+		66,
+		31,
+		76,
+		5,
+		12,
+		14,
+		7,
+		32,
+		25,
+		59,
+		63,
+		16,
+		52,
+		22,
+		42,
+		75,
+		5,
+		17,
+		62,
+		24,
+		10,
+		17,
+		109,
+		6,
+		20,
+		44,
+		47,
+		48,
+		107,
+		75,
+		71,
+		25,
+		13,
+		27,
+		17,
+		14,
+		16,
+		6,
+		6,
+		47,
+		37,
+		66,
+		85,
+		66,
+		74,
+		33,
+		73,
+		39,
+		90,
+		94,
+		69,
+		55,
+		27,
+		39,
+		40,
+		29,
+		87,
+		35,
+		48,
+		67,
+		86,
+		83,
+		104,
+		53,
+		114,
+		90,
+		68,
+		71,
+		56,
+		51,
+		93,
+		55,
+		34,
+		69,
+	})
+
+// textsRu are the messages without arguments in ru.
+var textsRu = i18n.NewTexts(""+
+	"Отмена"+
+	"Сохранить"+
+	"Удалить"+
+	"Убрать"+
+	"Изменить"+
+	"Восстановить"+
+	"Подтвердить"+
+	"Копировать"+
+	"Отменить"+
+	"Никогда"+
+	"—"+
+	"Логин"+
+	"Защищённая заметка"+
+	"Карта"+
+	"Личные данные"+
+	"Ключ SSH"+
+	"Элемент"+
+	"Логины"+
+	"Карты"+
+	"Личные данные"+
+	"Заметки"+
+	"Ключи SSH"+
+	"Вход в GoVault"+
+	"Подключитесь к серверу Bitwarden или Vaultwarden."+
+	"URL сервера"+
+	"Эл. почта"+
+	"Мастер-пароль"+
+	"Мастер-пароль"+
+	"Обязательно"+
+	"name@example.com"+
+	"Этот сервер не использует HTTPS. Мастер-пароль и данные хранилища передаются без шифрования; используйте его только в доверенной сети."+
+	"Войти"+
+	"Назад к разблокировке"+
+	"Сквозное шифрование. Мастер-пароль никогда не покидает это устройство."+
+	"Укажите URL сервера, эл. почту и мастер-пароль."+
+	"Показать или скрыть пароль"+
+	"Двухэтапная проверка"+
+	"Введите код, отправленный на вашу эл. почту."+
+	"Введите 6-значный код из приложения-аутентификатора."+
+	"Способ проверки"+
+	"Приложение-аутентификатор"+
+	"Эл. почта"+
+	"YubiKey"+
+	"Duo"+
+	"Duo (организация)"+
+	"FIDO U2F"+
+	"Passkey / WebAuthn"+
+	"Запомненное устройство"+
+	"Код подтверждения"+
+	"Запомнить устройство"+
+	"Назад ко входу"+
+	"Отправить код"+
+	"Отправить повторно"+
+	"Двухэтапная аутентификация защитит хранилище, даже если пароль утечёт."+
+	"Введите код подтверждения."+
+	"Неверный код подтверждения. Проверьте код и повторите попытку."+
+	"Код подтверждения отправлен на вашу эл. почту."+
+	"GoVault заблокирован"+
+	"Разблокировать"+
+	"или используйте мастер-пароль"+
+	"Выйти или сменить аккаунт…"+
+	"Выйти или сменить аккаунт"+
+	"Заблокированное хранилище остаётся зашифрованным на этом устройстве."+
+	"Введите мастер-пароль."+
+	"Биометрия"+
+	"Разблокировать GoVault"+
+	"разблокировать GoVault"+
+	"Сохранённый биометрический ключ недоступен. Разблокируйте мастер-паролем."+
+	"Биометрический ключ повреждён. Разблокируйте мастер-паролем."+
+	"Неверный биометрический ключ. Разблокируйте мастер-паролем."+
+	"Биометрическая проверка не удалась. Введите мастер-пароль."+
+	"Связка ключей недоступна"+
+	"Нет доступа к системной связке ключей."+
+	"Не удалось отключить биометрическую разблокировку"+
+	"Не удалось включить биометрическую разблокировку"+
+	"Хранилище заблокировано"+
+	"Автоматически заблокировано из-за бездействия."+
+	"Выйти из GoVault?"+
+	"Локальный зашифрованный кэш хранилища и сохранённый биометрический ключ будут удалены с этого устройства."+
+	"Выйти"+
+	"Выход выполнен"+
+	"Назад"+
+	"Вперёд"+
+	"Поиск в хранилище"+
+	"Очистить поиск"+
+	"Офлайн"+
+	"Синхронизировать"+
+	"Заблокировать хранилище"+
+	"Новый"+
+	"Все элементы"+
+	"Избранное"+
+	"Категории"+
+	"Папки"+
+	"Новая папка"+
+	"Коллекции"+
+	"Инструменты"+
+	"Генератор"+
+	"Проверка паролей"+
+	"Архив"+
+	"Корзина"+
+	"Настройки"+
+	"Импорт"+
+	"Без папки"+
+	"Коллекция"+
+	"Папка"+
+	"Действия с папкой"+
+	"Переименовать папку…"+
+	"Удалить папку"+
+	"Изменить размер панели"+
+	"Синхронизация…"+
+	"Ожидает синхр."+
+	"Офлайн · локальный кэш"+
+	"Сессия истекла"+
+	"Синхронизировано"+
+	"только что"+
+	"Войдите снова для синхронизации. Пока хранилище доступно офлайн."+
+	"Сессия истекла — кэшированное хранилище доступно для чтения. Войдите снова для синхронизации."+
+	"Не удалось сохранить вход. Войдите снова, чтобы GoVault мог синхронизироваться после блокировки."+
+	"Войти снова"+
+	"Элементы из корзины можно восстановить."+
+	"Очистить корзину"+
+	"Во всех элементах"+
+	"Искать везде"+
+	"Ничего не найдено"+
+	"Корзина пуста"+
+	"Нет элементов"+
+	"Удалённые элементы появляются здесь."+
+	"Нажмите «Новый», чтобы добавить первую запись."+
+	"Элемент не выбран"+
+	"Выберите элемент в списке, чтобы увидеть подробности."+
+	"Поиск"+
+	"Новый"+
+	"Блокировка"+
+	"Копировать имя пользователя"+
+	"Копировать пароль"+
+	"Копировать код подтверждения"+
+	"Копировать публичный ключ"+
+	"Удалить окончательно…"+
+	"В избранное"+
+	"Убрать из избранного"+
+	"Клонировать"+
+	"Архивировать"+
+	"Разархивировать"+
+	"В корзину"+
+	"Имя пользователя"+
+	"Пароль"+
+	"Скрыто вашей организацией"+
+	"Показать пароль"+
+	"Копировать пароль"+
+	"Копировать имя пользователя"+
+	"Учётные данные"+
+	"Веб-сайт"+
+	"Открыть сайт"+
+	"Копировать сайт"+
+	"Веб-сайты"+
+	"Владелец карты"+
+	"Копировать владельца"+
+	"Номер карты"+
+	"Показать номер карты"+
+	"Копировать номер карты"+
+	"Срок действия"+
+	"Копировать срок действия"+
+	"Код безопасности"+
+	"Платёжная система"+
+	"Данные карты"+
+	"Полное имя"+
+	"Компания"+
+	"Телефон"+
+	"Личное"+
+	"Адрес"+
+	"Копировать адрес"+
+	"Номер соц. страхования"+
+	"Номер паспорта"+
+	"Копировать номер паспорта"+
+	"Водительское удостоверение"+
+	"Копировать номер прав"+
+	"Документы"+
+	"Пользовательские поля"+
+	"Заметки"+
+	"Отпечаток"+
+	"Копировать отпечаток"+
+	"Публичный ключ"+
+	"Копировать публичный ключ"+
+	"Приватный ключ"+
+	"старый пароль"+
+	"Только чтение"+
+	"Запрос пароля"+
+	"В корзине"+
+	"В архиве"+
+	"Удалить окончательно"+
+	"Избранное"+
+	"Клонировать элемент"+
+	"Осталось времени"+
+	"Показать код подтверждения"+
+	"Копировать код подтверждения"+
+	"КАРТА"+
+	"ВЛАДЕЛЕЦ"+
+	"СРОК"+
+	"Пароль скопирован"+
+	"Имя пользователя скопировано"+
+	"Код подтверждения скопирован"+
+	"Публичный ключ скопирован"+
+	"Веб-сайт скопирован"+
+	"Владелец скопирован"+
+	"Номер карты скопирован"+
+	"Срок действия скопирован"+
+	"Код безопасности скопирован"+
+	"Имя скопировано"+
+	"Компания скопирована"+
+	"Эл. почта скопирована"+
+	"Телефон скопирован"+
+	"Адрес скопирован"+
+	"Номер соц. страхования скопирован"+
+	"Номер паспорта скопирован"+
+	"Номер прав скопирован"+
+	"Отпечаток скопирован"+
+	"Приватный ключ скопирован"+
+	"Старый пароль скопирован"+
+	"Сгенерированный пароль скопирован"+
+	"Ошибка копирования"+
+	"Скрыто из истории буфера обмена"+
+	"Проверка мастер-пароля"+
+	"Проверка мастер-пароля недоступна."+
+	"Неверный мастер-пароль."+
+	"Отменить несохранённые изменения?"+
+	"Ваши правки этого элемента не сохранены."+
+	"Продолжить"+
+	"Отбросить"+
+	"Укажите название."+
+	"Нельзя сохранить в офлайн-режиме."+
+	"Элемент сохранён"+
+	"Ошибка сохранения"+
+	"Элемент изменён на другом устройстве"+
+	"Этот элемент был обновлён в другом месте после последней синхронизации. Загрузите последнюю версию, чтобы не перезаписать изменения."+
+	"Загрузить новую"+
+	"Сохранено на сервере, но локальную копию обновить не удалось."+
+	"Синхронизировать"+
+	"Ошибка обновления"+
+	"Избранное обновлено"+
+	"Не удалось переместить в корзину"+
+	"Перемещено в корзину"+
+	"Ошибка архивирования"+
+	"Ошибка разархивирования"+
+	"Элемент архивирован"+
+	"Элемент разархивирован"+
+	"Ошибка восстановления"+
+	"Элемент восстановлен"+
+	"Удалить окончательно?"+
+	"Ошибка удаления"+
+	"Удалено окончательно"+
+	"Очистить корзину?"+
+	"Не удалось очистить корзину"+
+	"Корзина очищена"+
+	"Passkey не копируются"+
+	"Копия содержит данные входа без ключа Passkey."+
+	"Новая папка"+
+	"Переименовать папку"+
+	"Название папки"+
+	"Укажите название папки."+
+	"Папка сохранена"+
+	"Удалить папку?"+
+	"Не удалось удалить папку"+
+	"Папка удалена"+
+	"Сессия истекла"+
+	"Войдите снова, чтобы возобновить синхронизацию."+
+	"Показано кэшированное хранилище."+
+	"Ошибка синхронизации"+
+	"Хранилище синхронизировано"+
+	"Несохранённые изменения"+
+	"Без изменений"+
+	"Элемент"+
+	"Тип"+
+	"Название"+
+	"Избранное"+
+	"Повторный запрос мастер-пароля"+
+	"Добавить заметку"+
+	"Сгенерировать пароль"+
+	"Аутентификатор"+
+	"URI otpauth:// или ключ настройки"+
+	"Удалить сайт"+
+	"Добавить сайт"+
+	"Владелец"+
+	"Имя на карте"+
+	"Visa, Mastercard, Мир…"+
+	"Номер"+
+	"ММ"+
+	"ГГГГ"+
+	"CVV"+
+	"Имя"+
+	"Фамилия"+
+	"+7 912 345-67-89"+
+	"Улица"+
+	"ул. Тверская, д. 12"+
+	"Город"+
+	"Регион / Индекс"+
+	"Регион"+
+	"Почтовый индекс"+
+	"Страна"+
+	"Создать ключ Ed25519"+
+	"Текст"+
+	"Скрытое"+
+	"Имя поля"+
+	"Значение"+
+	"Удалить поле"+
+	"Добавить поле"+
+	"Passkey"+
+	"Будет удалён при сохранении"+
+	"Удалить Passkey"+
+	"Удалить Passkey?"+
+	"Вы больше не сможете входить с помощью этого Passkey."+
+	"Хранится в этом элементе"+
+	"Вложения"+
+	"Прикрепить файл"+
+	"Прикрепить файл"+
+	"Прикрепить"+
+	"Сохранить вложение"+
+	"Сохранить здесь"+
+	"Ошибка скачивания"+
+	"Вложение сохранено"+
+	"Не удалось открыть файл"+
+	"Файл слишком большой"+
+	"Максимальный размер вложения — 100 MiB."+
+	"Ошибка загрузки"+
+	"Файл прикреплён"+
+	"Удалить вложение?"+
+	"Вложение удалено"+
+	"Пароль"+
+	"Парольная фраза"+
+	"Слабый"+
+	"Средний"+
+	"Надёжный"+
+	"Очень надёжный"+
+	"Обновить"+
+	"Длина"+
+	"Символы"+
+	"Заглавные"+
+	"Строчные"+
+	"Цифры"+
+	"Спецсимволы"+
+	"Исключить похожие символы"+
+	"Исключает l, 1, I, O и 0"+
+	"Слова"+
+	"Параметры"+
+	"Разделитель слов"+
+	"Вставляется между словами"+
+	"С заглавной буквы"+
+	"Correct-Horse-Battery"+
+	"Добавить цифру"+
+	"Добавляет цифру к одному слову"+
+	"Повторы"+
+	"Слабые"+
+	"Истекающие карты"+
+	"Небезопасный HTTP"+
+	"В этой категории проблем нет."+
+	"Всё в порядке"+
+	"Нет повторяющихся или слабых паролей, истекающих карт и небезопасных сайтов."+
+	"Повторяющиеся пароли"+
+	"Слабые пароли"+
+	"Небезопасные сайты"+
+	"Проверяется только на этом устройстве. Данные не отправляются на сервер."+
+	"Распространённый пароль"+
+	"В основном последовательность или повторы"+
+	"Только один тип символов"+
+	"Легко угадать"+
+	"Пароль резервной копии"+
+	"Защита резервной копии"+
+	"Введите пароль, с которым была экспортирована эта копия."+
+	"Задайте пароль для зашифрованной копии. При утере его невозможно восстановить."+
+	"Пароль копии"+
+	"Подтвердите пароль"+
+	"Экспорт"+
+	"Расшифровать"+
+	"Пароли не совпадают."+
+	"Ошибка экспорта"+
+	"Зашифрованная копия сохранена"+
+	"Храните пароль от копии в надёжном месте — восстановить его нельзя."+
+	"Импорт резервной копии"+
+	"Импорт"+
+	"Ошибка импорта"+
+	"Введите пароль резервной копии."+
+	"Неверный пароль резервной копии."+
+	"Это не файл экспорта JSON Bitwarden."+
+	"Копия привязана к аккаунту. Экспортируйте её заново с защитой паролем."+
+	"Создать"+
+	"Создать копию"+
+	"Обновить"+
+	"Пропустить"+
+	"Импорт не выполняется"+
+	"Выберите «Импорт резервной копии» в Настройках, чтобы просмотреть файл."+
+	"Просмотр импорта"+
+	"Выбрать все новые"+
+	"Пропустить конфликты"+
+	"Копировать конфликты"+
+	"Обновить конфликты"+
+	"Пропустить все"+
+	"личном хранилище"+
+	"организации"+
+	"нельзя обновить: элемент в копии неполный"+
+	"нельзя обновить: поля или сайты не удаётся безопасно сопоставить"+
+	"существующий элемент только для чтения"+
+	"защищено: для обновления нужен мастер-пароль"+
+	"GoVault пока не поддерживает сохранение таких элементов, поэтому он пропущен."+
+	"Найдено несколько элементов с таким названием. Выберите «Создать», чтобы добавить как новый."+
+	"В копии архивирован; будет создан в хранилище, так как для архива нужен Premium."+
+	"Название"+
+	"Заметки"+
+	"Папка"+
+	"Избранное"+
+	"Запрос пароля"+
+	"Имя пользователя"+
+	"Пароль"+
+	"Код подтверждения"+
+	"Веб-сайты"+
+	"Passkey"+
+	"Карта"+
+	"Личные данные"+
+	"Ключ SSH"+
+	"Пользовательские поля"+
+	"Основные"+
+	"Язык"+
+	"Язык интерфейса GoVault. «Системный» следует языку системы."+
+	"Системный"+
+	"Аккаунт"+
+	"Синхронизировать"+
+	"Формирование ключа"+
+	"Последняя синхронизация"+
+	"Ещё не синхронизировано"+
+	"Выход удаляет локальный кэш хранилища."+
+	"Безопасность"+
+	"Автоблокировка"+
+	"Блокировать хранилище после периода бездействия."+
+	"Блокировать при сне или блокировке экрана"+
+	"Блокировать хранилище, когда Mac засыпает или экран блокируется."+
+	"Резервное копирование"+
+	"Экспорт зашифрованной копии"+
+	"JSON-файл в формате Bitwarden, защищённый вашим паролем."+
+	"Экспорт…"+
+	"Импорт резервной копии"+
+	"JSON Bitwarden, зашифрованный или открытый. Просмотр всех элементов перед изменениями."+
+	"Импорт…"+
+	"Конфиденциальность"+
+	"Показывать значки сайтов"+
+	"Загружать значки сайтов с вашего сервера Vaultwarden."+
+	"Кэш значков"+
+	"Удалить загруженные значки сайтов с этого устройства."+
+	"Очистить кэш"+
+	"Кэш значков очищен"+
+	"Не удалось очистить кэш значков"+
+	"Буфер обмена"+
+	"Очищать скопированные секреты"+
+	"Очищает буфер обмена, если в нём всё ещё хранится скопированное значение."+
+	"Приватный буфер обмена"+
+	"Помечает секреты, чтобы менеджеры буфера обмена пропускали их."+
+	"Активно"+
+	"Только macOS"+
+	"Строка меню"+
+	"Трей"+
+	"Значок в строке меню"+
+	"Значок в трее"+
+	"Открывать, синхронизировать и блокировать GoVault из строки меню."+
+	"Открывать, синхронизировать и блокировать GoVault из трея."+
+	"Запускать при входе"+
+	"Автоматически запускать GoVault при входе в систему."+
+	"Скрыть значок в Dock"+
+	"Показывать GoVault только в строке меню."+
+	"Сначала включите значок в строке меню, чтобы сохранить доступ к GoVault."+
+	"О приложении"+
+	"(разработка)"+
+	"Обновления подписаны и устанавливаются автоматически."+
+	"Проверить обновления"+
+	"SSH-агент"+
+	"Включить SSH-агент"+
+	"Предоставлять ключи SSH из разблокированного хранилища. Ключи с запросом мастер-пароля не предоставляются."+
+	"Сокет"+
+	"Копировать SSH_AUTH_SOCK"+
+	"Этот сокет уже используется другим процессом."+
+	"Путь существует и не является сокетом."+
+	"Unix-сокеты не поддерживаются в этой системе."+
+	"Touch ID недоступен на этом Mac — подключите клавиатуру с Touch ID или настройте его в Системных настройках."+
+	"Хранит защищённый ключ в системной связке ключей для быстрой разблокировки."+
+	"Аппаратная защита: macOS выдаёт ключ только после проверки Touch ID."+
+	"Запрашивать автоматически"+
+	"Открыть GoVault"+
+	"Проверить обновления…"+
+	"Синхронизировать"+
+	"Заблокировать"+
+	"Завершить GoVault"+
+	"Правка"+
+	"Окно"+
+	"Для этого аккаунта требуется двухэтапная аутентификация."+
+	"Неверная эл. почта или мастер-пароль."+
+	"Сервер недоступен. Проверьте подключение и URL сервера."+
+	"Сервер перенаправил на другой адрес; GoVault не переходит по перенаправлениям."+
+	"Сервер не нашёл этот элемент. Синхронизируйте и повторите попытку."+
+	"Этот элемент был изменён на другом устройстве. Синхронизируйте и повторите попытку."+
+	"Максимальный размер вложения — 100 MiB."+
+	"Этот сервер не поддерживает архив. Требуется Vaultwarden 1.36 или новее."+
+	"Для архива требуется подписка Premium."+
+	"Не удалось подтвердить ID аккаунта на сервере. Синхронизируйте и повторите попытку."+
+	"Сервер не подтвердил изменение. GoVault выполнил синхронизацию для обновления состояния."+
+	"Элементы в корзине нельзя архивировать. Сначала восстановите элемент."+
+	"Хранилище заблокировано. Разблокируйте его и повторите попытку."+
+	"Вы не вошли в аккаунт."+
+	"Этого элемента больше нет в вашем хранилище."+
+	"Этой папки больше нет в вашем хранилище."+
+	"Этот элемент доступен только для чтения."+
+	"GoVault не может прочитать элементы этой организации. Синхронизируйте и повторите попытку."+
+	"Этого вложения больше нет в элементе."+
+	"Ваша организация скрывает секреты этого элемента."+
+	"Сервер запросил неподдерживаемый способ загрузки вложения."+
+	"Сохранённый вход относится к другому серверу. Войдите снова."+
+	"Войдите снова для синхронизации. Пока хранилище доступно офлайн."+
+	"Этот вход относится к другому аккаунту. Чтобы сменить аккаунт, сначала выйдите."+
+	"Аккаунт изменился после подтверждения. Повторите попытку."+
+	"Сервер сохранил изменение, но локальную копию обновить не удалось. Синхронизируйте для обновления."+
+	"Этот элемент содержит зашифрованные данные, которые GoVault не может перенести под новый ключ."+
+	"Этот элемент имеет формат, который GoVault пока не поддерживает."+
+	"Элемент изменился после просмотра импорта. Просмотрите снова."+
+	"Для обновления этого защищённого элемента требуется мастер-пароль."+
+	"GoVault пока не может сохранять элементы этого типа."+
+	"GoVault не может определить, каким существующим элементам соответствуют элементы копии."+
+	"Не удалось расшифровать Passkey."+
+	"Неверный пароль резервной копии."+
+	"Зашифрованная копия слишком велика для повторного импорта в GoVault.",
+	[]uint16{
+		12,
+		18,
+		14,
+		12,
+		16,
+		24,
+		22,
+		20,
+		16,
+		14,
+		3,
+		10,
+		35,
+		10,
+		25,
+		12,
+		14,
+		12,
+		10,
+		25,
+		14,
+		14,
+		19,
+		72,
+		18,
+		16,
+		25,
+		25,
+		22,
+		16,
+		242,
+		10,
+		40,
+		130,
+		81,
+		49,
+		39,
+		79,
+		96,
+		29,
+		49,
+		16,
+		7,
+		3,
+		28,
+		8,
+		18,
+		43,
+		33,
+		39,
+		26,
+		25,
+		35,
+		131,
+		49,
+		115,
+		84,
+		32,
+		28,
+		55,
+		50,
+		47,
+		129,
+		41,
+		18,
+		36,
+		36,
+		138,
+		113,
+		111,
+		108,
+		46,
+		70,
+		94,
+		92,
+		45,
+		87,
+		24,
+		197,
+		10,
+		27,
+		10,
+		12,
+		32,
+		27,
+		12,
+		32,
+		45,
+		10,
+		23,
+		18,
+		18,
+		10,
+		21,
+		18,
+		22,
+		18,
+		31,
+		10,
+		14,
+		18,
+		12,
+		17,
+		18,
+		10,
+		32,
+		40,
+		25,
+		42,
+		29,
+		26,
+		41,
+		27,
+		32,
+		19,
+		119,
+		174,
+		171,
+		21,
+		73,
+		31,
+		32,
+		23,
+		32,
+		25,
+		25,
+		68,
+		85,
+		32,
+		98,
+		10,
+		10,
+		20,
+		52,
+		33,
+		54,
+		48,
+		42,
+		21,
+		38,
+		22,
+		24,
+		30,
+		17,
+		31,
+		12,
+		48,
+		29,
+		33,
+		52,
+		27,
+		15,
+		23,
+		29,
+		17,
+		27,
+		39,
+		21,
+		38,
+		42,
+		25,
+		46,
+		31,
+		33,
+		23,
+		19,
+		16,
+		14,
+		12,
+		10,
+		31,
+		41,
+		27,
+		48,
+		51,
+		40,
+		18,
+		41,
+		14,
+		18,
+		39,
+		27,
+		48,
+		27,
+		25,
+		25,
+		25,
+		17,
+		15,
+		39,
+		18,
+		37,
+		31,
+		50,
+		54,
+		10,
+		16,
+		8,
+		33,
+		54,
+		54,
+		48,
+		36,
+		37,
+		42,
+		46,
+		52,
+		29,
+		39,
+		39,
+		35,
+		31,
+		62,
+		48,
+		40,
+		39,
+		48,
+		46,
+		64,
+		35,
+		58,
+		42,
+		64,
+		43,
+		63,
+		74,
+		20,
+		18,
+		32,
+		61,
+		31,
+		33,
+		68,
+		245,
+		29,
+		112,
+		32,
+		33,
+		37,
+		60,
+		38,
+		39,
+		45,
+		37,
+		43,
+		41,
+		39,
+		40,
+		29,
+		39,
+		32,
+		51,
+		29,
+		33,
+		78,
+		21,
+		37,
+		27,
+		43,
+		29,
+		26,
+		45,
+		25,
+		27,
+		88,
+		61,
+		39,
+		51,
+		45,
+		25,
+		14,
+		6,
+		16,
+		18,
+		57,
+		31,
+		39,
+		28,
+		49,
+		23,
+		25,
+		16,
+		22,
+		27,
+		10,
+		4,
+		8,
+		3,
+		6,
+		14,
+		16,
+		10,
+		30,
+		10,
+		27,
+		12,
+		29,
+		12,
+		31,
+		10,
+		14,
+		15,
+		16,
+		23,
+		25,
+		7,
+		51,
+		22,
+		23,
+		90,
+		45,
+		16,
+		29,
+		29,
+		20,
+		35,
+		29,
+		33,
+		35,
+		43,
+		38,
+		67,
+		29,
+		29,
+		32,
+		31,
+		12,
+		29,
+		12,
+		14,
+		16,
+		27,
+		16,
+		10,
+		14,
+		18,
+		16,
+		10,
+		22,
+		48,
+		34,
+		10,
+		18,
+		31,
+		48,
+		32,
+		21,
+		27,
+		56,
+		14,
+		12,
+		31,
+		29,
+		53,
+		24,
+		141,
+		39,
+		25,
+		35,
+		133,
+		45,
+		78,
+		45,
+		25,
+		42,
+		42,
+		103,
+		145,
+		23,
+		35,
+		14,
+		24,
+		37,
+		29,
+		56,
+		124,
+		42,
+		12,
+		27,
+		58,
+		60,
+		53,
+		129,
+		14,
+		25,
+		16,
+		20,
+		40,
+		132,
+		31,
+		32,
+		39,
+		39,
+		35,
+		27,
+		31,
+		22,
+		76,
+		119,
+		72,
+		82,
+		136,
+		170,
+		138,
+		16,
+		14,
+		10,
+		18,
+		25,
+		31,
+		12,
+		33,
+		17,
+		7,
+		10,
+		25,
+		12,
+		41,
+		16,
+		8,
+		103,
+		18,
+		14,
+		32,
+		35,
+		45,
+		44,
+		71,
+		24,
+		28,
+		91,
+		77,
+		116,
+		41,
+		52,
+		90,
+		17,
+		42,
+		147,
+		15,
+		36,
+		46,
+		88,
+		21,
+		99,
+		23,
+		34,
+		58,
+		23,
+		56,
+		134,
+		42,
+		115,
+		14,
+		18,
+		21,
+		8,
+		37,
+		24,
+		114,
+		101,
+		36,
+		90,
+		33,
+		67,
+		125,
+		23,
+		22,
+		101,
+		39,
+		14,
+		31,
+		195,
+		10,
+		34,
+		84,
+		70,
+		79,
+		182,
+		140,
+		113,
+		49,
+		22,
+		42,
+		32,
+		26,
+		26,
+		12,
+		8,
+		106,
+		67,
+		99,
+		138,
+		122,
+		154,
+		67,
+		118,
+		64,
+		152,
+		158,
+		129,
+		118,
+		39,
+		81,
+		73,
+		74,
+		161,
+		68,
+		92,
+		110,
+		111,
+		119,
+		145,
+		107,
+		182,
+		167,
+		111,
+		114,
+		124,
+		89,
+		156,
+		53,
+		60,
+		120,
+	})
+
 // textsZhHans are the messages without arguments in zh-Hans.
 var textsZhHans = i18n.NewTexts(""+
 	"取消"+
@@ -2805,7 +11675,7 @@ var textsZhHans = i18n.NewTexts(""+
 	"剪贴板"+
 	"清除已复制的机密信息"+
 	"如果剪贴板中仍保留已复制的内容，则在超时后清除。"+
-	"隐蔽剪贴板"+
+	"私密剪贴板"+
 	"标记机密信息，使剪贴板管理器跳过记录。"+
 	"已启用"+
 	"仅限 macOS"+
@@ -2834,7 +11704,7 @@ var textsZhHans = i18n.NewTexts(""+
 	"此系统不支持 Unix 套接字。"+
 	"此 Mac 上 Touch ID 不可用——请配对带有 Touch ID 的键盘或在“系统设置”中注册指纹。"+
 	"在系统钥匙串中保存封装密钥以实现快速解锁。"+
-	"硬件强制：macOS 仅在通过 Touch ID 验证后释放密钥。"+
+	"硬件级保护：macOS 仅在通过 Touch ID 验证后释放密钥。"+
 	"自动提示"+
 	"打开 GoVault"+
 	"检查更新…"+
@@ -3359,7 +12229,7 @@ var textsZhHans = i18n.NewTexts(""+
 		36,
 		112,
 		63,
-		67,
+		70,
 		12,
 		14,
 		15,
@@ -3405,14 +12275,1083 @@ var textsZhHans = i18n.NewTexts(""+
 		59,
 	})
 
+// textsZhHant are the messages without arguments in zh-Hant.
+var textsZhHant = i18n.NewTexts(""+
+	"取消"+
+	"儲存"+
+	"刪除"+
+	"移除"+
+	"編輯"+
+	"還原"+
+	"驗證"+
+	"複製"+
+	"復原"+
+	"永不"+
+	"—"+
+	"登入"+
+	"安全筆記"+
+	"付款卡"+
+	"身分"+
+	"SSH 金鑰"+
+	"項目"+
+	"登入"+
+	"付款卡"+
+	"身分"+
+	"安全筆記"+
+	"SSH 金鑰"+
+	"登入 GoVault"+
+	"連線至您的 Bitwarden 或 Vaultwarden 伺服器。"+
+	"伺服器 URL"+
+	"電子郵件"+
+	"主密碼"+
+	"主密碼"+
+	"必填"+
+	"name@example.com"+
+	"此伺服器未使用 HTTPS。您的主密碼與密碼庫資料將以明文傳送，請僅在受信任的網路中使用。"+
+	"登入"+
+	"返回解鎖"+
+	"端對端加密。您的主密碼絕不會離開此裝置。"+
+	"請填寫伺服器 URL、電子郵件與主密碼。"+
+	"切換密碼顯示"+
+	"兩步驟驗證"+
+	"請輸入傳送至您電子郵件的驗證碼。"+
+	"請輸入驗證器應用程式中的 6 位數驗證碼。"+
+	"驗證方式"+
+	"驗證器應用程式"+
+	"電子郵件"+
+	"YubiKey"+
+	"Duo"+
+	"Duo（組織）"+
+	"FIDO U2F"+
+	"密碼金鑰 / WebAuthn"+
+	"已記住的裝置"+
+	"驗證碼"+
+	"記住此裝置"+
+	"返回登入"+
+	"傳送驗證碼"+
+	"重新傳送驗證碼"+
+	"即使密碼外洩，兩步驟登入也能保護您的密碼庫安全。"+
+	"請輸入驗證碼。"+
+	"驗證碼無效，請檢查後重試。"+
+	"驗證碼已傳送至您的電子郵件。"+
+	"GoVault 已鎖定"+
+	"解鎖"+
+	"或使用主密碼"+
+	"登出或切換帳戶…"+
+	"登出或切換帳戶"+
+	"鎖定的密碼庫在此裝置上保持靜態加密。"+
+	"請輸入主密碼。"+
+	"生物辨識"+
+	"解鎖 GoVault"+
+	"解鎖 GoVault"+
+	"已儲存的生物辨識金鑰無法使用，請使用主密碼解鎖。"+
+	"生物辨識金鑰已損毀，請使用主密碼解鎖。"+
+	"生物辨識金鑰無效，請使用主密碼解鎖。"+
+	"生物辨識驗證失敗，請輸入主密碼。"+
+	"鑰匙圈無法使用"+
+	"無法存取系統鑰匙圈。"+
+	"無法關閉生物辨識解鎖"+
+	"無法開啟生物辨識解鎖"+
+	"密碼庫已鎖定"+
+	"因長時間無操作已自動鎖定。"+
+	"要登出 GoVault 嗎？"+
+	"此裝置上快取的加密密碼庫與已儲存的生物辨識金鑰將被移除。"+
+	"登出"+
+	"已登出"+
+	"返回"+
+	"前進"+
+	"搜尋密碼庫"+
+	"清除搜尋"+
+	"離線"+
+	"立即同步"+
+	"鎖定密碼庫"+
+	"新增項目"+
+	"所有項目"+
+	"我的最愛"+
+	"類別"+
+	"資料夾"+
+	"新增資料夾"+
+	"分類"+
+	"工具"+
+	"產生器"+
+	"密碼庫健康"+
+	"封存"+
+	"垃圾桶"+
+	"設定"+
+	"匯入"+
+	"無資料夾"+
+	"分類"+
+	"資料夾"+
+	"資料夾動作"+
+	"重新命名資料夾…"+
+	"刪除資料夾"+
+	"調整窗格大小"+
+	"正在同步…"+
+	"等待同步"+
+	"離線 · 快取密碼庫"+
+	"工作階段已逾期"+
+	"已同步"+
+	"剛才"+
+	"請重新登入以進行同步。在此之前，您的密碼庫可離線使用。"+
+	"工作階段已逾期——您仍可檢視快取的密碼庫。請重新登入以恢復同步。"+
+	"無法儲存登入憑證。請重新登入，以便 GoVault 在鎖定後仍能同步。"+
+	"重新登入"+
+	"垃圾桶中的項目可以還原。"+
+	"清空垃圾桶"+
+	"在所有項目中"+
+	"搜尋所有項目"+
+	"無結果"+
+	"垃圾桶是空的"+
+	"沒有項目"+
+	"您刪除的項目會顯示在這裡。"+
+	"選擇「新增項目」來建立您的第一個項目。"+
+	"未選擇項目"+
+	"從清單中選擇項目以檢視詳細資訊。"+
+	"搜尋"+
+	"新增項目"+
+	"鎖定"+
+	"複製使用者名稱"+
+	"複製密碼"+
+	"複製驗證碼"+
+	"複製公開金鑰"+
+	"永久刪除…"+
+	"加入我的最愛"+
+	"從我的最愛移除"+
+	"複製副本"+
+	"封存"+
+	"取消封存"+
+	"移到垃圾桶"+
+	"使用者名稱"+
+	"密碼"+
+	"已由您的組織隱藏"+
+	"顯示密碼"+
+	"複製密碼"+
+	"複製使用者名稱"+
+	"憑證"+
+	"網站"+
+	"開啟網站"+
+	"複製網站"+
+	"網站"+
+	"持卡人姓名"+
+	"複製持卡人姓名"+
+	"卡號"+
+	"顯示卡號"+
+	"複製卡號"+
+	"有效期限"+
+	"複製有效期限"+
+	"安全代碼"+
+	"品牌"+
+	"付款卡詳細資訊"+
+	"姓名"+
+	"公司"+
+	"電話"+
+	"個人資訊"+
+	"地址"+
+	"複製地址"+
+	"社會保險號碼"+
+	"護照號碼"+
+	"複製護照號碼"+
+	"駕照號碼"+
+	"複製駕照號碼"+
+	"證件"+
+	"自訂欄位"+
+	"備註"+
+	"指紋"+
+	"複製指紋"+
+	"公開金鑰"+
+	"複製公開金鑰"+
+	"私密金鑰"+
+	"舊密碼"+
+	"僅供檢視"+
+	"重新詢問主密碼"+
+	"在垃圾桶中"+
+	"已封存"+
+	"永久刪除"+
+	"切換我的最愛"+
+	"複製項目副本"+
+	"剩餘時間"+
+	"顯示驗證碼"+
+	"複製驗證碼"+
+	"付款卡"+
+	"持卡人"+
+	"有效期限"+
+	"已複製密碼"+
+	"已複製使用者名稱"+
+	"已複製驗證碼"+
+	"已複製公開金鑰"+
+	"已複製網站"+
+	"已複製持卡人姓名"+
+	"已複製卡號"+
+	"已複製有效期限"+
+	"已複製安全代碼"+
+	"已複製姓名"+
+	"已複製公司"+
+	"已複製電子郵件"+
+	"已複製電話"+
+	"已複製地址"+
+	"已複製社會保險號碼"+
+	"已複製護照號碼"+
+	"已複製駕照號碼"+
+	"已複製指紋"+
+	"已複製私密金鑰"+
+	"已複製舊密碼"+
+	"已複製產生的密碼"+
+	"複製失敗"+
+	"已從剪貼簿記錄中隱藏"+
+	"主密碼驗證"+
+	"主密碼驗證無法使用。"+
+	"主密碼不正確。"+
+	"要捨棄未儲存的變更嗎？"+
+	"您對此項目的編輯尚未儲存。"+
+	"繼續編輯"+
+	"捨棄"+
+	"名稱不能為空白。"+
+	"離線時無法儲存。"+
+	"項目已儲存"+
+	"儲存失敗"+
+	"項目已在其他裝置上變更"+
+	"自上次同步以來，此項目已在其他位置更新。請重新載入最新版本以避免覆蓋變更。"+
+	"重新載入最新"+
+	"已儲存至伺服器，但無法更新此裝置上的副本。"+
+	"立即同步"+
+	"更新失敗"+
+	"我的最愛已更新"+
+	"移到垃圾桶失敗"+
+	"已移到垃圾桶"+
+	"封存失敗"+
+	"取消封存失敗"+
+	"項目已封存"+
+	"項目已取消封存"+
+	"還原失敗"+
+	"項目已還原"+
+	"要永久刪除嗎？"+
+	"刪除失敗"+
+	"已永久刪除"+
+	"要清空垃圾桶嗎？"+
+	"清空垃圾桶失敗"+
+	"垃圾桶已清空"+
+	"密碼金鑰不會被複製"+
+	"副本僅包含登入資訊，不包含密碼金鑰。"+
+	"新增資料夾"+
+	"重新命名資料夾"+
+	"資料夾名稱"+
+	"資料夾名稱不能為空白。"+
+	"資料夾已儲存"+
+	"要刪除資料夾嗎？"+
+	"刪除資料夾失敗"+
+	"資料夾已刪除"+
+	"工作階段已逾期"+
+	"請重新登入以恢復同步。"+
+	"正在顯示快取的密碼庫。"+
+	"同步失敗"+
+	"密碼庫已同步"+
+	"有未儲存的變更"+
+	"無變更"+
+	"項目"+
+	"類型"+
+	"名稱"+
+	"我的最愛"+
+	"重新詢問主密碼"+
+	"新增備註"+
+	"產生密碼"+
+	"驗證器"+
+	"otpauth:// URI 或設定金鑰"+
+	"移除網站"+
+	"新增網站"+
+	"持卡人"+
+	"卡面姓名"+
+	"Visa、Mastercard、Amex…"+
+	"卡號"+
+	"MM"+
+	"YYYY"+
+	"CVV"+
+	"名字"+
+	"姓氏"+
+	"+886 912 345 678"+
+	"街道地址"+
+	"忠孝東路一段 1 號"+
+	"城市"+
+	"縣市 / 郵遞區號"+
+	"縣市"+
+	"郵遞區號"+
+	"國家/地區"+
+	"產生 Ed25519 金鑰"+
+	"文字"+
+	"隱藏"+
+	"欄位名稱"+
+	"值"+
+	"移除欄位"+
+	"新增欄位"+
+	"密碼金鑰"+
+	"儲存時移除"+
+	"移除密碼金鑰"+
+	"要移除密碼金鑰嗎？"+
+	"移除後，您將無法再使用此密碼金鑰登入。"+
+	"儲存在此項目中"+
+	"附件"+
+	"附加檔案"+
+	"附加檔案"+
+	"附加"+
+	"儲存附件"+
+	"儲存至此處"+
+	"下載失敗"+
+	"附件已儲存"+
+	"無法開啟檔案"+
+	"檔案過大"+
+	"附件大小上限為 100 MiB。"+
+	"上傳失敗"+
+	"已附加檔案"+
+	"要刪除附件嗎？"+
+	"附件已刪除"+
+	"密碼"+
+	"密碼短語"+
+	"弱"+
+	"普通"+
+	"強"+
+	"極強"+
+	"重新產生"+
+	"長度"+
+	"字元"+
+	"大寫字母"+
+	"小寫字母"+
+	"數字"+
+	"符號"+
+	"避免易混淆字元"+
+	"排除 l、1、I、O 與 0"+
+	"單字數"+
+	"選項"+
+	"單字分隔符"+
+	"放在每個單字之間"+
+	"單字首字母大寫"+
+	"Correct-Horse-Battery"+
+	"包含數字"+
+	"在其中一個單字後加上數字"+
+	"重複使用"+
+	"弱密碼"+
+	"即將到期的付款卡"+
+	"不安全的 HTTP"+
+	"此類別中沒有問題。"+
+	"一切正常"+
+	"沒有重複使用或較弱的密碼、即將到期的付款卡或不安全的網站。"+
+	"重複使用的密碼"+
+	"弱密碼"+
+	"不安全的網站"+
+	"僅在此裝置上檢查，不會向伺服器傳送任何資料。"+
+	"常見密碼"+
+	"主要為連續或重複字元"+
+	"僅使用一種字元類型"+
+	"容易被猜到"+
+	"備份密碼"+
+	"保護您的備份"+
+	"請輸入匯出此備份時設定的密碼。"+
+	"請為加密備份設定密碼。若忘記將無法復原。"+
+	"備份密碼"+
+	"確認密碼"+
+	"匯出"+
+	"解密"+
+	"兩次輸入的密碼不相符。"+
+	"匯出失敗"+
+	"加密備份已儲存"+
+	"請妥善保管備份密碼，忘記後無法復原。"+
+	"匯入備份"+
+	"匯入"+
+	"匯入失敗"+
+	"請輸入備份密碼。"+
+	"備份密碼不正確。"+
+	"這不是 Bitwarden JSON 匯出檔案。"+
+	"此備份已綁定至原帳戶。請將其重新匯出為受密碼保護的檔案。"+
+	"新增"+
+	"建立副本"+
+	"更新現有項目"+
+	"略過"+
+	"目前沒有正在進行的匯入"+
+	"在「設定」中選擇「匯入備份」以檢視備份內容。"+
+	"檢視匯入"+
+	"全選新增"+
+	"略過全部衝突"+
+	"全部建立副本"+
+	"更新全部衝突"+
+	"全部略過"+
+	"您的個人密碼庫"+
+	"某個組織"+
+	"無法更新：備份項目不完整"+
+	"無法更新：其欄位或網站無法安全比對"+
+	"現有項目為唯讀"+
+	"受保護：更新需要輸入主密碼"+
+	"GoVault 目前無法儲存此類型的項目，因此已略過。"+
+	"密碼庫中有多個同名項目，無法自動比對。請選擇「新增」以作為新項目加入。"+
+	"備份中為已封存項目；由於封存需要進階會員，將直接建立至您的密碼庫中。"+
+	"名稱"+
+	"備註"+
+	"資料夾"+
+	"我的最愛"+
+	"重新詢問主密碼"+
+	"使用者名稱"+
+	"密碼"+
+	"驗證碼"+
+	"網站"+
+	"密碼金鑰"+
+	"付款卡"+
+	"身分"+
+	"SSH 金鑰"+
+	"自訂欄位"+
+	"一般"+
+	"語言"+
+	"GoVault 顯示的語言。「系統預設」將跟隨系統的語言設定。"+
+	"系統預設"+
+	"帳戶"+
+	"立即同步"+
+	"金鑰衍生"+
+	"上次同步"+
+	"尚未同步"+
+	"登出會移除本機密碼庫快取。"+
+	"安全性"+
+	"自動鎖定"+
+	"一段時間無操作後自動鎖定密碼庫。"+
+	"睡眠或鎖定螢幕時鎖定"+
+	"當 Mac 進入睡眠或鎖定螢幕時鎖定密碼庫。"+
+	"備份"+
+	"匯出加密備份"+
+	"由您設定密碼保護的 Bitwarden 相容 JSON 檔案。"+
+	"匯出…"+
+	"匯入備份"+
+	"Bitwarden JSON 格式，支援加密或明文。在套用變更前可逐項檢視。"+
+	"匯入…"+
+	"隱私權"+
+	"顯示網站圖示"+
+	"從您的 Vaultwarden 伺服器擷取網站圖示。"+
+	"圖示快取"+
+	"移除此裝置上已下載的網站圖示。"+
+	"清除圖示快取"+
+	"圖示快取已清除"+
+	"無法清除圖示快取"+
+	"剪貼簿"+
+	"清除已複製的機密資訊"+
+	"若剪貼簿中仍保留已複製的值，則在逾時後清除。"+
+	"私密剪貼簿"+
+	"標記機密資訊，使剪貼簿管理員略過記錄。"+
+	"已啟用"+
+	"僅限 macOS"+
+	"選單列"+
+	"系統匣"+
+	"顯示選單列圖示"+
+	"顯示系統匣圖示"+
+	"從選單列開啟、同步或鎖定 GoVault。"+
+	"從系統匣開啟、同步或鎖定 GoVault。"+
+	"登入時啟動"+
+	"登入系統時自動啟動 GoVault。"+
+	"隱藏 Dock 圖示"+
+	"僅在選單列中保留 GoVault。"+
+	"請先開啟選單列圖示，以確保仍可存取 GoVault。"+
+	"關於"+
+	"(開發版)"+
+	"更新經過簽章並會自動安裝。"+
+	"檢查更新"+
+	"SSH 代理程式"+
+	"啟用 SSH 代理程式"+
+	"從已解鎖的密碼庫提供 SSH 金鑰。已啟用重新詢問主密碼的金鑰不會提供。"+
+	"通訊端"+
+	"複製 SSH_AUTH_SOCK"+
+	"另一個程序已使用此通訊端。"+
+	"該路徑已存在，且不是通訊端檔案。"+
+	"此系統不支援 Unix 通訊端。"+
+	"此 Mac 上無法使用 Touch ID——請配對具備 Touch ID 的鍵盤或在「系統設定」中註冊指紋。"+
+	"在系統鑰匙圈中保存封裝金鑰以快速解鎖。"+
+	"硬體級保護：macOS 僅在通過 Touch ID 驗證後釋放金鑰。"+
+	"自動提示"+
+	"開啟 GoVault"+
+	"檢查更新…"+
+	"立即同步"+
+	"立即鎖定"+
+	"結束 GoVault"+
+	"編輯"+
+	"視窗"+
+	"此帳戶需要兩步驟登入。"+
+	"電子郵件或主密碼無效。"+
+	"無法連線至伺服器，請檢查網路連線與伺服器 URL。"+
+	"伺服器重新導向至其他位址，GoVault 不會跟隨重新導向。"+
+	"伺服器找不到此項目。請同步後重試。"+
+	"此項目已在其他裝置上變更。請同步後重試。"+
+	"附件大小上限為 100 MiB。"+
+	"此伺服器不支援封存功能，需要 Vaultwarden 1.36 或更新版本。"+
+	"封存功能需要進階會員。"+
+	"無法向伺服器確認您的帳戶 ID。請同步後重試。"+
+	"伺服器未確認此變更。GoVault 已重新同步以顯示項目的目前位置。"+
+	"垃圾桶中的項目無法封存，請先還原該項目。"+
+	"密碼庫已鎖定，請解鎖後重試。"+
+	"您尚未登入。"+
+	"此項目已不在您的密碼庫中。"+
+	"此資料夾已不在您的密碼庫中。"+
+	"此項目為唯讀。"+
+	"GoVault 無法讀取此組織的項目。請同步後重試。"+
+	"此附件已不在該項目中。"+
+	"您的組織隱藏了此項目的機密資訊。"+
+	"伺服器要求使用 GoVault 不支援的附件上傳方式。"+
+	"已儲存的登入憑證屬於與目前密碼庫副本不同的伺服器，請重新登入。"+
+	"請重新登入以進行同步。在此之前，您的密碼庫可離線使用。"+
+	"目前登入的帳戶與此裝置上的密碼庫不符。若要切換帳戶，請先登出。"+
+	"自確認以來帳戶已變更，請重試。"+
+	"伺服器已儲存變更，但無法更新此裝置上的副本。請同步以重新整理。"+
+	"此項目包含加密資料，GoVault 無法將其複製至新金鑰下。"+
+	"此項目使用了 GoVault 目前無法讀取的格式。"+
+	"此項目在您檢視匯入後發生了變更，請重新檢視。"+
+	"更新此受保護的項目需要輸入主密碼。"+
+	"GoVault 目前無法儲存此類型的項目。"+
+	"GoVault 無法判斷備份項目對應哪些現有項目。"+
+	"無法解密密碼金鑰。"+
+	"備份密碼不正確。"+
+	"加密備份體積過大，GoVault 將無法重新匯入。",
+	[]uint16{
+		6,
+		6,
+		6,
+		6,
+		6,
+		6,
+		6,
+		6,
+		6,
+		6,
+		3,
+		6,
+		12,
+		9,
+		6,
+		10,
+		6,
+		6,
+		9,
+		6,
+		12,
+		10,
+		14,
+		54,
+		13,
+		12,
+		9,
+		9,
+		6,
+		16,
+		123,
+		6,
+		12,
+		60,
+		52,
+		18,
+		15,
+		48,
+		57,
+		12,
+		21,
+		12,
+		7,
+		3,
+		15,
+		8,
+		23,
+		18,
+		9,
+		15,
+		12,
+		15,
+		21,
+		72,
+		21,
+		39,
+		42,
+		17,
+		6,
+		18,
+		24,
+		21,
+		54,
+		21,
+		12,
+		14,
+		14,
+		72,
+		57,
+		54,
+		48,
+		21,
+		30,
+		30,
+		30,
+		18,
+		39,
+		24,
+		84,
+		6,
+		9,
+		6,
+		6,
+		15,
+		12,
+		6,
+		12,
+		15,
+		12,
+		12,
+		12,
+		6,
+		9,
+		15,
+		6,
+		6,
+		9,
+		15,
+		6,
+		9,
+		6,
+		6,
+		12,
+		6,
+		9,
+		15,
+		24,
+		15,
+		18,
+		15,
+		12,
+		25,
+		21,
+		9,
+		6,
+		81,
+		96,
+		87,
+		12,
+		36,
+		15,
+		18,
+		18,
+		9,
+		18,
+		12,
+		39,
+		57,
+		15,
+		48,
+		6,
+		12,
+		6,
+		21,
+		12,
+		15,
+		18,
+		15,
+		18,
+		21,
+		12,
+		6,
+		12,
+		15,
+		15,
+		6,
+		24,
+		12,
+		12,
+		21,
+		6,
+		6,
+		12,
+		12,
+		6,
+		15,
+		21,
+		6,
+		12,
+		12,
+		12,
+		18,
+		12,
+		6,
+		21,
+		6,
+		6,
+		6,
+		12,
+		6,
+		12,
+		18,
+		12,
+		18,
+		12,
+		18,
+		6,
+		12,
+		6,
+		6,
+		12,
+		12,
+		18,
+		12,
+		9,
+		12,
+		21,
+		15,
+		9,
+		12,
+		18,
+		18,
+		12,
+		15,
+		15,
+		9,
+		9,
+		12,
+		15,
+		24,
+		18,
+		21,
+		15,
+		24,
+		15,
+		21,
+		21,
+		15,
+		15,
+		21,
+		15,
+		15,
+		27,
+		21,
+		21,
+		15,
+		21,
+		18,
+		24,
+		12,
+		30,
+		15,
+		30,
+		21,
+		33,
+		39,
+		12,
+		6,
+		24,
+		24,
+		15,
+		12,
+		33,
+		111,
+		18,
+		63,
+		12,
+		12,
+		21,
+		21,
+		18,
+		12,
+		18,
+		15,
+		21,
+		12,
+		15,
+		21,
+		12,
+		15,
+		24,
+		21,
+		18,
+		27,
+		54,
+		15,
+		21,
+		15,
+		33,
+		18,
+		24,
+		21,
+		18,
+		21,
+		33,
+		33,
+		12,
+		18,
+		21,
+		9,
+		6,
+		6,
+		6,
+		12,
+		21,
+		12,
+		12,
+		9,
+		30,
+		12,
+		12,
+		9,
+		12,
+		27,
+		6,
+		2,
+		4,
+		3,
+		6,
+		6,
+		16,
+		12,
+		24,
+		6,
+		21,
+		6,
+		12,
+		13,
+		21,
+		6,
+		6,
+		12,
+		3,
+		12,
+		12,
+		12,
+		15,
+		18,
+		27,
+		57,
+		21,
+		6,
+		12,
+		12,
+		6,
+		12,
+		15,
+		12,
+		15,
+		18,
+		12,
+		32,
+		12,
+		15,
+		21,
+		15,
+		6,
+		12,
+		3,
+		6,
+		3,
+		6,
+		12,
+		6,
+		6,
+		12,
+		12,
+		6,
+		6,
+		21,
+		26,
+		9,
+		6,
+		15,
+		24,
+		21,
+		21,
+		12,
+		36,
+		12,
+		9,
+		24,
+		17,
+		27,
+		12,
+		87,
+		21,
+		9,
+		18,
+		66,
+		12,
+		30,
+		27,
+		15,
+		12,
+		18,
+		45,
+		60,
+		12,
+		12,
+		6,
+		6,
+		33,
+		12,
+		21,
+		54,
+		12,
+		6,
+		12,
+		24,
+		24,
+		40,
+		84,
+		6,
+		12,
+		18,
+		6,
+		33,
+		66,
+		12,
+		12,
+		18,
+		18,
+		18,
+		12,
+		21,
+		12,
+		36,
+		51,
+		21,
+		39,
+		65,
+		105,
+		102,
+		6,
+		6,
+		9,
+		12,
+		21,
+		15,
+		6,
+		9,
+		6,
+		12,
+		9,
+		6,
+		10,
+		12,
+		6,
+		6,
+		77,
+		12,
+		6,
+		12,
+		12,
+		12,
+		12,
+		39,
+		9,
+		12,
+		48,
+		30,
+		56,
+		6,
+		18,
+		59,
+		9,
+		12,
+		84,
+		9,
+		9,
+		18,
+		52,
+		12,
+		45,
+		18,
+		21,
+		24,
+		9,
+		30,
+		66,
+		15,
+		57,
+		9,
+		12,
+		9,
+		9,
+		21,
+		21,
+		47,
+		47,
+		15,
+		38,
+		18,
+		35,
+		62,
+		6,
+		11,
+		39,
+		12,
+		16,
+		23,
+		98,
+		9,
+		20,
+		39,
+		48,
+		36,
+		114,
+		57,
+		70,
+		12,
+		14,
+		15,
+		12,
+		12,
+		14,
+		6,
+		6,
+		33,
+		33,
+		67,
+		74,
+		51,
+		60,
+		32,
+		78,
+		33,
+		63,
+		86,
+		60,
+		42,
+		18,
+		39,
+		42,
+		21,
+		62,
+		33,
+		48,
+		63,
+		93,
+		81,
+		93,
+		45,
+		93,
+		74,
+		57,
+		66,
+		51,
+		47,
+		59,
+		27,
+		24,
+		59,
+	})
+
 // texts returns the messages without arguments in lang, nil for a
 // language the catalog lacks.
 func texts(lang string) *i18n.Texts {
 	switch lang {
 	case "en":
 		return textsEn
+	case "de":
+		return textsDe
+	case "es":
+		return textsEs
+	case "fr":
+		return textsFr
+	case "ja":
+		return textsJa
+	case "ko":
+		return textsKo
+	case "pt-BR":
+		return textsPtBR
+	case "ru":
+		return textsRu
 	case "zh-Hans":
 		return textsZhHans
+	case "zh-Hant":
+		return textsZhHant
 	}
 	return nil
 }
@@ -4065,8 +14004,24 @@ func (msgs Messages) TwoFactorEnterEmailCodeTo(email string) string {
 		switch lang {
 		case "", "en":
 			return "Enter the code sent to " + msgs.arg(email) + "."
+		case "de":
+			return "Gib den Code ein, der an " + email + " gesendet wurde."
+		case "es":
+			return "Introduce el código enviado a " + email + "."
+		case "fr":
+			return "Saisissez le code envoyé à " + email + "."
+		case "ja":
+			return email + " に送信された認証コードを入力してください。"
+		case "ko":
+			return email + "(으)로 전송된 인증 코드를 입력하세요."
+		case "pt-BR":
+			return "Digite o código enviado para " + email + "."
+		case "ru":
+			return "Введите код, отправленный на " + email + "."
 		case "zh-Hans":
 			return "请输入发送至 " + email + " 的验证码。"
+		case "zh-Hant":
+			return "請輸入傳送至 " + email + " 的驗證碼。"
 		}
 	}
 }
@@ -4194,8 +14149,24 @@ func (msgs Messages) TwoFactorOtherProvider(number int) string {
 		switch lang {
 		case "", "en":
 			return "Method " + msgs.arg(i18n.FormatInteger("en", float64(number)))
+		case "de":
+			return "Methode " + i18n.FormatInteger("de", float64(number))
+		case "es":
+			return "Método " + i18n.FormatInteger("es", float64(number))
+		case "fr":
+			return "Méthode " + i18n.FormatInteger("fr", float64(number))
+		case "ja":
+			return "方法 " + i18n.FormatInteger("ja", float64(number))
+		case "ko":
+			return "방법 " + i18n.FormatInteger("ko", float64(number))
+		case "pt-BR":
+			return "Método " + i18n.FormatInteger("pt-BR", float64(number))
+		case "ru":
+			return "Способ " + i18n.FormatInteger("ru", float64(number))
 		case "zh-Hans":
 			return "方式 " + i18n.FormatInteger("zh-Hans", float64(number))
+		case "zh-Hant":
+			return "方式 " + i18n.FormatInteger("zh-Hant", float64(number))
 		}
 	}
 }
@@ -4276,8 +14247,24 @@ func (msgs Messages) TwoFactorUnsupported(methods string) string {
 		switch lang {
 		case "", "en":
 			return "This account requires two-step login with " + msgs.arg(methods) + ", which GoVault does not support yet. Enable Authenticator App or Email two-step login in your vault web settings to sign in here."
+		case "de":
+			return "Dieses Konto erfordert Zwei-Faktor-Authentifizierung über " + methods + ", was GoVault noch nicht unterstützt. Aktiviere Authenticator-App oder E-Mail in den Web-Tresor-Einstellungen, um dich hier anzumelden."
+		case "es":
+			return "Esta cuenta requiere autenticación en dos pasos con " + methods + ", que GoVault aún no admite. Activa App de autenticación o Correo electrónico en los ajustes web de tu caja fuerte para iniciar sesión aquí."
+		case "fr":
+			return "Ce compte nécessite une connexion en deux étapes via " + methods + ", que GoVault ne prend pas encore en charge. Activez l’application d’authentification ou l’e-mail dans les paramètres web de votre coffre pour vous connecter ici."
+		case "ja":
+			return "このアカウントは " + methods + " による2段階認証が必要ですが、GoVault はまだ対応していません。ここでログインするには、ウェブ保管庫の設定で認証アプリまたはメールによる2段階認証を有効にしてください。"
+		case "ko":
+			return "이 계정은 " + methods + " 2단계 인증이 필요하지만 GoVault에서 아직 지원하지 않습니다. 여기서 로그인하려면 웹 보관함 설정에서 인증 앱 또는 이메일 2단계 인증을 활성화하세요."
+		case "pt-BR":
+			return "Esta conta exige autenticação em duas etapas com " + methods + ", ainda não suportada pelo GoVault. Ative Aplicativo autenticador ou E-mail nas configurações web do seu cofre para entrar aqui."
+		case "ru":
+			return "Для этого аккаунта требуется двухэтапная аутентификация (" + methods + "), которую GoVault пока не поддерживает. Включите приложение-аутентификатор или эл. почту в веб-настройках хранилища, чтобы войти здесь."
 		case "zh-Hans":
 			return "此账户要求使用 " + methods + " 进行两步登录，GoVault 暂不支持。请在网页端密码库设置中启用验证器应用或电子邮箱两步登录，然后再在此处登录。"
+		case "zh-Hant":
+			return "此帳戶需要使用 " + methods + " 進行兩步驟登入，GoVault 目前尚未支援。請在網頁版密碼庫設定中啟用驗證器應用程式或電子郵件兩步驟登入，再於此處登入。"
 		}
 	}
 }
@@ -4302,8 +14289,24 @@ func (msgs Messages) TwoFactorEmailFailed(reason string) string {
 		switch lang {
 		case "", "en":
 			return "Could not send the verification email. " + msgs.arg(reason)
+		case "de":
+			return "Verifizierungs-E-Mail konnte nicht gesendet werden. " + reason
+		case "es":
+			return "No se pudo enviar el correo de verificación. " + reason
+		case "fr":
+			return "Impossible d’envoyer l’e-mail de vérification. " + reason
+		case "ja":
+			return "認証メールを送信できませんでした。" + reason
+		case "ko":
+			return "인증 이메일을 보낼 수 없습니다. " + reason
+		case "pt-BR":
+			return "Não foi possível enviar o e-mail de verificação. " + reason
+		case "ru":
+			return "Не удалось отправить письмо с кодом. " + reason
 		case "zh-Hans":
 			return "无法发送验证邮件。" + reason
+		case "zh-Hant":
+			return "無法傳送驗證郵件。" + reason
 		}
 	}
 }
@@ -4326,8 +14329,24 @@ func (msgs Messages) TwoFactorEmailSentTo(email string) string {
 		switch lang {
 		case "", "en":
 			return "A verification code was sent to " + msgs.arg(email) + "."
+		case "de":
+			return "Ein Verifizierungscode wurde an " + email + " gesendet."
+		case "es":
+			return "Se envió un código de verificación a " + email + "."
+		case "fr":
+			return "Un code de vérification a été envoyé à " + email + "."
+		case "ja":
+			return "認証コードを " + email + " に送信しました。"
+		case "ko":
+			return email + "(으)로 인증 코드를 보냈습니다."
+		case "pt-BR":
+			return "Um código de verificação foi enviado para " + email + "."
+		case "ru":
+			return "Код подтверждения отправлен на " + email + "."
 		case "zh-Hans":
 			return "验证码已发送至 " + email + "。"
+		case "zh-Hant":
+			return "驗證碼已傳送至 " + email + "。"
 		}
 	}
 }
@@ -4373,8 +14392,24 @@ func (msgs Messages) UnlockWith(method string) string {
 		switch lang {
 		case "", "en":
 			return "Unlock with " + msgs.arg(method)
+		case "de":
+			return "Mit " + method + " entsperren"
+		case "es":
+			return "Desbloquear con " + method
+		case "fr":
+			return "Déverrouiller avec " + method
+		case "ja":
+			return method + " でロック解除"
+		case "ko":
+			return method + "(으)로 잠금 해제"
+		case "pt-BR":
+			return "Desbloquear com " + method
+		case "ru":
+			return "Разблокировать с " + method
 		case "zh-Hans":
 			return "使用 " + method + " 解锁"
+		case "zh-Hant":
+			return "使用 " + method + " 解鎖"
 		}
 	}
 }
@@ -4456,8 +14491,24 @@ func (msgs Messages) BiometricEnableReason(method string) string {
 		switch lang {
 		case "", "en":
 			return "Enable " + msgs.arg(method) + " for GoVault"
+		case "de":
+			return method + " für GoVault aktivieren"
+		case "es":
+			return "Activar " + method + " para GoVault"
+		case "fr":
+			return "Activer " + method + " pour GoVault"
+		case "ja":
+			return "GoVault で " + method + " を有効化"
+		case "ko":
+			return "GoVault에서 " + method + " 활성화"
+		case "pt-BR":
+			return "Ativar " + method + " para o GoVault"
+		case "ru":
+			return "Включить " + method + " для GoVault"
 		case "zh-Hans":
 			return "为 GoVault 启用 " + method
+		case "zh-Hant":
+			return "為 GoVault 啟用 " + method
 		}
 	}
 }
@@ -4549,8 +14600,24 @@ func (msgs Messages) BiometricDisabled(method string) string {
 		switch lang {
 		case "", "en":
 			return msgs.arg(method) + " turned off"
+		case "de":
+			return method + " deaktiviert"
+		case "es":
+			return method + " desactivado"
+		case "fr":
+			return method + " désactivé"
+		case "ja":
+			return method + " をオフにしました"
+		case "ko":
+			return method + " 꺼짐"
+		case "pt-BR":
+			return method + " desativado"
+		case "ru":
+			return method + " отключён"
 		case "zh-Hans":
 			return "已关闭 " + method
+		case "zh-Hant":
+			return "已關閉 " + method
 		}
 	}
 }
@@ -4573,8 +14640,24 @@ func (msgs Messages) BiometricEnabled(method string) string {
 		switch lang {
 		case "", "en":
 			return msgs.arg(method) + " turned on"
+		case "de":
+			return method + " aktiviert"
+		case "es":
+			return method + " activado"
+		case "fr":
+			return method + " activé"
+		case "ja":
+			return method + " をオンにしました"
+		case "ko":
+			return method + " 켜짐"
+		case "pt-BR":
+			return method + " ativado"
+		case "ru":
+			return method + " включён"
 		case "zh-Hans":
 			return "已开启 " + method
+		case "zh-Hant":
+			return "已開啟 " + method
 		}
 	}
 }
@@ -4597,8 +14680,24 @@ func (msgs Messages) BiometricEnabledDetail(method string) string {
 		switch lang {
 		case "", "en":
 			return "You can now unlock GoVault with " + msgs.arg(method) + "."
+		case "de":
+			return "Du kannst GoVault jetzt mit " + method + " entsperren."
+		case "es":
+			return "Ahora puedes desbloquear GoVault con " + method + "."
+		case "fr":
+			return "Vous pouvez désormais déverrouiller GoVault avec " + method + "."
+		case "ja":
+			return method + " で GoVault のロックを解除できるようになりました。"
+		case "ko":
+			return "이제 " + method + "(으)로 GoVault 잠금을 해제할 수 있습니다."
+		case "pt-BR":
+			return "Agora você pode desbloquear o GoVault com " + method + "."
+		case "ru":
+			return "Теперь вы можете разблокировать GoVault с помощью " + method + "."
 		case "zh-Hans":
 			return "你现在可以使用 " + method + " 解锁 GoVault。"
+		case "zh-Hant":
+			return "您現在可以使用 " + method + " 解鎖 GoVault。"
 		}
 	}
 }
@@ -4667,8 +14766,24 @@ func (msgs Messages) LogOutSecretsLeft(reason string) string {
 		switch lang {
 		case "", "en":
 			return "Some saved secrets could not be removed: " + msgs.arg(reason)
+		case "de":
+			return "Einige gespeicherte Geheimnisse konnten nicht entfernt werden: " + reason
+		case "es":
+			return "No se pudieron eliminar algunos secretos guardados: " + reason
+		case "fr":
+			return "Certains secrets enregistrés n’ont pas pu être supprimés : " + reason
+		case "ja":
+			return "一部の保存済みシークレットを削除できませんでした：" + reason
+		case "ko":
+			return "일부 저장된 비밀 정보를 제거할 수 없습니다: " + reason
+		case "pt-BR":
+			return "Alguns segredos salvos não puderam ser removidos: " + reason
+		case "ru":
+			return "Не удалось удалить часть сохранённых секретов: " + reason
 		case "zh-Hans":
 			return "部分已保存的密钥无法移除：" + reason
+		case "zh-Hant":
+			return "部分已儲存的機密無法移除：" + reason
 		}
 	}
 }
@@ -4950,8 +15065,24 @@ func (msgs Messages) SyncedWhen(when string) string {
 		switch lang {
 		case "", "en":
 			return "Synced " + msgs.arg(when)
+		case "de":
+			return "Synchronisiert " + when
+		case "es":
+			return "Sincronizado " + when
+		case "fr":
+			return "Synchronisé " + when
+		case "ja":
+			return when + "に同期"
+		case "ko":
+			return when + " 동기화됨"
+		case "pt-BR":
+			return "Sincronizado " + when
+		case "ru":
+			return "Синхр.: " + when
 		case "zh-Hans":
 			return "同步于 " + when
+		case "zh-Hant":
+			return "同步於 " + when
 		}
 	}
 }
@@ -4990,12 +15121,105 @@ func (msgs Messages) MinutesAgo(count int) string {
 				b.WriteString(" minutes ago")
 			}
 			return b.String()
+		case "de":
+			var b strings.Builder
+			switch i18n.Cardinal("de", float64(count)) {
+			case i18n.One:
+				b.WriteString("vor ")
+				b.WriteString(i18n.FormatNumber("de", float64(count)))
+				b.WriteString(" Minute")
+			default:
+				b.WriteString("vor ")
+				b.WriteString(i18n.FormatNumber("de", float64(count)))
+				b.WriteString(" Minuten")
+			}
+			return b.String()
+		case "es":
+			var b strings.Builder
+			switch i18n.Cardinal("es", float64(count)) {
+			case i18n.One:
+				b.WriteString("hace ")
+				b.WriteString(i18n.FormatNumber("es", float64(count)))
+				b.WriteString(" minuto")
+			default:
+				b.WriteString("hace ")
+				b.WriteString(i18n.FormatNumber("es", float64(count)))
+				b.WriteString(" minutos")
+			}
+			return b.String()
+		case "fr":
+			var b strings.Builder
+			switch i18n.Cardinal("fr", float64(count)) {
+			case i18n.One:
+				b.WriteString("il y a ")
+				b.WriteString(i18n.FormatNumber("fr", float64(count)))
+				b.WriteString(" minute")
+			default:
+				b.WriteString("il y a ")
+				b.WriteString(i18n.FormatNumber("fr", float64(count)))
+				b.WriteString(" minutes")
+			}
+			return b.String()
+		case "ja":
+			var b strings.Builder
+			switch i18n.Cardinal("ja", float64(count)) {
+			default:
+				b.WriteString(i18n.FormatNumber("ja", float64(count)))
+				b.WriteString(" 分前")
+			}
+			return b.String()
+		case "ko":
+			var b strings.Builder
+			switch i18n.Cardinal("ko", float64(count)) {
+			default:
+				b.WriteString(i18n.FormatNumber("ko", float64(count)))
+				b.WriteString("분 전")
+			}
+			return b.String()
+		case "pt-BR":
+			var b strings.Builder
+			switch i18n.Cardinal("pt-BR", float64(count)) {
+			case i18n.One:
+				b.WriteString("há ")
+				b.WriteString(i18n.FormatNumber("pt-BR", float64(count)))
+				b.WriteString(" minuto")
+			default:
+				b.WriteString("há ")
+				b.WriteString(i18n.FormatNumber("pt-BR", float64(count)))
+				b.WriteString(" minutos")
+			}
+			return b.String()
+		case "ru":
+			var b strings.Builder
+			switch i18n.Cardinal("ru", float64(count)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" минуту назад")
+			case i18n.Few:
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" минуты назад")
+			case i18n.Many:
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" минут назад")
+			default:
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" минуты назад")
+			}
+			return b.String()
 		case "zh-Hans":
 			var b strings.Builder
 			switch i18n.Cardinal("zh-Hans", float64(count)) {
 			default:
 				b.WriteString(i18n.FormatNumber("zh-Hans", float64(count)))
 				b.WriteString(" 分钟前")
+			}
+			return b.String()
+		case "zh-Hant":
+			var b strings.Builder
+			switch i18n.Cardinal("zh-Hant", float64(count)) {
+			default:
+				b.WriteString(i18n.FormatNumber("zh-Hant", float64(count)))
+				b.WriteString(" 分鐘前")
 			}
 			return b.String()
 		}
@@ -5027,12 +15251,105 @@ func (msgs Messages) HoursAgo(count int) string {
 				b.WriteString(" hours ago")
 			}
 			return b.String()
+		case "de":
+			var b strings.Builder
+			switch i18n.Cardinal("de", float64(count)) {
+			case i18n.One:
+				b.WriteString("vor ")
+				b.WriteString(i18n.FormatNumber("de", float64(count)))
+				b.WriteString(" Stunde")
+			default:
+				b.WriteString("vor ")
+				b.WriteString(i18n.FormatNumber("de", float64(count)))
+				b.WriteString(" Stunden")
+			}
+			return b.String()
+		case "es":
+			var b strings.Builder
+			switch i18n.Cardinal("es", float64(count)) {
+			case i18n.One:
+				b.WriteString("hace ")
+				b.WriteString(i18n.FormatNumber("es", float64(count)))
+				b.WriteString(" hora")
+			default:
+				b.WriteString("hace ")
+				b.WriteString(i18n.FormatNumber("es", float64(count)))
+				b.WriteString(" horas")
+			}
+			return b.String()
+		case "fr":
+			var b strings.Builder
+			switch i18n.Cardinal("fr", float64(count)) {
+			case i18n.One:
+				b.WriteString("il y a ")
+				b.WriteString(i18n.FormatNumber("fr", float64(count)))
+				b.WriteString(" heure")
+			default:
+				b.WriteString("il y a ")
+				b.WriteString(i18n.FormatNumber("fr", float64(count)))
+				b.WriteString(" heures")
+			}
+			return b.String()
+		case "ja":
+			var b strings.Builder
+			switch i18n.Cardinal("ja", float64(count)) {
+			default:
+				b.WriteString(i18n.FormatNumber("ja", float64(count)))
+				b.WriteString(" 時間前")
+			}
+			return b.String()
+		case "ko":
+			var b strings.Builder
+			switch i18n.Cardinal("ko", float64(count)) {
+			default:
+				b.WriteString(i18n.FormatNumber("ko", float64(count)))
+				b.WriteString("시간 전")
+			}
+			return b.String()
+		case "pt-BR":
+			var b strings.Builder
+			switch i18n.Cardinal("pt-BR", float64(count)) {
+			case i18n.One:
+				b.WriteString("há ")
+				b.WriteString(i18n.FormatNumber("pt-BR", float64(count)))
+				b.WriteString(" hora")
+			default:
+				b.WriteString("há ")
+				b.WriteString(i18n.FormatNumber("pt-BR", float64(count)))
+				b.WriteString(" horas")
+			}
+			return b.String()
+		case "ru":
+			var b strings.Builder
+			switch i18n.Cardinal("ru", float64(count)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" час назад")
+			case i18n.Few:
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" часа назад")
+			case i18n.Many:
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" часов назад")
+			default:
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" часа назад")
+			}
+			return b.String()
 		case "zh-Hans":
 			var b strings.Builder
 			switch i18n.Cardinal("zh-Hans", float64(count)) {
 			default:
 				b.WriteString(i18n.FormatNumber("zh-Hans", float64(count)))
 				b.WriteString(" 小时前")
+			}
+			return b.String()
+		case "zh-Hant":
+			var b strings.Builder
+			switch i18n.Cardinal("zh-Hant", float64(count)) {
+			default:
+				b.WriteString(i18n.FormatNumber("zh-Hant", float64(count)))
+				b.WriteString(" 小時前")
 			}
 			return b.String()
 		}
@@ -5064,11 +15381,104 @@ func (msgs Messages) DaysAgo(count int) string {
 				b.WriteString(" days ago")
 			}
 			return b.String()
+		case "de":
+			var b strings.Builder
+			switch i18n.Cardinal("de", float64(count)) {
+			case i18n.One:
+				b.WriteString("vor ")
+				b.WriteString(i18n.FormatNumber("de", float64(count)))
+				b.WriteString(" Tag")
+			default:
+				b.WriteString("vor ")
+				b.WriteString(i18n.FormatNumber("de", float64(count)))
+				b.WriteString(" Tagen")
+			}
+			return b.String()
+		case "es":
+			var b strings.Builder
+			switch i18n.Cardinal("es", float64(count)) {
+			case i18n.One:
+				b.WriteString("hace ")
+				b.WriteString(i18n.FormatNumber("es", float64(count)))
+				b.WriteString(" día")
+			default:
+				b.WriteString("hace ")
+				b.WriteString(i18n.FormatNumber("es", float64(count)))
+				b.WriteString(" días")
+			}
+			return b.String()
+		case "fr":
+			var b strings.Builder
+			switch i18n.Cardinal("fr", float64(count)) {
+			case i18n.One:
+				b.WriteString("il y a ")
+				b.WriteString(i18n.FormatNumber("fr", float64(count)))
+				b.WriteString(" jour")
+			default:
+				b.WriteString("il y a ")
+				b.WriteString(i18n.FormatNumber("fr", float64(count)))
+				b.WriteString(" jours")
+			}
+			return b.String()
+		case "ja":
+			var b strings.Builder
+			switch i18n.Cardinal("ja", float64(count)) {
+			default:
+				b.WriteString(i18n.FormatNumber("ja", float64(count)))
+				b.WriteString(" 日前")
+			}
+			return b.String()
+		case "ko":
+			var b strings.Builder
+			switch i18n.Cardinal("ko", float64(count)) {
+			default:
+				b.WriteString(i18n.FormatNumber("ko", float64(count)))
+				b.WriteString("일 전")
+			}
+			return b.String()
+		case "pt-BR":
+			var b strings.Builder
+			switch i18n.Cardinal("pt-BR", float64(count)) {
+			case i18n.One:
+				b.WriteString("há ")
+				b.WriteString(i18n.FormatNumber("pt-BR", float64(count)))
+				b.WriteString(" dia")
+			default:
+				b.WriteString("há ")
+				b.WriteString(i18n.FormatNumber("pt-BR", float64(count)))
+				b.WriteString(" dias")
+			}
+			return b.String()
+		case "ru":
+			var b strings.Builder
+			switch i18n.Cardinal("ru", float64(count)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" день назад")
+			case i18n.Few:
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" дня назад")
+			case i18n.Many:
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" дней назад")
+			default:
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" дня назад")
+			}
+			return b.String()
 		case "zh-Hans":
 			var b strings.Builder
 			switch i18n.Cardinal("zh-Hans", float64(count)) {
 			default:
 				b.WriteString(i18n.FormatNumber("zh-Hans", float64(count)))
+				b.WriteString(" 天前")
+			}
+			return b.String()
+		case "zh-Hant":
+			var b strings.Builder
+			switch i18n.Cardinal("zh-Hant", float64(count)) {
+			default:
+				b.WriteString(i18n.FormatNumber("zh-Hant", float64(count)))
 				b.WriteString(" 天前")
 			}
 			return b.String()
@@ -5094,8 +15504,24 @@ func (msgs Messages) ShortDate(date time.Time) string {
 		switch lang {
 		case "", "en":
 			return msgs.arg(i18n.FormatDate(msgs.dated("en"), date, i18n.DateOptions{Skeleton: "MMMd"}))
+		case "de":
+			return i18n.FormatDate(msgs.dated("de"), date, i18n.DateOptions{Skeleton: "MMMd"})
+		case "es":
+			return i18n.FormatDate(msgs.dated("es"), date, i18n.DateOptions{Skeleton: "MMMd"})
+		case "fr":
+			return i18n.FormatDate(msgs.dated("fr"), date, i18n.DateOptions{Skeleton: "MMMd"})
+		case "ja":
+			return i18n.FormatDate(msgs.dated("ja"), date, i18n.DateOptions{Skeleton: "MMMd"})
+		case "ko":
+			return i18n.FormatDate(msgs.dated("ko"), date, i18n.DateOptions{Skeleton: "MMMd"})
+		case "pt-BR":
+			return i18n.FormatDate(msgs.dated("pt-BR"), date, i18n.DateOptions{Skeleton: "MMMd"})
+		case "ru":
+			return i18n.FormatDate(msgs.dated("ru"), date, i18n.DateOptions{Skeleton: "MMMd"})
 		case "zh-Hans":
 			return i18n.FormatDate(msgs.dated("zh-Hans"), date, i18n.DateOptions{Skeleton: "MMMd"})
+		case "zh-Hant":
+			return i18n.FormatDate(msgs.dated("zh-Hant"), date, i18n.DateOptions{Skeleton: "MMMd"})
 		}
 	}
 }
@@ -5153,12 +15579,97 @@ func (msgs Messages) ItemCount(count int) string {
 				b.WriteString(" items")
 			}
 			return b.String()
+		case "de":
+			var b strings.Builder
+			switch i18n.Cardinal("de", float64(count)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("de", float64(count)))
+				b.WriteString(" Eintrag")
+			default:
+				b.WriteString(i18n.FormatNumber("de", float64(count)))
+				b.WriteString(" Einträge")
+			}
+			return b.String()
+		case "es":
+			var b strings.Builder
+			switch i18n.Cardinal("es", float64(count)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("es", float64(count)))
+				b.WriteString(" elemento")
+			default:
+				b.WriteString(i18n.FormatNumber("es", float64(count)))
+				b.WriteString(" elementos")
+			}
+			return b.String()
+		case "fr":
+			var b strings.Builder
+			switch i18n.Cardinal("fr", float64(count)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("fr", float64(count)))
+				b.WriteString(" élément")
+			default:
+				b.WriteString(i18n.FormatNumber("fr", float64(count)))
+				b.WriteString(" éléments")
+			}
+			return b.String()
+		case "ja":
+			var b strings.Builder
+			switch i18n.Cardinal("ja", float64(count)) {
+			default:
+				b.WriteString(i18n.FormatNumber("ja", float64(count)))
+				b.WriteString(" 件")
+			}
+			return b.String()
+		case "ko":
+			var b strings.Builder
+			switch i18n.Cardinal("ko", float64(count)) {
+			default:
+				b.WriteString(i18n.FormatNumber("ko", float64(count)))
+				b.WriteString("개 항목")
+			}
+			return b.String()
+		case "pt-BR":
+			var b strings.Builder
+			switch i18n.Cardinal("pt-BR", float64(count)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("pt-BR", float64(count)))
+				b.WriteString(" item")
+			default:
+				b.WriteString(i18n.FormatNumber("pt-BR", float64(count)))
+				b.WriteString(" itens")
+			}
+			return b.String()
+		case "ru":
+			var b strings.Builder
+			switch i18n.Cardinal("ru", float64(count)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" элемент")
+			case i18n.Few:
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" элемента")
+			case i18n.Many:
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" элементов")
+			default:
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" элемента")
+			}
+			return b.String()
 		case "zh-Hans":
 			var b strings.Builder
 			switch i18n.Cardinal("zh-Hans", float64(count)) {
 			default:
 				b.WriteString(i18n.FormatNumber("zh-Hans", float64(count)))
 				b.WriteString(" 个项目")
+			}
+			return b.String()
+		case "zh-Hant":
+			var b strings.Builder
+			switch i18n.Cardinal("zh-Hant", float64(count)) {
+			default:
+				b.WriteString(i18n.FormatNumber("zh-Hant", float64(count)))
+				b.WriteString(" 個項目")
 			}
 			return b.String()
 		}
@@ -5204,8 +15715,24 @@ func (msgs Messages) SearchIn(section string) string {
 		switch lang {
 		case "", "en":
 			return "In " + msgs.arg(section)
+		case "de":
+			return "In „" + section + "“"
+		case "es":
+			return "En “" + section + "”"
+		case "fr":
+			return "Dans « " + section + " »"
+		case "ja":
+			return "「" + section + "」内"
+		case "ko":
+			return "“" + section + "”에서"
+		case "pt-BR":
+			return "Em “" + section + "”"
+		case "ru":
+			return "В «" + section + "»"
 		case "zh-Hans":
 			return "在“" + section + "”中"
+		case "zh-Hant":
+			return "在「" + section + "」中"
 		}
 	}
 }
@@ -5228,8 +15755,24 @@ func (msgs Messages) SearchOnlyIn(section string) string {
 		switch lang {
 		case "", "en":
 			return "Only " + msgs.arg(section)
+		case "de":
+			return "Nur „" + section + "“"
+		case "es":
+			return "Solo “" + section + "”"
+		case "fr":
+			return "Uniquement « " + section + " »"
+		case "ja":
+			return "「" + section + "」のみ"
+		case "ko":
+			return "“" + section + "”만"
+		case "pt-BR":
+			return "Apenas “" + section + "”"
+		case "ru":
+			return "Только «" + section + "»"
 		case "zh-Hans":
 			return "仅限“" + section + "”"
+		case "zh-Hant":
+			return "僅限「" + section + "」"
 		}
 	}
 }
@@ -5282,8 +15825,24 @@ func (msgs Messages) NothingInSectionMatches(section string, query string) strin
 		switch lang {
 		case "", "en":
 			return "Nothing in " + msgs.arg(section) + " matches “" + msgs.arg(query) + "”."
+		case "de":
+			return "Keine Treffer für „" + query + "“ in „" + section + "“."
+		case "es":
+			return "Nada en “" + section + "” coincide con “" + query + "”."
+		case "fr":
+			return "Aucun résultat pour « " + query + " » dans « " + section + " »."
+		case "ja":
+			return "「" + section + "」に「" + query + "」と一致するアイテムはありません。"
+		case "ko":
+			return "“" + section + "”에서 “" + query + "”와(과) 일치하는 항목이 없습니다."
+		case "pt-BR":
+			return "Nada em “" + section + "” corresponde a “" + query + "”."
+		case "ru":
+			return "В «" + section + "» нет совпадений для «" + query + "»."
 		case "zh-Hans":
 			return "“" + section + "”中没有与“" + query + "”匹配的项目。"
+		case "zh-Hant":
+			return "「" + section + "」中沒有符合「" + query + "」的項目。"
 		}
 	}
 }
@@ -5304,8 +15863,24 @@ func (msgs Messages) NothingMatches(query string) string {
 		switch lang {
 		case "", "en":
 			return "Nothing matches “" + msgs.arg(query) + "”."
+		case "de":
+			return "Keine Treffer für „" + query + "“."
+		case "es":
+			return "Nada coincide con “" + query + "”."
+		case "fr":
+			return "Aucun résultat pour « " + query + " »."
+		case "ja":
+			return "「" + query + "」と一致するアイテムはありません。"
+		case "ko":
+			return "“" + query + "”와(과) 일치하는 항목이 없습니다."
+		case "pt-BR":
+			return "Nada corresponde a “" + query + "”."
+		case "ru":
+			return "Нет совпадений для «" + query + "»."
 		case "zh-Hans":
 			return "没有与“" + query + "”匹配的项目。"
+		case "zh-Hant":
+			return "沒有符合「" + query + "」的項目。"
 		}
 	}
 }
@@ -5528,8 +16103,24 @@ func (msgs Messages) WebsiteNumbered(number int) string {
 		switch lang {
 		case "", "en":
 			return "Website " + msgs.arg(i18n.FormatInteger("en", float64(number)))
+		case "de":
+			return "Website " + i18n.FormatInteger("de", float64(number))
+		case "es":
+			return "Sitio web " + i18n.FormatInteger("es", float64(number))
+		case "fr":
+			return "Site web " + i18n.FormatInteger("fr", float64(number))
+		case "ja":
+			return "ウェブサイト " + i18n.FormatInteger("ja", float64(number))
+		case "ko":
+			return "웹사이트 " + i18n.FormatInteger("ko", float64(number))
+		case "pt-BR":
+			return "Site " + i18n.FormatInteger("pt-BR", float64(number))
+		case "ru":
+			return "Веб-сайт " + i18n.FormatInteger("ru", float64(number))
 		case "zh-Hans":
 			return "网站 " + i18n.FormatInteger("zh-Hans", float64(number))
+		case "zh-Hant":
+			return "網站 " + i18n.FormatInteger("zh-Hant", float64(number))
 		}
 	}
 }
@@ -5784,8 +16375,24 @@ func (msgs Messages) RevealField(field string) string {
 		switch lang {
 		case "", "en":
 			return "Reveal " + msgs.arg(field)
+		case "de":
+			return field + " anzeigen"
+		case "es":
+			return "Mostrar " + field
+		case "fr":
+			return "Afficher " + field
+		case "ja":
+			return field + " を表示"
+		case "ko":
+			return field + " 표시"
+		case "pt-BR":
+			return "Mostrar " + field
+		case "ru":
+			return "Показать " + field
 		case "zh-Hans":
 			return "显示 " + field
+		case "zh-Hant":
+			return "顯示 " + field
 		}
 	}
 }
@@ -5808,8 +16415,24 @@ func (msgs Messages) CopyField(field string) string {
 		switch lang {
 		case "", "en":
 			return "Copy " + msgs.arg(field)
+		case "de":
+			return field + " kopieren"
+		case "es":
+			return "Copiar " + field
+		case "fr":
+			return "Copier " + field
+		case "ja":
+			return field + " をコピー"
+		case "ko":
+			return field + " 복사"
+		case "pt-BR":
+			return "Copiar " + field
+		case "ru":
+			return "Копировать " + field
 		case "zh-Hans":
 			return "复制 " + field
+		case "zh-Hant":
+			return "複製 " + field
 		}
 	}
 }
@@ -5830,8 +16453,24 @@ func (msgs Messages) PasswordHistory(count int) string {
 		switch lang {
 		case "", "en":
 			return "Password History (" + msgs.arg(i18n.FormatInteger("en", float64(count))) + ")"
+		case "de":
+			return "Passwortverlauf (" + i18n.FormatInteger("de", float64(count)) + ")"
+		case "es":
+			return "Historial de contraseñas (" + i18n.FormatInteger("es", float64(count)) + ")"
+		case "fr":
+			return "Historique des mots de passe (" + i18n.FormatInteger("fr", float64(count)) + ")"
+		case "ja":
+			return "パスワード履歴（" + i18n.FormatInteger("ja", float64(count)) + "）"
+		case "ko":
+			return "비밀번호 기록 (" + i18n.FormatInteger("ko", float64(count)) + ")"
+		case "pt-BR":
+			return "Histórico de senhas (" + i18n.FormatInteger("pt-BR", float64(count)) + ")"
+		case "ru":
+			return "История паролей (" + i18n.FormatInteger("ru", float64(count)) + ")"
 		case "zh-Hans":
 			return "密码历史记录（" + i18n.FormatInteger("zh-Hans", float64(count)) + "）"
+		case "zh-Hant":
+			return "密碼歷史記錄（" + i18n.FormatInteger("zh-Hant", float64(count)) + "）"
 		}
 	}
 }
@@ -5854,8 +16493,24 @@ func (msgs Messages) UsedUntil(date time.Time) string {
 		switch lang {
 		case "", "en":
 			return "Used until " + msgs.arg(i18n.FormatDate(msgs.dated("en"), date, i18n.DateOptions{Date: i18n.MediumStyle})) + " at " + msgs.arg(i18n.FormatDate(msgs.dated("en"), date, i18n.DateOptions{Time: i18n.ShortStyle}))
+		case "de":
+			return "Verwendet bis " + i18n.FormatDate(msgs.dated("de"), date, i18n.DateOptions{Date: i18n.MediumStyle}) + " um " + i18n.FormatDate(msgs.dated("de"), date, i18n.DateOptions{Time: i18n.ShortStyle})
+		case "es":
+			return "Usada hasta el " + i18n.FormatDate(msgs.dated("es"), date, i18n.DateOptions{Date: i18n.MediumStyle}) + " a las " + i18n.FormatDate(msgs.dated("es"), date, i18n.DateOptions{Time: i18n.ShortStyle})
+		case "fr":
+			return "Utilisé jusqu’au " + i18n.FormatDate(msgs.dated("fr"), date, i18n.DateOptions{Date: i18n.MediumStyle}) + " à " + i18n.FormatDate(msgs.dated("fr"), date, i18n.DateOptions{Time: i18n.ShortStyle})
+		case "ja":
+			return i18n.FormatDate(msgs.dated("ja"), date, i18n.DateOptions{Date: i18n.MediumStyle}) + " " + i18n.FormatDate(msgs.dated("ja"), date, i18n.DateOptions{Time: i18n.ShortStyle}) + " まで使用"
+		case "ko":
+			return i18n.FormatDate(msgs.dated("ko"), date, i18n.DateOptions{Date: i18n.MediumStyle}) + " " + i18n.FormatDate(msgs.dated("ko"), date, i18n.DateOptions{Time: i18n.ShortStyle}) + "까지 사용됨"
+		case "pt-BR":
+			return "Usada até " + i18n.FormatDate(msgs.dated("pt-BR"), date, i18n.DateOptions{Date: i18n.MediumStyle}) + " às " + i18n.FormatDate(msgs.dated("pt-BR"), date, i18n.DateOptions{Time: i18n.ShortStyle})
+		case "ru":
+			return "Использовался до " + i18n.FormatDate(msgs.dated("ru"), date, i18n.DateOptions{Date: i18n.MediumStyle}) + ", " + i18n.FormatDate(msgs.dated("ru"), date, i18n.DateOptions{Time: i18n.ShortStyle})
 		case "zh-Hans":
 			return "使用至 " + i18n.FormatDate(msgs.dated("zh-Hans"), date, i18n.DateOptions{Date: i18n.MediumStyle}) + " " + i18n.FormatDate(msgs.dated("zh-Hans"), date, i18n.DateOptions{Time: i18n.ShortStyle})
+		case "zh-Hant":
+			return "使用至 " + i18n.FormatDate(msgs.dated("zh-Hant"), date, i18n.DateOptions{Date: i18n.MediumStyle}) + " " + i18n.FormatDate(msgs.dated("zh-Hant"), date, i18n.DateOptions{Time: i18n.ShortStyle})
 		}
 	}
 }
@@ -5958,11 +16613,96 @@ func (msgs Messages) SecondsLeft(seconds int) string {
 				b.WriteString("s")
 			}
 			return b.String()
+		case "de":
+			var b strings.Builder
+			switch i18n.Cardinal("de", float64(seconds)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("de", float64(seconds)))
+				b.WriteString(" s")
+			default:
+				b.WriteString(i18n.FormatNumber("de", float64(seconds)))
+				b.WriteString(" s")
+			}
+			return b.String()
+		case "es":
+			var b strings.Builder
+			switch i18n.Cardinal("es", float64(seconds)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("es", float64(seconds)))
+				b.WriteString(" s")
+			default:
+				b.WriteString(i18n.FormatNumber("es", float64(seconds)))
+				b.WriteString(" s")
+			}
+			return b.String()
+		case "fr":
+			var b strings.Builder
+			switch i18n.Cardinal("fr", float64(seconds)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("fr", float64(seconds)))
+				b.WriteString(" s")
+			default:
+				b.WriteString(i18n.FormatNumber("fr", float64(seconds)))
+				b.WriteString(" s")
+			}
+			return b.String()
+		case "ja":
+			var b strings.Builder
+			switch i18n.Cardinal("ja", float64(seconds)) {
+			default:
+				b.WriteString(i18n.FormatNumber("ja", float64(seconds)))
+				b.WriteString(" 秒")
+			}
+			return b.String()
+		case "ko":
+			var b strings.Builder
+			switch i18n.Cardinal("ko", float64(seconds)) {
+			default:
+				b.WriteString(i18n.FormatNumber("ko", float64(seconds)))
+				b.WriteString("초")
+			}
+			return b.String()
+		case "pt-BR":
+			var b strings.Builder
+			switch i18n.Cardinal("pt-BR", float64(seconds)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("pt-BR", float64(seconds)))
+				b.WriteString(" s")
+			default:
+				b.WriteString(i18n.FormatNumber("pt-BR", float64(seconds)))
+				b.WriteString(" s")
+			}
+			return b.String()
+		case "ru":
+			var b strings.Builder
+			switch i18n.Cardinal("ru", float64(seconds)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("ru", float64(seconds)))
+				b.WriteString(" с")
+			case i18n.Few:
+				b.WriteString(i18n.FormatNumber("ru", float64(seconds)))
+				b.WriteString(" с")
+			case i18n.Many:
+				b.WriteString(i18n.FormatNumber("ru", float64(seconds)))
+				b.WriteString(" с")
+			default:
+				b.WriteString(i18n.FormatNumber("ru", float64(seconds)))
+				b.WriteString(" с")
+			}
+			return b.String()
 		case "zh-Hans":
 			var b strings.Builder
 			switch i18n.Cardinal("zh-Hans", float64(seconds)) {
 			default:
 				b.WriteString(i18n.FormatNumber("zh-Hans", float64(seconds)))
+				b.WriteString(" 秒")
+			}
+			return b.String()
+		case "zh-Hant":
+			var b strings.Builder
+			switch i18n.Cardinal("zh-Hant", float64(seconds)) {
+			default:
+				b.WriteString(i18n.FormatNumber("zh-Hant", float64(seconds)))
 				b.WriteString(" 秒")
 			}
 			return b.String()
@@ -6027,8 +16767,24 @@ func (msgs Messages) UpdatedOn(date time.Time) string {
 		switch lang {
 		case "", "en":
 			return "Updated " + msgs.arg(i18n.FormatDate(msgs.dated("en"), date, i18n.DateOptions{Date: i18n.MediumStyle})) + " at " + msgs.arg(i18n.FormatDate(msgs.dated("en"), date, i18n.DateOptions{Time: i18n.ShortStyle}))
+		case "de":
+			return "Aktualisiert am " + i18n.FormatDate(msgs.dated("de"), date, i18n.DateOptions{Date: i18n.MediumStyle}) + " um " + i18n.FormatDate(msgs.dated("de"), date, i18n.DateOptions{Time: i18n.ShortStyle})
+		case "es":
+			return "Actualizado el " + i18n.FormatDate(msgs.dated("es"), date, i18n.DateOptions{Date: i18n.MediumStyle}) + " a las " + i18n.FormatDate(msgs.dated("es"), date, i18n.DateOptions{Time: i18n.ShortStyle})
+		case "fr":
+			return "Modifié le " + i18n.FormatDate(msgs.dated("fr"), date, i18n.DateOptions{Date: i18n.MediumStyle}) + " à " + i18n.FormatDate(msgs.dated("fr"), date, i18n.DateOptions{Time: i18n.ShortStyle})
+		case "ja":
+			return "更新：" + i18n.FormatDate(msgs.dated("ja"), date, i18n.DateOptions{Date: i18n.MediumStyle}) + " " + i18n.FormatDate(msgs.dated("ja"), date, i18n.DateOptions{Time: i18n.ShortStyle})
+		case "ko":
+			return "수정: " + i18n.FormatDate(msgs.dated("ko"), date, i18n.DateOptions{Date: i18n.MediumStyle}) + " " + i18n.FormatDate(msgs.dated("ko"), date, i18n.DateOptions{Time: i18n.ShortStyle})
+		case "pt-BR":
+			return "Atualizado em " + i18n.FormatDate(msgs.dated("pt-BR"), date, i18n.DateOptions{Date: i18n.MediumStyle}) + " às " + i18n.FormatDate(msgs.dated("pt-BR"), date, i18n.DateOptions{Time: i18n.ShortStyle})
+		case "ru":
+			return "Изменено " + i18n.FormatDate(msgs.dated("ru"), date, i18n.DateOptions{Date: i18n.MediumStyle}) + ", " + i18n.FormatDate(msgs.dated("ru"), date, i18n.DateOptions{Time: i18n.ShortStyle})
 		case "zh-Hans":
 			return "更新于 " + i18n.FormatDate(msgs.dated("zh-Hans"), date, i18n.DateOptions{Date: i18n.MediumStyle}) + " " + i18n.FormatDate(msgs.dated("zh-Hans"), date, i18n.DateOptions{Time: i18n.ShortStyle})
+		case "zh-Hant":
+			return "更新於 " + i18n.FormatDate(msgs.dated("zh-Hant"), date, i18n.DateOptions{Date: i18n.MediumStyle}) + " " + i18n.FormatDate(msgs.dated("zh-Hant"), date, i18n.DateOptions{Time: i18n.ShortStyle})
 		}
 	}
 }
@@ -6049,8 +16805,24 @@ func (msgs Messages) CreatedOn(date time.Time) string {
 		switch lang {
 		case "", "en":
 			return "Created " + msgs.arg(i18n.FormatDate(msgs.dated("en"), date, i18n.DateOptions{Date: i18n.MediumStyle}))
+		case "de":
+			return "Erstellt am " + i18n.FormatDate(msgs.dated("de"), date, i18n.DateOptions{Date: i18n.MediumStyle})
+		case "es":
+			return "Creado el " + i18n.FormatDate(msgs.dated("es"), date, i18n.DateOptions{Date: i18n.MediumStyle})
+		case "fr":
+			return "Créé le " + i18n.FormatDate(msgs.dated("fr"), date, i18n.DateOptions{Date: i18n.MediumStyle})
+		case "ja":
+			return "作成：" + i18n.FormatDate(msgs.dated("ja"), date, i18n.DateOptions{Date: i18n.MediumStyle})
+		case "ko":
+			return "생성: " + i18n.FormatDate(msgs.dated("ko"), date, i18n.DateOptions{Date: i18n.MediumStyle})
+		case "pt-BR":
+			return "Criado em " + i18n.FormatDate(msgs.dated("pt-BR"), date, i18n.DateOptions{Date: i18n.MediumStyle})
+		case "ru":
+			return "Создано " + i18n.FormatDate(msgs.dated("ru"), date, i18n.DateOptions{Date: i18n.MediumStyle})
 		case "zh-Hans":
 			return "创建于 " + i18n.FormatDate(msgs.dated("zh-Hans"), date, i18n.DateOptions{Date: i18n.MediumStyle})
+		case "zh-Hant":
+			return "建立於 " + i18n.FormatDate(msgs.dated("zh-Hant"), date, i18n.DateOptions{Date: i18n.MediumStyle})
 		}
 	}
 }
@@ -6073,8 +16845,24 @@ func (msgs Messages) DeletedWhen(when string) string {
 		switch lang {
 		case "", "en":
 			return "Deleted " + msgs.arg(when)
+		case "de":
+			return "Gelöscht " + when
+		case "es":
+			return "Eliminado " + when
+		case "fr":
+			return "Supprimé " + when
+		case "ja":
+			return "削除：" + when
+		case "ko":
+			return "삭제: " + when
+		case "pt-BR":
+			return "Excluído " + when
+		case "ru":
+			return "Удалено " + when
 		case "zh-Hans":
 			return "删除于 " + when
+		case "zh-Hant":
+			return "刪除於 " + when
 		}
 	}
 }
@@ -6097,8 +16885,24 @@ func (msgs Messages) Copied(field string) string {
 		switch lang {
 		case "", "en":
 			return msgs.arg(field) + " copied"
+		case "de":
+			return field + " kopiert"
+		case "es":
+			return field + " copiado"
+		case "fr":
+			return field + " copié"
+		case "ja":
+			return field + " をコピーしました"
+		case "ko":
+			return field + " 복사됨"
+		case "pt-BR":
+			return field + " copiado"
+		case "ru":
+			return field + " скопировано"
 		case "zh-Hans":
 			return "已复制 " + field
+		case "zh-Hant":
+			return "已複製 " + field
 		}
 	}
 }
@@ -6285,6 +17089,91 @@ func (msgs Messages) ClearsInConcealed(seconds int) string {
 				b.WriteString(" seconds")
 			}
 			return b.String()
+		case "de":
+			var b strings.Builder
+			b.WriteString("Privat · wird in ")
+			switch i18n.Cardinal("de", float64(seconds)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("de", float64(seconds)))
+				b.WriteString(" Sekunde")
+			default:
+				b.WriteString(i18n.FormatNumber("de", float64(seconds)))
+				b.WriteString(" Sekunden")
+			}
+			b.WriteString(" gelöscht")
+			return b.String()
+		case "es":
+			var b strings.Builder
+			b.WriteString("Privado · se borra en ")
+			switch i18n.Cardinal("es", float64(seconds)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("es", float64(seconds)))
+				b.WriteString(" segundo")
+			default:
+				b.WriteString(i18n.FormatNumber("es", float64(seconds)))
+				b.WriteString(" segundos")
+			}
+			return b.String()
+		case "fr":
+			var b strings.Builder
+			b.WriteString("Privé · effacé dans ")
+			switch i18n.Cardinal("fr", float64(seconds)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("fr", float64(seconds)))
+				b.WriteString(" seconde")
+			default:
+				b.WriteString(i18n.FormatNumber("fr", float64(seconds)))
+				b.WriteString(" secondes")
+			}
+			return b.String()
+		case "ja":
+			var b strings.Builder
+			b.WriteString("非表示 · ")
+			switch i18n.Cardinal("ja", float64(seconds)) {
+			default:
+				b.WriteString(i18n.FormatNumber("ja", float64(seconds)))
+				b.WriteString(" 秒後に消去")
+			}
+			return b.String()
+		case "ko":
+			var b strings.Builder
+			b.WriteString("숨김 · ")
+			switch i18n.Cardinal("ko", float64(seconds)) {
+			default:
+				b.WriteString(i18n.FormatNumber("ko", float64(seconds)))
+				b.WriteString("초 후 지워짐")
+			}
+			return b.String()
+		case "pt-BR":
+			var b strings.Builder
+			b.WriteString("Privado · limpa em ")
+			switch i18n.Cardinal("pt-BR", float64(seconds)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("pt-BR", float64(seconds)))
+				b.WriteString(" segundo")
+			default:
+				b.WriteString(i18n.FormatNumber("pt-BR", float64(seconds)))
+				b.WriteString(" segundos")
+			}
+			return b.String()
+		case "ru":
+			var b strings.Builder
+			b.WriteString("Приватно · очистка через ")
+			switch i18n.Cardinal("ru", float64(seconds)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("ru", float64(seconds)))
+				b.WriteString(" секунду")
+			case i18n.Few:
+				b.WriteString(i18n.FormatNumber("ru", float64(seconds)))
+				b.WriteString(" секунды")
+			case i18n.Many:
+				b.WriteString(i18n.FormatNumber("ru", float64(seconds)))
+				b.WriteString(" секунд")
+			default:
+				b.WriteString(i18n.FormatNumber("ru", float64(seconds)))
+				b.WriteString(" секунды")
+			}
+			return b.String()
 		case "zh-Hans":
 			var b strings.Builder
 			b.WriteString("已隐藏 · ")
@@ -6292,6 +17181,15 @@ func (msgs Messages) ClearsInConcealed(seconds int) string {
 			default:
 				b.WriteString(i18n.FormatNumber("zh-Hans", float64(seconds)))
 				b.WriteString(" 秒后清除")
+			}
+			return b.String()
+		case "zh-Hant":
+			var b strings.Builder
+			b.WriteString("已隱藏 · ")
+			switch i18n.Cardinal("zh-Hant", float64(seconds)) {
+			default:
+				b.WriteString(i18n.FormatNumber("zh-Hant", float64(seconds)))
+				b.WriteString(" 秒後清除")
 			}
 			return b.String()
 		}
@@ -6324,12 +17222,103 @@ func (msgs Messages) ClearsIn(seconds int) string {
 				b.WriteString(" seconds")
 			}
 			return b.String()
+		case "de":
+			var b strings.Builder
+			b.WriteString("Wird in ")
+			switch i18n.Cardinal("de", float64(seconds)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("de", float64(seconds)))
+				b.WriteString(" Sekunde")
+			default:
+				b.WriteString(i18n.FormatNumber("de", float64(seconds)))
+				b.WriteString(" Sekunden")
+			}
+			b.WriteString(" gelöscht")
+			return b.String()
+		case "es":
+			var b strings.Builder
+			b.WriteString("Se borra en ")
+			switch i18n.Cardinal("es", float64(seconds)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("es", float64(seconds)))
+				b.WriteString(" segundo")
+			default:
+				b.WriteString(i18n.FormatNumber("es", float64(seconds)))
+				b.WriteString(" segundos")
+			}
+			return b.String()
+		case "fr":
+			var b strings.Builder
+			b.WriteString("Effacé dans ")
+			switch i18n.Cardinal("fr", float64(seconds)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("fr", float64(seconds)))
+				b.WriteString(" seconde")
+			default:
+				b.WriteString(i18n.FormatNumber("fr", float64(seconds)))
+				b.WriteString(" secondes")
+			}
+			return b.String()
+		case "ja":
+			var b strings.Builder
+			switch i18n.Cardinal("ja", float64(seconds)) {
+			default:
+				b.WriteString(i18n.FormatNumber("ja", float64(seconds)))
+				b.WriteString(" 秒後に消去")
+			}
+			return b.String()
+		case "ko":
+			var b strings.Builder
+			switch i18n.Cardinal("ko", float64(seconds)) {
+			default:
+				b.WriteString(i18n.FormatNumber("ko", float64(seconds)))
+				b.WriteString("초 후 지워짐")
+			}
+			return b.String()
+		case "pt-BR":
+			var b strings.Builder
+			b.WriteString("Limpa em ")
+			switch i18n.Cardinal("pt-BR", float64(seconds)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("pt-BR", float64(seconds)))
+				b.WriteString(" segundo")
+			default:
+				b.WriteString(i18n.FormatNumber("pt-BR", float64(seconds)))
+				b.WriteString(" segundos")
+			}
+			return b.String()
+		case "ru":
+			var b strings.Builder
+			b.WriteString("Очистка через ")
+			switch i18n.Cardinal("ru", float64(seconds)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("ru", float64(seconds)))
+				b.WriteString(" секунду")
+			case i18n.Few:
+				b.WriteString(i18n.FormatNumber("ru", float64(seconds)))
+				b.WriteString(" секунды")
+			case i18n.Many:
+				b.WriteString(i18n.FormatNumber("ru", float64(seconds)))
+				b.WriteString(" секунд")
+			default:
+				b.WriteString(i18n.FormatNumber("ru", float64(seconds)))
+				b.WriteString(" секунды")
+			}
+			return b.String()
 		case "zh-Hans":
 			var b strings.Builder
 			switch i18n.Cardinal("zh-Hans", float64(seconds)) {
 			default:
 				b.WriteString(i18n.FormatNumber("zh-Hans", float64(seconds)))
 				b.WriteString(" 秒后清除")
+			}
+			return b.String()
+		case "zh-Hant":
+			var b strings.Builder
+			switch i18n.Cardinal("zh-Hant", float64(seconds)) {
+			default:
+				b.WriteString(i18n.FormatNumber("zh-Hant", float64(seconds)))
+				b.WriteString(" 秒後清除")
 			}
 			return b.String()
 		}
@@ -6419,6 +17408,377 @@ func (msgs Messages) RepromptPrompt(action string) string {
 				b.WriteString("Enter your master password to continue.")
 			}
 			return b.String()
+		case "de":
+			var b strings.Builder
+			switch action {
+			case "copyPassword":
+				b.WriteString("Gib dein Master-Passwort ein, um das Passwort zu kopieren.")
+			case "copyTOTP":
+				b.WriteString("Gib dein Master-Passwort ein, um den Verifizierungscode zu kopieren.")
+			case "revealTOTP":
+				b.WriteString("Gib dein Master-Passwort ein, um den Verifizierungscode anzuzeigen.")
+			case "revealPassword":
+				b.WriteString("Gib dein Master-Passwort ein, um das Passwort anzuzeigen.")
+			case "revealCardNumber":
+				b.WriteString("Gib dein Master-Passwort ein, um die Kartennummer anzuzeigen.")
+			case "copyCardNumber":
+				b.WriteString("Gib dein Master-Passwort ein, um die Kartennummer zu kopieren.")
+			case "revealSecurityCode":
+				b.WriteString("Gib dein Master-Passwort ein, um den Sicherheitscode anzuzeigen.")
+			case "copySecurityCode":
+				b.WriteString("Gib dein Master-Passwort ein, um den Sicherheitscode zu kopieren.")
+			case "revealSSN":
+				b.WriteString("Gib dein Master-Passwort ein, um die Sozialversicherungsnummer anzuzeigen.")
+			case "copySSN":
+				b.WriteString("Gib dein Master-Passwort ein, um die Sozialversicherungsnummer zu kopieren.")
+			case "revealField":
+				b.WriteString("Gib dein Master-Passwort ein, um das benutzerdefinierte Feld anzuzeigen.")
+			case "copyField":
+				b.WriteString("Gib dein Master-Passwort ein, um das benutzerdefinierte Feld zu kopieren.")
+			case "revealPrivateKey":
+				b.WriteString("Gib dein Master-Passwort ein, um den privaten Schlüssel anzuzeigen.")
+			case "copyPrivateKey":
+				b.WriteString("Gib dein Master-Passwort ein, um den privaten Schlüssel zu kopieren.")
+			case "revealOldPassword":
+				b.WriteString("Gib dein Master-Passwort ein, um das alte Passwort anzuzeigen.")
+			case "copyOldPassword":
+				b.WriteString("Gib dein Master-Passwort ein, um das alte Passwort zu kopieren.")
+			case "editItem":
+				b.WriteString("Gib dein Master-Passwort ein, um den Eintrag zu bearbeiten.")
+			case "cloneItem":
+				b.WriteString("Gib dein Master-Passwort ein, um den Eintrag zu duplizieren.")
+			case "archiveItem":
+				b.WriteString("Gib dein Master-Passwort ein, um den Eintrag zu archivieren.")
+			case "unarchiveItem":
+				b.WriteString("Gib dein Master-Passwort ein, um den Eintrag zu dearchivieren.")
+			case "downloadAttachment":
+				b.WriteString("Gib dein Master-Passwort ein, um den Anhang herunterzuladen.")
+			case "exportVault":
+				b.WriteString("Gib dein Master-Passwort ein, um deinen Tresor zu exportieren.")
+			case "updateProtectedItem":
+				b.WriteString("Gib dein Master-Passwort ein, um einen geschützten Eintrag zu aktualisieren.")
+			default:
+				b.WriteString("Gib dein Master-Passwort ein, um fortzufahren.")
+			}
+			return b.String()
+		case "es":
+			var b strings.Builder
+			switch action {
+			case "copyPassword":
+				b.WriteString("Introduce tu contraseña maestra para copiar la contraseña.")
+			case "copyTOTP":
+				b.WriteString("Introduce tu contraseña maestra para copiar el código de verificación.")
+			case "revealTOTP":
+				b.WriteString("Introduce tu contraseña maestra para mostrar el código de verificación.")
+			case "revealPassword":
+				b.WriteString("Introduce tu contraseña maestra para mostrar la contraseña.")
+			case "revealCardNumber":
+				b.WriteString("Introduce tu contraseña maestra para mostrar el número de tarjeta.")
+			case "copyCardNumber":
+				b.WriteString("Introduce tu contraseña maestra para copiar el número de tarjeta.")
+			case "revealSecurityCode":
+				b.WriteString("Introduce tu contraseña maestra para mostrar el código de seguridad.")
+			case "copySecurityCode":
+				b.WriteString("Introduce tu contraseña maestra para copiar el código de seguridad.")
+			case "revealSSN":
+				b.WriteString("Introduce tu contraseña maestra para mostrar el nº de seguridad social.")
+			case "copySSN":
+				b.WriteString("Introduce tu contraseña maestra para copiar el nº de seguridad social.")
+			case "revealField":
+				b.WriteString("Introduce tu contraseña maestra para mostrar el campo personalizado.")
+			case "copyField":
+				b.WriteString("Introduce tu contraseña maestra para copiar el campo personalizado.")
+			case "revealPrivateKey":
+				b.WriteString("Introduce tu contraseña maestra para mostrar la clave privada.")
+			case "copyPrivateKey":
+				b.WriteString("Introduce tu contraseña maestra para copiar la clave privada.")
+			case "revealOldPassword":
+				b.WriteString("Introduce tu contraseña maestra para mostrar la contraseña anterior.")
+			case "copyOldPassword":
+				b.WriteString("Introduce tu contraseña maestra para copiar la contraseña anterior.")
+			case "editItem":
+				b.WriteString("Introduce tu contraseña maestra para editar el elemento.")
+			case "cloneItem":
+				b.WriteString("Introduce tu contraseña maestra para clonar el elemento.")
+			case "archiveItem":
+				b.WriteString("Introduce tu contraseña maestra para archivar el elemento.")
+			case "unarchiveItem":
+				b.WriteString("Introduce tu contraseña maestra para desarchivar el elemento.")
+			case "downloadAttachment":
+				b.WriteString("Introduce tu contraseña maestra para descargar el adjunto.")
+			case "exportVault":
+				b.WriteString("Introduce tu contraseña maestra para exportar tu caja fuerte.")
+			case "updateProtectedItem":
+				b.WriteString("Introduce tu contraseña maestra para actualizar un elemento protegido.")
+			default:
+				b.WriteString("Introduce tu contraseña maestra para continuar.")
+			}
+			return b.String()
+		case "fr":
+			var b strings.Builder
+			switch action {
+			case "copyPassword":
+				b.WriteString("Saisissez votre mot de passe principal pour copier le mot de passe.")
+			case "copyTOTP":
+				b.WriteString("Saisissez votre mot de passe principal pour copier le code de vérification.")
+			case "revealTOTP":
+				b.WriteString("Saisissez votre mot de passe principal pour afficher le code de vérification.")
+			case "revealPassword":
+				b.WriteString("Saisissez votre mot de passe principal pour afficher le mot de passe.")
+			case "revealCardNumber":
+				b.WriteString("Saisissez votre mot de passe principal pour afficher le numéro de carte.")
+			case "copyCardNumber":
+				b.WriteString("Saisissez votre mot de passe principal pour copier le numéro de carte.")
+			case "revealSecurityCode":
+				b.WriteString("Saisissez votre mot de passe principal pour afficher le code de sécurité.")
+			case "copySecurityCode":
+				b.WriteString("Saisissez votre mot de passe principal pour copier le code de sécurité.")
+			case "revealSSN":
+				b.WriteString("Saisissez votre mot de passe principal pour afficher le numéro de sécurité sociale.")
+			case "copySSN":
+				b.WriteString("Saisissez votre mot de passe principal pour copier le numéro de sécurité sociale.")
+			case "revealField":
+				b.WriteString("Saisissez votre mot de passe principal pour afficher le champ personnalisé.")
+			case "copyField":
+				b.WriteString("Saisissez votre mot de passe principal pour copier le champ personnalisé.")
+			case "revealPrivateKey":
+				b.WriteString("Saisissez votre mot de passe principal pour afficher la clé privée.")
+			case "copyPrivateKey":
+				b.WriteString("Saisissez votre mot de passe principal pour copier la clé privée.")
+			case "revealOldPassword":
+				b.WriteString("Saisissez votre mot de passe principal pour afficher l’ancien mot de passe.")
+			case "copyOldPassword":
+				b.WriteString("Saisissez votre mot de passe principal pour copier l’ancien mot de passe.")
+			case "editItem":
+				b.WriteString("Saisissez votre mot de passe principal pour modifier l’élément.")
+			case "cloneItem":
+				b.WriteString("Saisissez votre mot de passe principal pour cloner l’élément.")
+			case "archiveItem":
+				b.WriteString("Saisissez votre mot de passe principal pour archiver l’élément.")
+			case "unarchiveItem":
+				b.WriteString("Saisissez votre mot de passe principal pour désarchiver l’élément.")
+			case "downloadAttachment":
+				b.WriteString("Saisissez votre mot de passe principal pour télécharger la pièce jointe.")
+			case "exportVault":
+				b.WriteString("Saisissez votre mot de passe principal pour exporter votre coffre.")
+			case "updateProtectedItem":
+				b.WriteString("Saisissez votre mot de passe principal pour mettre à jour un élément protégé.")
+			default:
+				b.WriteString("Saisissez votre mot de passe principal pour continuer.")
+			}
+			return b.String()
+		case "ja":
+			var b strings.Builder
+			switch action {
+			case "copyPassword":
+				b.WriteString("パスワードをコピーするにはマスターパスワードを入力してください。")
+			case "copyTOTP":
+				b.WriteString("認証コードをコピーするにはマスターパスワードを入力してください。")
+			case "revealTOTP":
+				b.WriteString("認証コードを表示するにはマスターパスワードを入力してください。")
+			case "revealPassword":
+				b.WriteString("パスワードを表示するにはマスターパスワードを入力してください。")
+			case "revealCardNumber":
+				b.WriteString("カード番号を表示するにはマスターパスワードを入力してください。")
+			case "copyCardNumber":
+				b.WriteString("カード番号をコピーするにはマスターパスワードを入力してください。")
+			case "revealSecurityCode":
+				b.WriteString("セキュリティコードを表示するにはマスターパスワードを入力してください。")
+			case "copySecurityCode":
+				b.WriteString("セキュリティコードをコピーするにはマスターパスワードを入力してください。")
+			case "revealSSN":
+				b.WriteString("社会保障番号を表示するにはマスターパスワードを入力してください。")
+			case "copySSN":
+				b.WriteString("社会保障番号をコピーするにはマスターパスワードを入力してください。")
+			case "revealField":
+				b.WriteString("カスタムフィールドを表示するにはマスターパスワードを入力してください。")
+			case "copyField":
+				b.WriteString("カスタムフィールドをコピーするにはマスターパスワードを入力してください。")
+			case "revealPrivateKey":
+				b.WriteString("秘密鍵を表示するにはマスターパスワードを入力してください。")
+			case "copyPrivateKey":
+				b.WriteString("秘密鍵をコピーするにはマスターパスワードを入力してください。")
+			case "revealOldPassword":
+				b.WriteString("旧パスワードを表示するにはマスターパスワードを入力してください。")
+			case "copyOldPassword":
+				b.WriteString("旧パスワードをコピーするにはマスターパスワードを入力してください。")
+			case "editItem":
+				b.WriteString("アイテムを編集するにはマスターパスワードを入力してください。")
+			case "cloneItem":
+				b.WriteString("アイテムを複製するにはマスターパスワードを入力してください。")
+			case "archiveItem":
+				b.WriteString("アイテムをアーカイブするにはマスターパスワードを入力してください。")
+			case "unarchiveItem":
+				b.WriteString("アイテムのアーカイブを解除するにはマスターパスワードを入力してください。")
+			case "downloadAttachment":
+				b.WriteString("添付ファイルをダウンロードするにはマスターパスワードを入力してください。")
+			case "exportVault":
+				b.WriteString("保管庫をエクスポートするにはマスターパスワードを入力してください。")
+			case "updateProtectedItem":
+				b.WriteString("保護されたアイテムを更新するにはマスターパスワードを入力してください。")
+			default:
+				b.WriteString("続行するにはマスターパスワードを入力してください。")
+			}
+			return b.String()
+		case "ko":
+			var b strings.Builder
+			switch action {
+			case "copyPassword":
+				b.WriteString("비밀번호를 복사하려면 마스터 비밀번호를 입력하세요.")
+			case "copyTOTP":
+				b.WriteString("인증 코드를 복사하려면 마스터 비밀번호를 입력하세요.")
+			case "revealTOTP":
+				b.WriteString("인증 코드를 표시하려면 마스터 비밀번호를 입력하세요.")
+			case "revealPassword":
+				b.WriteString("비밀번호를 표시하려면 마스터 비밀번호를 입력하세요.")
+			case "revealCardNumber":
+				b.WriteString("카드 번호를 표시하려면 마스터 비밀번호를 입력하세요.")
+			case "copyCardNumber":
+				b.WriteString("카드 번호를 복사하려면 마스터 비밀번호를 입력하세요.")
+			case "revealSecurityCode":
+				b.WriteString("보안 코드를 표시하려면 마스터 비밀번호를 입력하세요.")
+			case "copySecurityCode":
+				b.WriteString("보안 코드를 복사하려면 마스터 비밀번호를 입력하세요.")
+			case "revealSSN":
+				b.WriteString("주민등록번호를 표시하려면 마스터 비밀번호를 입력하세요.")
+			case "copySSN":
+				b.WriteString("주민등록번호를 복사하려면 마스터 비밀번호를 입력하세요.")
+			case "revealField":
+				b.WriteString("사용자 지정 필드를 표시하려면 마스터 비밀번호를 입력하세요.")
+			case "copyField":
+				b.WriteString("사용자 지정 필드를 복사하려면 마스터 비밀번호를 입력하세요.")
+			case "revealPrivateKey":
+				b.WriteString("비공개 키를 표시하려면 마스터 비밀번호를 입력하세요.")
+			case "copyPrivateKey":
+				b.WriteString("비공개 키를 복사하려면 마스터 비밀번호를 입력하세요.")
+			case "revealOldPassword":
+				b.WriteString("이전 비밀번호를 표시하려면 마스터 비밀번호를 입력하세요.")
+			case "copyOldPassword":
+				b.WriteString("이전 비밀번호를 복사하려면 마스터 비밀번호를 입력하세요.")
+			case "editItem":
+				b.WriteString("항목을 편집하려면 마스터 비밀번호를 입력하세요.")
+			case "cloneItem":
+				b.WriteString("항목을 복제하려면 마스터 비밀번호를 입력하세요.")
+			case "archiveItem":
+				b.WriteString("항목을 아카이브에 보관하려면 마스터 비밀번호를 입력하세요.")
+			case "unarchiveItem":
+				b.WriteString("항목 보관을 해제하려면 마스터 비밀번호를 입력하세요.")
+			case "downloadAttachment":
+				b.WriteString("첨부 파일을 다운로드하려면 마스터 비밀번호를 입력하세요.")
+			case "exportVault":
+				b.WriteString("보관함을 내보내려면 마스터 비밀번호를 입력하세요.")
+			case "updateProtectedItem":
+				b.WriteString("보호된 항목을 업데이트하려면 마스터 비밀번호를 입력하세요.")
+			default:
+				b.WriteString("계속하려면 마스터 비밀번호를 입력하세요.")
+			}
+			return b.String()
+		case "pt-BR":
+			var b strings.Builder
+			switch action {
+			case "copyPassword":
+				b.WriteString("Digite sua senha principal para copiar a senha.")
+			case "copyTOTP":
+				b.WriteString("Digite sua senha principal para copiar o código de verificação.")
+			case "revealTOTP":
+				b.WriteString("Digite sua senha principal para mostrar o código de verificação.")
+			case "revealPassword":
+				b.WriteString("Digite sua senha principal para mostrar a senha.")
+			case "revealCardNumber":
+				b.WriteString("Digite sua senha principal para mostrar o número do cartão.")
+			case "copyCardNumber":
+				b.WriteString("Digite sua senha principal para copiar o número do cartão.")
+			case "revealSecurityCode":
+				b.WriteString("Digite sua senha principal para mostrar o código de segurança.")
+			case "copySecurityCode":
+				b.WriteString("Digite sua senha principal para copiar o código de segurança.")
+			case "revealSSN":
+				b.WriteString("Digite sua senha principal para mostrar o número de CPF.")
+			case "copySSN":
+				b.WriteString("Digite sua senha principal para copiar o número de CPF.")
+			case "revealField":
+				b.WriteString("Digite sua senha principal para mostrar o campo personalizado.")
+			case "copyField":
+				b.WriteString("Digite sua senha principal para copiar o campo personalizado.")
+			case "revealPrivateKey":
+				b.WriteString("Digite sua senha principal para mostrar a chave privada.")
+			case "copyPrivateKey":
+				b.WriteString("Digite sua senha principal para copiar a chave privada.")
+			case "revealOldPassword":
+				b.WriteString("Digite sua senha principal para mostrar a senha antiga.")
+			case "copyOldPassword":
+				b.WriteString("Digite sua senha principal para copiar a senha antiga.")
+			case "editItem":
+				b.WriteString("Digite sua senha principal para editar o item.")
+			case "cloneItem":
+				b.WriteString("Digite sua senha principal para clonar o item.")
+			case "archiveItem":
+				b.WriteString("Digite sua senha principal para arquivar o item.")
+			case "unarchiveItem":
+				b.WriteString("Digite sua senha principal para desarquivar o item.")
+			case "downloadAttachment":
+				b.WriteString("Digite sua senha principal para baixar o anexo.")
+			case "exportVault":
+				b.WriteString("Digite sua senha principal para exportar seu cofre.")
+			case "updateProtectedItem":
+				b.WriteString("Digite sua senha principal para atualizar um item protegido.")
+			default:
+				b.WriteString("Digite sua senha principal para continuar.")
+			}
+			return b.String()
+		case "ru":
+			var b strings.Builder
+			switch action {
+			case "copyPassword":
+				b.WriteString("Введите мастер-пароль, чтобы скопировать пароль.")
+			case "copyTOTP":
+				b.WriteString("Введите мастер-пароль, чтобы скопировать код подтверждения.")
+			case "revealTOTP":
+				b.WriteString("Введите мастер-пароль, чтобы показать код подтверждения.")
+			case "revealPassword":
+				b.WriteString("Введите мастер-пароль, чтобы показать пароль.")
+			case "revealCardNumber":
+				b.WriteString("Введите мастер-пароль, чтобы показать номер карты.")
+			case "copyCardNumber":
+				b.WriteString("Введите мастер-пароль, чтобы скопировать номер карты.")
+			case "revealSecurityCode":
+				b.WriteString("Введите мастер-пароль, чтобы показать код безопасности.")
+			case "copySecurityCode":
+				b.WriteString("Введите мастер-пароль, чтобы скопировать код безопасности.")
+			case "revealSSN":
+				b.WriteString("Введите мастер-пароль, чтобы показать номер соц. страхования.")
+			case "copySSN":
+				b.WriteString("Введите мастер-пароль, чтобы скопировать номер соц. страхования.")
+			case "revealField":
+				b.WriteString("Введите мастер-пароль, чтобы показать пользовательское поле.")
+			case "copyField":
+				b.WriteString("Введите мастер-пароль, чтобы скопировать пользовательское поле.")
+			case "revealPrivateKey":
+				b.WriteString("Введите мастер-пароль, чтобы показать приватный ключ.")
+			case "copyPrivateKey":
+				b.WriteString("Введите мастер-пароль, чтобы скопировать приватный ключ.")
+			case "revealOldPassword":
+				b.WriteString("Введите мастер-пароль, чтобы показать старый пароль.")
+			case "copyOldPassword":
+				b.WriteString("Введите мастер-пароль, чтобы скопировать старый пароль.")
+			case "editItem":
+				b.WriteString("Введите мастер-пароль, чтобы изменить элемент.")
+			case "cloneItem":
+				b.WriteString("Введите мастер-пароль, чтобы клонировать элемент.")
+			case "archiveItem":
+				b.WriteString("Введите мастер-пароль, чтобы архивировать элемент.")
+			case "unarchiveItem":
+				b.WriteString("Введите мастер-пароль, чтобы разархивировать элемент.")
+			case "downloadAttachment":
+				b.WriteString("Введите мастер-пароль, чтобы скачать вложение.")
+			case "exportVault":
+				b.WriteString("Введите мастер-пароль, чтобы экспортировать хранилище.")
+			case "updateProtectedItem":
+				b.WriteString("Введите мастер-пароль, чтобы обновить защищённый элемент.")
+			default:
+				b.WriteString("Введите мастер-пароль, чтобы продолжить.")
+			}
+			return b.String()
 		case "zh-Hans":
 			var b strings.Builder
 			switch action {
@@ -6470,6 +17830,59 @@ func (msgs Messages) RepromptPrompt(action string) string {
 				b.WriteString("请输入主密码以更新受保护的项目。")
 			default:
 				b.WriteString("请输入主密码以继续。")
+			}
+			return b.String()
+		case "zh-Hant":
+			var b strings.Builder
+			switch action {
+			case "copyPassword":
+				b.WriteString("請輸入主密碼以複製密碼。")
+			case "copyTOTP":
+				b.WriteString("請輸入主密碼以複製驗證碼。")
+			case "revealTOTP":
+				b.WriteString("請輸入主密碼以顯示驗證碼。")
+			case "revealPassword":
+				b.WriteString("請輸入主密碼以顯示密碼。")
+			case "revealCardNumber":
+				b.WriteString("請輸入主密碼以顯示卡號。")
+			case "copyCardNumber":
+				b.WriteString("請輸入主密碼以複製卡號。")
+			case "revealSecurityCode":
+				b.WriteString("請輸入主密碼以顯示安全代碼。")
+			case "copySecurityCode":
+				b.WriteString("請輸入主密碼以複製安全代碼。")
+			case "revealSSN":
+				b.WriteString("請輸入主密碼以顯示社會保險號碼。")
+			case "copySSN":
+				b.WriteString("請輸入主密碼以複製社會保險號碼。")
+			case "revealField":
+				b.WriteString("請輸入主密碼以顯示自訂欄位。")
+			case "copyField":
+				b.WriteString("請輸入主密碼以複製自訂欄位。")
+			case "revealPrivateKey":
+				b.WriteString("請輸入主密碼以顯示私密金鑰。")
+			case "copyPrivateKey":
+				b.WriteString("請輸入主密碼以複製私密金鑰。")
+			case "revealOldPassword":
+				b.WriteString("請輸入主密碼以顯示舊密碼。")
+			case "copyOldPassword":
+				b.WriteString("請輸入主密碼以複製舊密碼。")
+			case "editItem":
+				b.WriteString("請輸入主密碼以編輯項目。")
+			case "cloneItem":
+				b.WriteString("請輸入主密碼以複製項目副本。")
+			case "archiveItem":
+				b.WriteString("請輸入主密碼以封存項目。")
+			case "unarchiveItem":
+				b.WriteString("請輸入主密碼以取消封存項目。")
+			case "downloadAttachment":
+				b.WriteString("請輸入主密碼以下載附件。")
+			case "exportVault":
+				b.WriteString("請輸入主密碼以匯出密碼庫。")
+			case "updateProtectedItem":
+				b.WriteString("請輸入主密碼以更新受保護的項目。")
+			default:
+				b.WriteString("請輸入主密碼以繼續。")
 			}
 			return b.String()
 		}
@@ -6547,6 +17960,377 @@ func (msgs Messages) RepromptBiometricReason(action string) string {
 				b.WriteString("Verify to continue")
 			}
 			return b.String()
+		case "de":
+			var b strings.Builder
+			switch action {
+			case "copyPassword":
+				b.WriteString("Zum Kopieren des Passworts bestätigen")
+			case "copyTOTP":
+				b.WriteString("Zum Kopieren des Verifizierungscodes bestätigen")
+			case "revealTOTP":
+				b.WriteString("Zum Anzeigen des Verifizierungscodes bestätigen")
+			case "revealPassword":
+				b.WriteString("Zum Anzeigen des Passworts bestätigen")
+			case "revealCardNumber":
+				b.WriteString("Zum Anzeigen der Kartennummer bestätigen")
+			case "copyCardNumber":
+				b.WriteString("Zum Kopieren der Kartennummer bestätigen")
+			case "revealSecurityCode":
+				b.WriteString("Zum Anzeigen des Sicherheitscodes bestätigen")
+			case "copySecurityCode":
+				b.WriteString("Zum Kopieren des Sicherheitscodes bestätigen")
+			case "revealSSN":
+				b.WriteString("Zum Anzeigen der Sozialversicherungsnummer bestätigen")
+			case "copySSN":
+				b.WriteString("Zum Kopieren der Sozialversicherungsnummer bestätigen")
+			case "revealField":
+				b.WriteString("Zum Anzeigen des benutzerdefinierten Felds bestätigen")
+			case "copyField":
+				b.WriteString("Zum Kopieren des benutzerdefinierten Felds bestätigen")
+			case "revealPrivateKey":
+				b.WriteString("Zum Anzeigen des privaten Schlüssels bestätigen")
+			case "copyPrivateKey":
+				b.WriteString("Zum Kopieren des privaten Schlüssels bestätigen")
+			case "revealOldPassword":
+				b.WriteString("Zum Anzeigen des alten Passworts bestätigen")
+			case "copyOldPassword":
+				b.WriteString("Zum Kopieren des alten Passworts bestätigen")
+			case "editItem":
+				b.WriteString("Zum Bearbeiten des Eintrags bestätigen")
+			case "cloneItem":
+				b.WriteString("Zum Duplizieren des Eintrags bestätigen")
+			case "archiveItem":
+				b.WriteString("Zum Archivieren des Eintrags bestätigen")
+			case "unarchiveItem":
+				b.WriteString("Zum Dearchivieren des Eintrags bestätigen")
+			case "downloadAttachment":
+				b.WriteString("Zum Herunterladen des Anhangs bestätigen")
+			case "exportVault":
+				b.WriteString("Zum Exportieren des Tresors bestätigen")
+			case "updateProtectedItem":
+				b.WriteString("Zum Aktualisieren eines geschützten Eintrags bestätigen")
+			default:
+				b.WriteString("Zum Fortfahren bestätigen")
+			}
+			return b.String()
+		case "es":
+			var b strings.Builder
+			switch action {
+			case "copyPassword":
+				b.WriteString("Verificar para copiar la contraseña")
+			case "copyTOTP":
+				b.WriteString("Verificar para copiar el código de verificación")
+			case "revealTOTP":
+				b.WriteString("Verificar para mostrar el código de verificación")
+			case "revealPassword":
+				b.WriteString("Verificar para mostrar la contraseña")
+			case "revealCardNumber":
+				b.WriteString("Verificar para mostrar el número de tarjeta")
+			case "copyCardNumber":
+				b.WriteString("Verificar para copiar el número de tarjeta")
+			case "revealSecurityCode":
+				b.WriteString("Verificar para mostrar el código de seguridad")
+			case "copySecurityCode":
+				b.WriteString("Verificar para copiar el código de seguridad")
+			case "revealSSN":
+				b.WriteString("Verificar para mostrar el nº de seguridad social")
+			case "copySSN":
+				b.WriteString("Verificar para copiar el nº de seguridad social")
+			case "revealField":
+				b.WriteString("Verificar para mostrar el campo personalizado")
+			case "copyField":
+				b.WriteString("Verificar para copiar el campo personalizado")
+			case "revealPrivateKey":
+				b.WriteString("Verificar para mostrar la clave privada")
+			case "copyPrivateKey":
+				b.WriteString("Verificar para copiar la clave privada")
+			case "revealOldPassword":
+				b.WriteString("Verificar para mostrar la contraseña anterior")
+			case "copyOldPassword":
+				b.WriteString("Verificar para copiar la contraseña anterior")
+			case "editItem":
+				b.WriteString("Verificar para editar el elemento")
+			case "cloneItem":
+				b.WriteString("Verificar para clonar el elemento")
+			case "archiveItem":
+				b.WriteString("Verificar para archivar el elemento")
+			case "unarchiveItem":
+				b.WriteString("Verificar para desarchivar el elemento")
+			case "downloadAttachment":
+				b.WriteString("Verificar para descargar el adjunto")
+			case "exportVault":
+				b.WriteString("Verificar para exportar tu caja fuerte")
+			case "updateProtectedItem":
+				b.WriteString("Verificar para actualizar un elemento protegido")
+			default:
+				b.WriteString("Verificar para continuar")
+			}
+			return b.String()
+		case "fr":
+			var b strings.Builder
+			switch action {
+			case "copyPassword":
+				b.WriteString("Vérifier pour copier le mot de passe")
+			case "copyTOTP":
+				b.WriteString("Vérifier pour copier le code de vérification")
+			case "revealTOTP":
+				b.WriteString("Vérifier pour afficher le code de vérification")
+			case "revealPassword":
+				b.WriteString("Vérifier pour afficher le mot de passe")
+			case "revealCardNumber":
+				b.WriteString("Vérifier pour afficher le numéro de carte")
+			case "copyCardNumber":
+				b.WriteString("Vérifier pour copier le numéro de carte")
+			case "revealSecurityCode":
+				b.WriteString("Vérifier pour afficher le code de sécurité")
+			case "copySecurityCode":
+				b.WriteString("Vérifier pour copier le code de sécurité")
+			case "revealSSN":
+				b.WriteString("Vérifier pour afficher le numéro de sécurité sociale")
+			case "copySSN":
+				b.WriteString("Vérifier pour copier le numéro de sécurité sociale")
+			case "revealField":
+				b.WriteString("Vérifier pour afficher le champ personnalisé")
+			case "copyField":
+				b.WriteString("Vérifier pour copier le champ personnalisé")
+			case "revealPrivateKey":
+				b.WriteString("Vérifier pour afficher la clé privée")
+			case "copyPrivateKey":
+				b.WriteString("Vérifier pour copier la clé privée")
+			case "revealOldPassword":
+				b.WriteString("Vérifier pour afficher l’ancien mot de passe")
+			case "copyOldPassword":
+				b.WriteString("Vérifier pour copier l’ancien mot de passe")
+			case "editItem":
+				b.WriteString("Vérifier pour modifier l’élément")
+			case "cloneItem":
+				b.WriteString("Vérifier pour cloner l’élément")
+			case "archiveItem":
+				b.WriteString("Vérifier pour archiver l’élément")
+			case "unarchiveItem":
+				b.WriteString("Vérifier pour désarchiver l’élément")
+			case "downloadAttachment":
+				b.WriteString("Vérifier pour télécharger la pièce jointe")
+			case "exportVault":
+				b.WriteString("Vérifier pour exporter votre coffre")
+			case "updateProtectedItem":
+				b.WriteString("Vérifier pour mettre à jour un élément protégé")
+			default:
+				b.WriteString("Vérifier pour continuer")
+			}
+			return b.String()
+		case "ja":
+			var b strings.Builder
+			switch action {
+			case "copyPassword":
+				b.WriteString("パスワードをコピーするために認証")
+			case "copyTOTP":
+				b.WriteString("認証コードをコピーするために認証")
+			case "revealTOTP":
+				b.WriteString("認証コードを表示するために認証")
+			case "revealPassword":
+				b.WriteString("パスワードを表示するために認証")
+			case "revealCardNumber":
+				b.WriteString("カード番号を表示するために認証")
+			case "copyCardNumber":
+				b.WriteString("カード番号をコピーするために認証")
+			case "revealSecurityCode":
+				b.WriteString("セキュリティコードを表示するために認証")
+			case "copySecurityCode":
+				b.WriteString("セキュリティコードをコピーするために認証")
+			case "revealSSN":
+				b.WriteString("社会保障番号を表示するために認証")
+			case "copySSN":
+				b.WriteString("社会保障番号をコピーするために認証")
+			case "revealField":
+				b.WriteString("カスタムフィールドを表示するために認証")
+			case "copyField":
+				b.WriteString("カスタムフィールドをコピーするために認証")
+			case "revealPrivateKey":
+				b.WriteString("秘密鍵を表示するために認証")
+			case "copyPrivateKey":
+				b.WriteString("秘密鍵をコピーするために認証")
+			case "revealOldPassword":
+				b.WriteString("旧パスワードを表示するために認証")
+			case "copyOldPassword":
+				b.WriteString("旧パスワードをコピーするために認証")
+			case "editItem":
+				b.WriteString("アイテムを編集するために認証")
+			case "cloneItem":
+				b.WriteString("アイテムを複製するために認証")
+			case "archiveItem":
+				b.WriteString("アイテムをアーカイブするために認証")
+			case "unarchiveItem":
+				b.WriteString("アーカイブを解除するために認証")
+			case "downloadAttachment":
+				b.WriteString("添付ファイルをダウンロードするために認証")
+			case "exportVault":
+				b.WriteString("保管庫をエクスポートするために認証")
+			case "updateProtectedItem":
+				b.WriteString("保護されたアイテムを更新するために認証")
+			default:
+				b.WriteString("続行するために認証")
+			}
+			return b.String()
+		case "ko":
+			var b strings.Builder
+			switch action {
+			case "copyPassword":
+				b.WriteString("비밀번호 복사를 위해 인증")
+			case "copyTOTP":
+				b.WriteString("인증 코드 복사를 위해 인증")
+			case "revealTOTP":
+				b.WriteString("인증 코드 표시를 위해 인증")
+			case "revealPassword":
+				b.WriteString("비밀번호 표시를 위해 인증")
+			case "revealCardNumber":
+				b.WriteString("카드 번호 표시를 위해 인증")
+			case "copyCardNumber":
+				b.WriteString("카드 번호 복사를 위해 인증")
+			case "revealSecurityCode":
+				b.WriteString("보안 코드 표시를 위해 인증")
+			case "copySecurityCode":
+				b.WriteString("보안 코드 복사를 위해 인증")
+			case "revealSSN":
+				b.WriteString("주민등록번호 표시를 위해 인증")
+			case "copySSN":
+				b.WriteString("주민등록번호 복사를 위해 인증")
+			case "revealField":
+				b.WriteString("사용자 지정 필드 표시를 위해 인증")
+			case "copyField":
+				b.WriteString("사용자 지정 필드 복사를 위해 인증")
+			case "revealPrivateKey":
+				b.WriteString("비공개 키 표시를 위해 인증")
+			case "copyPrivateKey":
+				b.WriteString("비공개 키 복사를 위해 인증")
+			case "revealOldPassword":
+				b.WriteString("이전 비밀번호 표시를 위해 인증")
+			case "copyOldPassword":
+				b.WriteString("이전 비밀번호 복사를 위해 인증")
+			case "editItem":
+				b.WriteString("항목 편집을 위해 인증")
+			case "cloneItem":
+				b.WriteString("항목 복제를 위해 인증")
+			case "archiveItem":
+				b.WriteString("항목 보관을 위해 인증")
+			case "unarchiveItem":
+				b.WriteString("항목 보관 해제를 위해 인증")
+			case "downloadAttachment":
+				b.WriteString("첨부 파일 다운로드를 위해 인증")
+			case "exportVault":
+				b.WriteString("보관함 내보내기를 위해 인증")
+			case "updateProtectedItem":
+				b.WriteString("보호된 항목 업데이트를 위해 인증")
+			default:
+				b.WriteString("계속하려면 인증")
+			}
+			return b.String()
+		case "pt-BR":
+			var b strings.Builder
+			switch action {
+			case "copyPassword":
+				b.WriteString("Verificar para copiar a senha")
+			case "copyTOTP":
+				b.WriteString("Verificar para copiar o código de verificação")
+			case "revealTOTP":
+				b.WriteString("Verificar para mostrar o código de verificação")
+			case "revealPassword":
+				b.WriteString("Verificar para mostrar a senha")
+			case "revealCardNumber":
+				b.WriteString("Verificar para mostrar o número do cartão")
+			case "copyCardNumber":
+				b.WriteString("Verificar para copiar o número do cartão")
+			case "revealSecurityCode":
+				b.WriteString("Verificar para mostrar o código de segurança")
+			case "copySecurityCode":
+				b.WriteString("Verificar para copiar o código de segurança")
+			case "revealSSN":
+				b.WriteString("Verificar para mostrar o número de CPF")
+			case "copySSN":
+				b.WriteString("Verificar para copiar o número de CPF")
+			case "revealField":
+				b.WriteString("Verificar para mostrar o campo personalizado")
+			case "copyField":
+				b.WriteString("Verificar para copiar o campo personalizado")
+			case "revealPrivateKey":
+				b.WriteString("Verificar para mostrar a chave privada")
+			case "copyPrivateKey":
+				b.WriteString("Verificar para copiar a chave privada")
+			case "revealOldPassword":
+				b.WriteString("Verificar para mostrar a senha antiga")
+			case "copyOldPassword":
+				b.WriteString("Verificar para copiar a senha antiga")
+			case "editItem":
+				b.WriteString("Verificar para editar o item")
+			case "cloneItem":
+				b.WriteString("Verificar para clonar o item")
+			case "archiveItem":
+				b.WriteString("Verificar para arquivar o item")
+			case "unarchiveItem":
+				b.WriteString("Verificar para desarquivar o item")
+			case "downloadAttachment":
+				b.WriteString("Verificar para baixar o anexo")
+			case "exportVault":
+				b.WriteString("Verificar para exportar seu cofre")
+			case "updateProtectedItem":
+				b.WriteString("Verificar para atualizar um item protegido")
+			default:
+				b.WriteString("Verificar para continuar")
+			}
+			return b.String()
+		case "ru":
+			var b strings.Builder
+			switch action {
+			case "copyPassword":
+				b.WriteString("Подтвердите для копирования пароля")
+			case "copyTOTP":
+				b.WriteString("Подтвердите для копирования кода")
+			case "revealTOTP":
+				b.WriteString("Подтвердите для показа кода")
+			case "revealPassword":
+				b.WriteString("Подтвердите для показа пароля")
+			case "revealCardNumber":
+				b.WriteString("Подтвердите для показа номера карты")
+			case "copyCardNumber":
+				b.WriteString("Подтвердите для копирования номера карты")
+			case "revealSecurityCode":
+				b.WriteString("Подтвердите для показа кода безопасности")
+			case "copySecurityCode":
+				b.WriteString("Подтвердите для копирования кода безопасности")
+			case "revealSSN":
+				b.WriteString("Подтвердите для показа номера соц. страхования")
+			case "copySSN":
+				b.WriteString("Подтвердите для копирования номера соц. страхования")
+			case "revealField":
+				b.WriteString("Подтвердите для показа поля")
+			case "copyField":
+				b.WriteString("Подтвердите для копирования поля")
+			case "revealPrivateKey":
+				b.WriteString("Подтвердите для показа приватного ключа")
+			case "copyPrivateKey":
+				b.WriteString("Подтвердите для копирования приватного ключа")
+			case "revealOldPassword":
+				b.WriteString("Подтвердите для показа старого пароля")
+			case "copyOldPassword":
+				b.WriteString("Подтвердите для копирования старого пароля")
+			case "editItem":
+				b.WriteString("Подтвердите для изменения элемента")
+			case "cloneItem":
+				b.WriteString("Подтвердите для клонирования элемента")
+			case "archiveItem":
+				b.WriteString("Подтвердите для архивирования элемента")
+			case "unarchiveItem":
+				b.WriteString("Подтвердите для разархивирования элемента")
+			case "downloadAttachment":
+				b.WriteString("Подтвердите для скачивания вложения")
+			case "exportVault":
+				b.WriteString("Подтвердите для экспорта хранилища")
+			case "updateProtectedItem":
+				b.WriteString("Подтвердите для обновления защищённого элемента")
+			default:
+				b.WriteString("Подтвердите, чтобы продолжить")
+			}
+			return b.String()
 		case "zh-Hans":
 			var b strings.Builder
 			switch action {
@@ -6598,6 +18382,59 @@ func (msgs Messages) RepromptBiometricReason(action string) string {
 				b.WriteString("验证以更新受保护的项目")
 			default:
 				b.WriteString("验证以继续")
+			}
+			return b.String()
+		case "zh-Hant":
+			var b strings.Builder
+			switch action {
+			case "copyPassword":
+				b.WriteString("驗證以複製密碼")
+			case "copyTOTP":
+				b.WriteString("驗證以複製驗證碼")
+			case "revealTOTP":
+				b.WriteString("驗證以顯示驗證碼")
+			case "revealPassword":
+				b.WriteString("驗證以顯示密碼")
+			case "revealCardNumber":
+				b.WriteString("驗證以顯示卡號")
+			case "copyCardNumber":
+				b.WriteString("驗證以複製卡號")
+			case "revealSecurityCode":
+				b.WriteString("驗證以顯示安全代碼")
+			case "copySecurityCode":
+				b.WriteString("驗證以複製安全代碼")
+			case "revealSSN":
+				b.WriteString("驗證以顯示社會保險號碼")
+			case "copySSN":
+				b.WriteString("驗證以複製社會保險號碼")
+			case "revealField":
+				b.WriteString("驗證以顯示自訂欄位")
+			case "copyField":
+				b.WriteString("驗證以複製自訂欄位")
+			case "revealPrivateKey":
+				b.WriteString("驗證以顯示私密金鑰")
+			case "copyPrivateKey":
+				b.WriteString("驗證以複製私密金鑰")
+			case "revealOldPassword":
+				b.WriteString("驗證以顯示舊密碼")
+			case "copyOldPassword":
+				b.WriteString("驗證以複製舊密碼")
+			case "editItem":
+				b.WriteString("驗證以編輯項目")
+			case "cloneItem":
+				b.WriteString("驗證以複製項目副本")
+			case "archiveItem":
+				b.WriteString("驗證以封存項目")
+			case "unarchiveItem":
+				b.WriteString("驗證以取消封存項目")
+			case "downloadAttachment":
+				b.WriteString("驗證以下載附件")
+			case "exportVault":
+				b.WriteString("驗證以匯出密碼庫")
+			case "updateProtectedItem":
+				b.WriteString("驗證以更新受保護的項目")
+			default:
+				b.WriteString("驗證以繼續")
 			}
 			return b.String()
 		}
@@ -6808,8 +18645,24 @@ func (msgs Messages) DeletePermanentlyMessage(name string) string {
 		switch lang {
 		case "", "en":
 			return "“" + msgs.arg(name) + "” will be permanently deleted and cannot be recovered."
+		case "de":
+			return "„" + name + "“ wird dauerhaft gelöscht und kann nicht wiederhergestellt werden."
+		case "es":
+			return "“" + name + "” se eliminará permanentemente y no podrá recuperarse."
+		case "fr":
+			return "« " + name + " » sera supprimé définitivement et ne pourra pas être récupéré."
+		case "ja":
+			return "「" + name + "」は完全に削除され、元に戻せません。"
+		case "ko":
+			return "“" + name + "” 항목이 영구 삭제되며 복구할 수 없습니다."
+		case "pt-BR":
+			return "“" + name + "” será excluído permanentemente e não poderá ser recuperado."
+		case "ru":
+			return "«" + name + "» будет удалён окончательно без возможности восстановления."
 		case "zh-Hans":
 			return "“" + name + "”将被永久删除，且无法恢复。"
+		case "zh-Hant":
+			return "「" + name + "」將被永久刪除，且無法復原。"
 		}
 	}
 }
@@ -6860,12 +18713,97 @@ func (msgs Messages) EmptyTrashMessage(count int) string {
 				b.WriteString(" items will be permanently deleted and cannot be recovered.")
 			}
 			return b.String()
+		case "de":
+			var b strings.Builder
+			switch i18n.Cardinal("de", float64(count)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("de", float64(count)))
+				b.WriteString(" Eintrag wird dauerhaft gelöscht und kann nicht wiederhergestellt werden.")
+			default:
+				b.WriteString(i18n.FormatNumber("de", float64(count)))
+				b.WriteString(" Einträge werden dauerhaft gelöscht und können nicht wiederhergestellt werden.")
+			}
+			return b.String()
+		case "es":
+			var b strings.Builder
+			switch i18n.Cardinal("es", float64(count)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("es", float64(count)))
+				b.WriteString(" elemento se eliminará permanentemente y no podrá recuperarse.")
+			default:
+				b.WriteString(i18n.FormatNumber("es", float64(count)))
+				b.WriteString(" elementos se eliminarán permanentemente y no podrán recuperarse.")
+			}
+			return b.String()
+		case "fr":
+			var b strings.Builder
+			switch i18n.Cardinal("fr", float64(count)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("fr", float64(count)))
+				b.WriteString(" élément sera supprimé définitivement et ne pourra pas être récupéré.")
+			default:
+				b.WriteString(i18n.FormatNumber("fr", float64(count)))
+				b.WriteString(" éléments seront supprimés définitivement et ne pourront pas être récupérés.")
+			}
+			return b.String()
+		case "ja":
+			var b strings.Builder
+			switch i18n.Cardinal("ja", float64(count)) {
+			default:
+				b.WriteString(i18n.FormatNumber("ja", float64(count)))
+				b.WriteString(" 件のアイテムが完全に削除され、元に戻せません。")
+			}
+			return b.String()
+		case "ko":
+			var b strings.Builder
+			switch i18n.Cardinal("ko", float64(count)) {
+			default:
+				b.WriteString(i18n.FormatNumber("ko", float64(count)))
+				b.WriteString("개 항목이 영구 삭제되며 복구할 수 없습니다.")
+			}
+			return b.String()
+		case "pt-BR":
+			var b strings.Builder
+			switch i18n.Cardinal("pt-BR", float64(count)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("pt-BR", float64(count)))
+				b.WriteString(" item será excluído permanentemente e não poderá ser recuperado.")
+			default:
+				b.WriteString(i18n.FormatNumber("pt-BR", float64(count)))
+				b.WriteString(" itens serão excluídos permanentemente e não poderão ser recuperados.")
+			}
+			return b.String()
+		case "ru":
+			var b strings.Builder
+			switch i18n.Cardinal("ru", float64(count)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" элемент будет удалён окончательно без возможности восстановления.")
+			case i18n.Few:
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" элемента будут удалены окончательно без возможности восстановления.")
+			case i18n.Many:
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" элементов будут удалены окончательно без возможности восстановления.")
+			default:
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" элемента будут удалены окончательно без возможности восстановления.")
+			}
+			return b.String()
 		case "zh-Hans":
 			var b strings.Builder
 			switch i18n.Cardinal("zh-Hans", float64(count)) {
 			default:
 				b.WriteString(i18n.FormatNumber("zh-Hans", float64(count)))
 				b.WriteString(" 个项目将被永久删除，且无法恢复。")
+			}
+			return b.String()
+		case "zh-Hant":
+			var b strings.Builder
+			switch i18n.Cardinal("zh-Hant", float64(count)) {
+			default:
+				b.WriteString(i18n.FormatNumber("zh-Hant", float64(count)))
+				b.WriteString(" 個項目將被永久刪除，且無法復原。")
 			}
 			return b.String()
 		}
@@ -6911,12 +18849,99 @@ func (msgs Messages) TrashReadOnlyKept(count int) string {
 				b.WriteString(" read-only items stayed in Trash.")
 			}
 			return b.String()
+		case "de":
+			var b strings.Builder
+			switch i18n.Cardinal("de", float64(count)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("de", float64(count)))
+				b.WriteString(" schreibgeschützter Eintrag blieb im Papierkorb.")
+			default:
+				b.WriteString(i18n.FormatNumber("de", float64(count)))
+				b.WriteString(" schreibgeschützte Einträge blieben im Papierkorb.")
+			}
+			return b.String()
+		case "es":
+			var b strings.Builder
+			switch i18n.Cardinal("es", float64(count)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("es", float64(count)))
+				b.WriteString(" elemento de solo lectura permaneció en la papelera.")
+			default:
+				b.WriteString(i18n.FormatNumber("es", float64(count)))
+				b.WriteString(" elementos de solo lectura permanecieron en la papelera.")
+			}
+			return b.String()
+		case "fr":
+			var b strings.Builder
+			switch i18n.Cardinal("fr", float64(count)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("fr", float64(count)))
+				b.WriteString(" élément en lecture seule est resté dans la corbeille.")
+			default:
+				b.WriteString(i18n.FormatNumber("fr", float64(count)))
+				b.WriteString(" éléments en lecture seule sont restés dans la corbeille.")
+			}
+			return b.String()
+		case "ja":
+			var b strings.Builder
+			switch i18n.Cardinal("ja", float64(count)) {
+			default:
+				b.WriteString("読み取り専用のアイテム ")
+				b.WriteString(i18n.FormatNumber("ja", float64(count)))
+				b.WriteString(" 件がごみ箱に残りました。")
+			}
+			return b.String()
+		case "ko":
+			var b strings.Builder
+			switch i18n.Cardinal("ko", float64(count)) {
+			default:
+				b.WriteString("읽기 전용 항목 ")
+				b.WriteString(i18n.FormatNumber("ko", float64(count)))
+				b.WriteString("개가 휴지통에 남아 있습니다.")
+			}
+			return b.String()
+		case "pt-BR":
+			var b strings.Builder
+			switch i18n.Cardinal("pt-BR", float64(count)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("pt-BR", float64(count)))
+				b.WriteString(" item somente leitura permaneceu na lixeira.")
+			default:
+				b.WriteString(i18n.FormatNumber("pt-BR", float64(count)))
+				b.WriteString(" itens somente leitura permaneceram na lixeira.")
+			}
+			return b.String()
+		case "ru":
+			var b strings.Builder
+			switch i18n.Cardinal("ru", float64(count)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" элемент только для чтения остался в корзине.")
+			case i18n.Few:
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" элемента только для чтения остались в корзине.")
+			case i18n.Many:
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" элементов только для чтения остались в корзине.")
+			default:
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" элемента только для чтения остались в корзине.")
+			}
+			return b.String()
 		case "zh-Hans":
 			var b strings.Builder
 			switch i18n.Cardinal("zh-Hans", float64(count)) {
 			default:
 				b.WriteString(i18n.FormatNumber("zh-Hans", float64(count)))
 				b.WriteString(" 个只读项目保留在回收站中。")
+			}
+			return b.String()
+		case "zh-Hant":
+			var b strings.Builder
+			switch i18n.Cardinal("zh-Hant", float64(count)) {
+			default:
+				b.WriteString(i18n.FormatNumber("zh-Hant", float64(count)))
+				b.WriteString(" 個唯讀項目保留在垃圾桶中。")
 			}
 			return b.String()
 		}
@@ -6948,12 +18973,99 @@ func (msgs Messages) TrashChangedKept(count int) string {
 				b.WriteString(" items changed on another device and were kept.")
 			}
 			return b.String()
+		case "de":
+			var b strings.Builder
+			switch i18n.Cardinal("de", float64(count)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("de", float64(count)))
+				b.WriteString(" Eintrag wurde auf einem anderen Gerät geändert und behalten.")
+			default:
+				b.WriteString(i18n.FormatNumber("de", float64(count)))
+				b.WriteString(" Einträge wurden auf einem anderen Gerät geändert und behalten.")
+			}
+			return b.String()
+		case "es":
+			var b strings.Builder
+			switch i18n.Cardinal("es", float64(count)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("es", float64(count)))
+				b.WriteString(" elemento cambió en otro dispositivo y se conservó.")
+			default:
+				b.WriteString(i18n.FormatNumber("es", float64(count)))
+				b.WriteString(" elementos cambiaron en otro dispositivo y se conservaron.")
+			}
+			return b.String()
+		case "fr":
+			var b strings.Builder
+			switch i18n.Cardinal("fr", float64(count)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("fr", float64(count)))
+				b.WriteString(" élément modifié sur un autre appareil a été conservé.")
+			default:
+				b.WriteString(i18n.FormatNumber("fr", float64(count)))
+				b.WriteString(" éléments modifiés sur un autre appareil ont été conservés.")
+			}
+			return b.String()
+		case "ja":
+			var b strings.Builder
+			switch i18n.Cardinal("ja", float64(count)) {
+			default:
+				b.WriteString("別のデバイスで変更されたアイテム ")
+				b.WriteString(i18n.FormatNumber("ja", float64(count)))
+				b.WriteString(" 件を保持しました。")
+			}
+			return b.String()
+		case "ko":
+			var b strings.Builder
+			switch i18n.Cardinal("ko", float64(count)) {
+			default:
+				b.WriteString("다른 기기에서 변경된 항목 ")
+				b.WriteString(i18n.FormatNumber("ko", float64(count)))
+				b.WriteString("개가 유지되었습니다.")
+			}
+			return b.String()
+		case "pt-BR":
+			var b strings.Builder
+			switch i18n.Cardinal("pt-BR", float64(count)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("pt-BR", float64(count)))
+				b.WriteString(" item foi alterado em outro dispositivo e mantido.")
+			default:
+				b.WriteString(i18n.FormatNumber("pt-BR", float64(count)))
+				b.WriteString(" itens foram alterados em outro dispositivo e mantidos.")
+			}
+			return b.String()
+		case "ru":
+			var b strings.Builder
+			switch i18n.Cardinal("ru", float64(count)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" элемент был изменён на другом устройстве и сохранён.")
+			case i18n.Few:
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" элемента были изменены на другом устройстве и сохранены.")
+			case i18n.Many:
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" элементов были изменены на другом устройстве и сохранены.")
+			default:
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" элемента были изменены на другом устройстве и сохранены.")
+			}
+			return b.String()
 		case "zh-Hans":
 			var b strings.Builder
 			switch i18n.Cardinal("zh-Hans", float64(count)) {
 			default:
 				b.WriteString(i18n.FormatNumber("zh-Hans", float64(count)))
 				b.WriteString(" 个项目已在其他设备上更改，已予以保留。")
+			}
+			return b.String()
+		case "zh-Hant":
+			var b strings.Builder
+			switch i18n.Cardinal("zh-Hant", float64(count)) {
+			default:
+				b.WriteString(i18n.FormatNumber("zh-Hant", float64(count)))
+				b.WriteString(" 個項目已在其他裝置上變更，已予以保留。")
 			}
 			return b.String()
 		}
@@ -6987,6 +19099,87 @@ func (msgs Messages) TrashPartlyDeleted(count int) string {
 				b.WriteString(" items")
 			}
 			return b.String()
+		case "de":
+			var b strings.Builder
+			switch i18n.Cardinal("de", float64(count)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("de", float64(count)))
+				b.WriteString(" Eintrag gelöscht")
+			default:
+				b.WriteString(i18n.FormatNumber("de", float64(count)))
+				b.WriteString(" Einträge gelöscht")
+			}
+			return b.String()
+		case "es":
+			var b strings.Builder
+			switch i18n.Cardinal("es", float64(count)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("es", float64(count)))
+				b.WriteString(" elemento eliminado")
+			default:
+				b.WriteString(i18n.FormatNumber("es", float64(count)))
+				b.WriteString(" elementos eliminados")
+			}
+			return b.String()
+		case "fr":
+			var b strings.Builder
+			switch i18n.Cardinal("fr", float64(count)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("fr", float64(count)))
+				b.WriteString(" élément supprimé")
+			default:
+				b.WriteString(i18n.FormatNumber("fr", float64(count)))
+				b.WriteString(" éléments supprimés")
+			}
+			return b.String()
+		case "ja":
+			var b strings.Builder
+			switch i18n.Cardinal("ja", float64(count)) {
+			default:
+				b.WriteString(i18n.FormatNumber("ja", float64(count)))
+				b.WriteString(" 件のアイテムを削除しました")
+			}
+			return b.String()
+		case "ko":
+			var b strings.Builder
+			switch i18n.Cardinal("ko", float64(count)) {
+			default:
+				b.WriteString(i18n.FormatNumber("ko", float64(count)))
+				b.WriteString("개 항목 삭제됨")
+			}
+			return b.String()
+		case "pt-BR":
+			var b strings.Builder
+			switch i18n.Cardinal("pt-BR", float64(count)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("pt-BR", float64(count)))
+				b.WriteString(" item excluído")
+			default:
+				b.WriteString(i18n.FormatNumber("pt-BR", float64(count)))
+				b.WriteString(" itens excluídos")
+			}
+			return b.String()
+		case "ru":
+			var b strings.Builder
+			switch i18n.Cardinal("ru", float64(count)) {
+			case i18n.One:
+				b.WriteString("Удалён ")
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" элемент")
+			case i18n.Few:
+				b.WriteString("Удалено ")
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" элемента")
+			case i18n.Many:
+				b.WriteString("Удалено ")
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" элементов")
+			default:
+				b.WriteString("Удалено ")
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" элемента")
+			}
+			return b.String()
 		case "zh-Hans":
 			var b strings.Builder
 			switch i18n.Cardinal("zh-Hans", float64(count)) {
@@ -6994,6 +19187,15 @@ func (msgs Messages) TrashPartlyDeleted(count int) string {
 				b.WriteString("已删除 ")
 				b.WriteString(i18n.FormatNumber("zh-Hans", float64(count)))
 				b.WriteString(" 个项目")
+			}
+			return b.String()
+		case "zh-Hant":
+			var b strings.Builder
+			switch i18n.Cardinal("zh-Hant", float64(count)) {
+			default:
+				b.WriteString("已刪除 ")
+				b.WriteString(i18n.FormatNumber("zh-Hant", float64(count)))
+				b.WriteString(" 個項目")
 			}
 			return b.String()
 		}
@@ -7020,8 +19222,24 @@ func (msgs Messages) TrashSomeNotDeleted(reason string) string {
 		switch lang {
 		case "", "en":
 			return "Some items could not be deleted: " + msgs.arg(reason)
+		case "de":
+			return "Einige Einträge konnten nicht gelöscht werden: " + reason
+		case "es":
+			return "No se pudieron eliminar algunos elementos: " + reason
+		case "fr":
+			return "Certains éléments n’ont pas pu être supprimés : " + reason
+		case "ja":
+			return "一部のアイテムを削除できませんでした：" + reason
+		case "ko":
+			return "일부 항목을 삭제할 수 없습니다: " + reason
+		case "pt-BR":
+			return "Alguns itens não puderam ser excluídos: " + reason
+		case "ru":
+			return "Часть элементов не удалось удалить: " + reason
 		case "zh-Hans":
 			return "部分项目无法删除：" + reason
+		case "zh-Hant":
+			return "部分項目無法刪除：" + reason
 		}
 	}
 }
@@ -7058,7 +19276,23 @@ func (msgs Messages) CloneName(name string) string {
 		switch lang {
 		case "", "en":
 			return msgs.arg(name) + " (Copy)"
+		case "de":
+			return name + " (Kopie)"
+		case "es":
+			return name + " (Copia)"
+		case "fr":
+			return name + " (Copie)"
+		case "ja":
+			return name + "（コピー）"
+		case "ko":
+			return name + " (복사본)"
+		case "pt-BR":
+			return name + " (Cópia)"
+		case "ru":
+			return name + " (копия)"
 		case "zh-Hans":
+			return name + "（副本）"
+		case "zh-Hant":
 			return name + "（副本）"
 		}
 	}
@@ -7124,8 +19358,24 @@ func (msgs Messages) DeleteFolderMessage(name string) string {
 		switch lang {
 		case "", "en":
 			return "Items inside “" + msgs.arg(name) + "” will be moved to No Folder."
+		case "de":
+			return "Einträge in „" + name + "“ werden nach „Kein Ordner“ verschoben."
+		case "es":
+			return "Los elementos dentro de “" + name + "” se moverán a “Sin carpeta”."
+		case "fr":
+			return "Les éléments de « " + name + " » seront déplacés dans « Aucun dossier »."
+		case "ja":
+			return "「" + name + "」内のアイテムは「フォルダーなし」に移動されます。"
+		case "ko":
+			return "“" + name + "” 안의 항목은 “폴더 없음”으로 이동됩니다."
+		case "pt-BR":
+			return "Os itens dentro de “" + name + "” serão movidos para “Sem pasta”."
+		case "ru":
+			return "Элементы из «" + name + "» будут перемещены в «Без папки»."
 		case "zh-Hans":
 			return "“" + name + "”中的项目将被移至“无文件夹”。"
+		case "zh-Hant":
+			return "「" + name + "」中的項目將移至「無資料夾」。"
 		}
 	}
 }
@@ -7214,6 +19464,125 @@ func (msgs Messages) NewItemOfType(kind string) string {
 				b.WriteString("New Item")
 			}
 			return b.String()
+		case "de":
+			var b strings.Builder
+			switch kind {
+			case "login":
+				b.WriteString("Neue Zugangsdaten")
+			case "secureNote":
+				b.WriteString("Neue sichere Notiz")
+			case "card":
+				b.WriteString("Neue Karte")
+			case "identity":
+				b.WriteString("Neue Identität")
+			case "sshKey":
+				b.WriteString("Neuer SSH-Schlüssel")
+			default:
+				b.WriteString("Neuer Eintrag")
+			}
+			return b.String()
+		case "es":
+			var b strings.Builder
+			switch kind {
+			case "login":
+				b.WriteString("Nueva entrada")
+			case "secureNote":
+				b.WriteString("Nueva nota segura")
+			case "card":
+				b.WriteString("Nueva tarjeta")
+			case "identity":
+				b.WriteString("Nueva identidad")
+			case "sshKey":
+				b.WriteString("Nueva clave SSH")
+			default:
+				b.WriteString("Nuevo elemento")
+			}
+			return b.String()
+		case "fr":
+			var b strings.Builder
+			switch kind {
+			case "login":
+				b.WriteString("Nouvel identifiant")
+			case "secureNote":
+				b.WriteString("Nouvelle note sécurisée")
+			case "card":
+				b.WriteString("Nouvelle carte")
+			case "identity":
+				b.WriteString("Nouvelle identité")
+			case "sshKey":
+				b.WriteString("Nouvelle clé SSH")
+			default:
+				b.WriteString("Nouvel élément")
+			}
+			return b.String()
+		case "ja":
+			var b strings.Builder
+			switch kind {
+			case "login":
+				b.WriteString("新規ログイン")
+			case "secureNote":
+				b.WriteString("新規セキュアメモ")
+			case "card":
+				b.WriteString("新規カード")
+			case "identity":
+				b.WriteString("新規 ID")
+			case "sshKey":
+				b.WriteString("新規 SSH キー")
+			default:
+				b.WriteString("新規アイテム")
+			}
+			return b.String()
+		case "ko":
+			var b strings.Builder
+			switch kind {
+			case "login":
+				b.WriteString("새 로그인")
+			case "secureNote":
+				b.WriteString("새 보안 메모")
+			case "card":
+				b.WriteString("새 카드")
+			case "identity":
+				b.WriteString("새 신원")
+			case "sshKey":
+				b.WriteString("새 SSH 키")
+			default:
+				b.WriteString("새 항목")
+			}
+			return b.String()
+		case "pt-BR":
+			var b strings.Builder
+			switch kind {
+			case "login":
+				b.WriteString("Nova credencial")
+			case "secureNote":
+				b.WriteString("Nova anotação segura")
+			case "card":
+				b.WriteString("Novo cartão")
+			case "identity":
+				b.WriteString("Nova identidade")
+			case "sshKey":
+				b.WriteString("Nova chave SSH")
+			default:
+				b.WriteString("Novo item")
+			}
+			return b.String()
+		case "ru":
+			var b strings.Builder
+			switch kind {
+			case "login":
+				b.WriteString("Новый логин")
+			case "secureNote":
+				b.WriteString("Новая заметка")
+			case "card":
+				b.WriteString("Новая карта")
+			case "identity":
+				b.WriteString("Новые личные данные")
+			case "sshKey":
+				b.WriteString("Новый ключ SSH")
+			default:
+				b.WriteString("Новый элемент")
+			}
+			return b.String()
 		case "zh-Hans":
 			var b strings.Builder
 			switch kind {
@@ -7229,6 +19598,23 @@ func (msgs Messages) NewItemOfType(kind string) string {
 				b.WriteString("新建 SSH 密钥")
 			default:
 				b.WriteString("新建项目")
+			}
+			return b.String()
+		case "zh-Hant":
+			var b strings.Builder
+			switch kind {
+			case "login":
+				b.WriteString("新增登入")
+			case "secureNote":
+				b.WriteString("新增安全筆記")
+			case "card":
+				b.WriteString("新增付款卡")
+			case "identity":
+				b.WriteString("新增身分")
+			case "sshKey":
+				b.WriteString("新增 SSH 金鑰")
+			default:
+				b.WriteString("新增項目")
 			}
 			return b.String()
 		}
@@ -7268,6 +19654,125 @@ func (msgs Messages) EditItemOfType(kind string) string {
 				b.WriteString("Edit Item")
 			}
 			return b.String()
+		case "de":
+			var b strings.Builder
+			switch kind {
+			case "login":
+				b.WriteString("Zugangsdaten bearbeiten")
+			case "secureNote":
+				b.WriteString("Sichere Notiz bearbeiten")
+			case "card":
+				b.WriteString("Karte bearbeiten")
+			case "identity":
+				b.WriteString("Identität bearbeiten")
+			case "sshKey":
+				b.WriteString("SSH-Schlüssel bearbeiten")
+			default:
+				b.WriteString("Eintrag bearbeiten")
+			}
+			return b.String()
+		case "es":
+			var b strings.Builder
+			switch kind {
+			case "login":
+				b.WriteString("Editar entrada")
+			case "secureNote":
+				b.WriteString("Editar nota segura")
+			case "card":
+				b.WriteString("Editar tarjeta")
+			case "identity":
+				b.WriteString("Editar identidad")
+			case "sshKey":
+				b.WriteString("Editar clave SSH")
+			default:
+				b.WriteString("Editar elemento")
+			}
+			return b.String()
+		case "fr":
+			var b strings.Builder
+			switch kind {
+			case "login":
+				b.WriteString("Modifier l’identifiant")
+			case "secureNote":
+				b.WriteString("Modifier la note sécurisée")
+			case "card":
+				b.WriteString("Modifier la carte")
+			case "identity":
+				b.WriteString("Modifier l’identité")
+			case "sshKey":
+				b.WriteString("Modifier la clé SSH")
+			default:
+				b.WriteString("Modifier l’élément")
+			}
+			return b.String()
+		case "ja":
+			var b strings.Builder
+			switch kind {
+			case "login":
+				b.WriteString("ログインを編集")
+			case "secureNote":
+				b.WriteString("セキュアメモを編集")
+			case "card":
+				b.WriteString("カードを編集")
+			case "identity":
+				b.WriteString("ID を編集")
+			case "sshKey":
+				b.WriteString("SSH キーを編集")
+			default:
+				b.WriteString("アイテムを編集")
+			}
+			return b.String()
+		case "ko":
+			var b strings.Builder
+			switch kind {
+			case "login":
+				b.WriteString("로그인 편집")
+			case "secureNote":
+				b.WriteString("보안 메모 편집")
+			case "card":
+				b.WriteString("카드 편집")
+			case "identity":
+				b.WriteString("신원 편집")
+			case "sshKey":
+				b.WriteString("SSH 키 편집")
+			default:
+				b.WriteString("항목 편집")
+			}
+			return b.String()
+		case "pt-BR":
+			var b strings.Builder
+			switch kind {
+			case "login":
+				b.WriteString("Editar credencial")
+			case "secureNote":
+				b.WriteString("Editar anotação segura")
+			case "card":
+				b.WriteString("Editar cartão")
+			case "identity":
+				b.WriteString("Editar identidade")
+			case "sshKey":
+				b.WriteString("Editar chave SSH")
+			default:
+				b.WriteString("Editar item")
+			}
+			return b.String()
+		case "ru":
+			var b strings.Builder
+			switch kind {
+			case "login":
+				b.WriteString("Изменить логин")
+			case "secureNote":
+				b.WriteString("Изменить заметку")
+			case "card":
+				b.WriteString("Изменить карту")
+			case "identity":
+				b.WriteString("Изменить личные данные")
+			case "sshKey":
+				b.WriteString("Изменить ключ SSH")
+			default:
+				b.WriteString("Изменить элемент")
+			}
+			return b.String()
 		case "zh-Hans":
 			var b strings.Builder
 			switch kind {
@@ -7283,6 +19788,23 @@ func (msgs Messages) EditItemOfType(kind string) string {
 				b.WriteString("编辑 SSH 密钥")
 			default:
 				b.WriteString("编辑项目")
+			}
+			return b.String()
+		case "zh-Hant":
+			var b strings.Builder
+			switch kind {
+			case "login":
+				b.WriteString("編輯登入")
+			case "secureNote":
+				b.WriteString("編輯安全筆記")
+			case "card":
+				b.WriteString("編輯付款卡")
+			case "identity":
+				b.WriteString("編輯身分")
+			case "sshKey":
+				b.WriteString("編輯 SSH 金鑰")
+			default:
+				b.WriteString("編輯項目")
 			}
 			return b.String()
 		}
@@ -7552,8 +20074,24 @@ func (msgs Messages) SshKeyGenerateFailed(reason string) string {
 		switch lang {
 		case "", "en":
 			return "Could not generate SSH key: " + msgs.arg(reason)
+		case "de":
+			return "SSH-Schlüssel konnte nicht erzeugt werden: " + reason
+		case "es":
+			return "No se pudo generar la clave SSH: " + reason
+		case "fr":
+			return "Impossible de générer la clé SSH : " + reason
+		case "ja":
+			return "SSH キーを生成できませんでした：" + reason
+		case "ko":
+			return "SSH 키를 생성할 수 없습니다: " + reason
+		case "pt-BR":
+			return "Não foi possível gerar a chave SSH: " + reason
+		case "ru":
+			return "Не удалось создать ключ SSH: " + reason
 		case "zh-Hans":
 			return "无法生成 SSH 密钥：" + reason
+		case "zh-Hant":
+			return "無法產生 SSH 金鑰：" + reason
 		}
 	}
 }
@@ -7659,8 +20197,24 @@ func (msgs Messages) PasskeySiteCreated(site string, date time.Time) string {
 		switch lang {
 		case "", "en":
 			return msgs.arg(site) + " · Created " + msgs.arg(i18n.FormatDate(msgs.dated("en"), date, i18n.DateOptions{Date: i18n.MediumStyle}))
+		case "de":
+			return site + " · Erstellt am " + i18n.FormatDate(msgs.dated("de"), date, i18n.DateOptions{Date: i18n.MediumStyle})
+		case "es":
+			return site + " · Creada el " + i18n.FormatDate(msgs.dated("es"), date, i18n.DateOptions{Date: i18n.MediumStyle})
+		case "fr":
+			return site + " · Créée le " + i18n.FormatDate(msgs.dated("fr"), date, i18n.DateOptions{Date: i18n.MediumStyle})
+		case "ja":
+			return site + " · " + i18n.FormatDate(msgs.dated("ja"), date, i18n.DateOptions{Date: i18n.MediumStyle}) + " に作成"
+		case "ko":
+			return site + " · " + i18n.FormatDate(msgs.dated("ko"), date, i18n.DateOptions{Date: i18n.MediumStyle}) + " 생성"
+		case "pt-BR":
+			return site + " · Criada em " + i18n.FormatDate(msgs.dated("pt-BR"), date, i18n.DateOptions{Date: i18n.MediumStyle})
+		case "ru":
+			return site + " · Создан " + i18n.FormatDate(msgs.dated("ru"), date, i18n.DateOptions{Date: i18n.MediumStyle})
 		case "zh-Hans":
 			return site + " · 创建于 " + i18n.FormatDate(msgs.dated("zh-Hans"), date, i18n.DateOptions{Date: i18n.MediumStyle})
+		case "zh-Hant":
+			return site + " · 建立於 " + i18n.FormatDate(msgs.dated("zh-Hant"), date, i18n.DateOptions{Date: i18n.MediumStyle})
 		}
 	}
 }
@@ -7681,8 +20235,24 @@ func (msgs Messages) PasskeyCreated(date time.Time) string {
 		switch lang {
 		case "", "en":
 			return "Created " + msgs.arg(i18n.FormatDate(msgs.dated("en"), date, i18n.DateOptions{Date: i18n.MediumStyle}))
+		case "de":
+			return "Erstellt am " + i18n.FormatDate(msgs.dated("de"), date, i18n.DateOptions{Date: i18n.MediumStyle})
+		case "es":
+			return "Creada el " + i18n.FormatDate(msgs.dated("es"), date, i18n.DateOptions{Date: i18n.MediumStyle})
+		case "fr":
+			return "Créée le " + i18n.FormatDate(msgs.dated("fr"), date, i18n.DateOptions{Date: i18n.MediumStyle})
+		case "ja":
+			return i18n.FormatDate(msgs.dated("ja"), date, i18n.DateOptions{Date: i18n.MediumStyle}) + " に作成"
+		case "ko":
+			return i18n.FormatDate(msgs.dated("ko"), date, i18n.DateOptions{Date: i18n.MediumStyle}) + " 생성"
+		case "pt-BR":
+			return "Criada em " + i18n.FormatDate(msgs.dated("pt-BR"), date, i18n.DateOptions{Date: i18n.MediumStyle})
+		case "ru":
+			return "Создан " + i18n.FormatDate(msgs.dated("ru"), date, i18n.DateOptions{Date: i18n.MediumStyle})
 		case "zh-Hans":
 			return "创建于 " + i18n.FormatDate(msgs.dated("zh-Hans"), date, i18n.DateOptions{Date: i18n.MediumStyle})
+		case "zh-Hant":
+			return "建立於 " + i18n.FormatDate(msgs.dated("zh-Hant"), date, i18n.DateOptions{Date: i18n.MediumStyle})
 		}
 	}
 }
@@ -7742,8 +20312,24 @@ func (msgs Messages) DownloadFile(file string) string {
 		switch lang {
 		case "", "en":
 			return "Download " + msgs.arg(file)
+		case "de":
+			return file + " herunterladen"
+		case "es":
+			return "Descargar " + file
+		case "fr":
+			return "Télécharger " + file
+		case "ja":
+			return file + " をダウンロード"
+		case "ko":
+			return file + " 다운로드"
+		case "pt-BR":
+			return "Baixar " + file
+		case "ru":
+			return "Скачать " + file
 		case "zh-Hans":
 			return "下载 " + file
+		case "zh-Hant":
+			return "下載 " + file
 		}
 	}
 }
@@ -7766,8 +20352,24 @@ func (msgs Messages) DeleteFile(file string) string {
 		switch lang {
 		case "", "en":
 			return "Delete " + msgs.arg(file)
+		case "de":
+			return file + " löschen"
+		case "es":
+			return "Eliminar " + file
+		case "fr":
+			return "Supprimer " + file
+		case "ja":
+			return file + " を削除"
+		case "ko":
+			return file + " 삭제"
+		case "pt-BR":
+			return "Excluir " + file
+		case "ru":
+			return "Удалить " + file
 		case "zh-Hans":
 			return "删除 " + file
+		case "zh-Hant":
+			return "刪除 " + file
 		}
 	}
 }
@@ -7860,8 +20462,24 @@ func (msgs Messages) DeleteAttachmentMessage(file string) string {
 		switch lang {
 		case "", "en":
 			return "“" + msgs.arg(file) + "” will be permanently deleted."
+		case "de":
+			return "„" + file + "“ wird dauerhaft gelöscht."
+		case "es":
+			return "“" + file + "” se eliminará permanentemente."
+		case "fr":
+			return "« " + file + " » sera supprimé définitivement."
+		case "ja":
+			return "「" + file + "」は完全に削除されます。"
+		case "ko":
+			return "“" + file + "” 파일이 영구 삭제됩니다."
+		case "pt-BR":
+			return "“" + file + "” será excluído permanentemente."
+		case "ru":
+			return "«" + file + "» будет удалён окончательно."
 		case "zh-Hans":
 			return "“" + file + "”将被永久删除。"
+		case "zh-Hant":
+			return "「" + file + "」將被永久刪除。"
 		}
 	}
 }
@@ -7891,8 +20509,24 @@ func (msgs Messages) Bytes(count int) string {
 		switch lang {
 		case "", "en":
 			return msgs.arg(i18n.FormatInteger("en", float64(count))) + " B"
+		case "de":
+			return i18n.FormatInteger("de", float64(count)) + " B"
+		case "es":
+			return i18n.FormatInteger("es", float64(count)) + " B"
+		case "fr":
+			return i18n.FormatInteger("fr", float64(count)) + " B"
+		case "ja":
+			return i18n.FormatInteger("ja", float64(count)) + " B"
+		case "ko":
+			return i18n.FormatInteger("ko", float64(count)) + " B"
+		case "pt-BR":
+			return i18n.FormatInteger("pt-BR", float64(count)) + " B"
+		case "ru":
+			return i18n.FormatInteger("ru", float64(count)) + " B"
 		case "zh-Hans":
 			return i18n.FormatInteger("zh-Hans", float64(count)) + " B"
+		case "zh-Hant":
+			return i18n.FormatInteger("zh-Hant", float64(count)) + " B"
 		}
 	}
 }
@@ -7915,8 +20549,24 @@ func (msgs Messages) Kilobytes(size float64) string {
 		switch lang {
 		case "", "en":
 			return msgs.arg(i18n.FormatNumberSkeleton("en", size, ".0")) + " KB"
+		case "de":
+			return i18n.FormatNumberSkeleton("de", size, ".0") + " KB"
+		case "es":
+			return i18n.FormatNumberSkeleton("es", size, ".0") + " KB"
+		case "fr":
+			return i18n.FormatNumberSkeleton("fr", size, ".0") + " KB"
+		case "ja":
+			return i18n.FormatNumberSkeleton("ja", size, ".0") + " KB"
+		case "ko":
+			return i18n.FormatNumberSkeleton("ko", size, ".0") + " KB"
+		case "pt-BR":
+			return i18n.FormatNumberSkeleton("pt-BR", size, ".0") + " KB"
+		case "ru":
+			return i18n.FormatNumberSkeleton("ru", size, ".0") + " KB"
 		case "zh-Hans":
 			return i18n.FormatNumberSkeleton("zh-Hans", size, ".0") + " KB"
+		case "zh-Hant":
+			return i18n.FormatNumberSkeleton("zh-Hant", size, ".0") + " KB"
 		}
 	}
 }
@@ -7939,8 +20589,24 @@ func (msgs Messages) Megabytes(size float64) string {
 		switch lang {
 		case "", "en":
 			return msgs.arg(i18n.FormatNumberSkeleton("en", size, ".0")) + " MB"
+		case "de":
+			return i18n.FormatNumberSkeleton("de", size, ".0") + " MB"
+		case "es":
+			return i18n.FormatNumberSkeleton("es", size, ".0") + " MB"
+		case "fr":
+			return i18n.FormatNumberSkeleton("fr", size, ".0") + " MB"
+		case "ja":
+			return i18n.FormatNumberSkeleton("ja", size, ".0") + " MB"
+		case "ko":
+			return i18n.FormatNumberSkeleton("ko", size, ".0") + " MB"
+		case "pt-BR":
+			return i18n.FormatNumberSkeleton("pt-BR", size, ".0") + " MB"
+		case "ru":
+			return i18n.FormatNumberSkeleton("ru", size, ".0") + " MB"
 		case "zh-Hans":
 			return i18n.FormatNumberSkeleton("zh-Hans", size, ".0") + " MB"
+		case "zh-Hant":
+			return i18n.FormatNumberSkeleton("zh-Hant", size, ".0") + " MB"
 		}
 	}
 }
@@ -7963,8 +20629,24 @@ func (msgs Messages) Gigabytes(size float64) string {
 		switch lang {
 		case "", "en":
 			return msgs.arg(i18n.FormatNumberSkeleton("en", size, ".0")) + " GB"
+		case "de":
+			return i18n.FormatNumberSkeleton("de", size, ".0") + " GB"
+		case "es":
+			return i18n.FormatNumberSkeleton("es", size, ".0") + " GB"
+		case "fr":
+			return i18n.FormatNumberSkeleton("fr", size, ".0") + " GB"
+		case "ja":
+			return i18n.FormatNumberSkeleton("ja", size, ".0") + " GB"
+		case "ko":
+			return i18n.FormatNumberSkeleton("ko", size, ".0") + " GB"
+		case "pt-BR":
+			return i18n.FormatNumberSkeleton("pt-BR", size, ".0") + " GB"
+		case "ru":
+			return i18n.FormatNumberSkeleton("ru", size, ".0") + " GB"
 		case "zh-Hans":
 			return i18n.FormatNumberSkeleton("zh-Hans", size, ".0") + " GB"
+		case "zh-Hant":
+			return i18n.FormatNumberSkeleton("zh-Hant", size, ".0") + " GB"
 		}
 	}
 }
@@ -7987,8 +20669,24 @@ func (msgs Messages) Terabytes(size float64) string {
 		switch lang {
 		case "", "en":
 			return msgs.arg(i18n.FormatNumberSkeleton("en", size, ".0")) + " TB"
+		case "de":
+			return i18n.FormatNumberSkeleton("de", size, ".0") + " TB"
+		case "es":
+			return i18n.FormatNumberSkeleton("es", size, ".0") + " TB"
+		case "fr":
+			return i18n.FormatNumberSkeleton("fr", size, ".0") + " TB"
+		case "ja":
+			return i18n.FormatNumberSkeleton("ja", size, ".0") + " TB"
+		case "ko":
+			return i18n.FormatNumberSkeleton("ko", size, ".0") + " TB"
+		case "pt-BR":
+			return i18n.FormatNumberSkeleton("pt-BR", size, ".0") + " TB"
+		case "ru":
+			return i18n.FormatNumberSkeleton("ru", size, ".0") + " TB"
 		case "zh-Hans":
 			return i18n.FormatNumberSkeleton("zh-Hans", size, ".0") + " TB"
+		case "zh-Hant":
+			return i18n.FormatNumberSkeleton("zh-Hant", size, ".0") + " TB"
 		}
 	}
 }
@@ -8074,6 +20772,97 @@ func (msgs Messages) EntropyBits(bits int) string {
 				b.WriteString(" bits of entropy")
 			}
 			return b.String()
+		case "de":
+			var b strings.Builder
+			switch i18n.Cardinal("de", float64(bits)) {
+			case i18n.One:
+				b.WriteString("≈ ")
+				b.WriteString(i18n.FormatNumber("de", float64(bits)))
+				b.WriteString(" Bit Entropie")
+			default:
+				b.WriteString("≈ ")
+				b.WriteString(i18n.FormatNumber("de", float64(bits)))
+				b.WriteString(" Bit Entropie")
+			}
+			return b.String()
+		case "es":
+			var b strings.Builder
+			switch i18n.Cardinal("es", float64(bits)) {
+			case i18n.One:
+				b.WriteString("≈ ")
+				b.WriteString(i18n.FormatNumber("es", float64(bits)))
+				b.WriteString(" bit de entropía")
+			default:
+				b.WriteString("≈ ")
+				b.WriteString(i18n.FormatNumber("es", float64(bits)))
+				b.WriteString(" bits de entropía")
+			}
+			return b.String()
+		case "fr":
+			var b strings.Builder
+			switch i18n.Cardinal("fr", float64(bits)) {
+			case i18n.One:
+				b.WriteString("≈ ")
+				b.WriteString(i18n.FormatNumber("fr", float64(bits)))
+				b.WriteString(" bit d’entropie")
+			default:
+				b.WriteString("≈ ")
+				b.WriteString(i18n.FormatNumber("fr", float64(bits)))
+				b.WriteString(" bits d’entropie")
+			}
+			return b.String()
+		case "ja":
+			var b strings.Builder
+			switch i18n.Cardinal("ja", float64(bits)) {
+			default:
+				b.WriteString("≈ ")
+				b.WriteString(i18n.FormatNumber("ja", float64(bits)))
+				b.WriteString(" ビットのエントロピー")
+			}
+			return b.String()
+		case "ko":
+			var b strings.Builder
+			switch i18n.Cardinal("ko", float64(bits)) {
+			default:
+				b.WriteString("≈ ")
+				b.WriteString(i18n.FormatNumber("ko", float64(bits)))
+				b.WriteString("비트 엔트로피")
+			}
+			return b.String()
+		case "pt-BR":
+			var b strings.Builder
+			switch i18n.Cardinal("pt-BR", float64(bits)) {
+			case i18n.One:
+				b.WriteString("≈ ")
+				b.WriteString(i18n.FormatNumber("pt-BR", float64(bits)))
+				b.WriteString(" bit de entropia")
+			default:
+				b.WriteString("≈ ")
+				b.WriteString(i18n.FormatNumber("pt-BR", float64(bits)))
+				b.WriteString(" bits de entropia")
+			}
+			return b.String()
+		case "ru":
+			var b strings.Builder
+			switch i18n.Cardinal("ru", float64(bits)) {
+			case i18n.One:
+				b.WriteString("≈ ")
+				b.WriteString(i18n.FormatNumber("ru", float64(bits)))
+				b.WriteString(" бит энтропии")
+			case i18n.Few:
+				b.WriteString("≈ ")
+				b.WriteString(i18n.FormatNumber("ru", float64(bits)))
+				b.WriteString(" бита энтропии")
+			case i18n.Many:
+				b.WriteString("≈ ")
+				b.WriteString(i18n.FormatNumber("ru", float64(bits)))
+				b.WriteString(" бит энтропии")
+			default:
+				b.WriteString("≈ ")
+				b.WriteString(i18n.FormatNumber("ru", float64(bits)))
+				b.WriteString(" бита энтропии")
+			}
+			return b.String()
 		case "zh-Hans":
 			var b strings.Builder
 			switch i18n.Cardinal("zh-Hans", float64(bits)) {
@@ -8081,6 +20870,15 @@ func (msgs Messages) EntropyBits(bits int) string {
 				b.WriteString("≈ ")
 				b.WriteString(i18n.FormatNumber("zh-Hans", float64(bits)))
 				b.WriteString(" 位熵")
+			}
+			return b.String()
+		case "zh-Hant":
+			var b strings.Builder
+			switch i18n.Cardinal("zh-Hant", float64(bits)) {
+			default:
+				b.WriteString("≈ ")
+				b.WriteString(i18n.FormatNumber("zh-Hant", float64(bits)))
+				b.WriteString(" 位元熵")
 			}
 			return b.String()
 		}
@@ -8315,8 +21113,24 @@ func (msgs Messages) OpenItem(name string) string {
 		switch lang {
 		case "", "en":
 			return "Open " + msgs.arg(name)
+		case "de":
+			return name + " öffnen"
+		case "es":
+			return "Abrir " + name
+		case "fr":
+			return "Ouvrir " + name
+		case "ja":
+			return name + " を開く"
+		case "ko":
+			return name + " 열기"
+		case "pt-BR":
+			return "Abrir " + name
+		case "ru":
+			return "Открыть " + name
 		case "zh-Hans":
 			return "打开 " + name
+		case "zh-Hant":
+			return "開啟 " + name
 		}
 	}
 }
@@ -8348,6 +21162,95 @@ func (msgs Messages) UsedInItems(count int) string {
 				b.WriteString(" items")
 			}
 			return b.String()
+		case "de":
+			var b strings.Builder
+			switch i18n.Cardinal("de", float64(count)) {
+			case i18n.One:
+				b.WriteString("In ")
+				b.WriteString(i18n.FormatNumber("de", float64(count)))
+				b.WriteString(" Eintrag verwendet")
+			default:
+				b.WriteString("In ")
+				b.WriteString(i18n.FormatNumber("de", float64(count)))
+				b.WriteString(" Einträgen verwendet")
+			}
+			return b.String()
+		case "es":
+			var b strings.Builder
+			switch i18n.Cardinal("es", float64(count)) {
+			case i18n.One:
+				b.WriteString("Usada en ")
+				b.WriteString(i18n.FormatNumber("es", float64(count)))
+				b.WriteString(" elemento")
+			default:
+				b.WriteString("Usada en ")
+				b.WriteString(i18n.FormatNumber("es", float64(count)))
+				b.WriteString(" elementos")
+			}
+			return b.String()
+		case "fr":
+			var b strings.Builder
+			switch i18n.Cardinal("fr", float64(count)) {
+			case i18n.One:
+				b.WriteString("Utilisé dans ")
+				b.WriteString(i18n.FormatNumber("fr", float64(count)))
+				b.WriteString(" élément")
+			default:
+				b.WriteString("Utilisé dans ")
+				b.WriteString(i18n.FormatNumber("fr", float64(count)))
+				b.WriteString(" éléments")
+			}
+			return b.String()
+		case "ja":
+			var b strings.Builder
+			switch i18n.Cardinal("ja", float64(count)) {
+			default:
+				b.WriteString(i18n.FormatNumber("ja", float64(count)))
+				b.WriteString(" 件のアイテムで使用")
+			}
+			return b.String()
+		case "ko":
+			var b strings.Builder
+			switch i18n.Cardinal("ko", float64(count)) {
+			default:
+				b.WriteString(i18n.FormatNumber("ko", float64(count)))
+				b.WriteString("개 항목에서 사용")
+			}
+			return b.String()
+		case "pt-BR":
+			var b strings.Builder
+			switch i18n.Cardinal("pt-BR", float64(count)) {
+			case i18n.One:
+				b.WriteString("Usada em ")
+				b.WriteString(i18n.FormatNumber("pt-BR", float64(count)))
+				b.WriteString(" item")
+			default:
+				b.WriteString("Usada em ")
+				b.WriteString(i18n.FormatNumber("pt-BR", float64(count)))
+				b.WriteString(" itens")
+			}
+			return b.String()
+		case "ru":
+			var b strings.Builder
+			switch i18n.Cardinal("ru", float64(count)) {
+			case i18n.One:
+				b.WriteString("Используется в ")
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" элементе")
+			case i18n.Few:
+				b.WriteString("Используется в ")
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" элементах")
+			case i18n.Many:
+				b.WriteString("Используется в ")
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" элементах")
+			default:
+				b.WriteString("Используется в ")
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" элементах")
+			}
+			return b.String()
 		case "zh-Hans":
 			var b strings.Builder
 			switch i18n.Cardinal("zh-Hans", float64(count)) {
@@ -8355,6 +21258,15 @@ func (msgs Messages) UsedInItems(count int) string {
 				b.WriteString("用于 ")
 				b.WriteString(i18n.FormatNumber("zh-Hans", float64(count)))
 				b.WriteString(" 个项目")
+			}
+			return b.String()
+		case "zh-Hant":
+			var b strings.Builder
+			switch i18n.Cardinal("zh-Hant", float64(count)) {
+			default:
+				b.WriteString("用於 ")
+				b.WriteString(i18n.FormatNumber("zh-Hant", float64(count)))
+				b.WriteString(" 個項目")
 			}
 			return b.String()
 		}
@@ -8395,6 +21307,95 @@ func (msgs Messages) WeakShort(count int) string {
 				b.WriteString(" characters")
 			}
 			return b.String()
+		case "de":
+			var b strings.Builder
+			switch i18n.Cardinal("de", float64(count)) {
+			case i18n.One:
+				b.WriteString("Kürzer als ")
+				b.WriteString(i18n.FormatNumber("de", float64(count)))
+				b.WriteString(" Zeichen")
+			default:
+				b.WriteString("Kürzer als ")
+				b.WriteString(i18n.FormatNumber("de", float64(count)))
+				b.WriteString(" Zeichen")
+			}
+			return b.String()
+		case "es":
+			var b strings.Builder
+			switch i18n.Cardinal("es", float64(count)) {
+			case i18n.One:
+				b.WriteString("Menos de ")
+				b.WriteString(i18n.FormatNumber("es", float64(count)))
+				b.WriteString(" carácter")
+			default:
+				b.WriteString("Menos de ")
+				b.WriteString(i18n.FormatNumber("es", float64(count)))
+				b.WriteString(" caracteres")
+			}
+			return b.String()
+		case "fr":
+			var b strings.Builder
+			switch i18n.Cardinal("fr", float64(count)) {
+			case i18n.One:
+				b.WriteString("Moins de ")
+				b.WriteString(i18n.FormatNumber("fr", float64(count)))
+				b.WriteString(" caractère")
+			default:
+				b.WriteString("Moins de ")
+				b.WriteString(i18n.FormatNumber("fr", float64(count)))
+				b.WriteString(" caractères")
+			}
+			return b.String()
+		case "ja":
+			var b strings.Builder
+			switch i18n.Cardinal("ja", float64(count)) {
+			default:
+				b.WriteString(i18n.FormatNumber("ja", float64(count)))
+				b.WriteString(" 文字未満")
+			}
+			return b.String()
+		case "ko":
+			var b strings.Builder
+			switch i18n.Cardinal("ko", float64(count)) {
+			default:
+				b.WriteString(i18n.FormatNumber("ko", float64(count)))
+				b.WriteString("자 미만")
+			}
+			return b.String()
+		case "pt-BR":
+			var b strings.Builder
+			switch i18n.Cardinal("pt-BR", float64(count)) {
+			case i18n.One:
+				b.WriteString("Menos de ")
+				b.WriteString(i18n.FormatNumber("pt-BR", float64(count)))
+				b.WriteString(" caractere")
+			default:
+				b.WriteString("Menos de ")
+				b.WriteString(i18n.FormatNumber("pt-BR", float64(count)))
+				b.WriteString(" caracteres")
+			}
+			return b.String()
+		case "ru":
+			var b strings.Builder
+			switch i18n.Cardinal("ru", float64(count)) {
+			case i18n.One:
+				b.WriteString("Короче ")
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" символа")
+			case i18n.Few:
+				b.WriteString("Короче ")
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" символов")
+			case i18n.Many:
+				b.WriteString("Короче ")
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" символов")
+			default:
+				b.WriteString("Короче ")
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" символов")
+			}
+			return b.String()
 		case "zh-Hans":
 			var b strings.Builder
 			switch i18n.Cardinal("zh-Hans", float64(count)) {
@@ -8402,6 +21403,15 @@ func (msgs Messages) WeakShort(count int) string {
 				b.WriteString("少于 ")
 				b.WriteString(i18n.FormatNumber("zh-Hans", float64(count)))
 				b.WriteString(" 个字符")
+			}
+			return b.String()
+		case "zh-Hant":
+			var b strings.Builder
+			switch i18n.Cardinal("zh-Hant", float64(count)) {
+			default:
+				b.WriteString("少於 ")
+				b.WriteString(i18n.FormatNumber("zh-Hant", float64(count)))
+				b.WriteString(" 個字元")
 			}
 			return b.String()
 		}
@@ -8447,8 +21457,24 @@ func (msgs Messages) CardExpired(expiry string) string {
 		switch lang {
 		case "", "en":
 			return "Expired " + msgs.arg(expiry)
+		case "de":
+			return "Abgelaufen " + expiry
+		case "es":
+			return "Caducada " + expiry
+		case "fr":
+			return "Expirée " + expiry
+		case "ja":
+			return expiry + " に期限切れ"
+		case "ko":
+			return expiry + " 만료됨"
+		case "pt-BR":
+			return "Vencido " + expiry
+		case "ru":
+			return "Истекла " + expiry
 		case "zh-Hans":
 			return "已于 " + expiry + " 过期"
+		case "zh-Hant":
+			return "已於 " + expiry + " 過期"
 		}
 	}
 }
@@ -8471,8 +21497,24 @@ func (msgs Messages) CardExpires(expiry string) string {
 		switch lang {
 		case "", "en":
 			return "Expires " + msgs.arg(expiry)
+		case "de":
+			return "Läuft ab " + expiry
+		case "es":
+			return "Caduca " + expiry
+		case "fr":
+			return "Expire " + expiry
+		case "ja":
+			return expiry + " に期限切れ予定"
+		case "ko":
+			return expiry + " 만료 예정"
+		case "pt-BR":
+			return "Vence " + expiry
+		case "ru":
+			return "Истекает " + expiry
 		case "zh-Hans":
 			return "将于 " + expiry + " 过期"
+		case "zh-Hant":
+			return "將於 " + expiry + " 到期"
 		}
 	}
 }
@@ -8566,6 +21608,95 @@ func (msgs Messages) BackupPasswordTooShort(count int) string {
 				b.WriteString(" characters.")
 			}
 			return b.String()
+		case "de":
+			var b strings.Builder
+			switch i18n.Cardinal("de", float64(count)) {
+			case i18n.One:
+				b.WriteString("Mindestens ")
+				b.WriteString(i18n.FormatNumber("de", float64(count)))
+				b.WriteString(" Zeichen verwenden.")
+			default:
+				b.WriteString("Mindestens ")
+				b.WriteString(i18n.FormatNumber("de", float64(count)))
+				b.WriteString(" Zeichen verwenden.")
+			}
+			return b.String()
+		case "es":
+			var b strings.Builder
+			switch i18n.Cardinal("es", float64(count)) {
+			case i18n.One:
+				b.WriteString("Usa al menos ")
+				b.WriteString(i18n.FormatNumber("es", float64(count)))
+				b.WriteString(" carácter.")
+			default:
+				b.WriteString("Usa al menos ")
+				b.WriteString(i18n.FormatNumber("es", float64(count)))
+				b.WriteString(" caracteres.")
+			}
+			return b.String()
+		case "fr":
+			var b strings.Builder
+			switch i18n.Cardinal("fr", float64(count)) {
+			case i18n.One:
+				b.WriteString("Utilisez au moins ")
+				b.WriteString(i18n.FormatNumber("fr", float64(count)))
+				b.WriteString(" caractère.")
+			default:
+				b.WriteString("Utilisez au moins ")
+				b.WriteString(i18n.FormatNumber("fr", float64(count)))
+				b.WriteString(" caractères.")
+			}
+			return b.String()
+		case "ja":
+			var b strings.Builder
+			switch i18n.Cardinal("ja", float64(count)) {
+			default:
+				b.WriteString(i18n.FormatNumber("ja", float64(count)))
+				b.WriteString(" 文字以上で入力してください。")
+			}
+			return b.String()
+		case "ko":
+			var b strings.Builder
+			switch i18n.Cardinal("ko", float64(count)) {
+			default:
+				b.WriteString(i18n.FormatNumber("ko", float64(count)))
+				b.WriteString("자 이상 입력하세요.")
+			}
+			return b.String()
+		case "pt-BR":
+			var b strings.Builder
+			switch i18n.Cardinal("pt-BR", float64(count)) {
+			case i18n.One:
+				b.WriteString("Use pelo menos ")
+				b.WriteString(i18n.FormatNumber("pt-BR", float64(count)))
+				b.WriteString(" caractere.")
+			default:
+				b.WriteString("Use pelo menos ")
+				b.WriteString(i18n.FormatNumber("pt-BR", float64(count)))
+				b.WriteString(" caracteres.")
+			}
+			return b.String()
+		case "ru":
+			var b strings.Builder
+			switch i18n.Cardinal("ru", float64(count)) {
+			case i18n.One:
+				b.WriteString("Минимум ")
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" символ.")
+			case i18n.Few:
+				b.WriteString("Минимум ")
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" символа.")
+			case i18n.Many:
+				b.WriteString("Минимум ")
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" символов.")
+			default:
+				b.WriteString("Минимум ")
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" символа.")
+			}
+			return b.String()
 		case "zh-Hans":
 			var b strings.Builder
 			switch i18n.Cardinal("zh-Hans", float64(count)) {
@@ -8573,6 +21704,15 @@ func (msgs Messages) BackupPasswordTooShort(count int) string {
 				b.WriteString("请至少使用 ")
 				b.WriteString(i18n.FormatNumber("zh-Hans", float64(count)))
 				b.WriteString(" 个字符。")
+			}
+			return b.String()
+		case "zh-Hant":
+			var b strings.Builder
+			switch i18n.Cardinal("zh-Hant", float64(count)) {
+			default:
+				b.WriteString("請至少使用 ")
+				b.WriteString(i18n.FormatNumber("zh-Hant", float64(count)))
+				b.WriteString(" 個字元。")
 			}
 			return b.String()
 		}
@@ -8611,6 +21751,85 @@ func (msgs Messages) BackupIncomplete(count int) string {
 				b.WriteString(" personal items are in a format GoVault cannot read, so the backup would be incomplete. Export from the Bitwarden web vault instead.")
 			}
 			return b.String()
+		case "de":
+			var b strings.Builder
+			switch i18n.Cardinal("de", float64(count)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("de", float64(count)))
+				b.WriteString(" persönlicher Eintrag hat ein Format, das GoVault nicht lesen kann, sodass das Backup unvollständig wäre. Exportiere stattdessen aus dem Bitwarden-Web-Tresor.")
+			default:
+				b.WriteString(i18n.FormatNumber("de", float64(count)))
+				b.WriteString(" persönliche Einträge haben ein Format, das GoVault nicht lesen kann, sodass das Backup unvollständig wäre. Exportiere stattdessen aus dem Bitwarden-Web-Tresor.")
+			}
+			return b.String()
+		case "es":
+			var b strings.Builder
+			switch i18n.Cardinal("es", float64(count)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("es", float64(count)))
+				b.WriteString(" elemento personal tiene un formato que GoVault no puede leer, por lo que la copia estaría incompleta. Exporta desde la caja fuerte web de Bitwarden.")
+			default:
+				b.WriteString(i18n.FormatNumber("es", float64(count)))
+				b.WriteString(" elementos personales tienen un formato que GoVault no puede leer, por lo que la copia estaría incompleta. Exporta desde la caja fuerte web de Bitwarden.")
+			}
+			return b.String()
+		case "fr":
+			var b strings.Builder
+			switch i18n.Cardinal("fr", float64(count)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("fr", float64(count)))
+				b.WriteString(" élément personnel utilise un format que GoVault ne peut pas lire ; la sauvegarde serait incomplète. Exportez plutôt depuis le coffre web Bitwarden.")
+			default:
+				b.WriteString(i18n.FormatNumber("fr", float64(count)))
+				b.WriteString(" éléments personnels utilisent un format que GoVault ne peut pas lire ; la sauvegarde serait incomplète. Exportez plutôt depuis le coffre web Bitwarden.")
+			}
+			return b.String()
+		case "ja":
+			var b strings.Builder
+			switch i18n.Cardinal("ja", float64(count)) {
+			default:
+				b.WriteString("GoVault で読み取れない形式の個人アイテムが ")
+				b.WriteString(i18n.FormatNumber("ja", float64(count)))
+				b.WriteString(" 件あるため、バックアップが不完全になります。代わりに Bitwarden のウェブ保管庫からエクスポートしてください。")
+			}
+			return b.String()
+		case "ko":
+			var b strings.Builder
+			switch i18n.Cardinal("ko", float64(count)) {
+			default:
+				b.WriteString("GoVault가 읽을 수 없는 형식의 개인 항목이 ")
+				b.WriteString(i18n.FormatNumber("ko", float64(count)))
+				b.WriteString("개 있어 백업이 불완전합니다. 대신 Bitwarden 웹 보관함에서 내보내세요.")
+			}
+			return b.String()
+		case "pt-BR":
+			var b strings.Builder
+			switch i18n.Cardinal("pt-BR", float64(count)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("pt-BR", float64(count)))
+				b.WriteString(" item pessoal está em um formato que o GoVault não consegue ler, então o backup ficaria incompleto. Exporte pelo cofre web do Bitwarden.")
+			default:
+				b.WriteString(i18n.FormatNumber("pt-BR", float64(count)))
+				b.WriteString(" itens pessoais estão em um formato que o GoVault não consegue ler, então o backup ficaria incompleto. Exporte pelo cofre web do Bitwarden.")
+			}
+			return b.String()
+		case "ru":
+			var b strings.Builder
+			switch i18n.Cardinal("ru", float64(count)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" личный элемент имеет формат, который GoVault не может прочитать, поэтому копия будет неполной. Экспортируйте через веб-хранилище Bitwarden.")
+			case i18n.Few:
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" личных элемента имеют формат, который GoVault не может прочитать, поэтому копия будет неполной. Экспортируйте через веб-хранилище Bitwarden.")
+			case i18n.Many:
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" личных элементов имеют формат, который GoVault не может прочитать, поэтому копия будет неполной. Экспортируйте через веб-хранилище Bitwarden.")
+			default:
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" личного элемента имеют формат, который GoVault не может прочитать, поэтому копия будет неполной. Экспортируйте через веб-хранилище Bitwarden.")
+			}
+			return b.String()
 		case "zh-Hans":
 			var b strings.Builder
 			switch i18n.Cardinal("zh-Hans", float64(count)) {
@@ -8618,6 +21837,15 @@ func (msgs Messages) BackupIncomplete(count int) string {
 				b.WriteString("有 ")
 				b.WriteString(i18n.FormatNumber("zh-Hans", float64(count)))
 				b.WriteString(" 个个人项目的格式 GoVault 无法读取，因此备份将不完整。请改用 Bitwarden 网页端密码库导出。")
+			}
+			return b.String()
+		case "zh-Hant":
+			var b strings.Builder
+			switch i18n.Cardinal("zh-Hant", float64(count)) {
+			default:
+				b.WriteString("有 ")
+				b.WriteString(i18n.FormatNumber("zh-Hant", float64(count)))
+				b.WriteString(" 個個人項目的格式 GoVault 無法讀取，因此備份將不完整。請改用 Bitwarden 網頁版密碼庫匯出。")
 			}
 			return b.String()
 		}
@@ -8686,8 +21914,24 @@ func (msgs Messages) BackupFileTooLarge(size int) string {
 		switch lang {
 		case "", "en":
 			return "The file is larger than " + msgs.arg(i18n.FormatInteger("en", float64(size))) + " MiB."
+		case "de":
+			return "Die Datei ist größer als " + i18n.FormatInteger("de", float64(size)) + " MiB."
+		case "es":
+			return "El archivo supera los " + i18n.FormatInteger("es", float64(size)) + " MiB."
+		case "fr":
+			return "Le fichier dépasse " + i18n.FormatInteger("fr", float64(size)) + " MiB."
+		case "ja":
+			return "ファイルサイズが " + i18n.FormatInteger("ja", float64(size)) + " MiB を超えています。"
+		case "ko":
+			return "파일 크기가 " + i18n.FormatInteger("ko", float64(size)) + " MiB를 초과합니다."
+		case "pt-BR":
+			return "O arquivo é maior que " + i18n.FormatInteger("pt-BR", float64(size)) + " MiB."
+		case "ru":
+			return "Размер файла превышает " + i18n.FormatInteger("ru", float64(size)) + " MiB."
 		case "zh-Hans":
 			return "文件大小超过 " + i18n.FormatInteger("zh-Hans", float64(size)) + " MiB。"
+		case "zh-Hant":
+			return "檔案大小超過 " + i18n.FormatInteger("zh-Hant", float64(size)) + " MiB。"
 		}
 	}
 }
@@ -8738,8 +21982,24 @@ func (msgs Messages) ImportResult(created int, updated int) string {
 		switch lang {
 		case "", "en":
 			return "Imported: " + msgs.arg(i18n.FormatInteger("en", float64(created))) + " created, " + msgs.arg(i18n.FormatInteger("en", float64(updated))) + " updated"
+		case "de":
+			return "Importiert: " + i18n.FormatInteger("de", float64(created)) + " erstellt, " + i18n.FormatInteger("de", float64(updated)) + " aktualisiert"
+		case "es":
+			return "Importado: " + i18n.FormatInteger("es", float64(created)) + " creados, " + i18n.FormatInteger("es", float64(updated)) + " actualizados"
+		case "fr":
+			return "Importé : " + i18n.FormatInteger("fr", float64(created)) + " créés, " + i18n.FormatInteger("fr", float64(updated)) + " mis à jour"
+		case "ja":
+			return "インポート完了：新規 " + i18n.FormatInteger("ja", float64(created)) + " 件、更新 " + i18n.FormatInteger("ja", float64(updated)) + " 件"
+		case "ko":
+			return "가져오기 완료: " + i18n.FormatInteger("ko", float64(created)) + "개 생성, " + i18n.FormatInteger("ko", float64(updated)) + "개 업데이트"
+		case "pt-BR":
+			return "Importado: " + i18n.FormatInteger("pt-BR", float64(created)) + " criados, " + i18n.FormatInteger("pt-BR", float64(updated)) + " atualizados"
+		case "ru":
+			return "Импортировано: создано " + i18n.FormatInteger("ru", float64(created)) + ", обновлено " + i18n.FormatInteger("ru", float64(updated))
 		case "zh-Hans":
 			return "导入完成：新建 " + i18n.FormatInteger("zh-Hans", float64(created)) + " 个，更新 " + i18n.FormatInteger("zh-Hans", float64(updated)) + " 个"
+		case "zh-Hant":
+			return "匯入完成：新增 " + i18n.FormatInteger("zh-Hant", float64(created)) + " 個，更新 " + i18n.FormatInteger("zh-Hant", float64(updated)) + " 個"
 		}
 	}
 }
@@ -8775,12 +22035,116 @@ func (msgs Messages) ImportSomeFailed(count int, reason string) string {
 				b.WriteString(msgs.arg(reason))
 			}
 			return b.String()
+		case "de":
+			var b strings.Builder
+			switch i18n.Cardinal("de", float64(count)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("de", float64(count)))
+				b.WriteString(" Eintrag fehlgeschlagen: ")
+				b.WriteString(reason)
+			default:
+				b.WriteString(i18n.FormatNumber("de", float64(count)))
+				b.WriteString(" Einträge fehlgeschlagen: ")
+				b.WriteString(reason)
+			}
+			return b.String()
+		case "es":
+			var b strings.Builder
+			switch i18n.Cardinal("es", float64(count)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("es", float64(count)))
+				b.WriteString(" elemento falló: ")
+				b.WriteString(reason)
+			default:
+				b.WriteString(i18n.FormatNumber("es", float64(count)))
+				b.WriteString(" elementos fallaron: ")
+				b.WriteString(reason)
+			}
+			return b.String()
+		case "fr":
+			var b strings.Builder
+			switch i18n.Cardinal("fr", float64(count)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("fr", float64(count)))
+				b.WriteString(" élément en échec : ")
+				b.WriteString(reason)
+			default:
+				b.WriteString(i18n.FormatNumber("fr", float64(count)))
+				b.WriteString(" éléments en échec : ")
+				b.WriteString(reason)
+			}
+			return b.String()
+		case "ja":
+			var b strings.Builder
+			switch i18n.Cardinal("ja", float64(count)) {
+			default:
+				b.WriteString(i18n.FormatNumber("ja", float64(count)))
+				b.WriteString(" 件失敗：")
+				b.WriteString(reason)
+			}
+			return b.String()
+		case "ko":
+			var b strings.Builder
+			switch i18n.Cardinal("ko", float64(count)) {
+			default:
+				b.WriteString(i18n.FormatNumber("ko", float64(count)))
+				b.WriteString("개 항목 실패: ")
+				b.WriteString(reason)
+			}
+			return b.String()
+		case "pt-BR":
+			var b strings.Builder
+			switch i18n.Cardinal("pt-BR", float64(count)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("pt-BR", float64(count)))
+				b.WriteString(" item falhou: ")
+				b.WriteString(reason)
+			default:
+				b.WriteString(i18n.FormatNumber("pt-BR", float64(count)))
+				b.WriteString(" itens falharam: ")
+				b.WriteString(reason)
+			}
+			return b.String()
+		case "ru":
+			var b strings.Builder
+			switch i18n.Cardinal("ru", float64(count)) {
+			case i18n.One:
+				b.WriteString("Ошибка у ")
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" элемента: ")
+				b.WriteString(reason)
+			case i18n.Few:
+				b.WriteString("Ошибка у ")
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" элементов: ")
+				b.WriteString(reason)
+			case i18n.Many:
+				b.WriteString("Ошибка у ")
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" элементов: ")
+				b.WriteString(reason)
+			default:
+				b.WriteString("Ошибка у ")
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" элемента: ")
+				b.WriteString(reason)
+			}
+			return b.String()
 		case "zh-Hans":
 			var b strings.Builder
 			switch i18n.Cardinal("zh-Hans", float64(count)) {
 			default:
 				b.WriteString(i18n.FormatNumber("zh-Hans", float64(count)))
 				b.WriteString(" 个项目失败：")
+				b.WriteString(reason)
+			}
+			return b.String()
+		case "zh-Hant":
+			var b strings.Builder
+			switch i18n.Cardinal("zh-Hant", float64(count)) {
+			default:
+				b.WriteString(i18n.FormatNumber("zh-Hant", float64(count)))
+				b.WriteString(" 個項目失敗：")
 				b.WriteString(reason)
 			}
 			return b.String()
@@ -8804,8 +22168,24 @@ func (msgs Messages) ImportSkipped(count int) string {
 		switch lang {
 		case "", "en":
 			return msgs.arg(i18n.FormatInteger("en", float64(count))) + " skipped"
+		case "de":
+			return i18n.FormatInteger("de", float64(count)) + " übersprungen"
+		case "es":
+			return i18n.FormatInteger("es", float64(count)) + " omitidos"
+		case "fr":
+			return i18n.FormatInteger("fr", float64(count)) + " ignorés"
+		case "ja":
+			return i18n.FormatInteger("ja", float64(count)) + " 件スキップ"
+		case "ko":
+			return i18n.FormatInteger("ko", float64(count)) + "개 건너뜀"
+		case "pt-BR":
+			return i18n.FormatInteger("pt-BR", float64(count)) + " ignorados"
+		case "ru":
+			return "пропущено: " + i18n.FormatInteger("ru", float64(count))
 		case "zh-Hans":
 			return "已跳过 " + i18n.FormatInteger("zh-Hans", float64(count)) + " 个"
+		case "zh-Hant":
+			return "已略過 " + i18n.FormatInteger("zh-Hant", float64(count)) + " 個"
 		}
 	}
 }
@@ -8887,8 +22267,24 @@ func (msgs Messages) ImportSummary(file string, added int, changed int, identica
 		switch lang {
 		case "", "en":
 			return msgs.arg(file) + " · " + msgs.arg(i18n.FormatInteger("en", float64(added))) + " new, " + msgs.arg(i18n.FormatInteger("en", float64(changed))) + " changed, " + msgs.arg(i18n.FormatInteger("en", float64(identical))) + " identical. Nothing changes until you apply."
+		case "de":
+			return file + " · " + i18n.FormatInteger("de", float64(added)) + " neu, " + i18n.FormatInteger("de", float64(changed)) + " geändert, " + i18n.FormatInteger("de", float64(identical)) + " identisch. Nichts wird geändert, bis du anwendest."
+		case "es":
+			return file + " · " + i18n.FormatInteger("es", float64(added)) + " nuevos, " + i18n.FormatInteger("es", float64(changed)) + " cambiados, " + i18n.FormatInteger("es", float64(identical)) + " idénticos. Nada cambia hasta que apliques."
+		case "fr":
+			return file + " · " + i18n.FormatInteger("fr", float64(added)) + " nouveaux, " + i18n.FormatInteger("fr", float64(changed)) + " modifiés, " + i18n.FormatInteger("fr", float64(identical)) + " identiques. Rien ne change tant que vous n’appliquez pas."
+		case "ja":
+			return file + " · 新規 " + i18n.FormatInteger("ja", float64(added)) + " 件、変更 " + i18n.FormatInteger("ja", float64(changed)) + " 件、同一 " + i18n.FormatInteger("ja", float64(identical)) + " 件。適用するまで何も変更されません。"
+		case "ko":
+			return file + " · 새로 추가 " + i18n.FormatInteger("ko", float64(added)) + "개, 변경 " + i18n.FormatInteger("ko", float64(changed)) + "개, 동일 " + i18n.FormatInteger("ko", float64(identical)) + "개. 적용하기 전까지는 아무것도 변경되지 않습니다."
+		case "pt-BR":
+			return file + " · " + i18n.FormatInteger("pt-BR", float64(added)) + " novos, " + i18n.FormatInteger("pt-BR", float64(changed)) + " alterados, " + i18n.FormatInteger("pt-BR", float64(identical)) + " idênticos. Nada muda até você aplicar."
+		case "ru":
+			return file + " · новых: " + i18n.FormatInteger("ru", float64(added)) + ", изменено: " + i18n.FormatInteger("ru", float64(changed)) + ", совпадает: " + i18n.FormatInteger("ru", float64(identical)) + ". Изменения применятся только после подтверждения."
 		case "zh-Hans":
 			return file + " · " + i18n.FormatInteger("zh-Hans", float64(added)) + " 个新增，" + i18n.FormatInteger("zh-Hans", float64(changed)) + " 个有变更，" + i18n.FormatInteger("zh-Hans", float64(identical)) + " 个相同。在你应用之前不会更改任何内容。"
+		case "zh-Hant":
+			return file + " · " + i18n.FormatInteger("zh-Hant", float64(added)) + " 個新增，" + i18n.FormatInteger("zh-Hant", float64(changed)) + " 個有變更，" + i18n.FormatInteger("zh-Hant", float64(identical)) + " 個相同。在您套用前不會變更任何內容。"
 		}
 	}
 }
@@ -8946,8 +22342,24 @@ func (msgs Messages) ImportGroupChanged(count int) string {
 		switch lang {
 		case "", "en":
 			return "Changed (" + msgs.arg(i18n.FormatInteger("en", float64(count))) + ")"
+		case "de":
+			return "Geändert (" + i18n.FormatInteger("de", float64(count)) + ")"
+		case "es":
+			return "Cambiados (" + i18n.FormatInteger("es", float64(count)) + ")"
+		case "fr":
+			return "Modifiés (" + i18n.FormatInteger("fr", float64(count)) + ")"
+		case "ja":
+			return "変更あり（" + i18n.FormatInteger("ja", float64(count)) + "）"
+		case "ko":
+			return "변경됨 (" + i18n.FormatInteger("ko", float64(count)) + ")"
+		case "pt-BR":
+			return "Alterados (" + i18n.FormatInteger("pt-BR", float64(count)) + ")"
+		case "ru":
+			return "Изменённые (" + i18n.FormatInteger("ru", float64(count)) + ")"
 		case "zh-Hans":
 			return "有变更（" + i18n.FormatInteger("zh-Hans", float64(count)) + "）"
+		case "zh-Hant":
+			return "有變更（" + i18n.FormatInteger("zh-Hant", float64(count)) + "）"
 		}
 	}
 }
@@ -8970,8 +22382,24 @@ func (msgs Messages) ImportGroupNew(count int) string {
 		switch lang {
 		case "", "en":
 			return "New (" + msgs.arg(i18n.FormatInteger("en", float64(count))) + ")"
+		case "de":
+			return "Neu (" + i18n.FormatInteger("de", float64(count)) + ")"
+		case "es":
+			return "Nuevos (" + i18n.FormatInteger("es", float64(count)) + ")"
+		case "fr":
+			return "Nouveaux (" + i18n.FormatInteger("fr", float64(count)) + ")"
+		case "ja":
+			return "新規（" + i18n.FormatInteger("ja", float64(count)) + "）"
+		case "ko":
+			return "새 항목 (" + i18n.FormatInteger("ko", float64(count)) + ")"
+		case "pt-BR":
+			return "Novos (" + i18n.FormatInteger("pt-BR", float64(count)) + ")"
+		case "ru":
+			return "Новые (" + i18n.FormatInteger("ru", float64(count)) + ")"
 		case "zh-Hans":
 			return "新增（" + i18n.FormatInteger("zh-Hans", float64(count)) + "）"
+		case "zh-Hant":
+			return "新增（" + i18n.FormatInteger("zh-Hant", float64(count)) + "）"
 		}
 	}
 }
@@ -8996,8 +22424,24 @@ func (msgs Messages) ImportGroupIdentical(count int) string {
 		switch lang {
 		case "", "en":
 			return "Identical (" + msgs.arg(i18n.FormatInteger("en", float64(count))) + ")"
+		case "de":
+			return "Identisch (" + i18n.FormatInteger("de", float64(count)) + ")"
+		case "es":
+			return "Idénticos (" + i18n.FormatInteger("es", float64(count)) + ")"
+		case "fr":
+			return "Identiques (" + i18n.FormatInteger("fr", float64(count)) + ")"
+		case "ja":
+			return "同一（" + i18n.FormatInteger("ja", float64(count)) + "）"
+		case "ko":
+			return "동일함 (" + i18n.FormatInteger("ko", float64(count)) + ")"
+		case "pt-BR":
+			return "Idênticos (" + i18n.FormatInteger("pt-BR", float64(count)) + ")"
+		case "ru":
+			return "Совпадающие (" + i18n.FormatInteger("ru", float64(count)) + ")"
 		case "zh-Hans":
 			return "相同（" + i18n.FormatInteger("zh-Hans", float64(count)) + "）"
+		case "zh-Hant":
+			return "相同（" + i18n.FormatInteger("zh-Hant", float64(count)) + "）"
 		}
 	}
 }
@@ -9020,8 +22464,24 @@ func (msgs Messages) ImportApply(create int, update int, skip int) string {
 		switch lang {
 		case "", "en":
 			return "Apply: " + msgs.arg(i18n.FormatInteger("en", float64(create))) + " create, " + msgs.arg(i18n.FormatInteger("en", float64(update))) + " update, " + msgs.arg(i18n.FormatInteger("en", float64(skip))) + " skipped"
+		case "de":
+			return "Anwenden: " + i18n.FormatInteger("de", float64(create)) + " erstellen, " + i18n.FormatInteger("de", float64(update)) + " aktualisieren, " + i18n.FormatInteger("de", float64(skip)) + " überspringen"
+		case "es":
+			return "Aplicar: " + i18n.FormatInteger("es", float64(create)) + " crear, " + i18n.FormatInteger("es", float64(update)) + " actualizar, " + i18n.FormatInteger("es", float64(skip)) + " omitir"
+		case "fr":
+			return "Appliquer : " + i18n.FormatInteger("fr", float64(create)) + " créer, " + i18n.FormatInteger("fr", float64(update)) + " maj, " + i18n.FormatInteger("fr", float64(skip)) + " ignorer"
+		case "ja":
+			return "適用：新規 " + i18n.FormatInteger("ja", float64(create)) + " 件、更新 " + i18n.FormatInteger("ja", float64(update)) + " 件、スキップ " + i18n.FormatInteger("ja", float64(skip)) + " 件"
+		case "ko":
+			return "적용: 생성 " + i18n.FormatInteger("ko", float64(create)) + "개, 업데이트 " + i18n.FormatInteger("ko", float64(update)) + "개, 건너뜀 " + i18n.FormatInteger("ko", float64(skip)) + "개"
+		case "pt-BR":
+			return "Aplicar: " + i18n.FormatInteger("pt-BR", float64(create)) + " criar, " + i18n.FormatInteger("pt-BR", float64(update)) + " atualizar, " + i18n.FormatInteger("pt-BR", float64(skip)) + " ignorar"
+		case "ru":
+			return "Применить: создать " + i18n.FormatInteger("ru", float64(create)) + ", обновить " + i18n.FormatInteger("ru", float64(update)) + ", пропустить " + i18n.FormatInteger("ru", float64(skip))
 		case "zh-Hans":
 			return "应用：新建 " + i18n.FormatInteger("zh-Hans", float64(create)) + " 个，更新 " + i18n.FormatInteger("zh-Hans", float64(update)) + " 个，跳过 " + i18n.FormatInteger("zh-Hans", float64(skip)) + " 个"
+		case "zh-Hant":
+			return "套用：新增 " + i18n.FormatInteger("zh-Hant", float64(create)) + " 個，更新 " + i18n.FormatInteger("zh-Hant", float64(update)) + " 個，略過 " + i18n.FormatInteger("zh-Hant", float64(skip)) + " 個"
 		}
 	}
 }
@@ -9060,8 +22520,24 @@ func (msgs Messages) SharedVaultOf(organization string) string {
 		switch lang {
 		case "", "en":
 			return "the shared vault of " + msgs.arg(organization)
+		case "de":
+			return "dem gemeinsamen Tresor von " + organization
+		case "es":
+			return "la caja fuerte compartida de " + organization
+		case "fr":
+			return "le coffre partagé de " + organization
+		case "ja":
+			return organization + " の共有保管庫"
+		case "ko":
+			return organization + "의 공유 보관함"
+		case "pt-BR":
+			return "o cofre compartilhado de " + organization
+		case "ru":
+			return "общем хранилище " + organization
 		case "zh-Hans":
 			return organization + " 的共享密码库"
+		case "zh-Hant":
+			return organization + " 的共享密碼庫"
 		}
 	}
 }
@@ -9086,7 +22562,23 @@ func (msgs Messages) OrganizationCollections(organization string, collections st
 		switch lang {
 		case "", "en":
 			return msgs.arg(organization) + " · " + msgs.arg(collections)
+		case "de":
+			return organization + " · " + collections
+		case "es":
+			return organization + " · " + collections
+		case "fr":
+			return organization + " · " + collections
+		case "ja":
+			return organization + " · " + collections
+		case "ko":
+			return organization + " · " + collections
+		case "pt-BR":
+			return organization + " · " + collections
+		case "ru":
+			return organization + " · " + collections
 		case "zh-Hans":
+			return organization + " · " + collections
+		case "zh-Hant":
 			return organization + " · " + collections
 		}
 	}
@@ -9119,6 +22611,95 @@ func (msgs Messages) ShowIdentical(count int) string {
 				b.WriteString(" identical items")
 			}
 			return b.String()
+		case "de":
+			var b strings.Builder
+			switch i18n.Cardinal("de", float64(count)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("de", float64(count)))
+				b.WriteString(" identischen Eintrag anzeigen")
+			default:
+				b.WriteString(i18n.FormatNumber("de", float64(count)))
+				b.WriteString(" identische Einträge anzeigen")
+			}
+			return b.String()
+		case "es":
+			var b strings.Builder
+			switch i18n.Cardinal("es", float64(count)) {
+			case i18n.One:
+				b.WriteString("Mostrar ")
+				b.WriteString(i18n.FormatNumber("es", float64(count)))
+				b.WriteString(" elemento idéntico")
+			default:
+				b.WriteString("Mostrar ")
+				b.WriteString(i18n.FormatNumber("es", float64(count)))
+				b.WriteString(" elementos idénticos")
+			}
+			return b.String()
+		case "fr":
+			var b strings.Builder
+			switch i18n.Cardinal("fr", float64(count)) {
+			case i18n.One:
+				b.WriteString("Afficher ")
+				b.WriteString(i18n.FormatNumber("fr", float64(count)))
+				b.WriteString(" élément identique")
+			default:
+				b.WriteString("Afficher ")
+				b.WriteString(i18n.FormatNumber("fr", float64(count)))
+				b.WriteString(" éléments identiques")
+			}
+			return b.String()
+		case "ja":
+			var b strings.Builder
+			switch i18n.Cardinal("ja", float64(count)) {
+			default:
+				b.WriteString("同一のアイテム ")
+				b.WriteString(i18n.FormatNumber("ja", float64(count)))
+				b.WriteString(" 件を表示")
+			}
+			return b.String()
+		case "ko":
+			var b strings.Builder
+			switch i18n.Cardinal("ko", float64(count)) {
+			default:
+				b.WriteString("동일한 항목 ")
+				b.WriteString(i18n.FormatNumber("ko", float64(count)))
+				b.WriteString("개 표시")
+			}
+			return b.String()
+		case "pt-BR":
+			var b strings.Builder
+			switch i18n.Cardinal("pt-BR", float64(count)) {
+			case i18n.One:
+				b.WriteString("Mostrar ")
+				b.WriteString(i18n.FormatNumber("pt-BR", float64(count)))
+				b.WriteString(" item idêntico")
+			default:
+				b.WriteString("Mostrar ")
+				b.WriteString(i18n.FormatNumber("pt-BR", float64(count)))
+				b.WriteString(" itens idênticos")
+			}
+			return b.String()
+		case "ru":
+			var b strings.Builder
+			switch i18n.Cardinal("ru", float64(count)) {
+			case i18n.One:
+				b.WriteString("Показать ")
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" совпадающий элемент")
+			case i18n.Few:
+				b.WriteString("Показать ")
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" совпадающих элемента")
+			case i18n.Many:
+				b.WriteString("Показать ")
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" совпадающих элементов")
+			default:
+				b.WriteString("Показать ")
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" совпадающего элемента")
+			}
+			return b.String()
 		case "zh-Hans":
 			var b strings.Builder
 			switch i18n.Cardinal("zh-Hans", float64(count)) {
@@ -9126,6 +22707,15 @@ func (msgs Messages) ShowIdentical(count int) string {
 				b.WriteString("显示 ")
 				b.WriteString(i18n.FormatNumber("zh-Hans", float64(count)))
 				b.WriteString(" 个相同的项目")
+			}
+			return b.String()
+		case "zh-Hant":
+			var b strings.Builder
+			switch i18n.Cardinal("zh-Hant", float64(count)) {
+			default:
+				b.WriteString("顯示 ")
+				b.WriteString(i18n.FormatNumber("zh-Hant", float64(count)))
+				b.WriteString(" 個相同的項目")
 			}
 			return b.String()
 		}
@@ -9159,6 +22749,95 @@ func (msgs Messages) HideIdentical(count int) string {
 				b.WriteString(" identical items")
 			}
 			return b.String()
+		case "de":
+			var b strings.Builder
+			switch i18n.Cardinal("de", float64(count)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("de", float64(count)))
+				b.WriteString(" identischen Eintrag ausblenden")
+			default:
+				b.WriteString(i18n.FormatNumber("de", float64(count)))
+				b.WriteString(" identische Einträge ausblenden")
+			}
+			return b.String()
+		case "es":
+			var b strings.Builder
+			switch i18n.Cardinal("es", float64(count)) {
+			case i18n.One:
+				b.WriteString("Ocultar ")
+				b.WriteString(i18n.FormatNumber("es", float64(count)))
+				b.WriteString(" elemento idéntico")
+			default:
+				b.WriteString("Ocultar ")
+				b.WriteString(i18n.FormatNumber("es", float64(count)))
+				b.WriteString(" elementos idénticos")
+			}
+			return b.String()
+		case "fr":
+			var b strings.Builder
+			switch i18n.Cardinal("fr", float64(count)) {
+			case i18n.One:
+				b.WriteString("Masquer ")
+				b.WriteString(i18n.FormatNumber("fr", float64(count)))
+				b.WriteString(" élément identique")
+			default:
+				b.WriteString("Masquer ")
+				b.WriteString(i18n.FormatNumber("fr", float64(count)))
+				b.WriteString(" éléments identiques")
+			}
+			return b.String()
+		case "ja":
+			var b strings.Builder
+			switch i18n.Cardinal("ja", float64(count)) {
+			default:
+				b.WriteString("同一のアイテム ")
+				b.WriteString(i18n.FormatNumber("ja", float64(count)))
+				b.WriteString(" 件を非表示")
+			}
+			return b.String()
+		case "ko":
+			var b strings.Builder
+			switch i18n.Cardinal("ko", float64(count)) {
+			default:
+				b.WriteString("동일한 항목 ")
+				b.WriteString(i18n.FormatNumber("ko", float64(count)))
+				b.WriteString("개 숨기기")
+			}
+			return b.String()
+		case "pt-BR":
+			var b strings.Builder
+			switch i18n.Cardinal("pt-BR", float64(count)) {
+			case i18n.One:
+				b.WriteString("Ocultar ")
+				b.WriteString(i18n.FormatNumber("pt-BR", float64(count)))
+				b.WriteString(" item idêntico")
+			default:
+				b.WriteString("Ocultar ")
+				b.WriteString(i18n.FormatNumber("pt-BR", float64(count)))
+				b.WriteString(" itens idênticos")
+			}
+			return b.String()
+		case "ru":
+			var b strings.Builder
+			switch i18n.Cardinal("ru", float64(count)) {
+			case i18n.One:
+				b.WriteString("Скрыть ")
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" совпадающий элемент")
+			case i18n.Few:
+				b.WriteString("Скрыть ")
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" совпадающих элемента")
+			case i18n.Many:
+				b.WriteString("Скрыть ")
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" совпадающих элементов")
+			default:
+				b.WriteString("Скрыть ")
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" совпадающего элемента")
+			}
+			return b.String()
 		case "zh-Hans":
 			var b strings.Builder
 			switch i18n.Cardinal("zh-Hans", float64(count)) {
@@ -9166,6 +22845,15 @@ func (msgs Messages) HideIdentical(count int) string {
 				b.WriteString("隐藏 ")
 				b.WriteString(i18n.FormatNumber("zh-Hans", float64(count)))
 				b.WriteString(" 个相同的项目")
+			}
+			return b.String()
+		case "zh-Hant":
+			var b strings.Builder
+			switch i18n.Cardinal("zh-Hant", float64(count)) {
+			default:
+				b.WriteString("隱藏 ")
+				b.WriteString(i18n.FormatNumber("zh-Hant", float64(count)))
+				b.WriteString(" 個相同的項目")
 			}
 			return b.String()
 		}
@@ -9192,8 +22880,24 @@ func (msgs Messages) ImportDiffers(fields string, destination string) string {
 		switch lang {
 		case "", "en":
 			return "Differs: " + msgs.arg(fields) + " · in " + msgs.arg(destination)
+		case "de":
+			return "Abweichend: " + fields + " · in " + destination
+		case "es":
+			return "Difiere: " + fields + " · en " + destination
+		case "fr":
+			return "Différences : " + fields + " · dans " + destination
+		case "ja":
+			return "相違：" + fields + " · " + destination + "内"
+		case "ko":
+			return "차이점: " + fields + " · 위치: " + destination
+		case "pt-BR":
+			return "Diferenças: " + fields + " · em " + destination
+		case "ru":
+			return "Отличия: " + fields + " · в " + destination
 		case "zh-Hans":
 			return "差异：" + fields + " · 位于" + destination
+		case "zh-Hant":
+			return "差異：" + fields + " · 位於" + destination
 		}
 	}
 }
@@ -9254,8 +22958,24 @@ func (msgs Messages) ImportAlreadyIn(destination string) string {
 		switch lang {
 		case "", "en":
 			return "Already in " + msgs.arg(destination)
+		case "de":
+			return "Bereits in " + destination
+		case "es":
+			return "Ya está en " + destination
+		case "fr":
+			return "Déjà dans " + destination
+		case "ja":
+			return destination + "に既存"
+		case "ko":
+			return destination + "에 이미 있음"
+		case "pt-BR":
+			return "Já está em " + destination
+		case "ru":
+			return "Уже есть в " + destination
 		case "zh-Hans":
 			return "已存在于" + destination
+		case "zh-Hant":
+			return "已存在於" + destination
 		}
 	}
 }
@@ -9477,6 +23197,167 @@ func (msgs Messages) KdfArgon2id(memory int, iterations int, threads int) string
 				b.WriteString(" threads")
 			}
 			return b.String()
+		case "de":
+			var b strings.Builder
+			b.WriteString("Argon2id · ")
+			b.WriteString(i18n.FormatInteger("de", float64(memory)))
+			b.WriteString(" MiB · ")
+			switch i18n.Cardinal("de", float64(iterations)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("de", float64(iterations)))
+				b.WriteString(" Iteration")
+			default:
+				b.WriteString(i18n.FormatNumber("de", float64(iterations)))
+				b.WriteString(" Iterationen")
+			}
+			b.WriteString(" · ")
+			switch i18n.Cardinal("de", float64(threads)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("de", float64(threads)))
+				b.WriteString(" Thread")
+			default:
+				b.WriteString(i18n.FormatNumber("de", float64(threads)))
+				b.WriteString(" Threads")
+			}
+			return b.String()
+		case "es":
+			var b strings.Builder
+			b.WriteString("Argon2id · ")
+			b.WriteString(i18n.FormatInteger("es", float64(memory)))
+			b.WriteString(" MiB · ")
+			switch i18n.Cardinal("es", float64(iterations)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("es", float64(iterations)))
+				b.WriteString(" iteración")
+			default:
+				b.WriteString(i18n.FormatNumber("es", float64(iterations)))
+				b.WriteString(" iteraciones")
+			}
+			b.WriteString(" · ")
+			switch i18n.Cardinal("es", float64(threads)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("es", float64(threads)))
+				b.WriteString(" hilo")
+			default:
+				b.WriteString(i18n.FormatNumber("es", float64(threads)))
+				b.WriteString(" hilos")
+			}
+			return b.String()
+		case "fr":
+			var b strings.Builder
+			b.WriteString("Argon2id · ")
+			b.WriteString(i18n.FormatInteger("fr", float64(memory)))
+			b.WriteString(" MiB · ")
+			switch i18n.Cardinal("fr", float64(iterations)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("fr", float64(iterations)))
+				b.WriteString(" itération")
+			default:
+				b.WriteString(i18n.FormatNumber("fr", float64(iterations)))
+				b.WriteString(" itérations")
+			}
+			b.WriteString(" · ")
+			switch i18n.Cardinal("fr", float64(threads)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("fr", float64(threads)))
+				b.WriteString(" thread")
+			default:
+				b.WriteString(i18n.FormatNumber("fr", float64(threads)))
+				b.WriteString(" threads")
+			}
+			return b.String()
+		case "ja":
+			var b strings.Builder
+			b.WriteString("Argon2id · ")
+			b.WriteString(i18n.FormatInteger("ja", float64(memory)))
+			b.WriteString(" MiB · ")
+			switch i18n.Cardinal("ja", float64(iterations)) {
+			default:
+				b.WriteString(i18n.FormatNumber("ja", float64(iterations)))
+				b.WriteString(" 回反復")
+			}
+			b.WriteString(" · ")
+			switch i18n.Cardinal("ja", float64(threads)) {
+			default:
+				b.WriteString(i18n.FormatNumber("ja", float64(threads)))
+				b.WriteString(" スレッド")
+			}
+			return b.String()
+		case "ko":
+			var b strings.Builder
+			b.WriteString("Argon2id · ")
+			b.WriteString(i18n.FormatInteger("ko", float64(memory)))
+			b.WriteString(" MiB · ")
+			switch i18n.Cardinal("ko", float64(iterations)) {
+			default:
+				b.WriteString(i18n.FormatNumber("ko", float64(iterations)))
+				b.WriteString("회 반복")
+			}
+			b.WriteString(" · ")
+			switch i18n.Cardinal("ko", float64(threads)) {
+			default:
+				b.WriteString(i18n.FormatNumber("ko", float64(threads)))
+				b.WriteString("스레드")
+			}
+			return b.String()
+		case "pt-BR":
+			var b strings.Builder
+			b.WriteString("Argon2id · ")
+			b.WriteString(i18n.FormatInteger("pt-BR", float64(memory)))
+			b.WriteString(" MiB · ")
+			switch i18n.Cardinal("pt-BR", float64(iterations)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("pt-BR", float64(iterations)))
+				b.WriteString(" iteração")
+			default:
+				b.WriteString(i18n.FormatNumber("pt-BR", float64(iterations)))
+				b.WriteString(" iterações")
+			}
+			b.WriteString(" · ")
+			switch i18n.Cardinal("pt-BR", float64(threads)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("pt-BR", float64(threads)))
+				b.WriteString(" thread")
+			default:
+				b.WriteString(i18n.FormatNumber("pt-BR", float64(threads)))
+				b.WriteString(" threads")
+			}
+			return b.String()
+		case "ru":
+			var b strings.Builder
+			b.WriteString("Argon2id · ")
+			b.WriteString(i18n.FormatInteger("ru", float64(memory)))
+			b.WriteString(" MiB · ")
+			switch i18n.Cardinal("ru", float64(iterations)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("ru", float64(iterations)))
+				b.WriteString(" итерация")
+			case i18n.Few:
+				b.WriteString(i18n.FormatNumber("ru", float64(iterations)))
+				b.WriteString(" итерации")
+			case i18n.Many:
+				b.WriteString(i18n.FormatNumber("ru", float64(iterations)))
+				b.WriteString(" итераций")
+			default:
+				b.WriteString(i18n.FormatNumber("ru", float64(iterations)))
+				b.WriteString(" итерации")
+			}
+			b.WriteString(" · ")
+			switch i18n.Cardinal("ru", float64(threads)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("ru", float64(threads)))
+				b.WriteString(" поток")
+			case i18n.Few:
+				b.WriteString(i18n.FormatNumber("ru", float64(threads)))
+				b.WriteString(" потока")
+			case i18n.Many:
+				b.WriteString(i18n.FormatNumber("ru", float64(threads)))
+				b.WriteString(" потоков")
+			default:
+				b.WriteString(i18n.FormatNumber("ru", float64(threads)))
+				b.WriteString(" потока")
+			}
+			return b.String()
 		case "zh-Hans":
 			var b strings.Builder
 			b.WriteString("Argon2id · ")
@@ -9492,6 +23373,23 @@ func (msgs Messages) KdfArgon2id(memory int, iterations int, threads int) string
 			default:
 				b.WriteString(i18n.FormatNumber("zh-Hans", float64(threads)))
 				b.WriteString(" 线程")
+			}
+			return b.String()
+		case "zh-Hant":
+			var b strings.Builder
+			b.WriteString("Argon2id · ")
+			b.WriteString(i18n.FormatInteger("zh-Hant", float64(memory)))
+			b.WriteString(" MiB · ")
+			switch i18n.Cardinal("zh-Hant", float64(iterations)) {
+			default:
+				b.WriteString(i18n.FormatNumber("zh-Hant", float64(iterations)))
+				b.WriteString(" 次迭代")
+			}
+			b.WriteString(" · ")
+			switch i18n.Cardinal("zh-Hant", float64(threads)) {
+			default:
+				b.WriteString(i18n.FormatNumber("zh-Hant", float64(threads)))
+				b.WriteString(" 執行緒")
 			}
 			return b.String()
 		}
@@ -9526,12 +23424,105 @@ func (msgs Messages) KdfPBKDF2(iterations int) string {
 				b.WriteString(" iterations")
 			}
 			return b.String()
+		case "de":
+			var b strings.Builder
+			b.WriteString("PBKDF2-SHA256 · ")
+			switch i18n.Cardinal("de", float64(iterations)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("de", float64(iterations)))
+				b.WriteString(" Iteration")
+			default:
+				b.WriteString(i18n.FormatNumber("de", float64(iterations)))
+				b.WriteString(" Iterationen")
+			}
+			return b.String()
+		case "es":
+			var b strings.Builder
+			b.WriteString("PBKDF2-SHA256 · ")
+			switch i18n.Cardinal("es", float64(iterations)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("es", float64(iterations)))
+				b.WriteString(" iteración")
+			default:
+				b.WriteString(i18n.FormatNumber("es", float64(iterations)))
+				b.WriteString(" iteraciones")
+			}
+			return b.String()
+		case "fr":
+			var b strings.Builder
+			b.WriteString("PBKDF2-SHA256 · ")
+			switch i18n.Cardinal("fr", float64(iterations)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("fr", float64(iterations)))
+				b.WriteString(" itération")
+			default:
+				b.WriteString(i18n.FormatNumber("fr", float64(iterations)))
+				b.WriteString(" itérations")
+			}
+			return b.String()
+		case "ja":
+			var b strings.Builder
+			b.WriteString("PBKDF2-SHA256 · ")
+			switch i18n.Cardinal("ja", float64(iterations)) {
+			default:
+				b.WriteString(i18n.FormatNumber("ja", float64(iterations)))
+				b.WriteString(" 回反復")
+			}
+			return b.String()
+		case "ko":
+			var b strings.Builder
+			b.WriteString("PBKDF2-SHA256 · ")
+			switch i18n.Cardinal("ko", float64(iterations)) {
+			default:
+				b.WriteString(i18n.FormatNumber("ko", float64(iterations)))
+				b.WriteString("회 반복")
+			}
+			return b.String()
+		case "pt-BR":
+			var b strings.Builder
+			b.WriteString("PBKDF2-SHA256 · ")
+			switch i18n.Cardinal("pt-BR", float64(iterations)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("pt-BR", float64(iterations)))
+				b.WriteString(" iteração")
+			default:
+				b.WriteString(i18n.FormatNumber("pt-BR", float64(iterations)))
+				b.WriteString(" iterações")
+			}
+			return b.String()
+		case "ru":
+			var b strings.Builder
+			b.WriteString("PBKDF2-SHA256 · ")
+			switch i18n.Cardinal("ru", float64(iterations)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("ru", float64(iterations)))
+				b.WriteString(" итерация")
+			case i18n.Few:
+				b.WriteString(i18n.FormatNumber("ru", float64(iterations)))
+				b.WriteString(" итерации")
+			case i18n.Many:
+				b.WriteString(i18n.FormatNumber("ru", float64(iterations)))
+				b.WriteString(" итераций")
+			default:
+				b.WriteString(i18n.FormatNumber("ru", float64(iterations)))
+				b.WriteString(" итерации")
+			}
+			return b.String()
 		case "zh-Hans":
 			var b strings.Builder
 			b.WriteString("PBKDF2-SHA256 · ")
 			switch i18n.Cardinal("zh-Hans", float64(iterations)) {
 			default:
 				b.WriteString(i18n.FormatNumber("zh-Hans", float64(iterations)))
+				b.WriteString(" 次迭代")
+			}
+			return b.String()
+		case "zh-Hant":
+			var b strings.Builder
+			b.WriteString("PBKDF2-SHA256 · ")
+			switch i18n.Cardinal("zh-Hant", float64(iterations)) {
+			default:
+				b.WriteString(i18n.FormatNumber("zh-Hant", float64(iterations)))
 				b.WriteString(" 次迭代")
 			}
 			return b.String()
@@ -9569,8 +23560,24 @@ func (msgs Messages) LastSyncAt(date time.Time) string {
 		switch lang {
 		case "", "en":
 			return msgs.arg(i18n.FormatDate(msgs.dated("en"), date, i18n.DateOptions{Date: i18n.MediumStyle})) + " at " + msgs.arg(i18n.FormatDate(msgs.dated("en"), date, i18n.DateOptions{Time: i18n.ShortStyle}))
+		case "de":
+			return i18n.FormatDate(msgs.dated("de"), date, i18n.DateOptions{Date: i18n.MediumStyle}) + " um " + i18n.FormatDate(msgs.dated("de"), date, i18n.DateOptions{Time: i18n.ShortStyle})
+		case "es":
+			return i18n.FormatDate(msgs.dated("es"), date, i18n.DateOptions{Date: i18n.MediumStyle}) + " a las " + i18n.FormatDate(msgs.dated("es"), date, i18n.DateOptions{Time: i18n.ShortStyle})
+		case "fr":
+			return i18n.FormatDate(msgs.dated("fr"), date, i18n.DateOptions{Date: i18n.MediumStyle}) + " à " + i18n.FormatDate(msgs.dated("fr"), date, i18n.DateOptions{Time: i18n.ShortStyle})
+		case "ja":
+			return i18n.FormatDate(msgs.dated("ja"), date, i18n.DateOptions{Date: i18n.MediumStyle}) + " " + i18n.FormatDate(msgs.dated("ja"), date, i18n.DateOptions{Time: i18n.ShortStyle})
+		case "ko":
+			return i18n.FormatDate(msgs.dated("ko"), date, i18n.DateOptions{Date: i18n.MediumStyle}) + " " + i18n.FormatDate(msgs.dated("ko"), date, i18n.DateOptions{Time: i18n.ShortStyle})
+		case "pt-BR":
+			return i18n.FormatDate(msgs.dated("pt-BR"), date, i18n.DateOptions{Date: i18n.MediumStyle}) + " às " + i18n.FormatDate(msgs.dated("pt-BR"), date, i18n.DateOptions{Time: i18n.ShortStyle})
+		case "ru":
+			return i18n.FormatDate(msgs.dated("ru"), date, i18n.DateOptions{Date: i18n.MediumStyle}) + ", " + i18n.FormatDate(msgs.dated("ru"), date, i18n.DateOptions{Time: i18n.ShortStyle})
 		case "zh-Hans":
 			return i18n.FormatDate(msgs.dated("zh-Hans"), date, i18n.DateOptions{Date: i18n.MediumStyle}) + " " + i18n.FormatDate(msgs.dated("zh-Hans"), date, i18n.DateOptions{Time: i18n.ShortStyle})
+		case "zh-Hant":
+			return i18n.FormatDate(msgs.dated("zh-Hant"), date, i18n.DateOptions{Date: i18n.MediumStyle}) + " " + i18n.FormatDate(msgs.dated("zh-Hant"), date, i18n.DateOptions{Time: i18n.ShortStyle})
 		}
 	}
 }
@@ -9630,12 +23637,109 @@ func (msgs Messages) AfterMinutes(count int) string {
 				b.WriteString(" minutes")
 			}
 			return b.String()
+		case "de":
+			var b strings.Builder
+			switch i18n.Cardinal("de", float64(count)) {
+			case i18n.One:
+				b.WriteString("Nach ")
+				b.WriteString(i18n.FormatNumber("de", float64(count)))
+				b.WriteString(" Minute")
+			default:
+				b.WriteString("Nach ")
+				b.WriteString(i18n.FormatNumber("de", float64(count)))
+				b.WriteString(" Minuten")
+			}
+			return b.String()
+		case "es":
+			var b strings.Builder
+			switch i18n.Cardinal("es", float64(count)) {
+			case i18n.One:
+				b.WriteString("Tras ")
+				b.WriteString(i18n.FormatNumber("es", float64(count)))
+				b.WriteString(" minuto")
+			default:
+				b.WriteString("Tras ")
+				b.WriteString(i18n.FormatNumber("es", float64(count)))
+				b.WriteString(" minutos")
+			}
+			return b.String()
+		case "fr":
+			var b strings.Builder
+			switch i18n.Cardinal("fr", float64(count)) {
+			case i18n.One:
+				b.WriteString("Après ")
+				b.WriteString(i18n.FormatNumber("fr", float64(count)))
+				b.WriteString(" minute")
+			default:
+				b.WriteString("Après ")
+				b.WriteString(i18n.FormatNumber("fr", float64(count)))
+				b.WriteString(" minutes")
+			}
+			return b.String()
+		case "ja":
+			var b strings.Builder
+			switch i18n.Cardinal("ja", float64(count)) {
+			default:
+				b.WriteString(i18n.FormatNumber("ja", float64(count)))
+				b.WriteString(" 分後")
+			}
+			return b.String()
+		case "ko":
+			var b strings.Builder
+			switch i18n.Cardinal("ko", float64(count)) {
+			default:
+				b.WriteString(i18n.FormatNumber("ko", float64(count)))
+				b.WriteString("분 후")
+			}
+			return b.String()
+		case "pt-BR":
+			var b strings.Builder
+			switch i18n.Cardinal("pt-BR", float64(count)) {
+			case i18n.One:
+				b.WriteString("Após ")
+				b.WriteString(i18n.FormatNumber("pt-BR", float64(count)))
+				b.WriteString(" minuto")
+			default:
+				b.WriteString("Após ")
+				b.WriteString(i18n.FormatNumber("pt-BR", float64(count)))
+				b.WriteString(" minutos")
+			}
+			return b.String()
+		case "ru":
+			var b strings.Builder
+			switch i18n.Cardinal("ru", float64(count)) {
+			case i18n.One:
+				b.WriteString("Через ")
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" минуту")
+			case i18n.Few:
+				b.WriteString("Через ")
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" минуты")
+			case i18n.Many:
+				b.WriteString("Через ")
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" минут")
+			default:
+				b.WriteString("Через ")
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" минуты")
+			}
+			return b.String()
 		case "zh-Hans":
 			var b strings.Builder
 			switch i18n.Cardinal("zh-Hans", float64(count)) {
 			default:
 				b.WriteString(i18n.FormatNumber("zh-Hans", float64(count)))
 				b.WriteString(" 分钟后")
+			}
+			return b.String()
+		case "zh-Hant":
+			var b strings.Builder
+			switch i18n.Cardinal("zh-Hant", float64(count)) {
+			default:
+				b.WriteString(i18n.FormatNumber("zh-Hant", float64(count)))
+				b.WriteString(" 分鐘後")
 			}
 			return b.String()
 		}
@@ -9669,12 +23773,109 @@ func (msgs Messages) AfterHours(count int) string {
 				b.WriteString(" hours")
 			}
 			return b.String()
+		case "de":
+			var b strings.Builder
+			switch i18n.Cardinal("de", float64(count)) {
+			case i18n.One:
+				b.WriteString("Nach ")
+				b.WriteString(i18n.FormatNumber("de", float64(count)))
+				b.WriteString(" Stunde")
+			default:
+				b.WriteString("Nach ")
+				b.WriteString(i18n.FormatNumber("de", float64(count)))
+				b.WriteString(" Stunden")
+			}
+			return b.String()
+		case "es":
+			var b strings.Builder
+			switch i18n.Cardinal("es", float64(count)) {
+			case i18n.One:
+				b.WriteString("Tras ")
+				b.WriteString(i18n.FormatNumber("es", float64(count)))
+				b.WriteString(" hora")
+			default:
+				b.WriteString("Tras ")
+				b.WriteString(i18n.FormatNumber("es", float64(count)))
+				b.WriteString(" horas")
+			}
+			return b.String()
+		case "fr":
+			var b strings.Builder
+			switch i18n.Cardinal("fr", float64(count)) {
+			case i18n.One:
+				b.WriteString("Après ")
+				b.WriteString(i18n.FormatNumber("fr", float64(count)))
+				b.WriteString(" heure")
+			default:
+				b.WriteString("Après ")
+				b.WriteString(i18n.FormatNumber("fr", float64(count)))
+				b.WriteString(" heures")
+			}
+			return b.String()
+		case "ja":
+			var b strings.Builder
+			switch i18n.Cardinal("ja", float64(count)) {
+			default:
+				b.WriteString(i18n.FormatNumber("ja", float64(count)))
+				b.WriteString(" 時間後")
+			}
+			return b.String()
+		case "ko":
+			var b strings.Builder
+			switch i18n.Cardinal("ko", float64(count)) {
+			default:
+				b.WriteString(i18n.FormatNumber("ko", float64(count)))
+				b.WriteString("시간 후")
+			}
+			return b.String()
+		case "pt-BR":
+			var b strings.Builder
+			switch i18n.Cardinal("pt-BR", float64(count)) {
+			case i18n.One:
+				b.WriteString("Após ")
+				b.WriteString(i18n.FormatNumber("pt-BR", float64(count)))
+				b.WriteString(" hora")
+			default:
+				b.WriteString("Após ")
+				b.WriteString(i18n.FormatNumber("pt-BR", float64(count)))
+				b.WriteString(" horas")
+			}
+			return b.String()
+		case "ru":
+			var b strings.Builder
+			switch i18n.Cardinal("ru", float64(count)) {
+			case i18n.One:
+				b.WriteString("Через ")
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" час")
+			case i18n.Few:
+				b.WriteString("Через ")
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" часа")
+			case i18n.Many:
+				b.WriteString("Через ")
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" часов")
+			default:
+				b.WriteString("Через ")
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" часа")
+			}
+			return b.String()
 		case "zh-Hans":
 			var b strings.Builder
 			switch i18n.Cardinal("zh-Hans", float64(count)) {
 			default:
 				b.WriteString(i18n.FormatNumber("zh-Hans", float64(count)))
 				b.WriteString(" 小时后")
+			}
+			return b.String()
+		case "zh-Hant":
+			var b strings.Builder
+			switch i18n.Cardinal("zh-Hant", float64(count)) {
+			default:
+				b.WriteString(i18n.FormatNumber("zh-Hant", float64(count)))
+				b.WriteString(" 小時後")
 			}
 			return b.String()
 		}
@@ -9708,12 +23909,109 @@ func (msgs Messages) AfterSeconds(count int) string {
 				b.WriteString(" seconds")
 			}
 			return b.String()
+		case "de":
+			var b strings.Builder
+			switch i18n.Cardinal("de", float64(count)) {
+			case i18n.One:
+				b.WriteString("Nach ")
+				b.WriteString(i18n.FormatNumber("de", float64(count)))
+				b.WriteString(" Sekunde")
+			default:
+				b.WriteString("Nach ")
+				b.WriteString(i18n.FormatNumber("de", float64(count)))
+				b.WriteString(" Sekunden")
+			}
+			return b.String()
+		case "es":
+			var b strings.Builder
+			switch i18n.Cardinal("es", float64(count)) {
+			case i18n.One:
+				b.WriteString("Tras ")
+				b.WriteString(i18n.FormatNumber("es", float64(count)))
+				b.WriteString(" segundo")
+			default:
+				b.WriteString("Tras ")
+				b.WriteString(i18n.FormatNumber("es", float64(count)))
+				b.WriteString(" segundos")
+			}
+			return b.String()
+		case "fr":
+			var b strings.Builder
+			switch i18n.Cardinal("fr", float64(count)) {
+			case i18n.One:
+				b.WriteString("Après ")
+				b.WriteString(i18n.FormatNumber("fr", float64(count)))
+				b.WriteString(" seconde")
+			default:
+				b.WriteString("Après ")
+				b.WriteString(i18n.FormatNumber("fr", float64(count)))
+				b.WriteString(" secondes")
+			}
+			return b.String()
+		case "ja":
+			var b strings.Builder
+			switch i18n.Cardinal("ja", float64(count)) {
+			default:
+				b.WriteString(i18n.FormatNumber("ja", float64(count)))
+				b.WriteString(" 秒後")
+			}
+			return b.String()
+		case "ko":
+			var b strings.Builder
+			switch i18n.Cardinal("ko", float64(count)) {
+			default:
+				b.WriteString(i18n.FormatNumber("ko", float64(count)))
+				b.WriteString("초 후")
+			}
+			return b.String()
+		case "pt-BR":
+			var b strings.Builder
+			switch i18n.Cardinal("pt-BR", float64(count)) {
+			case i18n.One:
+				b.WriteString("Após ")
+				b.WriteString(i18n.FormatNumber("pt-BR", float64(count)))
+				b.WriteString(" segundo")
+			default:
+				b.WriteString("Após ")
+				b.WriteString(i18n.FormatNumber("pt-BR", float64(count)))
+				b.WriteString(" segundos")
+			}
+			return b.String()
+		case "ru":
+			var b strings.Builder
+			switch i18n.Cardinal("ru", float64(count)) {
+			case i18n.One:
+				b.WriteString("Через ")
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" секунду")
+			case i18n.Few:
+				b.WriteString("Через ")
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" секунды")
+			case i18n.Many:
+				b.WriteString("Через ")
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" секунд")
+			default:
+				b.WriteString("Через ")
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" секунды")
+			}
+			return b.String()
 		case "zh-Hans":
 			var b strings.Builder
 			switch i18n.Cardinal("zh-Hans", float64(count)) {
 			default:
 				b.WriteString(i18n.FormatNumber("zh-Hans", float64(count)))
 				b.WriteString(" 秒后")
+			}
+			return b.String()
+		case "zh-Hant":
+			var b strings.Builder
+			switch i18n.Cardinal("zh-Hant", float64(count)) {
+			default:
+				b.WriteString(i18n.FormatNumber("zh-Hant", float64(count)))
+				b.WriteString(" 秒後")
 			}
 			return b.String()
 		}
@@ -10004,7 +24302,23 @@ func (msgs Messages) AppVersion(version string) string {
 		switch lang {
 		case "", "en":
 			return "GoVault " + msgs.arg(version)
+		case "de":
+			return "GoVault " + version
+		case "es":
+			return "GoVault " + version
+		case "fr":
+			return "GoVault " + version
+		case "ja":
+			return "GoVault " + version
+		case "ko":
+			return "GoVault " + version
+		case "pt-BR":
+			return "GoVault " + version
+		case "ru":
+			return "GoVault " + version
 		case "zh-Hans":
+			return "GoVault " + version
+		case "zh-Hant":
 			return "GoVault " + version
 		}
 	}
@@ -10030,8 +24344,24 @@ func (msgs Messages) DevelopmentVersion(version string) string {
 		switch lang {
 		case "", "en":
 			return msgs.arg(version) + " (development)"
+		case "de":
+			return version + " (Entwicklung)"
+		case "es":
+			return version + " (desarrollo)"
+		case "fr":
+			return version + " (développement)"
+		case "ja":
+			return version + " (開発版)"
+		case "ko":
+			return version + " (개발 버전)"
+		case "pt-BR":
+			return version + " (desenvolvimento)"
+		case "ru":
+			return version + " (разработка)"
 		case "zh-Hans":
 			return version + " (开发版)"
+		case "zh-Hant":
+			return version + " (開發版)"
 		}
 	}
 }
@@ -10116,8 +24446,24 @@ func (msgs Messages) SshAgentUnavailable(reason string) string {
 		switch lang {
 		case "", "en":
 			return "Agent unavailable: " + msgs.arg(reason)
+		case "de":
+			return "Agent nicht verfügbar: " + reason
+		case "es":
+			return "Agente no disponible: " + reason
+		case "fr":
+			return "Agent indisponible : " + reason
+		case "ja":
+			return "エージェントを利用できません：" + reason
+		case "ko":
+			return "에이전트를 사용할 수 없음: " + reason
+		case "pt-BR":
+			return "Agente indisponível: " + reason
+		case "ru":
+			return "Агент недоступен: " + reason
 		case "zh-Hans":
 			return "代理不可用：" + reason
+		case "zh-Hant":
+			return "代理程式無法使用：" + reason
 		}
 	}
 }
@@ -10182,8 +24528,24 @@ func (msgs Messages) BiometricAppGated(method string) string {
 		switch lang {
 		case "", "en":
 			return "App-gated: the key is in your login keychain and GoVault asks for " + msgs.arg(method) + " before reading it."
+		case "de":
+			return "App-Verifizierung: Der Schlüssel liegt im Anmelde-Schlüsselbund und GoVault fragt vor dem Lesen nach " + method + "."
+		case "es":
+			return "Verificación por la app: la clave está en tu llavero de inicio de sesión y GoVault solicita " + method + " antes de leerla."
+		case "fr":
+			return "Vérification par l’application : la clé est dans votre trousseau de session et GoVault demande " + method + " avant de la lire."
+		case "ja":
+			return "アプリレベルの認証：キーはログインキーチェーンに保存され、GoVault が読み取り前に " + method + " を要求します。"
+		case "ko":
+			return "앱 수준 인증: 키가 로그인 키체인에 저장되며 GoVault가 읽기 전에 " + method + " 인증을 요청합니다."
+		case "pt-BR":
+			return "Verificação pelo app: a chave fica nas suas chaves de início de sessão e o GoVault pede " + method + " antes de lê-la."
+		case "ru":
+			return "Проверка приложением: ключ хранится в связке ключей входа, и GoVault запрашивает " + method + " перед чтением."
 		case "zh-Hans":
-			return "应用门控：密钥保存在你的登录钥匙串中，GoVault 在读取前会请求 " + method + " 验证。"
+			return "应用层验证：密钥保存在你的登录钥匙串中，GoVault 在读取前会请求 " + method + " 验证。"
+		case "zh-Hant":
+			return "應用層驗證：金鑰儲存在您的登入鑰匙圈中，GoVault 在讀取前會要求 " + method + " 驗證。"
 		}
 	}
 }
@@ -10213,8 +24575,24 @@ func (msgs Messages) PromptAutomaticallyDetail(method string) string {
 		switch lang {
 		case "", "en":
 			return "Ask for " + msgs.arg(method) + " as soon as the locked window opens."
+		case "de":
+			return "Fragt " + method + " sofort beim Öffnen des gesperrten Fensters ab."
+		case "es":
+			return "Solicitar " + method + " en cuanto se abra la ventana bloqueada."
+		case "fr":
+			return "Demander " + method + " dès l’ouverture de la fenêtre verrouillée."
+		case "ja":
+			return "ロック画面が開いたらすぐに " + method + " を要求します。"
+		case "ko":
+			return "잠금 창이 열리면 즉시 " + method + " 인증을 요청합니다."
+		case "pt-BR":
+			return "Solicitar " + method + " assim que a janela bloqueada abrir."
+		case "ru":
+			return "Запрашивать " + method + " сразу при открытии заблокированного окна."
 		case "zh-Hans":
 			return "锁定窗口打开后立即请求 " + method + "。"
+		case "zh-Hant":
+			return "鎖定視窗開啟時立即要求 " + method + "。"
 		}
 	}
 }
@@ -10547,8 +24925,24 @@ func (msgs Messages) ErrorServer(status string, detail string) string {
 		switch lang {
 		case "", "en":
 			return "The server reported an error (" + msgs.arg(status) + "): " + msgs.arg(detail)
+		case "de":
+			return "Der Server meldete einen Fehler (" + status + "): " + detail
+		case "es":
+			return "El servidor devolvió un error (" + status + "): " + detail
+		case "fr":
+			return "Le serveur a renvoyé une erreur (" + status + ") : " + detail
+		case "ja":
+			return "サーバーエラー（" + status + "）：" + detail
+		case "ko":
+			return "서버 오류 (" + status + "): " + detail
+		case "pt-BR":
+			return "O servidor retornou um erro (" + status + "): " + detail
+		case "ru":
+			return "Ошибка сервера (" + status + "): " + detail
 		case "zh-Hans":
 			return "服务器返回错误（" + status + "）：" + detail
+		case "zh-Hant":
+			return "伺服器回傳錯誤（" + status + "）：" + detail
 		}
 	}
 }
@@ -10571,8 +24965,24 @@ func (msgs Messages) ErrorWithDetail(detail string) string {
 		switch lang {
 		case "", "en":
 			return "Something went wrong: " + msgs.arg(detail)
+		case "de":
+			return "Etwas ist schiefgelaufen: " + detail
+		case "es":
+			return "Algo salió mal: " + detail
+		case "fr":
+			return "Une erreur est survenue : " + detail
+		case "ja":
+			return "エラーが発生しました：" + detail
+		case "ko":
+			return "오류가 발생했습니다: " + detail
+		case "pt-BR":
+			return "Algo deu errado: " + detail
+		case "ru":
+			return "Произошла ошибка: " + detail
 		case "zh-Hans":
 			return "出现错误：" + detail
+		case "zh-Hant":
+			return "發生錯誤：" + detail
 		}
 	}
 }

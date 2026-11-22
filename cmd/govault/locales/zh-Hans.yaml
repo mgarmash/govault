@@ -595,7 +595,7 @@ iconCacheClearFailed: 无法清除图标缓存
 clipboard: 剪贴板
 clearCopiedSecrets: 清除已复制的机密信息
 clearCopiedSecretsDetail: 如果剪贴板中仍保留已复制的内容，则在超时后清除。
-concealedClipboard: 隐蔽剪贴板
+concealedClipboard: 私密剪贴板
 concealedClipboardDetail: 标记机密信息，使剪贴板管理器跳过记录。
 concealedActive: 已启用
 macOSOnly: 仅限 macOS
@@ -627,8 +627,8 @@ sshAgentNotSocket: 该路径已存在，且不是套接字文件。
 sshAgentUnsupported: 此系统不支持 Unix 套接字。
 biometricUnavailable: 此 Mac 上 Touch ID 不可用——请配对带有 Touch ID 的键盘或在“系统设置”中注册指纹。
 biometricDetail: 在系统钥匙串中保存封装密钥以实现快速解锁。
-biometricHardware: 硬件强制：macOS 仅在通过 Touch ID 验证后释放密钥。
-biometricAppGated: "应用门控：密钥保存在你的登录钥匙串中，GoVault 在读取前会请求 {method} 验证。"
+biometricHardware: 硬件级保护：macOS 仅在通过 Touch ID 验证后释放密钥。
+biometricAppGated: "应用层验证：密钥保存在你的登录钥匙串中，GoVault 在读取前会请求 {method} 验证。"
 promptAutomatically: 自动提示
 promptAutomaticallyDetail: "锁定窗口打开后立即请求 {method}。"
 

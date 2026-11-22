@@ -1,0 +1,806 @@
+# GoVault Russian (ru) message catalog.
+
+# Common words
+
+cancel: Отмена
+save: Сохранить
+delete: Удалить
+remove: Убрать
+edit: Изменить
+restore: Восстановить
+verify: Подтвердить
+copy: Копировать
+undo: Отменить
+never: Никогда
+notAvailable: "—"
+
+# Item types
+
+typeLogin: Логин
+typeSecureNote: Защищённая заметка
+typeCard: Карта
+typeIdentity: Личные данные
+typeSSHKey: Ключ SSH
+typeItem: Элемент
+typeLogins: Логины
+typeCards: Карты
+typeIdentities: Личные данные
+typeSecureNotes: Заметки
+typeSSHKeys: Ключи SSH
+
+# Sign in
+
+signInTitle: Вход в GoVault
+signInSubtitle: Подключитесь к серверу Bitwarden или Vaultwarden.
+serverURL: URL сервера
+email: Эл. почта
+masterPassword: Мастер-пароль
+masterPasswordPlaceholder: Мастер-пароль
+required: Обязательно
+emailPlaceholder: name@example.com
+insecureServer: Этот сервер не использует HTTPS. Мастер-пароль и данные хранилища передаются без шифрования; используйте его только в доверенной сети.
+signIn: Войти
+backToUnlock: Назад к разблокировке
+signInFootnote: Сквозное шифрование. Мастер-пароль никогда не покидает это устройство.
+signInFieldsRequired: Укажите URL сервера, эл. почту и мастер-пароль.
+togglePasswordVisibility: Показать или скрыть пароль
+
+# Two-step login
+
+twoFactorTitle: Двухэтапная проверка
+twoFactorEnterEmailCodeTo: "Введите код, отправленный на {email}."
+twoFactorEnterEmailCode: Введите код, отправленный на вашу эл. почту.
+twoFactorEnterAuthenticatorCode: Введите 6-значный код из приложения-аутентификатора.
+twoFactorMethod: Способ проверки
+twoFactorAuthenticator: Приложение-аутентификатор
+twoFactorEmail: Эл. почта
+twoFactorYubiKey: YubiKey
+twoFactorDuo: Duo
+twoFactorOrganizationDuo: Duo (организация)
+twoFactorU2F: FIDO U2F
+twoFactorWebAuthn: Passkey / WebAuthn
+twoFactorRememberedDevice: Запомненное устройство
+twoFactorOtherProvider: "Способ {number, number, integer}"
+verificationCode: Код подтверждения
+rememberDevice: Запомнить устройство
+backToSignIn: Назад ко входу
+sendCode: Отправить код
+resendCode: Отправить повторно
+twoFactorFootnote: Двухэтапная аутентификация защитит хранилище, даже если пароль утечёт.
+twoFactorCodeRequired: Введите код подтверждения.
+twoFactorCodeInvalid: Неверный код подтверждения. Проверьте код и повторите попытку.
+twoFactorUnsupported: "Для этого аккаунта требуется двухэтапная аутентификация ({methods}), которую GoVault пока не поддерживает. Включите приложение-аутентификатор или эл. почту в веб-настройках хранилища, чтобы войти здесь."
+twoFactorEmailFailed: "Не удалось отправить письмо с кодом. {reason}"
+twoFactorEmailSentTo: "Код подтверждения отправлен на {email}."
+twoFactorEmailSent: Код подтверждения отправлен на вашу эл. почту.
+
+# Lock screen
+
+lockedTitle: GoVault заблокирован
+unlock: Разблокировать
+unlockWith: "Разблокировать с {method}"
+orUseMasterPassword: или используйте мастер-пароль
+logOutOrSwitchAccount: Выйти или сменить аккаунт…
+logOutOrSwitchAccountLabel: Выйти или сменить аккаунт
+lockFootnote: Заблокированное хранилище остаётся зашифрованным на этом устройстве.
+masterPasswordRequired: Введите мастер-пароль.
+biometricGeneric: Биометрия
+biometricUnlockReason: Разблокировать GoVault
+biometricEnableReason: "Включить {method} для GoVault"
+keychainPromptReason: разблокировать GoVault
+biometricKeyUnavailable: Сохранённый биометрический ключ недоступен. Разблокируйте мастер-паролем.
+biometricKeyCorrupt: Биометрический ключ повреждён. Разблокируйте мастер-паролем.
+biometricKeyInvalid: Неверный биометрический ключ. Разблокируйте мастер-паролем.
+biometricFailed: Биометрическая проверка не удалась. Введите мастер-пароль.
+keychainUnavailable: Связка ключей недоступна
+keychainUnavailableDetail: Нет доступа к системной связке ключей.
+biometricDisableFailed: Не удалось отключить биометрическую разблокировку
+biometricEnableFailed: Не удалось включить биометрическую разблокировку
+biometricDisabled: "{method} отключён"
+biometricEnabled: "{method} включён"
+biometricEnabledDetail: "Теперь вы можете разблокировать GoVault с помощью {method}."
+vaultLocked: Хранилище заблокировано
+vaultLockedInactivity: Автоматически заблокировано из-за бездействия.
+
+# Log out
+
+logOutTitle: Выйти из GoVault?
+logOutMessage: Локальный зашифрованный кэш хранилища и сохранённый биометрический ключ будут удалены с этого устройства.
+logOut: Выйти
+loggedOut: Выход выполнен
+logOutSecretsLeft: "Не удалось удалить часть сохранённых секретов: {reason}"
+
+# Toolbar and sidebar
+
+back: Назад
+forward: Вперёд
+searchVault: Поиск в хранилище
+clearSearch: Очистить поиск
+offline: Офлайн
+syncNowLabel: Синхронизировать
+lockVault: Заблокировать хранилище
+newItem: Новый
+allItems: Все элементы
+favorites: Избранное
+categories: Категории
+folders: Папки
+newFolder: Новая папка
+collections: Коллекции
+tools: Инструменты
+generator: Генератор
+vaultHealth: Проверка паролей
+archive: Архив
+trash: Корзина
+settings: Настройки
+importTitle: Импорт
+noFolder: Без папки
+collection: Коллекция
+folder: Папка
+folderActions: Действия с папкой
+renameFolderMenu: Переименовать папку…
+deleteFolder: Удалить папку
+resizePane: Изменить размер панели
+syncing: Синхронизация…
+syncPending: Ожидает синхр.
+syncOfflineCached: Офлайн · локальный кэш
+sessionExpired: Сессия истекла
+synced: Синхронизировано
+syncedWhen: "Синхр.: {when}"
+justNow: только что
+minutesAgo: "{count, plural, one {# минуту назад} few {# минуты назад} many {# минут назад} other {# минуты назад}}"
+hoursAgo: "{count, plural, one {# час назад} few {# часа назад} many {# часов назад} other {# часа назад}}"
+daysAgo: "{count, plural, one {# день назад} few {# дня назад} many {# дней назад} other {# дня назад}}"
+shortDate: "{date, date, ::MMMd}"
+signInAgainToSync: Войдите снова для синхронизации. Пока хранилище доступно офлайн.
+sessionExpiredBanner: Сессия истекла — кэшированное хранилище доступно для чтения. Войдите снова для синхронизации.
+signInNotSaved: Не удалось сохранить вход. Войдите снова, чтобы GoVault мог синхронизироваться после блокировки.
+signInAgain: Войти снова
+
+# Item list
+
+itemCount: "{count, plural, one {# элемент} few {# элемента} many {# элементов} other {# элемента}}"
+trashCanRestore: Элементы из корзины можно восстановить.
+emptyTrash: Очистить корзину
+searchInAllItems: Во всех элементах
+searchIn: "В «{section}»"
+searchOnlyIn: "Только «{section}»"
+searchAllItems: Искать везде
+noResults: Ничего не найдено
+trashIsEmpty: Корзина пуста
+noItems: Нет элементов
+nothingInSectionMatches: "В «{section}» нет совпадений для «{query}»."
+nothingMatches: "Нет совпадений для «{query}»."
+trashEmptyHint: Удалённые элементы появляются здесь.
+noItemsHint: Нажмите «Новый», чтобы добавить первую запись.
+noItemSelected: Элемент не выбран
+noItemSelectedHint: Выберите элемент в списке, чтобы увидеть подробности.
+shortcutSearch: Поиск
+shortcutNewItem: Новый
+shortcutLock: Блокировка
+
+# Item context menu
+
+copyUsernameMenu: Копировать имя пользователя
+copyPasswordMenu: Копировать пароль
+copyVerificationCodeMenu: Копировать код подтверждения
+copyPublicKeyMenu: Копировать публичный ключ
+deletePermanentlyMenu: Удалить окончательно…
+addToFavorites: В избранное
+removeFromFavorites: Убрать из избранного
+clone: Клонировать
+archiveAction: Архивировать
+unarchiveAction: Разархивировать
+moveToTrash: В корзину
+
+# Item details
+
+username: Имя пользователя
+password: Пароль
+hiddenByOrganization: Скрыто вашей организацией
+revealPassword: Показать пароль
+copyPassword: Копировать пароль
+copyUsername: Копировать имя пользователя
+credentials: Учётные данные
+website: Веб-сайт
+websiteNumbered: "Веб-сайт {number, number, integer}"
+openWebsite: Открыть сайт
+copyWebsite: Копировать сайт
+websites: Веб-сайты
+cardholderName: Владелец карты
+copyCardholder: Копировать владельца
+cardNumber: Номер карты
+revealCardNumber: Показать номер карты
+copyCardNumber: Копировать номер карты
+expiration: Срок действия
+copyExpiration: Копировать срок действия
+securityCode: Код безопасности
+brand: Платёжная система
+cardDetails: Данные карты
+fullName: Полное имя
+company: Компания
+phone: Телефон
+personal: Личное
+address: Адрес
+copyAddress: Копировать адрес
+socialSecurityNumber: Номер соц. страхования
+passportNumber: Номер паспорта
+copyPassportNumber: Копировать номер паспорта
+licenseNumber: Водительское удостоверение
+copyLicenseNumber: Копировать номер прав
+documents: Документы
+customFields: Пользовательские поля
+notes: Заметки
+fingerprint: Отпечаток
+copyFingerprint: Копировать отпечаток
+publicKey: Публичный ключ
+copyPublicKey: Копировать публичный ключ
+privateKey: Приватный ключ
+revealField: "Показать {field}"
+copyField: "Копировать {field}"
+passwordHistory: "История паролей ({count, number, integer})"
+usedUntil: "Использовался до {date, date, medium}, {date, time, short}"
+oldPassword: старый пароль
+viewOnly: Только чтение
+passwordReprompt: Запрос пароля
+inTrash: В корзине
+archived: В архиве
+deletePermanently: Удалить окончательно
+toggleFavorite: Избранное
+cloneItem: Клонировать элемент
+timeRemaining: Осталось времени
+secondsLeft: "{seconds, plural, one {# с} few {# с} many {# с} other {# с}}"
+revealVerificationCode: Показать код подтверждения
+copyVerificationCode: Копировать код подтверждения
+cardPictureBrand: КАРТА
+cardPictureCardholder: ВЛАДЕЛЕЦ
+cardPictureExpires: СРОК
+updatedOn: "Изменено {date, date, medium}, {date, time, short}"
+createdOn: "Создано {date, date, medium}"
+deletedWhen: "Удалено {when}"
+
+# Copying
+
+copied: "{field} скопировано"
+passwordCopied: Пароль скопирован
+usernameCopied: Имя пользователя скопировано
+verificationCodeCopied: Код подтверждения скопирован
+publicKeyCopied: Публичный ключ скопирован
+websiteCopied: Веб-сайт скопирован
+cardholderNameCopied: Владелец скопирован
+cardNumberCopied: Номер карты скопирован
+expirationCopied: Срок действия скопирован
+securityCodeCopied: Код безопасности скопирован
+fullNameCopied: Имя скопировано
+companyCopied: Компания скопирована
+emailCopied: Эл. почта скопирована
+phoneCopied: Телефон скопирован
+addressCopied: Адрес скопирован
+ssnCopied: Номер соц. страхования скопирован
+passportNumberCopied: Номер паспорта скопирован
+licenseNumberCopied: Номер прав скопирован
+fingerprintCopied: Отпечаток скопирован
+privateKeyCopied: Приватный ключ скопирован
+oldPasswordCopied: Старый пароль скопирован
+generatedCopied: Сгенерированный пароль скопирован
+copyFailed: Ошибка копирования
+clearsInConcealed: "Приватно · очистка через {seconds, plural, one {# секунду} few {# секунды} many {# секунд} other {# секунды}}"
+clearsIn: "Очистка через {seconds, plural, one {# секунду} few {# секунды} many {# секунд} other {# секунды}}"
+concealedFromHistory: Скрыто из истории буфера обмена
+
+# Master password reprompt
+
+repromptTitle: Проверка мастер-пароля
+repromptPrompt: "{action, select, copyPassword {Введите мастер-пароль, чтобы скопировать пароль.} copyTOTP {Введите мастер-пароль, чтобы скопировать код подтверждения.} revealTOTP {Введите мастер-пароль, чтобы показать код подтверждения.} revealPassword {Введите мастер-пароль, чтобы показать пароль.} revealCardNumber {Введите мастер-пароль, чтобы показать номер карты.} copyCardNumber {Введите мастер-пароль, чтобы скопировать номер карты.} revealSecurityCode {Введите мастер-пароль, чтобы показать код безопасности.} copySecurityCode {Введите мастер-пароль, чтобы скопировать код безопасности.} revealSSN {Введите мастер-пароль, чтобы показать номер соц. страхования.} copySSN {Введите мастер-пароль, чтобы скопировать номер соц. страхования.} revealField {Введите мастер-пароль, чтобы показать пользовательское поле.} copyField {Введите мастер-пароль, чтобы скопировать пользовательское поле.} revealPrivateKey {Введите мастер-пароль, чтобы показать приватный ключ.} copyPrivateKey {Введите мастер-пароль, чтобы скопировать приватный ключ.} revealOldPassword {Введите мастер-пароль, чтобы показать старый пароль.} copyOldPassword {Введите мастер-пароль, чтобы скопировать старый пароль.} editItem {Введите мастер-пароль, чтобы изменить элемент.} cloneItem {Введите мастер-пароль, чтобы клонировать элемент.} archiveItem {Введите мастер-пароль, чтобы архивировать элемент.} unarchiveItem {Введите мастер-пароль, чтобы разархивировать элемент.} downloadAttachment {Введите мастер-пароль, чтобы скачать вложение.} exportVault {Введите мастер-пароль, чтобы экспортировать хранилище.} updateProtectedItem {Введите мастер-пароль, чтобы обновить защищённый элемент.} other {Введите мастер-пароль, чтобы продолжить.}}"
+repromptBiometricReason: "{action, select, copyPassword {Подтвердите для копирования пароля} copyTOTP {Подтвердите для копирования кода} revealTOTP {Подтвердите для показа кода} revealPassword {Подтвердите для показа пароля} revealCardNumber {Подтвердите для показа номера карты} copyCardNumber {Подтвердите для копирования номера карты} revealSecurityCode {Подтвердите для показа кода безопасности} copySecurityCode {Подтвердите для копирования кода безопасности} revealSSN {Подтвердите для показа номера соц. страхования} copySSN {Подтвердите для копирования номера соц. страхования} revealField {Подтвердите для показа поля} copyField {Подтвердите для копирования поля} revealPrivateKey {Подтвердите для показа приватного ключа} copyPrivateKey {Подтвердите для копирования приватного ключа} revealOldPassword {Подтвердите для показа старого пароля} copyOldPassword {Подтвердите для копирования старого пароля} editItem {Подтвердите для изменения элемента} cloneItem {Подтвердите для клонирования элемента} archiveItem {Подтвердите для архивирования элемента} unarchiveItem {Подтвердите для разархивирования элемента} downloadAttachment {Подтвердите для скачивания вложения} exportVault {Подтвердите для экспорта хранилища} updateProtectedItem {Подтвердите для обновления защищённого элемента} other {Подтвердите, чтобы продолжить}}"
+repromptUnavailable: Проверка мастер-пароля недоступна.
+incorrectMasterPassword: Неверный мастер-пароль.
+
+# Saving, trash and folders
+
+discardChangesTitle: Отменить несохранённые изменения?
+discardChangesMessage: Ваши правки этого элемента не сохранены.
+keepEditing: Продолжить
+discard: Отбросить
+nameRequired: Укажите название.
+cannotSaveOffline: Нельзя сохранить в офлайн-режиме.
+itemSaved: Элемент сохранён
+saveFailed: Ошибка сохранения
+itemChangedTitle: Элемент изменён на другом устройстве
+itemChangedMessage: Этот элемент был обновлён в другом месте после последней синхронизации. Загрузите последнюю версию, чтобы не перезаписать изменения.
+reloadLatest: Загрузить новую
+localCopyNotUpdated: Сохранено на сервере, но локальную копию обновить не удалось.
+syncNowAction: Синхронизировать
+updateFailed: Ошибка обновления
+favoriteUpdated: Избранное обновлено
+moveToTrashFailed: Не удалось переместить в корзину
+movedToTrash: Перемещено в корзину
+archiveFailed: Ошибка архивирования
+unarchiveFailed: Ошибка разархивирования
+itemArchived: Элемент архивирован
+itemUnarchived: Элемент разархивирован
+restoreFailed: Ошибка восстановления
+itemRestored: Элемент восстановлен
+deletePermanentlyTitle: Удалить окончательно?
+deletePermanentlyMessage: "«{name}» будет удалён окончательно без возможности восстановления."
+deleteFailed: Ошибка удаления
+permanentlyDeleted: Удалено окончательно
+emptyTrashTitle: Очистить корзину?
+emptyTrashMessage: "{count, plural, one {# элемент будет удалён окончательно без возможности восстановления.} few {# элемента будут удалены окончательно без возможности восстановления.} many {# элементов будут удалены окончательно без возможности восстановления.} other {# элемента будут удалены окончательно без возможности восстановления.}}"
+emptyTrashFailed: Не удалось очистить корзину
+trashEmptied: Корзина очищена
+trashReadOnlyKept: "{count, plural, one {# элемент только для чтения остался в корзине.} few {# элемента только для чтения остались в корзине.} many {# элементов только для чтения остались в корзине.} other {# элемента только для чтения остались в корзине.}}"
+trashChangedKept: "{count, plural, one {# элемент был изменён на другом устройстве и сохранён.} few {# элемента были изменены на другом устройстве и сохранены.} many {# элементов были изменены на другом устройстве и сохранены.} other {# элемента были изменены на другом устройстве и сохранены.}}"
+trashPartlyDeleted: "{count, plural, one {Удалён # элемент} few {Удалено # элемента} many {Удалено # элементов} other {Удалено # элемента}}"
+trashSomeNotDeleted: "Часть элементов не удалось удалить: {reason}"
+passkeysNotCopied: Passkey не копируются
+passkeysNotCopiedDetail: Копия содержит данные входа без ключа Passkey.
+cloneName: "{name} (копия)"
+newFolderTitle: Новая папка
+renameFolderTitle: Переименовать папку
+folderName: Название папки
+folderNameRequired: Укажите название папки.
+folderSaved: Папка сохранена
+deleteFolderTitle: Удалить папку?
+deleteFolderMessage: "Элементы из «{name}» будут перемещены в «Без папки»."
+deleteFolderFailed: Не удалось удалить папку
+folderDeleted: Папка удалена
+
+# Sync
+
+sessionExpiredToast: Сессия истекла
+sessionExpiredToastDetail: Войдите снова, чтобы возобновить синхронизацию.
+offlineToastDetail: Показано кэшированное хранилище.
+syncFailed: Ошибка синхронизации
+vaultSynced: Хранилище синхронизировано
+
+# Editor
+
+newItemOfType: "{kind, select, login {Новый логин} secureNote {Новая заметка} card {Новая карта} identity {Новые личные данные} sshKey {Новый ключ SSH} other {Новый элемент}}"
+editItemOfType: "{kind, select, login {Изменить логин} secureNote {Изменить заметку} card {Изменить карту} identity {Изменить личные данные} sshKey {Изменить ключ SSH} other {Изменить элемент}}"
+unsavedChanges: Несохранённые изменения
+noChanges: Без изменений
+itemSection: Элемент
+type: Тип
+name: Название
+favorite: Избранное
+masterPasswordReprompt: Повторный запрос мастер-пароля
+addNote: Добавить заметку
+generatePassword: Сгенерировать пароль
+authenticatorKey: Аутентификатор
+authenticatorKeyPlaceholder: URI otpauth:// или ключ настройки
+removeWebsite: Удалить сайт
+addWebsite: Добавить сайт
+cardholder: Владелец
+nameOnCard: Имя на карте
+brandPlaceholder: Visa, Mastercard, Мир…
+cardNumberLabel: Номер
+expiryMonthPlaceholder: ММ
+expiryYearPlaceholder: ГГГГ
+securityCodePlaceholder: CVV
+firstName: Имя
+lastName: Фамилия
+phonePlaceholder: "+7 912 345-67-89"
+street: Улица
+streetPlaceholder: ул. Тверская, д. 12
+city: Город
+stateZip: Регион / Индекс
+stateRegion: Регион
+postalCode: Почтовый индекс
+country: Страна
+generateSSHKey: Создать ключ Ed25519
+sshKeyGenerateFailed: "Не удалось создать ключ SSH: {reason}"
+fieldTypeText: Текст
+fieldTypeHidden: Скрытое
+fieldName: Имя поля
+fieldValue: Значение
+removeField: Удалить поле
+addField: Добавить поле
+passkey: Passkey
+removedWhenSaved: Будет удалён при сохранении
+removePasskey: Удалить Passkey
+removePasskeyTitle: Удалить Passkey?
+removePasskeyMessage: Вы больше не сможете входить с помощью этого Passkey.
+passkeySiteCreated: "{site} · Создан {date, date, medium}"
+passkeyCreated: "Создан {date, date, medium}"
+passkeyStored: Хранится в этом элементе
+
+# Attachments
+
+attachments: Вложения
+attachFile: Прикрепить файл
+attachFileTitle: Прикрепить файл
+attachButton: Прикрепить
+downloadFile: "Скачать {file}"
+deleteFile: "Удалить {file}"
+saveAttachmentTitle: Сохранить вложение
+saveHere: Сохранить здесь
+downloadFailed: Ошибка скачивания
+attachmentSaved: Вложение сохранено
+couldNotOpenFile: Не удалось открыть файл
+fileTooLarge: Файл слишком большой
+attachmentLimit: Максимальный размер вложения — 100 MiB.
+uploadFailed: Ошибка загрузки
+fileAttached: Файл прикреплён
+deleteAttachmentTitle: Удалить вложение?
+deleteAttachmentMessage: "«{file}» будет удалён окончательно."
+attachmentDeleted: Вложение удалено
+bytes: "{count, number, integer} B"
+kilobytes: "{size, number, ::.0} KB"
+megabytes: "{size, number, ::.0} MB"
+gigabytes: "{size, number, ::.0} GB"
+terabytes: "{size, number, ::.0} TB"
+
+# Generator
+
+passwordMode: Пароль
+passphraseMode: Парольная фраза
+strengthWeak: Слабый
+strengthFair: Средний
+strengthStrong: Надёжный
+strengthVeryStrong: Очень надёжный
+entropyBits: "{bits, plural, one {≈ # бит энтропии} few {≈ # бита энтропии} many {≈ # бит энтропии} other {≈ # бита энтропии}}"
+regenerate: Обновить
+length: Длина
+characters: Символы
+uppercase: Заглавные
+lowercase: Строчные
+numbers: Цифры
+symbols: Спецсимволы
+avoidAmbiguous: Исключить похожие символы
+avoidAmbiguousDetail: Исключает l, 1, I, O и 0
+words: Слова
+options: Параметры
+wordSeparator: Разделитель слов
+wordSeparatorDetail: Вставляется между словами
+capitalizeWords: С заглавной буквы
+capitalizeWordsExample: Correct-Horse-Battery
+includeNumber: Добавить цифру
+includeNumberDetail: Добавляет цифру к одному слову
+
+# Vault Health
+
+healthReused: Повторы
+healthWeak: Слабые
+healthExpiringCards: Истекающие карты
+healthUnsecured: Небезопасный HTTP
+healthFilterEmpty: В этой категории проблем нет.
+healthAllClear: Всё в порядке
+healthAllClearDetail: Нет повторяющихся или слабых паролей, истекающих карт и небезопасных сайтов.
+reusedPasswords: Повторяющиеся пароли
+weakPasswords: Слабые пароли
+unsecuredWebsites: Небезопасные сайты
+healthLocalOnly: Проверяется только на этом устройстве. Данные не отправляются на сервер.
+openItem: "Открыть {name}"
+usedInItems: "{count, plural, one {Используется в # элементе} few {Используется в # элементах} many {Используется в # элементах} other {Используется в # элементах}}"
+weakCommon: Распространённый пароль
+weakShort: "{count, plural, one {Короче # символа} few {Короче # символов} many {Короче # символов} other {Короче # символов}}"
+weakPattern: В основном последовательность или повторы
+weakOneClass: Только один тип символов
+weakGuessable: Легко угадать
+cardExpired: "Истекла {expiry}"
+cardExpires: "Истекает {expiry}"
+
+# Backup and import
+
+backupPasswordTitle: Пароль резервной копии
+protectBackupTitle: Защита резервной копии
+backupPasswordPrompt: Введите пароль, с которым была экспортирована эта копия.
+protectBackupPrompt: Задайте пароль для зашифрованной копии. При утере его невозможно восстановить.
+backupPassword: Пароль копии
+confirmPassword: Подтвердите пароль
+export: Экспорт
+decrypt: Расшифровать
+backupPasswordTooShort: "{count, plural, one {Минимум # символ.} few {Минимум # символа.} many {Минимум # символов.} other {Минимум # символа.}}"
+backupPasswordsDiffer: Пароли не совпадают.
+backupIncomplete: "{count, plural, one {# личный элемент имеет формат, который GoVault не может прочитать, поэтому копия будет неполной. Экспортируйте через веб-хранилище Bitwarden.} few {# личных элемента имеют формат, который GoVault не может прочитать, поэтому копия будет неполной. Экспортируйте через веб-хранилище Bitwarden.} many {# личных элементов имеют формат, который GoVault не может прочитать, поэтому копия будет неполной. Экспортируйте через веб-хранилище Bitwarden.} other {# личного элемента имеют формат, который GoVault не может прочитать, поэтому копия будет неполной. Экспортируйте через веб-хранилище Bitwarden.}}"
+exportFailed: Ошибка экспорта
+backupSaved: Зашифрованная копия сохранена
+backupSavedDetail: Храните пароль от копии в надёжном месте — восстановить его нельзя.
+importBackupTitle: Импорт резервной копии
+importButton: Импорт
+importFailed: Ошибка импорта
+backupFileTooLarge: "Размер файла превышает {size, number, integer} MiB."
+backupPasswordRequired: Введите пароль резервной копии.
+incorrectBackupPassword: Неверный пароль резервной копии.
+notBitwardenExport: Это не файл экспорта JSON Bitwarden.
+backupAccountRestricted: Копия привязана к аккаунту. Экспортируйте её заново с защитой паролем.
+importResult: "Импортировано: создано {created, number, integer}, обновлено {updated, number, integer}"
+importSomeFailed: "{count, plural, one {Ошибка у # элемента: {reason}} few {Ошибка у # элементов: {reason}} many {Ошибка у # элементов: {reason}} other {Ошибка у # элемента: {reason}}}"
+importSkipped: "пропущено: {count, number, integer}"
+importCreate: Создать
+importCreateCopy: Создать копию
+importUpdate: Обновить
+importSkip: Пропустить
+noImport: Импорт не выполняется
+noImportHint: Выберите «Импорт резервной копии» в Настройках, чтобы просмотреть файл.
+reviewImport: Просмотр импорта
+importSummary: "{file} · новых: {added, number, integer}, изменено: {changed, number, integer}, совпадает: {identical, number, integer}. Изменения применятся только после подтверждения."
+selectAllNew: Выбрать все новые
+skipAllConflicts: Пропустить конфликты
+copyAllConflicts: Копировать конфликты
+updateAllConflicts: Обновить конфликты
+skipAll: Пропустить все
+importGroupChanged: "Изменённые ({count, number, integer})"
+importGroupNew: "Новые ({count, number, integer})"
+importGroupIdentical: "Совпадающие ({count, number, integer})"
+importApply: "Применить: создать {create, number, integer}, обновить {update, number, integer}, пропустить {skip, number, integer}"
+personalVault: личном хранилище
+anOrganization: организации
+sharedVaultOf: "общем хранилище {organization}"
+organizationCollections: "{organization} · {collections}"
+showIdentical: "{count, plural, one {Показать # совпадающий элемент} few {Показать # совпадающих элемента} many {Показать # совпадающих элементов} other {Показать # совпадающего элемента}}"
+hideIdentical: "{count, plural, one {Скрыть # совпадающий элемент} few {Скрыть # совпадающих элемента} many {Скрыть # совпадающих элементов} other {Скрыть # совпадающего элемента}}"
+importDiffers: "Отличия: {fields} · в {destination}"
+importCannotUpdateIncomplete: "нельзя обновить: элемент в копии неполный"
+importCannotUpdateUnmatchable: "нельзя обновить: поля или сайты не удаётся безопасно сопоставить"
+importReadOnly: существующий элемент только для чтения
+importProtected: "защищено: для обновления нужен мастер-пароль"
+importAlreadyIn: "Уже есть в {destination}"
+importUnsupported: GoVault пока не поддерживает сохранение таких элементов, поэтому он пропущен.
+importAmbiguous: Найдено несколько элементов с таким названием. Выберите «Создать», чтобы добавить как новый.
+importArchivedNoPremium: В копии архивирован; будет создан в хранилище, так как для архива нужен Premium.
+diffName: Название
+diffNotes: Заметки
+diffFolder: Папка
+diffFavorite: Избранное
+diffReprompt: Запрос пароля
+diffUsername: Имя пользователя
+diffPassword: Пароль
+diffTOTP: Код подтверждения
+diffWebsites: Веб-сайты
+diffPasskey: Passkey
+diffCard: Карта
+diffIdentity: Личные данные
+diffSSHKey: Ключ SSH
+diffCustomFields: Пользовательские поля
+
+# Settings
+
+general: Основные
+language: Язык
+languageDetail: Язык интерфейса GoVault. «Системный» следует языку системы.
+systemDefault: Системный
+account: Аккаунт
+syncNow: Синхронизировать
+keyDerivation: Формирование ключа
+kdfArgon2id: "Argon2id · {memory, number, integer} MiB · {iterations, plural, one {# итерация} few {# итерации} many {# итераций} other {# итерации}} · {threads, plural, one {# поток} few {# потока} many {# потоков} other {# потока}}"
+kdfPBKDF2: "PBKDF2-SHA256 · {iterations, plural, one {# итерация} few {# итерации} many {# итераций} other {# итерации}}"
+lastSync: Последняя синхронизация
+notYetSynced: Ещё не синхронизировано
+lastSyncAt: "{date, date, medium}, {date, time, short}"
+logOutHint: Выход удаляет локальный кэш хранилища.
+security: Безопасность
+autoLock: Автоблокировка
+autoLockDetail: Блокировать хранилище после периода бездействия.
+afterMinutes: "{count, plural, one {Через # минуту} few {Через # минуты} many {Через # минут} other {Через # минуты}}"
+afterHours: "{count, plural, one {Через # час} few {Через # часа} many {Через # часов} other {Через # часа}}"
+afterSeconds: "{count, plural, one {Через # секунду} few {Через # секунды} many {Через # секунд} other {Через # секунды}}"
+lockOnSleep: Блокировать при сне или блокировке экрана
+lockOnSleepDetail: Блокировать хранилище, когда Mac засыпает или экран блокируется.
+backup: Резервное копирование
+exportBackup: Экспорт зашифрованной копии
+exportBackupDetail: JSON-файл в формате Bitwarden, защищённый вашим паролем.
+exportEllipsis: Экспорт…
+importBackup: Импорт резервной копии
+importBackupDetail: JSON Bitwarden, зашифрованный или открытый. Просмотр всех элементов перед изменениями.
+importEllipsis: Импорт…
+privacy: Конфиденциальность
+showWebsiteIcons: Показывать значки сайтов
+showWebsiteIconsDetail: Загружать значки сайтов с вашего сервера Vaultwarden.
+iconCache: Кэш значков
+iconCacheDetail: Удалить загруженные значки сайтов с этого устройства.
+clearIconCache: Очистить кэш
+iconCacheCleared: Кэш значков очищен
+iconCacheClearFailed: Не удалось очистить кэш значков
+clipboard: Буфер обмена
+clearCopiedSecrets: Очищать скопированные секреты
+clearCopiedSecretsDetail: Очищает буфер обмена, если в нём всё ещё хранится скопированное значение.
+concealedClipboard: Приватный буфер обмена
+concealedClipboardDetail: Помечает секреты, чтобы менеджеры буфера обмена пропускали их.
+concealedActive: Активно
+macOSOnly: Только macOS
+menuBar: Строка меню
+tray: Трей
+showMenuBarIcon: Значок в строке меню
+showTrayIcon: Значок в трее
+menuBarIconDetail: Открывать, синхронизировать и блокировать GoVault из строки меню.
+trayIconDetail: Открывать, синхронизировать и блокировать GoVault из трея.
+launchAtLogin: Запускать при входе
+launchAtLoginDetail: Автоматически запускать GoVault при входе в систему.
+hideDockIcon: Скрыть значок в Dock
+hideDockIconDetail: Показывать GoVault только в строке меню.
+hideDockIconNeedsMenuBar: Сначала включите значок в строке меню, чтобы сохранить доступ к GoVault.
+about: О приложении
+appVersion: "GoVault {version}"
+developmentVersion: "{version} (разработка)"
+development: "(разработка)"
+updatesSigned: Обновления подписаны и устанавливаются автоматически.
+checkForUpdates: Проверить обновления
+sshAgent: SSH-агент
+enableSSHAgent: Включить SSH-агент
+enableSSHAgentDetail: Предоставлять ключи SSH из разблокированного хранилища. Ключи с запросом мастер-пароля не предоставляются.
+socket: Сокет
+copySSHAuthSock: Копировать SSH_AUTH_SOCK
+sshAgentUnavailable: "Агент недоступен: {reason}"
+sshAgentInUse: Этот сокет уже используется другим процессом.
+sshAgentNotSocket: Путь существует и не является сокетом.
+sshAgentUnsupported: Unix-сокеты не поддерживаются в этой системе.
+biometricUnavailable: Touch ID недоступен на этом Mac — подключите клавиатуру с Touch ID или настройте его в Системных настройках.
+biometricDetail: Хранит защищённый ключ в системной связке ключей для быстрой разблокировки.
+biometricHardware: "Аппаратная защита: macOS выдаёт ключ только после проверки Touch ID."
+biometricAppGated: "Проверка приложением: ключ хранится в связке ключей входа, и GoVault запрашивает {method} перед чтением."
+promptAutomatically: Запрашивать автоматически
+promptAutomaticallyDetail: "Запрашивать {method} сразу при открытии заблокированного окна."
+
+# Menus
+
+openGoVault: Открыть GoVault
+checkForUpdatesMenu: Проверить обновления…
+syncNowMenu: Синхронизировать
+lockNow: Заблокировать
+quitGoVault: Завершить GoVault
+editMenu: Правка
+windowMenu: Окно
+
+# Errors from the vault
+
+errorTwoFactorRequired: Для этого аккаунта требуется двухэтапная аутентификация.
+errorUnauthorized: Неверная эл. почта или мастер-пароль.
+errorOffline: Сервер недоступен. Проверьте подключение и URL сервера.
+errorRedirect: Сервер перенаправил на другой адрес; GoVault не переходит по перенаправлениям.
+errorNotFound: Сервер не нашёл этот элемент. Синхронизируйте и повторите попытку.
+errorRevisionConflict: Этот элемент был изменён на другом устройстве. Синхронизируйте и повторите попытку.
+errorAttachmentTooLarge: Максимальный размер вложения — 100 MiB.
+errorArchiveUnsupported: Этот сервер не поддерживает архив. Требуется Vaultwarden 1.36 или новее.
+errorPremiumRequired: Для архива требуется подписка Premium.
+errorAccountIDUnknown: Не удалось подтвердить ID аккаунта на сервере. Синхронизируйте и повторите попытку.
+errorArchiveNotConfirmed: Сервер не подтвердил изменение. GoVault выполнил синхронизацию для обновления состояния.
+errorCipherInTrash: Элементы в корзине нельзя архивировать. Сначала восстановите элемент.
+errorLocked: Хранилище заблокировано. Разблокируйте его и повторите попытку.
+errorLoggedOut: Вы не вошли в аккаунт.
+errorCipherNotFound: Этого элемента больше нет в вашем хранилище.
+errorFolderNotFound: Этой папки больше нет в вашем хранилище.
+errorReadOnly: Этот элемент доступен только для чтения.
+errorOrganizationKey: GoVault не может прочитать элементы этой организации. Синхронизируйте и повторите попытку.
+errorAttachmentNotFound: Этого вложения больше нет в элементе.
+errorHiddenByOrganization: Ваша организация скрывает секреты этого элемента.
+errorUnsupportedUpload: Сервер запросил неподдерживаемый способ загрузки вложения.
+errorServerMismatch: Сохранённый вход относится к другому серверу. Войдите снова.
+errorSignInRequired: Войдите снова для синхронизации. Пока хранилище доступно офлайн.
+errorDifferentAccount: Этот вход относится к другому аккаунту. Чтобы сменить аккаунт, сначала выйдите.
+errorAccountChanged: Аккаунт изменился после подтверждения. Повторите попытку.
+errorSnapshotNotUpdated: Сервер сохранил изменение, но локальную копию обновить не удалось. Синхронизируйте для обновления.
+errorSealedField: Этот элемент содержит зашифрованные данные, которые GoVault не может перенести под новый ключ.
+errorUnsupportedCipher: Этот элемент имеет формат, который GoVault пока не поддерживает.
+errorChangedSinceReview: Элемент изменился после просмотра импорта. Просмотрите снова.
+errorRepromptRequired: Для обновления этого защищённого элемента требуется мастер-пароль.
+errorUnsupportedType: GoVault пока не может сохранять элементы этого типа.
+errorAmbiguousUpdate: GoVault не может определить, каким существующим элементам соответствуют элементы копии.
+errorUnreadablePasskey: Не удалось расшифровать Passkey.
+errorWrongBackupPassword: Неверный пароль резервной копии.
+errorBackupTooLarge: Зашифрованная копия слишком велика для повторного импорта в GoVault.
+errorServer: "Ошибка сервера ({status}): {detail}"
+errorWithDetail: "Произошла ошибка: {detail}"
+
+# NSGo catalogs
+
+github.com/nsgo-dev/nsgo/desktop/locales:
+  edit: Правка
+  window: Окно
+  about: О программе
+  aboutApp: "О {app}"
+  hide: Скрыть
+  hideApp: "Скрыть {app}"
+  hideOthers: Скрыть остальные
+  showAll: Показать все
+  quit: Завершить
+  quitApp: "Завершить {app}"
+  undo: Отменить
+  redo: Повторить
+  cut: Вырезать
+  copy: Скопировать
+  paste: Вставить
+  delete: Удалить
+  selectAll: Выбрать все
+  minimize: Свернуть
+  zoom: Изменить масштаб
+  toggleFullScreen: Полноэкранный режим
+  enterFullScreen: Перейти в полноэкранный режим
+  exitFullScreen: Выйти из полноэкранного режима
+  close: Закрыть
+  guideDrag: "Перетащите {app} в список выше, чтобы разрешить «{permission}»."
+  guideDragHint: Перетащить
+  permissionAccessibility: Универсальный доступ
+  permissionDeviceControl: Управление устройством и доступ к данным
+  permissionScreenRecording: Запись экрана
+  permissionScreenAudioRecording: Запись экрана и системного аудио
+  permissionInputMonitoring: Мониторинг ввода
+  permissionFullDiskAccess: Доступ ко всему диску
+  permissionAppManagement: Управление приложениями
+  permissionDeveloperTools: Инструменты разработчика
+  permissionBluetooth: Bluetooth
+  permissionMediaLibrary: Медиатека и Apple Music
+  authSessionDone: Вы можете закрыть эту страницу и вернуться в приложение.
+  pasteAndMatchStyle: Вставить и согласовать стиль
+  startSpeaking: Начать чтение
+  stopSpeaking: Остановить чтение
+  bringAllToFront: Все окна — на передний план
+  services: Службы
+  help: Справка
+  roleLink: ссылка
+  roleTab: вкладка
+  roleSearchBox: поле поиска
+  roleStatus: статус
+  roleMenu: меню
+  roleMenuItem: пункт меню
+  roleDialog: диалог
+  roleAlert: оповещение
+  roleTable: таблица
+  roleGrid: сетка
+  roleRow: строка
+  roleColumnHeader: заголовок столбца
+  roleCell: ячейка
+  statePartiallyChecked: частично выбрано
+  stateExpanded: развёрнуто
+  stateCollapsed: свёрнуто
+  spokenSeparator: ", "
+
+github.com/nsgo-dev/nsgo/updater/locales:
+  updateAvailable: "Доступна новая версия {app}"
+  updateAvailableMessage: "Доступна версия {app} {version}. У вас установлена {current}."
+  update: Обновить
+  later: Позже
+  upToDate: Установлена последняя версия
+  upToDateMessage: "{app} {version} — самая новая доступная версия."
+  updateError: Не удалось проверить обновления
+  updateErrorMessage: При проверке обновлений произошла ошибка. Попробуйте позже.
+  installError: Не удалось установить обновление
+  installErrorMessage: "Не удалось загрузить или установить {app} {version}. Вы можете скачать его со страницы приложения."
+  openPage: Открыть страницу
+  ok: ОК
+
+github.com/nsgo-dev/nsgo/base/locales:
+  sortBy: "Сортировать по: {column}"
+  diffUnchangedLines: "{n, plural, one {# неизменённая строка} few {# неизменённые строки} many {# неизменённых строк} other {# неизменённой строки}}"
+  diffExpandAll: Развернуть все
+  diffStage: Индексировать
+  diffDiscardChanges: Отменить изменения…
+  collapseMerge: Свернуть слияние
+  expandMerge: Развернуть слияние
+  colorHue: Оттенок
+  colorAlpha: Непрозрачность
+  colorSaturationBrightness: Насыщенность и яркость
+  colorHex: HEX-цвет
+  colorEyeDropper: Выбрать цвет с экрана
+  colorFormat: Формат цвета
+  colorCopy: Копировать цвет
+  colorRed: Красный
+  colorGreen: Зелёный
+  colorBlue: Синий
+  colorHueDegrees: Оттенок в градусах
+  colorSaturationPercent: Насыщенность в процентах
+  colorBrightnessPercent: Яркость в процентах
+  colorLightnessPercent: Светлота в процентах
+  colorOpacityPercent: Непрозрачность в процентах
+  calendarPrevious: Предыдущий месяц
+  calendarNext: Следующий месяц
+  listClear: Очистить
+  listNothingFound: Ничего не найдено
+  listSearch: Поиск
+  commandSearch: Поиск команд
+  commandSearchPlaceholder: Поиск команд…
+  commandNoMatches: Подходящих команд нет
+  commandLoading: Загрузка…
+  commandList: Команды
+  calendarMonth: "{d, date, ::yMMMM}"
+  calendarMonthName: "{d, date, ::MMM}"
+  calendarWeekday: "{d, date, ::EEEEE}"
+  breadcrumbsMore: Ещё
+  flowLabel: "{nodes, plural, one {# узел} few {# узла} many {# узлов} other {# узла}}, {edges, plural, one {# ребро} few {# ребра} many {# рёбер} other {# ребра}}"
+
+github.com/nsgo-dev/nsgo/base/textview/locales:
+  alertNote: Примечание
+  alertTip: Совет
+  alertImportant: Важно
+  alertWarning: Предупреждение
+  alertCaution: Внимание
