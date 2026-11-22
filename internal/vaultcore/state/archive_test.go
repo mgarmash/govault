@@ -294,3 +294,117 @@ func TestService_404FromAServerWithArchiveIsNotBlamedOnItsVersion(t *testing.T) 
 		t.Fatalf("a 404 from a server that reports archivedDate = %v, want ErrArchiveNotConfirmed", err)
 	}
 }
+
+func TestService_SaveAlwaysTakesTheServersArchiveDate(t *testing.T) {
+	env := newVaultTestEnv(t)
+	svc := loggedInTestService(t, env)
+	draft, _ := svc.GetCipher("c-1")
+	when := time.Date(2026, 11, 21, 8, 0, 0, 0, time.UTC)
+	env.mu.Lock()
+	c := env.ciphers["c-1"]
+	c.ArchivedDate = &when
+	env.ciphers["c-1"] = c
+	env.mu.Unlock()
+
+	// The item is gone from this device but still on the server.
+	svc.mu.Lock()
+	delete(svc.ciphers, "c-1")
+	svc.mu.Unlock()
+	if _, err := svc.SaveCipher(context.Background(), draft); err != nil {
+		t.Fatal(err)
+	}
+	var sent struct {
+		ArchivedDate *time.Time `json:"archivedDate"`
+	}
+	env.mu.Lock()
+	_ = json.Unmarshal(env.lastBody, &sent)
+	env.lastBody = nil
+	// Now the server has lost it too.
+	delete(env.ciphers, "c-1")
+	env.mu.Unlock()
+	if sent.ArchivedDate == nil || !sent.ArchivedDate.Equal(when) {
+		t.Fatalf("a save of an item missing locally sent archivedDate %v, want the server's", sent.ArchivedDate)
+	}
+	if _, err := svc.SaveCipher(context.Background(), draft); !errors.Is(err, ErrCipherNotFound) {
+		t.Fatalf("a save of an item the server no longer has = %v, want ErrCipherNotFound", err)
+	}
+	env.mu.Lock()
+	defer env.mu.Unlock()
+	if env.lastBody != nil {
+		t.Fatal("a stale archive date was sent for an item the server no longer has")
+	}
+}
+
+func TestService_FavoriteGuardUsesTheServersArchiveState(t *testing.T) {
+	env := newVaultTestEnv(t)
+	env.noPremium = true
+	svc := loggedInTestService(t, env)
+	draft, _ := svc.GetCipher("c-1")
+
+	// Archived on another device; this device still shows it unarchived.
+	when := time.Date(2026, 11, 21, 8, 0, 0, 0, time.UTC)
+	env.mu.Lock()
+	c := env.ciphers["c-1"]
+	c.ArchivedDate = &when
+	env.ciphers["c-1"] = c
+	env.mu.Unlock()
+
+	draft.Favorite = !draft.Favorite
+	if _, err := svc.SaveCipher(context.Background(), draft); !errors.Is(err, ErrPremiumRequired) {
+		t.Fatalf("changing the favorite of an item the server has archived = %v, want ErrPremiumRequired", err)
+	}
+}
+
+func TestService_ArchiveEvidenceFromSingleResponsesAndNone(t *testing.T) {
+	// Sync sends no archivedDate, so the server looks like it lacks
+	// Archive, until an item response reports archivedDate.
+	env := newVaultTestEnv(t)
+	svc := loggedInTestService(t, env)
+	svc.mu.RLock()
+	absentAfterSync := svc.archiveAbsent
+	svc.mu.RUnlock()
+	if !absentAfterSync {
+		t.Fatal("a sync without archivedDate should count as evidence of no Archive")
+	}
+	setReported := func(on bool) {
+		env.mu.Lock()
+		c := env.ciphers["c-1"]
+		c.Extra = nil
+		if on {
+			c.Extra = map[string]json.RawMessage{"archivedDate": json.RawMessage("null")}
+		}
+		env.ciphers["c-1"] = c
+		env.mu.Unlock()
+	}
+	setReported(true)
+	cur, _ := svc.GetCipher("c-1")
+	if _, err := svc.SaveCipher(context.Background(), cur); err != nil {
+		t.Fatal(err)
+	}
+	setReported(false)
+	env.mu.Lock()
+	env.oldServer = true
+	env.mu.Unlock()
+	if err := svc.ArchiveCipher(context.Background(), "c-1"); !errors.Is(err, ErrArchiveNotConfirmed) {
+		t.Fatalf("a 404 after an item response reported archivedDate = %v, want ErrArchiveNotConfirmed", err)
+	}
+
+	// No evidence either way: the vault the server sends is empty.
+	env2 := newVaultTestEnv(t)
+	env2.oldServer = true
+	svc2 := loggedInTestService(t, env2)
+	env2.mu.Lock()
+	for id := range env2.ciphers {
+		delete(env2.ciphers, id)
+	}
+	env2.mu.Unlock()
+	if err := svc2.forceSync(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	svc2.mu.Lock()
+	svc2.ciphers["c-x"] = &Cipher{ID: "c-x", Type: api.CipherTypeSecureNote, Name: "x", SecureNote: &SecureNote{}}
+	svc2.mu.Unlock()
+	if err := svc2.ArchiveCipher(context.Background(), "c-x"); !errors.Is(err, ErrArchiveNotConfirmed) {
+		t.Fatalf("a 404 with no evidence either way = %v, want ErrArchiveNotConfirmed", err)
+	}
+}

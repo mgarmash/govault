@@ -61,6 +61,7 @@ type Service struct {
 	unreadable    []string
 	premium       bool
 	archiveKnown  bool
+	archiveAbsent bool
 	credsUnsaved  bool
 	// localOnly marks an unlocked session whose saved sign-in could not be
 	// validated: the vault is readable, but nothing goes to the server
@@ -889,21 +890,25 @@ func (s *Service) SaveCipher(ctx context.Context, c *Cipher) (*Cipher, error) {
 		if err != nil && !errors.Is(err, ErrCipherNotFound) {
 			return nil, err
 		}
+		// The archive is per user and changes without touching the item's
+		// revision, so a draft may carry a stale archive date. Every update
+		// takes the server's current one, also for an item gone from this
+		// device; the draft's revision still guards the content.
+		cur, err := withAuth(o, func(ctx context.Context, tok string) (*api.EncryptedCipher, error) {
+			return o.client.GetCipher(ctx, tok, c.ID)
+		})
+		if errors.Is(err, api.ErrNotFound) {
+			return nil, ErrCipherNotFound
+		}
+		if err != nil {
+			return nil, err
+		}
+		s.noteArchiveEvidence(cur)
+		c.ArchivedDate = cloneTimePtr(cur.ArchivedDate)
+		if cur.ArchivedDate != nil && !premium && cur.Favorite != c.Favorite {
+			return nil, ErrPremiumRequired
+		}
 		if existing != nil {
-			if existing.ArchivedDate != nil && !premium && existing.Favorite != c.Favorite {
-				return nil, ErrPremiumRequired
-			}
-			// The archive is per user and changes without touching the
-			// item's revision, so a draft may carry a stale archive date.
-			// Take the server's current one; the draft's revision still
-			// guards the content.
-			cur, err := withAuth(o, func(ctx context.Context, tok string) (*api.EncryptedCipher, error) {
-				return o.client.GetCipher(ctx, tok, c.ID)
-			})
-			if err != nil {
-				return nil, err
-			}
-			c.ArchivedDate = cloneTimePtr(cur.ArchivedDate)
 			recordPasswordChange(existing, c, time.Now().UTC())
 			if c.OrganizationID == nil {
 				c.OrganizationID = cloneStringPtr(existing.OrganizationID)
@@ -954,6 +959,7 @@ func (s *Service) SaveCipher(ctx context.Context, c *Cipher) (*Cipher, error) {
 // commitCipherIfUnchanged is commitCipher for a response that must not
 // land on a vault that changed during the request (errSnapshotMoved).
 func (o *op) commitCipherIfUnchanged(decrypted *Cipher, enc *api.EncryptedCipher) (*Cipher, error) {
+	o.s.noteArchiveEvidence(enc)
 	stored := *enc
 	if len(stored.CollectionIDs) == 0 {
 		stored.CollectionIDs = append([]string(nil), decrypted.CollectionIDs...)
@@ -976,6 +982,7 @@ func (o *op) commitCipherIfUnchanged(decrypted *Cipher, enc *api.EncryptedCipher
 // *LocalCopyError the committed item is returned too, and carried in the
 // error.
 func (o *op) commitCipher(decrypted *Cipher, enc *api.EncryptedCipher) (*Cipher, error) {
+	o.s.noteArchiveEvidence(enc)
 	stored := *enc
 	if len(stored.CollectionIDs) == 0 {
 		stored.CollectionIDs = append([]string(nil), decrypted.CollectionIDs...)
@@ -1320,13 +1327,15 @@ type vaultData struct {
 	// a newer format; a backup without them would be incomplete.
 	unreadable []string
 	premium    bool
-	// archiveKnown: the server reported archivedDate on its ciphers.
-	archiveKnown bool
-	ciphers      map[string]*Cipher
-	folders      map[string]Folder
-	orgs         map[string]Organization
-	collections  map[string]Collection
-	orgKeys      map[string]*crypto.SymmetricKey
+	// archiveKnown: the server reported archivedDate on its ciphers;
+	// archiveAbsent: it sent ciphers and none reported it.
+	archiveKnown  bool
+	archiveAbsent bool
+	ciphers       map[string]*Cipher
+	folders       map[string]Folder
+	orgs          map[string]Organization
+	collections   map[string]Collection
+	orgKeys       map[string]*crypto.SymmetricKey
 }
 
 func (d *vaultData) zero() {
@@ -1349,6 +1358,18 @@ func (s *Service) applyDataLocked(d *vaultData) {
 	s.unreadable = d.unreadable
 	s.premium = d.premium
 	s.archiveKnown = d.archiveKnown
+	s.archiveAbsent = !d.archiveKnown && len(d.ciphers) > 0
+}
+
+// noteArchiveEvidence records that the server supports Archive when a
+// cipher it returns reports archivedDate.
+func (s *Service) noteArchiveEvidence(enc *api.EncryptedCipher) {
+	if enc == nil || !enc.ReportsArchive() {
+		return
+	}
+	s.mu.Lock()
+	s.archiveKnown, s.archiveAbsent = true, false
+	s.mu.Unlock()
 }
 
 func profileFlag(extra map[string]json.RawMessage, name string) bool {
@@ -1420,12 +1441,14 @@ func (s *Service) setArchived(ctx context.Context, id string, archive bool) erro
 			return serr
 		}
 		s.mu.RLock()
-		now, known := s.ciphers[id], s.archiveKnown || known
+		now, known, absent := s.ciphers[id], s.archiveKnown || known, s.archiveAbsent
 		s.mu.RUnlock()
 		switch {
 		case now != nil && (now.ArchivedDate != nil) == archive:
 			return nil
-		case !known:
+		case absent && !known:
+			// Only a server that sent ciphers without archivedDate is
+			// known to lack Archive; no evidence either way is no proof.
 			return ErrArchiveUnsupported
 		}
 		return ErrArchiveNotConfirmed
@@ -1482,6 +1505,7 @@ func (s *Service) clearDataLocked() {
 	s.unreadable = nil
 	s.premium = false
 	s.archiveKnown = false
+	s.archiveAbsent = false
 }
 
 func (s *Service) Organizations() []Organization {

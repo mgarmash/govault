@@ -17,7 +17,7 @@ func (env *vaultTestEnv) handleAttachments(w http.ResponseWriter, r *http.Reques
 	env.mu.Lock()
 	defer env.mu.Unlock()
 	const prefix = "/api/ciphers/c-1"
-	c := env.ciphers["c-1"]
+	c, exists := env.ciphers["c-1"]
 	if id, ok := strings.CutPrefix(r.URL.Path, "/api/ciphers/"); ok && r.Method == http.MethodDelete && !strings.Contains(id, "/") {
 		if _, exists := env.ciphers[id]; !exists {
 			w.WriteHeader(http.StatusNotFound)
@@ -27,7 +27,7 @@ func (env *vaultTestEnv) handleAttachments(w http.ResponseWriter, r *http.Reques
 		return true
 	}
 	switch {
-	case r.Method == http.MethodGet && r.URL.Path == prefix:
+	case r.Method == http.MethodGet && r.URL.Path == prefix && exists:
 		_ = json.NewEncoder(w).Encode(c)
 	case r.Method == http.MethodPost && r.URL.Path == prefix+"/attachment/v2":
 		var req api.AttachmentUploadRequest
