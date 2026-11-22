@@ -50,6 +50,13 @@ func matchesFilter(c *Cipher, filter SearchFilter) bool {
 	if isDeleted {
 		return false
 	}
+	isArchived := c.ArchivedDate != nil
+	if filter.Category == FilterArchive {
+		return isArchived
+	}
+	if isArchived {
+		return false
+	}
 
 	if filter.Type != nil && c.Type != *filter.Type {
 		return false

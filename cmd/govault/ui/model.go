@@ -537,6 +537,7 @@ type VaultCounts struct {
 	All        int
 	Favorites  int
 	Trash      int
+	Archive    int
 	NoFolder   int
 	Login      int
 	Card       int
@@ -1570,9 +1571,11 @@ func (m *AppModel) RefreshVaultData() {
 func (m *AppModel) recomputeCounts() {
 	all := m.Core.Search("", state.SearchFilter{Category: state.FilterAll})
 	trash := m.Core.Search("", state.SearchFilter{Category: state.FilterTrash})
+	archived := m.Core.Search("", state.SearchFilter{Category: state.FilterArchive})
 	counts := VaultCounts{
 		All:      len(all),
 		Trash:    len(trash),
+		Archive:  len(archived),
 		ByFolder: make(map[string]int),
 
 		ByCollection: make(map[string]int),
@@ -1641,7 +1644,7 @@ func (m *AppModel) SearchIsGlobal() bool {
 // All Items is selected, so it can search that section or the whole vault.
 func (m *AppModel) SearchScoped() bool {
 	f := m.SidebarFilter.Get()
-	return strings.TrimSpace(m.SearchQuery.Get()) != "" && f.Category != state.FilterTrash && !IsAllItemsFilter(f)
+	return strings.TrimSpace(m.SearchQuery.Get()) != "" && f.Category != state.FilterTrash && f.Category != state.FilterArchive && !IsAllItemsFilter(f)
 }
 
 func IsAllItemsFilter(f state.SearchFilter) bool {
@@ -2079,6 +2082,68 @@ func (m *AppModel) SoftDeleteActive() {
 			m.ActiveCipher.Set(nil)
 			m.RefreshVaultData()
 			m.ShowToast(ui.ToastInfo, "Moved to Trash", "")
+		})
+	}()
+}
+
+// CanFavorite reports whether c may change its favorite: Bitwarden hides
+// it on archived items once the account can no longer archive.
+func (m *AppModel) CanFavorite(c *state.Cipher) bool {
+	return c != nil && (c.ArchivedDate == nil || m.Core.CanArchive())
+}
+
+// CanArchiveItem reports whether c can go to the Archive now: an item not in
+// Trash or the Archive, for an account with Archive (premium).
+func (m *AppModel) CanArchiveItem(c *state.Cipher) bool {
+	return c != nil && c.DeletedDate == nil && c.ArchivedDate == nil && m.Core.CanArchive() && m.SyncState.Get() != SyncOffline
+}
+
+// CanUnarchiveItem reports whether c can leave the Archive. Unlike
+// archiving it needs no premium, so items archived before premium ended
+// can come back.
+func (m *AppModel) CanUnarchiveItem(c *state.Cipher) bool {
+	return c != nil && c.DeletedDate == nil && c.ArchivedDate != nil && m.SyncState.Get() != SyncOffline
+}
+
+// ArchiveActive moves the selected item to the Archive, or back with
+// archive false.
+func (m *AppModel) ArchiveActive(archive bool) {
+	c := m.ActiveCipher.Get()
+	if (archive && !m.CanArchiveItem(c)) || (!archive && !m.CanUnarchiveItem(c)) {
+		return
+	}
+	id := c.ID
+	gen := m.LockGeneration()
+	go func() {
+		var err error
+		if archive {
+			err = m.Core.ArchiveCipher(context.Background(), id)
+		} else {
+			err = m.Core.UnarchiveCipher(context.Background(), id)
+		}
+		m.Scope.Post(func() {
+			if !m.StillUnlocked(gen) {
+				return
+			}
+			var lc *state.LocalCopyError
+			if err != nil && !errors.As(err, &lc) {
+				title := "Archive failed"
+				if !archive {
+					title = "Unarchive failed"
+				}
+				m.ShowToast(ui.ToastError, title, friendlyError(err))
+				return
+			}
+			m.RefreshVaultData()
+			title := "Item archived"
+			if !archive {
+				title = "Item unarchived"
+			}
+			if lc != nil {
+				m.ShowLocalCopyWarning(title)
+				return
+			}
+			m.ShowToast(ui.ToastSuccess, title, "")
 		})
 	}()
 }
@@ -2591,6 +2656,12 @@ func friendlyError(err error) string {
 		return "Server unreachable. Check your connection and server URL."
 	case errors.Is(err, crypto.ErrInvalidMAC):
 		return "Incorrect master password."
+	case errors.Is(err, state.ErrArchiveUnsupported):
+		return "This server does not support Archive. It needs Vaultwarden 1.36 or later."
+	case errors.Is(err, state.ErrPremiumRequired):
+		return "Archive needs a premium membership."
+	case errors.Is(err, state.ErrCipherInTrash):
+		return "Items in Trash cannot be archived. Restore the item first."
 	default:
 		return err.Error()
 	}

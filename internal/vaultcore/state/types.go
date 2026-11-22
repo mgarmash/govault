@@ -35,6 +35,9 @@ var (
 	ErrServerMismatch          = errors.New("state: the saved sign-in belongs to a different server than this vault copy; sign in again")
 	ErrSignInRequired          = errors.New("state: sign in again to sync; the vault is available offline until then")
 	ErrDifferentAccount        = errors.New("state: this signs in to a different account than the vault on this device; to use a different account, log out first")
+	ErrArchiveUnsupported      = errors.New("state: this server does not support Archive; it needs Vaultwarden 1.36 or later")
+	ErrPremiumRequired         = errors.New("state: archiving items needs a premium membership")
+	ErrCipherInTrash           = errors.New("state: the item is in Trash")
 	ErrAccountChanged          = errors.New("state: the account changed since this was confirmed")
 	ErrSnapshotNotUpdated      = errors.New("state: the server has the change, but the local copy could not be updated; sync to refresh it")
 )
@@ -61,6 +64,9 @@ const (
 	FilterFavorites
 	FilterTrash
 	FilterNoFolder
+	// FilterArchive lists archived items, which every other category but
+	// Trash leaves out, as Bitwarden's clients do.
+	FilterArchive
 )
 
 type SearchFilter struct {
@@ -77,6 +83,7 @@ type CipherSummary struct {
 	FolderID *string
 	Favorite bool
 	Deleted  bool
+	Archived bool
 	Name     string
 	Subtitle string
 	HasTOTP  bool
@@ -338,6 +345,9 @@ type VaultService interface {
 	RestoreCipher(ctx context.Context, id string) error
 	HardDeleteCipher(ctx context.Context, id string) error
 	TrashSelection() TrashSelection
+	ArchiveCipher(ctx context.Context, id string) error
+	UnarchiveCipher(ctx context.Context, id string) error
+	CanArchive() bool
 	UnreadableItems() []string
 	BackupData() BackupData
 	Account() Account

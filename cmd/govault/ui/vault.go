@@ -143,6 +143,8 @@ func (m *AppModel) sectionTitle() string {
 		return "Favorites"
 	case state.FilterTrash:
 		return "Trash"
+	case state.FilterArchive:
+		return "Archive"
 	case state.FilterNoFolder:
 		return "No Folder"
 	}
@@ -377,6 +379,12 @@ func sidebarView(cx *core.Scope, m *AppModel) core.Node {
 						badge:  true,
 						active: func() bool { return m.Route.Get() == RouteHealth },
 						press:  route(RouteHealth),
+					}),
+					sidebarRow(sidebarEntry{
+						testID: "sidebar-archive", label: "Archive", glyph: lucide.Archive, tint: 0x8e8e93,
+						count:  func() int { return m.AllCounts.Get().Archive },
+						active: vaultActive(func(f state.SearchFilter) bool { return f.Category == state.FilterArchive }),
+						press:  func() { m.SetSidebarFilter(state.SearchFilter{Category: state.FilterArchive}) },
 					}),
 					sidebarRow(sidebarEntry{
 						testID: "sidebar-trash", label: "Trash", glyph: lucide.Trash, tint: 0x8e8e93,
@@ -831,10 +839,15 @@ func rowMenu(cx *core.Scope, m *AppModel, id string, at core.Point) {
 		items = append(items,
 			desktop.MenuItem{Label: "Edit", Disabled: offline || readOnly || m.PasswordHidden(c), OnSelect: func() { m.StartEditCipher(cx) }},
 			desktop.MenuItem{Label: "Clone", Disabled: !m.CanClone(c), OnSelect: func() { m.CloneActive(cx) }},
-			desktop.MenuItem{Label: fav, Disabled: offline || readOnly, OnSelect: m.ToggleFavorite},
+			desktop.MenuItem{Label: fav, Disabled: offline || readOnly || !m.CanFavorite(c), OnSelect: m.ToggleFavorite},
 			desktop.MenuItem{Separator: true},
-			desktop.MenuItem{Label: "Move to Trash", Disabled: offline || readOnly, OnSelect: m.SoftDeleteActive},
 		)
+		if c.ArchivedDate != nil {
+			items = append(items, desktop.MenuItem{Label: "Unarchive", Disabled: !m.CanUnarchiveItem(c), OnSelect: func() { m.ArchiveActive(false) }})
+		} else {
+			items = append(items, desktop.MenuItem{Label: "Archive", Disabled: !m.CanArchiveItem(c), OnSelect: func() { m.ArchiveActive(true) }})
+		}
+		items = append(items, desktop.MenuItem{Label: "Move to Trash", Disabled: offline || readOnly, OnSelect: m.SoftDeleteActive})
 	}
 	desktop.PopupMenu(cx, items, at, nil)
 }
@@ -1646,6 +1659,9 @@ func detailHeader(cx *core.Scope, m *AppModel, c *state.Cipher, isTrash bool, of
 	if isTrash {
 		pills = append(pills, pill(lucide.Trash, "In Trash"))
 	}
+	if c.ArchivedDate != nil {
+		pills = append(pills, pill(lucide.Archive, "Archived"))
+	}
 
 	var actions []core.Node
 	if isTrash && readOnly {
@@ -1688,9 +1704,10 @@ func detailHeader(cx *core.Scope, m *AppModel, c *state.Cipher, isTrash bool, of
 					}
 					return themeColor(cx, "gv-fg2")
 				},
-				Disabled: func() bool { return offline() || readOnly },
+				Disabled: func() bool { return offline() || readOnly || !m.CanFavorite(c) },
 				OnPress:  m.ToggleFavorite,
 			},
+			archiveButton(cx, m, c),
 			ui.Button{
 				TestID:   "detail-clone",
 				Icon:     lucide.CopyPlus,
@@ -1733,6 +1750,35 @@ func detailHeader(cx *core.Scope, m *AppModel, c *state.Cipher, isTrash bool, of
 			},
 			core.View{Class: "flex-row items-center gap-2", Children: actions},
 		},
+	}
+}
+
+// archiveButton moves the item to the Archive or back, as Bitwarden's
+// clients offer it for any item not in Trash.
+func archiveButton(cx *core.Scope, m *AppModel, c *state.Cipher) core.Node {
+	if c.ArchivedDate != nil {
+		return ui.Button{
+			TestID:   "detail-unarchive",
+			Icon:     lucide.ArchiveRestore,
+			Label:    "Unarchive",
+			Variant:  ui.ButtonGhost,
+			Side:     28,
+			IconSize: 15,
+			Tint:     func() core.Color { return themeColor(cx, "gv-fg2") },
+			Disabled: func() bool { return !m.CanUnarchiveItem(c) },
+			OnPress:  func() { m.ArchiveActive(false) },
+		}
+	}
+	return ui.Button{
+		TestID:   "detail-archive",
+		Icon:     lucide.Archive,
+		Label:    "Archive",
+		Variant:  ui.ButtonGhost,
+		Side:     28,
+		IconSize: 15,
+		Tint:     func() core.Color { return themeColor(cx, "gv-fg2") },
+		Disabled: func() bool { return !m.CanArchiveItem(c) },
+		OnPress:  func() { m.ArchiveActive(true) },
 	}
 }
 

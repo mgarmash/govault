@@ -229,6 +229,7 @@ func encryptCipherPayload(c *Cipher, userKey *crypto.SymmetricKey) (*api.CipherP
 		Name:                  encName,
 		Notes:                 encNotes,
 		LastKnownRevisionDate: cloneTimePtr(c.RevisionDate),
+		ArchivedDate:          cloneTimePtr(c.ArchivedDate),
 		CollectionIDs:         append([]string(nil), c.CollectionIDs...),
 		Extra:                 sl.keep(c.Extra),
 	}
@@ -767,6 +768,7 @@ func summarizeCipher(c *Cipher) CipherSummary {
 		FolderID: cloneStringPtr(c.FolderID),
 		Favorite: c.Favorite,
 		Deleted:  c.DeletedDate != nil,
+		Archived: c.ArchivedDate != nil,
 		Name:     c.Name,
 		Subtitle: subtitle,
 		HasTOTP:  hasTOTP,

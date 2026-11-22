@@ -189,6 +189,9 @@ func (s *Service) Search(query string, filter state.SearchFilter) []state.Cipher
 		if (filter.Category == state.FilterTrash) != deleted {
 			continue
 		}
+		if !deleted && (filter.Category == state.FilterArchive) != (c.ArchivedDate != nil) {
+			continue
+		}
 		if filter.Category == state.FilterFavorites && !c.Favorite {
 			continue
 		}
@@ -218,6 +221,7 @@ func (s *Service) Search(query string, filter state.SearchFilter) []state.Cipher
 			FolderID: c.FolderID,
 			Favorite: c.Favorite,
 			Deleted:  deleted,
+			Archived: c.ArchivedDate != nil,
 			Name:     c.Name,
 			Subtitle: sub,
 			HasTOTP:  c.Login != nil && strings.TrimSpace(c.Login.TOTP) != "",
@@ -352,6 +356,30 @@ func (s *Service) UnreadableItems() []string { return nil }
 func (s *Service) SessionContext(parent context.Context) (context.Context, context.CancelFunc, error) {
 	ctx, cancel := context.WithCancel(parent)
 	return ctx, cancel, nil
+}
+
+func (s *Service) CanArchive() bool { return true }
+
+func (s *Service) ArchiveCipher(_ context.Context, id string) error { return s.setArchived(id, true) }
+
+func (s *Service) UnarchiveCipher(_ context.Context, id string) error {
+	return s.setArchived(id, false)
+}
+
+func (s *Service) setArchived(id string, archive bool) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	c, ok := s.ciphers[id]
+	if !ok {
+		return state.ErrCipherNotFound
+	}
+	if archive {
+		now := time.Now()
+		c.ArchivedDate = &now
+	} else {
+		c.ArchivedDate = nil
+	}
+	return nil
 }
 
 func (s *Service) TrashSelection() state.TrashSelection {
@@ -569,6 +597,12 @@ func seedCiphers() []*state.Cipher {
 			SSHKey:       demoSSHKey("deploy@northwind"),
 			Notes:        "Used by CI to reach the production bastion.",
 			CreationDate: ago(90 * day), RevisionDate: ago(12 * day),
+		},
+		{
+			ID: "c-myspace", Type: api.CipherTypeLogin, Name: "Myspace",
+			Login:        login("alexmorgan88", "summer-2008-tunes", "", "https://myspace.com"),
+			Notes:        "Kept for the old photos; archived to keep it out of the way.",
+			CreationDate: ago(2400 * day), RevisionDate: ago(30 * day), ArchivedDate: ago(30 * day),
 		},
 		{
 			ID: "c-dropbox", Type: api.CipherTypeLogin, Name: "Dropbox (old)",

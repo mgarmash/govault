@@ -239,6 +239,30 @@ func (c *Client) RestoreCipher(ctx context.Context, accessToken, cipherID string
 	return &cipher, nil
 }
 
+// ArchiveCipher moves a cipher to the user's Archive
+// (PUT /api/ciphers/{id}/archive, Vaultwarden 1.36 or later) and returns it.
+func (c *Client) ArchiveCipher(ctx context.Context, accessToken, cipherID string) (*EncryptedCipher, error) {
+	return c.putCipherAction(ctx, accessToken, cipherID, "archive")
+}
+
+// UnarchiveCipher moves a cipher out of the user's Archive
+// (PUT /api/ciphers/{id}/unarchive) and returns it.
+func (c *Client) UnarchiveCipher(ctx context.Context, accessToken, cipherID string) (*EncryptedCipher, error) {
+	return c.putCipherAction(ctx, accessToken, cipherID, "unarchive")
+}
+
+func (c *Client) putCipherAction(ctx context.Context, accessToken, cipherID, action string) (*EncryptedCipher, error) {
+	raw, err := c.do(ctx, http.MethodPut, "/api/ciphers/"+url.PathEscape(cipherID)+"/"+action, "", accessToken, nil, nil)
+	if err != nil {
+		return nil, err
+	}
+	var cipher EncryptedCipher
+	if err := json.Unmarshal(raw, &cipher); err != nil {
+		return nil, err
+	}
+	return &cipher, nil
+}
+
 func (c *Client) HardDeleteCipher(ctx context.Context, accessToken, cipherID string) error {
 	_, err := c.do(ctx, http.MethodDelete, "/api/ciphers/"+url.PathEscape(cipherID), "", accessToken, nil, nil)
 	return err

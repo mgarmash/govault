@@ -213,24 +213,27 @@ func (c EncryptedCipher) MarshalJSON() ([]byte, error) {
 }
 
 type CipherPayload struct {
-	Type                  CipherType                 `json:"type"`
-	FolderID              *string                    `json:"folderId"`
-	OrganizationID        *string                    `json:"organizationId"`
-	Favorite              bool                       `json:"favorite"`
-	Reprompt              int                        `json:"reprompt"`
-	Key                   *string                    `json:"key,omitempty"`
-	Name                  string                     `json:"name"`
-	Notes                 *string                    `json:"notes"`
-	LastKnownRevisionDate *time.Time                 `json:"lastKnownRevisionDate,omitempty"`
-	Login                 *EncryptedLogin            `json:"login,omitempty"`
-	SecureNote            *EncryptedSecureNote       `json:"secureNote,omitempty"`
-	Card                  *EncryptedCard             `json:"card,omitempty"`
-	Identity              *EncryptedIdentity         `json:"identity,omitempty"`
-	SSHKey                *EncryptedSSHKey           `json:"sshKey,omitempty"`
-	Fields                []EncryptedField           `json:"fields,omitempty"`
-	PasswordHistory       []EncryptedPasswordHistory `json:"passwordHistory,omitempty"`
-	CollectionIDs         []string                   `json:"collectionIds,omitempty"`
-	Extra                 map[string]json.RawMessage `json:"-"`
+	Type                  CipherType `json:"type"`
+	FolderID              *string    `json:"folderId"`
+	OrganizationID        *string    `json:"organizationId"`
+	Favorite              bool       `json:"favorite"`
+	Reprompt              int        `json:"reprompt"`
+	Key                   *string    `json:"key,omitempty"`
+	Name                  string     `json:"name"`
+	Notes                 *string    `json:"notes"`
+	LastKnownRevisionDate *time.Time `json:"lastKnownRevisionDate,omitempty"`
+	// ArchivedDate is always sent: Vaultwarden and Bitwarden unarchive an
+	// item whose update omits it.
+	ArchivedDate    *time.Time                 `json:"archivedDate"`
+	Login           *EncryptedLogin            `json:"login,omitempty"`
+	SecureNote      *EncryptedSecureNote       `json:"secureNote,omitempty"`
+	Card            *EncryptedCard             `json:"card,omitempty"`
+	Identity        *EncryptedIdentity         `json:"identity,omitempty"`
+	SSHKey          *EncryptedSSHKey           `json:"sshKey,omitempty"`
+	Fields          []EncryptedField           `json:"fields,omitempty"`
+	PasswordHistory []EncryptedPasswordHistory `json:"passwordHistory,omitempty"`
+	CollectionIDs   []string                   `json:"collectionIds,omitempty"`
+	Extra           map[string]json.RawMessage `json:"-"`
 }
 
 func (p *CipherPayload) UnmarshalJSON(data []byte) error {

@@ -617,3 +617,24 @@ func TestExportRefusesABackupTooLargeToImport(t *testing.T) {
 		t.Fatalf("EncryptWithPassword = %v, want ErrBackupTooLarge", err)
 	}
 }
+
+func TestExportKeepsArchivedDate(t *testing.T) {
+	when := time.Date(2026, 11, 1, 9, 0, 0, 0, time.UTC)
+	c := login("c-old", "Myspace", "alex", "pw")
+	c.ArchivedDate = &when
+	v, err := Build([]*state.Cipher{c}, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	data, _ := json.Marshal(v)
+	if !strings.Contains(string(data), `"archivedDate":"2026-11-01T09:00:00Z"`) {
+		t.Fatalf("export lacks archivedDate: %s", data)
+	}
+	var back Vault
+	if err := json.Unmarshal(data, &back); err != nil {
+		t.Fatal(err)
+	}
+	if got := back.Items[0].content().ArchivedDate; got == nil || !got.Equal(when) {
+		t.Fatalf("a new item from the backup is archived at %v", got)
+	}
+}

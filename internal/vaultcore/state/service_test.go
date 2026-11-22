@@ -106,8 +106,13 @@ type vaultTestEnv struct {
 	// rotate them do.
 	rotateRefresh bool
 	noNewRefresh  bool
-	refreshes     int
-	refreshSpent  map[string]bool
+	// noPremium sends a profile without premium; oldServer answers the
+	// archive endpoints 404, as Vaultwarden before 1.36 does.
+	noPremium    bool
+	oldServer    bool
+	archiveCalls []string
+	refreshes    int
+	refreshSpent map[string]bool
 }
 
 func (env *vaultTestEnv) syncBody() []byte { return env.syncResp() }
@@ -396,6 +401,7 @@ func newVaultTestEnv(t *testing.T) *vaultTestEnv {
 			updated.Fields = p.Fields
 			updated.PasswordHistory = p.PasswordHistory
 			updated.Extra = p.Extra
+			updated.ArchivedDate = p.ArchivedDate
 			updated.RevisionDate = &now
 			env.ciphers[id] = updated
 			env.mu.Unlock()
@@ -409,6 +415,36 @@ func newVaultTestEnv(t *testing.T) *vaultTestEnv {
 			env.ciphers["c-created"] = c
 			env.mu.Unlock()
 			w.WriteHeader(http.StatusOK)
+
+		case r.Method == http.MethodPut && (strings.HasSuffix(r.URL.Path, "/archive") || strings.HasSuffix(r.URL.Path, "/unarchive")) && strings.HasPrefix(r.URL.Path, "/api/ciphers/"):
+			rest := strings.TrimPrefix(r.URL.Path, "/api/ciphers/")
+			id, action, _ := strings.Cut(rest, "/")
+			body, _ := io.ReadAll(r.Body)
+			env.mu.Lock()
+			env.archiveCalls = append(env.archiveCalls, r.Method+" "+r.URL.Path+" body="+string(body))
+			old := env.oldServer
+			c, ok := env.ciphers[id]
+			if ok && !old {
+				now := env.revDate.Add(time.Minute)
+				env.revDate = now
+				c.RevisionDate = &now
+				if action == "archive" {
+					c.ArchivedDate = &now
+				} else {
+					c.ArchivedDate = nil
+				}
+				env.ciphers[id] = c
+			}
+			env.mu.Unlock()
+			switch {
+			case old:
+				w.WriteHeader(http.StatusNotFound)
+			case !ok:
+				w.WriteHeader(http.StatusBadRequest)
+				_, _ = w.Write([]byte(`{"message":"Cipher doesn't exist"}`))
+			default:
+				_ = json.NewEncoder(w).Encode(c)
+			}
 
 		case r.Method == http.MethodPut && r.URL.Path == "/api/ciphers/c-created/restore":
 			env.mu.Lock()
@@ -470,7 +506,8 @@ func newVaultTestEnv(t *testing.T) *vaultTestEnv {
 			ciphers = append(ciphers, c)
 		}
 		raw, _ := json.Marshal(api.SyncResponse{
-			Profile: api.Profile{ID: env.profileID, Email: email, Key: protectedUserKey.String()},
+			Profile: api.Profile{ID: env.profileID, Email: email, Key: protectedUserKey.String(),
+				Extra: map[string]json.RawMessage{"premium": json.RawMessage(fmt.Sprint(!env.noPremium))}},
 			Folders: folders,
 			Ciphers: ciphers,
 		})

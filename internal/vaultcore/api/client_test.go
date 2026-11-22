@@ -5,8 +5,10 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"io"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -337,5 +339,37 @@ func TestInsecureServer(t *testing.T) {
 		if got := InsecureServer(u); got != want {
 			t.Errorf("InsecureServer(%q) = %v, want %v", u, got, want)
 		}
+	}
+}
+
+func TestArchiveRequests(t *testing.T) {
+	var seen []string
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		body, _ := io.ReadAll(r.Body)
+		seen = append(seen, r.Method+" "+r.URL.Path+" auth="+r.Header.Get("Authorization")+" body="+string(body))
+		_, _ = w.Write([]byte(`{"id":"c 1","type":1,"name":"2.n|c|m","archivedDate":"2026-11-22T03:40:28.812Z"}`))
+	}))
+	defer srv.Close()
+	c, err := NewClient(ClientConfig{ServerURL: srv.URL, HTTPClient: srv.Client()})
+	if err != nil {
+		t.Fatal(err)
+	}
+	got, err := c.ArchiveCipher(context.Background(), "tok", "c 1")
+	if err != nil || got.ArchivedDate == nil {
+		t.Fatalf("archive = %+v, %v", got, err)
+	}
+	if _, err := c.UnarchiveCipher(context.Background(), "tok", "c 1"); err != nil {
+		t.Fatal(err)
+	}
+	want := []string{"PUT /api/ciphers/c 1/archive auth=Bearer tok body=", "PUT /api/ciphers/c 1/unarchive auth=Bearer tok body="}
+	if len(seen) != 2 || seen[0] != want[0] || seen[1] != want[1] {
+		t.Fatalf("requests = %q, want %q", seen, want)
+	}
+}
+
+func TestUpdatePayloadAlwaysCarriesArchivedDate(t *testing.T) {
+	raw, _ := json.Marshal(CipherPayload{Name: "2.n|c|m"})
+	if !strings.Contains(string(raw), `"archivedDate":null`) {
+		t.Fatalf("payload = %s, want archivedDate present", raw)
 	}
 }

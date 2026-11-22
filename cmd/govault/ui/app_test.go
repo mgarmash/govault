@@ -44,6 +44,7 @@ type mockVaultService struct {
 	syncCalls int
 
 	unreadable   []string
+	noPremium    bool
 	uploads      int
 	attempt      uint64
 	revokes      int
@@ -211,6 +212,8 @@ func (m *mockVaultService) Search(query string, filter state.SearchFilter) []sta
 			}
 		} else if deleted {
 			continue
+		} else if (filter.Category == state.FilterArchive) != (c.ArchivedDate != nil) {
+			continue
 		}
 		if filter.Category == state.FilterFavorites && !c.Favorite {
 			continue
@@ -236,6 +239,7 @@ func (m *mockVaultService) Search(query string, filter state.SearchFilter) []sta
 			FolderID: c.FolderID,
 			Favorite: c.Favorite,
 			Deleted:  deleted,
+			Archived: c.ArchivedDate != nil,
 			Name:     c.Name,
 			Subtitle: sub,
 			HasTOTP:  hasTOTP,
@@ -357,6 +361,35 @@ func (m *mockVaultService) UnreadableItems() []string { return m.unreadable }
 func (m *mockVaultService) SessionContext(parent context.Context) (context.Context, context.CancelFunc, error) {
 	ctx, cancel := context.WithCancel(parent)
 	return ctx, cancel, nil
+}
+
+func (m *mockVaultService) CanArchive() bool { return !m.noPremium }
+
+func (m *mockVaultService) ArchiveCipher(_ context.Context, id string) error {
+	return m.setArchived(id, true)
+}
+
+func (m *mockVaultService) UnarchiveCipher(_ context.Context, id string) error {
+	return m.setArchived(id, false)
+}
+
+func (m *mockVaultService) setArchived(id string, archive bool) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	c, ok := m.ciphers[id]
+	if !ok {
+		return state.ErrCipherNotFound
+	}
+	if archive && m.noPremium {
+		return state.ErrPremiumRequired
+	}
+	if archive {
+		now := time.Now()
+		c.ArchivedDate = &now
+	} else {
+		c.ArchivedDate = nil
+	}
+	return nil
 }
 
 func (m *mockVaultService) TrashSelection() state.TrashSelection {

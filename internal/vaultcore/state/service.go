@@ -59,6 +59,7 @@ type Service struct {
 	sessionCtx    context.Context
 	sessionCancel context.CancelFunc
 	unreadable    []string
+	premium       bool
 	credsUnsaved  bool
 	// localOnly marks an unlocked session whose saved sign-in could not be
 	// validated: the vault is readable, but nothing goes to the server
@@ -1275,6 +1276,7 @@ type vaultData struct {
 	// unreadable lists personal items GoVault cannot read, such as ones in
 	// a newer format; a backup without them would be incomplete.
 	unreadable  []string
+	premium     bool
 	ciphers     map[string]*Cipher
 	folders     map[string]Folder
 	orgs        map[string]Organization
@@ -1300,6 +1302,88 @@ func (s *Service) applyDataLocked(d *vaultData) {
 	s.collections = d.collections
 	s.orgKeys = d.orgKeys
 	s.unreadable = d.unreadable
+	s.premium = d.premium
+}
+
+func profileFlag(extra map[string]json.RawMessage, name string) bool {
+	var on bool
+	return json.Unmarshal(extra[name], &on) == nil && on
+}
+
+// CanArchive reports whether the account may archive items: Bitwarden
+// makes Archive a premium feature, from a personal or organization plan
+// (Vaultwarden gives every account premium). Unarchiving is always
+// allowed, so items archived before premium ended can come back.
+func (s *Service) CanArchive() bool {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return s.status == StatusUnlocked && s.premium
+}
+
+// ArchiveCipher moves an item to the user's Archive. Like a favorite, the
+// archive is per user, so read-only organization items can be archived
+// too; items in Trash cannot.
+func (s *Service) ArchiveCipher(ctx context.Context, id string) error {
+	return s.setArchived(ctx, id, true)
+}
+
+// UnarchiveCipher moves an item from the Archive back to the vault.
+func (s *Service) UnarchiveCipher(ctx context.Context, id string) error {
+	return s.setArchived(ctx, id, false)
+}
+
+func (s *Service) setArchived(ctx context.Context, id string, archive bool) error {
+	o, err := s.beginOp(ctx)
+	if err != nil {
+		return err
+	}
+	defer o.end()
+	s.mu.RLock()
+	c, premium := s.ciphers[id], s.premium
+	var prevCollections []string
+	if c != nil {
+		prevCollections = slices.Clone(c.CollectionIDs)
+	}
+	s.mu.RUnlock()
+	switch {
+	case c == nil:
+		return ErrCipherNotFound
+	case c.DeletedDate != nil:
+		return ErrCipherInTrash
+	case (c.ArchivedDate != nil) == archive:
+		return nil
+	case archive && !premium:
+		return ErrPremiumRequired
+	}
+
+	encResp, err := withAuth(o, func(ctx context.Context, tok string) (*api.EncryptedCipher, error) {
+		if archive {
+			return o.client.ArchiveCipher(ctx, tok, id)
+		}
+		return o.client.UnarchiveCipher(ctx, tok, id)
+	})
+	if err == api.ErrNotFound {
+		// A plain 404 is a server without the archive endpoints; a missing
+		// item is a 400 on Vaultwarden.
+		return ErrArchiveUnsupported
+	}
+	if err != nil {
+		return err
+	}
+	key, err := o.itemKey(encResp.OrganizationID)
+	if err != nil {
+		return err
+	}
+	defer key.Zero()
+	decrypted, err := decryptCipher(encResp, key)
+	if err != nil {
+		return err
+	}
+	if len(decrypted.CollectionIDs) == 0 {
+		decrypted.CollectionIDs = prevCollections
+	}
+	_, err = o.commitCipher(decrypted, encResp)
+	return err
 }
 
 // UnreadableItems lists the IDs of personal items GoVault could not read,
@@ -1323,6 +1407,7 @@ func (s *Service) clearDataLocked() {
 	s.ciphers = nil
 	s.folders = nil
 	s.unreadable = nil
+	s.premium = false
 }
 
 func (s *Service) Organizations() []Organization {
@@ -1381,6 +1466,7 @@ func decryptSyncResponse(resp *api.SyncResponse, userKey *crypto.SymmetricKey) (
 		orgs:        map[string]Organization{},
 		collections: map[string]Collection{},
 		orgKeys:     unwrapOrgKeys(&resp.Profile, userKey),
+		premium:     profileFlag(resp.Profile.Extra, "premium") || profileFlag(resp.Profile.Extra, "premiumFromOrganization"),
 	}
 	for _, org := range resp.Profile.Organizations {
 		if _, ok := d.orgKeys[org.ID]; ok {

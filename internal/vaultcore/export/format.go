@@ -35,6 +35,7 @@ type Item struct {
 	RevisionDate    *time.Time        `json:"revisionDate"`
 	CreationDate    *time.Time        `json:"creationDate"`
 	DeletedDate     *time.Time        `json:"deletedDate"`
+	ArchivedDate    *time.Time        `json:"archivedDate,omitempty"`
 	ID              string            `json:"id"`
 	OrganizationID  *string           `json:"organizationId"`
 	FolderID        *string           `json:"folderId"`
@@ -203,7 +204,7 @@ func Build(ciphers []*state.Cipher, folders []state.Folder) (*Vault, error) {
 
 func FromCipher(c *state.Cipher) Item {
 	it := Item{
-		RevisionDate: c.RevisionDate, CreationDate: c.CreationDate,
+		RevisionDate: c.RevisionDate, CreationDate: c.CreationDate, ArchivedDate: c.ArchivedDate,
 		ID: c.ID, FolderID: c.FolderID, Type: c.Type, Reprompt: c.Reprompt,
 		Name: c.Name, Notes: opt(c.Notes), Favorite: c.Favorite,
 	}
@@ -247,7 +248,7 @@ func FromCipher(c *state.Cipher) Item {
 // content returns the item as a new personal cipher without an ID, folder,
 // organization or dates; callers place it.
 func (it Item) content() *state.Cipher {
-	c := &state.Cipher{Type: it.Type, Reprompt: it.Reprompt, Name: it.Name, Notes: val(it.Notes), Favorite: it.Favorite}
+	c := &state.Cipher{Type: it.Type, Reprompt: it.Reprompt, Name: it.Name, Notes: val(it.Notes), Favorite: it.Favorite, ArchivedDate: it.ArchivedDate}
 	for _, h := range it.PasswordHistory {
 		c.PasswordHistory = append(c.PasswordHistory, state.PasswordHistoryEntry{Password: h.Password, LastUsedDate: h.LastUsedDate})
 	}
