@@ -158,4 +158,4 @@ More detail:
 
 ## License
 
-GoVault is released under the [MIT License](LICENSE). Built with [NSGo](https://nsgo.dev) (Apache License 2.0).
+GoVault is released under the [MIT License](LICENSE). Built with [NSGo](https://nsgo.dev) (Apache License 2.0). Passphrases use the [EFF large wordlist](https://www.eff.org/dice) by the Electronic Frontier Foundation, licensed under [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/) (dice numbers removed).

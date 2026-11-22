@@ -1,70 +1,15 @@
 package gen
 
-var passphraseWords = [...]string{
-	"acorn", "admiral", "agenda", "almond", "alpine", "amber", "anchor", "anorak",
-	"apricot", "arcade", "archer", "arctic", "aroma", "arrow", "aspen", "atlas",
-	"autumn", "avenue", "badge", "bakery", "ballet", "bamboo", "banjo", "banner",
-	"banyan", "barley", "barrel", "basalt", "basket", "beacon", "beagle", "beaker",
-	"beetle", "belfry", "beret", "bison", "blazer", "blizzard", "blossom", "bobcat",
-	"boulder", "bramble", "breeze", "bridge", "bronze", "brook", "bucket", "buffalo",
-	"cactus", "cairn", "camera", "canary", "candle", "canopy", "canyon", "carbon",
-	"carpet", "carrot", "castle", "cedar", "cellar", "chalet", "chapel", "cherry",
-	"chisel", "cider", "cinder", "citrus", "clamor", "clarinet", "clover", "cobalt",
-	"cobble", "coconut", "compass", "condor", "copper", "coral", "cornet", "cotton",
-	"cougar", "cradle", "crater", "crayon", "cricket", "crimson", "crocus", "crystal",
-	"cupola", "curtain", "cypress", "dagger", "dahlia", "dancer", "dapple", "daybreak",
-	"delta", "denim", "desert", "diadem", "dimple", "dinghy", "dolphin", "domino",
-	"donkey", "dormer", "dragon", "drizzle", "drumlin", "duffel", "eagle", "earwig",
-	"easel", "eclipse", "eddy", "egret", "elder", "ember", "emerald", "enamel",
-	"encore", "engine", "ermine", "estuary", "fable", "falcon", "fennel", "ferret",
-	"fiddle", "fiesta", "figment", "filbert", "finial", "firefly", "flannel", "flicker",
-	"flint", "flurry", "fodder", "forest", "fossil", "fountain", "foxglove", "fresco",
-	"frigate", "furlong", "gadget", "galley", "gambit", "gander", "garnet", "gazebo",
-	"gecko", "geyser", "gibbon", "ginger", "glacier", "glider", "goblet", "gopher",
-	"granite", "gravel", "griffin", "grotto", "guinea", "guitar", "harbor", "harvest",
-	"hawk", "hazelnut", "heather", "helmet", "hemlock", "herald", "hermit", "hickory",
-	"hollow", "hornet", "hurdle", "hyssop", "ibex", "icicle", "iguana", "indigo",
-	"ingot", "inlet", "island", "ivory", "jackal", "jasper", "jigsaw", "juniper",
-	"kayak", "kennel", "kernel", "kestrel", "kettle", "kimono", "kindred", "kingdom",
-	"kitten", "knapsack", "kobold", "kumquat", "ladder", "lagoon", "lantern", "larch",
-	"lariat", "laurel", "lavender", "ledger", "lemur", "lentil", "leopard", "lichen",
-	"linden", "linnet", "lizard", "lobster", "locket", "locust", "lotus", "lumber",
-	"lynx", "macaw", "magnet", "magpie", "mallet", "mammal", "mandolin", "mango",
-	"mantis", "maple", "marble", "margin", "marigold", "marmot", "marrow", "marshal",
-	"marten", "meadow", "medley", "melon", "mercury", "merlin", "meteor", "mitten",
-	"monarch", "monkey", "monsoon", "mortar", "mosaic", "muffin", "mullet", "musket",
-	"mustard", "myrtle", "narwhal", "nectar", "needle", "nettle", "newt", "nickel",
-	"nimbus", "nocturne", "noodle", "nutmeg", "oarsman", "obelisk", "ocelot", "ochre",
-	"octave", "odyssey", "olive", "omelet", "onyx", "opossum", "orange", "orchard",
-	"orchid", "origami", "oriole", "osprey", "otter", "outpost", "oyster", "paddle",
-	"pagoda", "palace", "palate", "panther", "papaya", "parade", "parcel", "parlor",
-	"parrot", "parsley", "pasture", "pebble", "pelican", "pendant", "penguin", "peony",
-	"pepper", "peridot", "petrel", "pewter", "pheasant", "piccolo", "pigeon", "pillar",
-	"pillow", "pimento", "pioneer", "pippin", "pirate", "pistil", "plover", "plumage",
-	"pocket", "pointer", "pollen", "pomelo", "poncho", "poplar", "porch", "porpoise",
-	"portal", "possum", "prairie", "pretzel", "primrose", "prism", "prowler", "puffin",
-	"pulley", "pumpkin", "pyramid", "python", "quail", "quarry", "quartz", "quiver",
-	"rabbit", "raccoon", "radish", "rafter", "raisin", "ramble", "raptor", "rascal",
-	"rattle", "raven", "redwood", "regatta", "reindeer", "relic", "ribbon", "riddle",
-	"ripple", "rivulet", "robin", "rocket", "rooster", "rosemary", "rowboat", "rubicon",
-	"rudder", "russet", "saffron", "saguaro", "sailor", "salmon", "saloon", "sandal",
-	"sapling", "sardine", "satchel", "savanna", "scarab", "scepter", "schooner", "scroll",
-	"seagull", "sequoia", "serpent", "sesame", "shackle", "shallot", "shamrock", "shelter",
-	"sherbet", "shingle", "shuttle", "sierra", "signal", "silver", "siskin", "skillet",
-	"skipper", "skylark", "slipper", "snorkel", "snowdrop", "solstice", "sonnet", "sorrel",
-	"sparrow", "spatula", "spindle", "spruce", "squire", "stallion", "staple", "starling",
-	"steeple", "stirrup", "stork", "strudel", "stucco", "summit", "sundial", "sunbeam",
-	"swallow", "sycamore", "tablet", "tackle", "tadpole", "talon", "tamale", "tamarind",
-	"tandem", "tangle", "tapestry", "tarmac", "tarpon", "tartan", "tassel", "tavern",
-	"teacup", "teasel", "tempest", "terrace", "terrier", "thatch", "thimble", "thistle",
-	"thrush", "thunder", "thyme", "ticket", "timber", "tinder", "tinsel", "toadstool",
-	"toboggan", "topaz", "tornado", "tortoise", "toucan", "tractor", "trapeze", "trellis",
-	"trident", "trillium", "trinket", "trolley", "trumpet", "truffle", "tulip", "tundra",
-	"tunnel", "turban", "turnip", "turret", "turtle", "tussock", "twilight", "umbrella",
-	"urchin", "utensil", "valley", "vanguard", "vanilla", "velvet", "veranda", "verbena",
-	"vesper", "vessel", "viaduct", "vigil", "village", "vinegar", "violet", "viola",
-	"viper", "viscount", "vortex", "voyager", "waffle", "wagon", "walnut", "walrus",
-	"warbler", "warden", "wattle", "weasel", "weather", "wharf", "whippet", "whistle",
-	"wicker", "widgeon", "wildcat", "willow", "windmill", "winkle", "winter", "wisteria",
-	"wombat", "woodland", "wrangler", "wren", "yarrow", "yonder", "zephyr", "zinnia",
-}
+import (
+	_ "embed"
+	"strings"
+)
+
+// eff_large_wordlist.txt is the EFF large wordlist (https://www.eff.org/dice)
+// by the Electronic Frontier Foundation, CC BY 3.0, with its dice numbers
+// removed: 7,776 words, one per line.
+//
+//go:embed eff_large_wordlist.txt
+var effLargeWordlist string
+
+var passphraseWords = strings.Fields(effLargeWordlist)

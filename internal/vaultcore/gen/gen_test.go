@@ -2,6 +2,7 @@ package gen
 
 import (
 	"errors"
+	"math"
 	"strings"
 	"testing"
 	"unicode"
@@ -114,5 +115,32 @@ func TestGenerateEd25519SSHKey(t *testing.T) {
 	got, err := InspectSSHPrivateKey(k.PrivateKey, "me@host")
 	if err != nil || got != k {
 		t.Fatalf("InspectSSHPrivateKey = (%+v, %v), want %+v", got, err, k)
+	}
+}
+
+func TestPassphraseWordsAreTheEFFLargeList(t *testing.T) {
+	if len(passphraseWords) != 7776 {
+		t.Fatalf("word list has %d words, want 7776", len(passphraseWords))
+	}
+	seen := map[string]bool{}
+	for _, w := range passphraseWords {
+		if seen[w] {
+			t.Fatalf("duplicate word %q", w)
+		}
+		seen[w] = true
+	}
+	if passphraseWords[0] != "abacus" || passphraseWords[7775] != "zoom" {
+		t.Fatalf("list starts %q and ends %q", passphraseWords[0], passphraseWords[7775])
+	}
+}
+
+func TestPassphraseBits(t *testing.T) {
+	four := PassphraseBits(PassphraseOptions{NumWords: 4})
+	if math.Abs(four-4*math.Log2(7776)) > 1e-9 {
+		t.Fatalf("4 words = %.2f bits", four)
+	}
+	withNum := PassphraseBits(PassphraseOptions{NumWords: 4, IncludeNum: true, Capitalize: true})
+	if math.Abs(withNum-(four+math.Log2(10)+2)) > 1e-9 {
+		t.Fatalf("4 words with a digit = %.2f bits", withNum)
 	}
 }

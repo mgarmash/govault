@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"errors"
 	"fmt"
+	"math"
 	"math/big"
 	"strings"
 )
@@ -130,6 +131,20 @@ func GeneratePassword(opts PasswordOptions) (string, error) {
 		return "", err
 	}
 	return string(out), nil
+}
+
+// PassphraseBits is the entropy of a passphrase GeneratePassphrase makes
+// with opts: each word drawn from the word list, plus, with IncludeNum, a
+// digit and the word it is added to. Capitalizing adds none.
+func PassphraseBits(opts PassphraseOptions) float64 {
+	if opts.NumWords <= 0 {
+		return 0
+	}
+	bits := float64(opts.NumWords) * math.Log2(float64(len(passphraseWords)))
+	if opts.IncludeNum {
+		bits += math.Log2(10) + math.Log2(float64(opts.NumWords))
+	}
+	return bits
 }
 
 func GeneratePassphrase(opts PassphraseOptions) (string, error) {

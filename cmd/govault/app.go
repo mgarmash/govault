@@ -119,8 +119,8 @@ func NewDesktopShell(app *core.Scope, demoMode bool) *DesktopShell {
 	hooks.DiscoverSnapshot = func(preferred string) *govaultui.AccountSnapshotMeta {
 		return DiscoverAccountSnapshot(dataDir, preferred)
 	}
-	hooks.VerifyMasterPassword = func(password []byte) error {
-		return VerifyMasterPasswordOffline(dataDir, shell.model.Prefs.Get().AccountID, password)
+	hooks.VerifyMasterPassword = func(accountID string, password []byte) error {
+		return VerifyMasterPasswordOffline(dataDir, accountID, password)
 	}
 
 	shell.model = govaultui.NewAppModel(app, svc, hooks)

@@ -6,6 +6,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -93,6 +94,7 @@ func TestFaviconStoreCachesDedupsAndClears(t *testing.T) {
 	loaded := make(chan string, 8)
 	store := NewFaviconStore(FaviconStoreConfig{CacheDir: dir, HTTPClient: srv.Client()})
 	store.SetOnLoaded(func(d string) { loaded <- d })
+	store.SetAccount("acct-1")
 
 	if store.Lookup(srv.URL, "github.com") != nil || store.Lookup(srv.URL, "github.com") != nil {
 		t.Fatal("first lookups should miss")
@@ -101,9 +103,15 @@ func TestFaviconStoreCachesDedupsAndClears(t *testing.T) {
 	if got := store.Lookup(srv.URL, "github.com"); !bytes.Equal(got, testPNG) {
 		t.Fatalf("memory hit = %q", got)
 	}
-	if disk, err := os.ReadFile(filepath.Join(dir, "github.com.png")); err != nil || !bytes.Equal(disk, testPNG) {
+	if disk, err := os.ReadFile(store.diskPath("github.com")); err != nil || !bytes.Equal(disk, testPNG) {
 		t.Fatalf("disk cache = %q, %v", disk, err)
 	}
+	_ = filepath.WalkDir(dir, func(p string, _ os.DirEntry, _ error) error {
+		if strings.Contains(p, "github") {
+			t.Fatalf("the cache names a vault domain: %s", p)
+		}
+		return nil
+	})
 
 	for range 3 {
 		store.Lookup(srv.URL, "missing.example.com")
@@ -115,6 +123,7 @@ func TestFaviconStoreCachesDedupsAndClears(t *testing.T) {
 	waitHits(t, srv, 3)
 
 	fresh := NewFaviconStore(FaviconStoreConfig{CacheDir: dir, HTTPClient: srv.Client()})
+	fresh.SetAccount("acct-1")
 	freshLoaded := make(chan string, 1)
 	fresh.SetOnLoaded(func(d string) { freshLoaded <- d })
 	fresh.Lookup(srv.URL, "github.com")
@@ -169,4 +178,43 @@ func TestShowFaviconsToggleGatesFetches(t *testing.T) {
 	app.Post(func() { model.SetShowFavicons(true) })
 	app.WaitUntil(2*time.Second, func() bool { return srv.hits.Load() == 1 })
 	app.WaitUntil(2*time.Second, func() bool { return favicons.Lookup(srv.URL, "github.com") != nil })
+}
+
+func TestFaviconFetchedBeforeClearIsNeverWritten(t *testing.T) {
+	dir := t.TempDir()
+	s := NewFaviconStore(FaviconStoreConfig{CacheDir: dir})
+	s.SetAccount("acct-1")
+	path := s.diskPath("github.com")
+	job := faviconJob{domain: "github.com", generation: 0}
+	s.mu.Lock()
+	job.generation = s.generation
+	s.mu.Unlock()
+	if err := s.ClearAccount("acct-1"); err != nil {
+		t.Fatal(err)
+	}
+	s.writeIfCurrent(job, path, testPNG)
+	if _, err := os.Stat(path); !os.IsNotExist(err) {
+		t.Fatalf("an icon fetched before Clear was written after it: %v", err)
+	}
+}
+
+func TestLogoutRemovesTheAccountIconCache(t *testing.T) {
+	srv := newIconServer(t)
+	dir := t.TempDir()
+	store := NewFaviconStore(FaviconStoreConfig{CacheDir: dir, HTTPClient: srv.Client()})
+	loaded := make(chan string, 1)
+	store.SetOnLoaded(func(d string) { loaded <- d })
+	store.SetAccount("acct-1")
+	store.Lookup(srv.URL, "github.com")
+	waitLoaded(t, loaded, "github.com")
+	acct := store.accountDir("acct-1")
+	if _, err := os.Stat(acct); err != nil {
+		t.Fatal(err)
+	}
+	if err := store.ClearAccount("acct-1"); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.Stat(acct); !os.IsNotExist(err) {
+		t.Fatalf("account icon cache after logout: %v", err)
+	}
 }

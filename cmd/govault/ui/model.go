@@ -149,7 +149,10 @@ type PlatformHooks struct {
 	SleepLockSupported   bool
 	Favicons             *FaviconStore
 	DiscoverSnapshot     func(preferredAccountID string) *AccountSnapshotMeta
-	VerifyMasterPassword func(password []byte) error
+	// VerifyMasterPassword checks password against accountID's vault. It
+	// runs on a worker, so it takes the account as an argument rather than
+	// reading app state.
+	VerifyMasterPassword func(accountID string, password []byte) error
 	PrefsKey             string
 	SSHAgent             SSHAgentHost
 	// BiometricHardwareBound reports whether the biometric key of an account is
@@ -467,10 +470,11 @@ type AppModel struct {
 
 	Toaster *ui.Toaster
 
-	faviconsOn *core.Memo[bool]
-	iconServer *core.Memo[string]
-	iconEpoch  *core.Signal[int]
-	iconSigs   map[string]*core.Signal[int]
+	faviconsOn  *core.Memo[bool]
+	iconServer  *core.Memo[string]
+	iconAccount *core.Memo[string]
+	iconEpoch   *core.Signal[int]
+	iconSigs    map[string]*core.Signal[int]
 
 	totpCtrl  TOTPController
 	idleTimer IdleTimer
@@ -1267,6 +1271,9 @@ func (m *AppModel) ServiceLeftUnlocked(st state.LockStatus) {
 }
 
 func (m *AppModel) forgetAccount() {
+	if f := m.Hooks.Favicons; f != nil {
+		_ = f.ClearAccount(m.Prefs.Get().AccountID)
+	}
 	m.resetFaviconMemory()
 	m.UpdatePrefs(func(p UserPrefs) UserPrefs {
 		p.AccountID = ""
@@ -1820,6 +1827,7 @@ func (m *AppModel) SaveDraft(cx *core.Scope) {
 
 	cipher := cipherFromDraft(draft)
 	m.ReleaseSecureInput()
+	gen := m.LockGeneration()
 	m.EditBusy.Set(true)
 	m.EditError.Set("")
 
@@ -1833,6 +1841,9 @@ func (m *AppModel) SaveDraft(cx *core.Scope) {
 			saved = lc.Cipher
 		}
 		m.Scope.Post(func() {
+			if !m.StillUnlocked(gen) {
+				return
+			}
 			m.EditBusy.Set(false)
 			if err != nil && !localCopyFailed {
 				if errors.Is(err, api.ErrRevisionConflict) {
@@ -1900,16 +1911,21 @@ func (m *AppModel) ToggleFavorite() {
 	}
 	cp := *c
 	cp.Favorite = !cp.Favorite
+	gen := m.LockGeneration()
 	go func() {
 		saved, err := m.Core.SaveCipher(context.Background(), &cp)
 		m.Scope.Post(func() {
-			if err != nil {
+			if !m.StillUnlocked(gen) {
+				return
+			}
+			var lc *state.LocalCopyError
+			if err != nil && !errors.As(err, &lc) {
 				m.ShowToast(ui.ToastError, "Update failed", friendlyError(err))
 				return
 			}
-			m.RefreshVaultData()
-			if saved != nil {
-				m.ActiveCipher.Set(saved)
+			m.applyCipherUpdate(saved)
+			if lc != nil {
+				m.ShowLocalCopyWarning("Favorite updated")
 			}
 		})
 	}()
@@ -2121,10 +2137,11 @@ func (m *AppModel) SubmitReprompt() {
 	m.RepromptError.Set("")
 	pwBytes := []byte(pw)
 	cb := m.Reprompt.Get().OnAllow
+	accountID := m.Prefs.Get().AccountID
 
 	go func() {
 		defer crypto.ZeroBytes(pwBytes)
-		err := m.Hooks.VerifyMasterPassword(pwBytes)
+		err := m.Hooks.VerifyMasterPassword(accountID, pwBytes)
 		m.Scope.Post(func() {
 			m.RepromptBusy.Set(false)
 			if err != nil {

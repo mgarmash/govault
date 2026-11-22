@@ -208,11 +208,21 @@ func (m *AppModel) AttachFile(cx *core.Scope, c *state.Cipher) {
 					return
 				}
 				m.AttachmentBusy.Set("")
-				if err != nil {
+				// The server has the attachment even when its local copy
+				// failed; uploading again would attach it twice.
+				var lc *state.LocalCopyError
+				if err != nil && !errors.As(err, &lc) {
 					m.ShowToast(ui.ToastError, "Upload failed", friendlyError(err))
 					return
 				}
+				if updated == nil && lc != nil {
+					updated = lc.Cipher
+				}
 				m.applyCipherUpdate(updated)
+				if lc != nil {
+					m.ShowLocalCopyWarning("File attached")
+					return
+				}
 				m.ShowToast(ui.ToastSuccess, "File attached", f.Name)
 			})
 		}()
@@ -265,11 +275,19 @@ func (m *AppModel) DeleteAttachment(cx *core.Scope, c *state.Cipher, att state.A
 					return
 				}
 				m.AttachmentBusy.Set("")
-				if err != nil {
+				var lc *state.LocalCopyError
+				if err != nil && !errors.As(err, &lc) {
 					m.ShowToast(ui.ToastError, "Delete failed", friendlyError(err))
 					return
 				}
+				if updated == nil && lc != nil {
+					updated = lc.Cipher
+				}
 				m.applyCipherUpdate(updated)
+				if lc != nil {
+					m.ShowLocalCopyWarning("Attachment deleted")
+					return
+				}
 				m.ShowToast(ui.ToastInfo, "Attachment deleted", "")
 			})
 		}()

@@ -4,6 +4,10 @@ import (
 	"bytes"
 	"container/list"
 	"context"
+	"crypto/hmac"
+	"crypto/rand"
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"io"
@@ -109,6 +113,10 @@ type FaviconStore struct {
 	failed     map[string]time.Time
 	inflight   map[string]bool
 	generation uint64
+	// account scopes the disk cache: icons live in a directory of the
+	// account's, under names that do not reveal the domain.
+	account    string
+	legacyOnce sync.Once
 	jobs       chan faviconJob
 	startOnce  sync.Once
 	onLoaded   func(domain string)
@@ -189,6 +197,65 @@ func (s *FaviconStore) Lookup(serverURL, domain string) []byte {
 	return nil
 }
 
+// SetAccount scopes the cache to accountID; "" keeps icons in memory only.
+func (s *FaviconStore) SetAccount(accountID string) {
+	s.legacyOnce.Do(s.removeLegacyFiles)
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.account == accountID {
+		return
+	}
+	s.account = accountID
+	s.generation++
+	s.lru.Init()
+	clear(s.entries)
+	clear(s.failed)
+	clear(s.inflight)
+}
+
+// ClearAccount removes accountID's icons from memory and disk.
+func (s *FaviconStore) ClearAccount(accountID string) error {
+	s.ResetMemory()
+	if s.cfg.CacheDir == "" || accountID == "" {
+		return nil
+	}
+	return os.RemoveAll(s.accountDir(accountID))
+}
+
+// removeLegacyFiles deletes icons older versions saved under their domain
+// names at the top of the cache.
+func (s *FaviconStore) removeLegacyFiles() {
+	if s.cfg.CacheDir == "" {
+		return
+	}
+	old, _ := filepath.Glob(filepath.Join(s.cfg.CacheDir, "*.png"))
+	for _, p := range old {
+		_ = os.Remove(p)
+	}
+}
+
+func (s *FaviconStore) accountDir(accountID string) string {
+	sum := sha256.Sum256([]byte("govault-favicons\x00" + accountID))
+	return filepath.Join(s.cfg.CacheDir, "acct-"+hex.EncodeToString(sum[:8]))
+}
+
+// accountKey is a random key per account, kept with its icons, that names
+// them: the cache shows which files exist, not which sites they are for.
+func (s *FaviconStore) accountKey(dir string) []byte {
+	path := filepath.Join(dir, "key")
+	if k, err := os.ReadFile(path); err == nil && len(k) == 32 {
+		return k
+	}
+	k := make([]byte, 32)
+	if _, err := rand.Read(k); err != nil {
+		return nil
+	}
+	if writeFileAtomic(path, k) != nil {
+		return nil
+	}
+	return k
+}
+
 func (s *FaviconStore) ResetMemory() {
 	s.mu.Lock()
 	s.generation++
@@ -240,10 +307,30 @@ func (s *FaviconStore) putLocked(domain string, data []byte) {
 }
 
 func (s *FaviconStore) diskPath(domain string) string {
-	if s.cfg.CacheDir == "" || !validIconHost(domain) {
+	s.mu.Lock()
+	account := s.account
+	s.mu.Unlock()
+	if s.cfg.CacheDir == "" || account == "" || !validIconHost(domain) {
 		return ""
 	}
-	return filepath.Join(s.cfg.CacheDir, domain+".png")
+	dir := s.accountDir(account)
+	key := s.accountKey(dir)
+	if key == nil {
+		return ""
+	}
+	mac := hmac.New(sha256.New, key)
+	mac.Write([]byte(domain))
+	return filepath.Join(dir, hex.EncodeToString(mac.Sum(nil)[:16])+".png")
+}
+
+// writeIfCurrent saves an icon only while job's generation is current, so
+// an icon fetched before Clear, lock or logout is never written after it.
+func (s *FaviconStore) writeIfCurrent(job faviconJob, path string, data []byte) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if job.generation == s.generation {
+		_ = writeFileAtomic(path, data)
+	}
 }
 
 func (s *FaviconStore) load(job faviconJob) ([]byte, error) {
@@ -254,7 +341,7 @@ func (s *FaviconStore) load(job faviconJob) ([]byte, error) {
 				return data, nil
 			}
 			if fixed, err := normalizeIcon(data); err == nil {
-				_ = writeFileAtomic(path, fixed)
+				s.writeIfCurrent(job, path, fixed)
 				return fixed, nil
 			}
 			_ = os.Remove(path)
@@ -271,7 +358,7 @@ func (s *FaviconStore) load(job faviconJob) ([]byte, error) {
 		return nil, err
 	}
 	if path != "" {
-		_ = writeFileAtomic(path, data)
+		s.writeIfCurrent(job, path, data)
 	}
 	return data, nil
 }
@@ -330,6 +417,7 @@ func (m *AppModel) setupFavicons() {
 	m.iconSigs = map[string]*core.Signal[int]{}
 	m.faviconsOn = core.NewMemo(m.Scope, func() bool { return m.Prefs.Get().FaviconsEnabled() })
 	m.iconServer = core.NewMemo(m.Scope, func() string { return m.Prefs.Get().ServerURL })
+	m.iconAccount = core.NewMemo(m.Scope, func() string { return m.Prefs.Get().AccountID })
 	f := m.Hooks.Favicons
 	if f == nil {
 		return
@@ -356,6 +444,7 @@ func (m *AppModel) SiteIcon(uris []string) []byte {
 		return nil
 	}
 	m.iconEpoch.Get()
+	f.SetAccount(m.iconAccount.Get())
 	sig := m.iconSigs[domain]
 	if sig == nil {
 		sig = core.NewSignal(m.Scope, 0)

@@ -2,6 +2,7 @@ package ui
 
 import (
 	"fmt"
+	"github.com/txchen/govault/internal/vaultcore/gen"
 	"math"
 
 	"github.com/nsgo-dev/nsgo/base"
@@ -61,10 +62,7 @@ func (m *AppModel) generatorStrength() strength {
 	p := m.Prefs.Get()
 	var bits float64
 	if p.GeneratorMode == "passphrase" {
-		bits = float64(p.PassphraseOpts.NumWords) * math.Log2(7776)
-		if p.PassphraseOpts.IncludeNum {
-			bits += math.Log2(10)
-		}
+		bits = gen.PassphraseBits(p.PassphraseOpts)
 	} else {
 		pool := 0
 		o := p.PasswordOpts

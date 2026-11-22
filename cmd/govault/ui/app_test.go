@@ -44,6 +44,9 @@ type mockVaultService struct {
 	syncCalls int
 
 	unreadable []string
+	uploads    int
+	// saveGate, when set, holds SaveCipher until it is closed.
+	saveGate chan struct{}
 }
 
 func newMockVaultService(initial state.LockStatus) *mockVaultService {
@@ -235,6 +238,12 @@ func (m *mockVaultService) GetCipher(id string) (*state.Cipher, error) {
 }
 
 func (m *mockVaultService) SaveCipher(_ context.Context, c *state.Cipher) (*state.Cipher, error) {
+	m.mu.RLock()
+	gate := m.saveGate
+	m.mu.RUnlock()
+	if gate != nil {
+		<-gate
+	}
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	if m.status != state.StatusUnlocked {
@@ -701,7 +710,11 @@ func (m *mockVaultService) UploadAttachment(_ context.Context, cipherID, fileNam
 		return nil, state.ErrCipherNotFound
 	}
 	c.Attachments = append(slices.Clone(c.Attachments), state.Attachment{ID: "att-" + fileName, FileName: fileName, Size: int64(len(plain))})
+	m.uploads++
 	cp := *c
+	if m.localCopyFails {
+		return &cp, &state.LocalCopyError{Cipher: &cp, Err: errors.New("disk full")}
+	}
 	return &cp, nil
 }
 

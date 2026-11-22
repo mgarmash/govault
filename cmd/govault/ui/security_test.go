@@ -16,7 +16,7 @@ func startSecurityApp(t *testing.T, svc *mockVaultService, hooks PlatformHooks) 
 	t.Helper()
 	var model *AppModel
 	var root *core.Scope
-	hooks.VerifyMasterPassword = func([]byte) error { return nil }
+	hooks.VerifyMasterPassword = func(string, []byte) error { return nil }
 	app := nsgotest.Start(t, func(cx *core.Scope) core.Node {
 		root = cx
 		model = NewAppModel(cx, svc, hooks)

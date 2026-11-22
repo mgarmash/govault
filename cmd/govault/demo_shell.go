@@ -16,7 +16,7 @@ func newDemoShell(app *core.Scope) *DesktopShell {
 	}
 	hooks := shell.platformHooks(demo.NewSecretStore())
 	hooks.PrefsKey = "govault.demo.prefs"
-	hooks.VerifyMasterPassword = func(password []byte) error {
+	hooks.VerifyMasterPassword = func(_ string, password []byte) error {
 		if len(password) == 0 {
 			return state.ErrLocked
 		}

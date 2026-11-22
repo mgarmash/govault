@@ -98,11 +98,12 @@ func TestNormalizeIconPicksLargestStaticFrame(t *testing.T) {
 func TestFaviconStoreNormalizesCachedICO(t *testing.T) {
 	dir := t.TempDir()
 	s := NewFaviconStore(FaviconStoreConfig{CacheDir: dir})
+	s.SetAccount("acct-1")
 	path := s.diskPath("login.live.com")
 	if err := os.WriteFile(path, buildICO(solidPNG(t, 16), solidPNG(t, 32)), 0o600); err != nil {
 		t.Fatal(err)
 	}
-	data, err := s.load(faviconJob{domain: "login.live.com"})
+	data, err := s.load(faviconJob{domain: "login.live.com", generation: s.generation})
 	if err != nil || decodedSize(t, data) != 32 {
 		t.Fatalf("load = (%d bytes, %v)", len(data), err)
 	}
