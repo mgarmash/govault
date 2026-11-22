@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"slices"
+	"strings"
 	"time"
 )
 
@@ -304,7 +305,14 @@ func (s *Server) writeCipher(w http.ResponseWriter, r *http.Request, parts []str
 		it["attachments"] = append(atts, att)
 		it["revisionDate"] = now()
 		s.bump()
+		if s.cfg.AzureUploads {
+			writeJSON(w, 200, obj{"attachmentId": aid, "url": s.blobURL(id, aid, s.cfg.AzureURLExpired), "fileUploadType": 1, "cipherResponse": it, "object": "attachment-fileUpload"})
+			return true
+		}
 		writeJSON(w, 200, obj{"attachmentId": aid, "url": "/api/ciphers/" + id + "/attachment/" + aid, "fileUploadType": 0, "cipherResponse": it, "object": "attachment-fileUpload"})
+	case m == http.MethodGet && action == "attachment" && n == 6 && parts[5] == "renew":
+		s.renewals++
+		writeJSON(w, 200, obj{"url": s.blobURL(id, parts[4], false), "fileUploadType": 1, "object": "attachment-fileUpload"})
 	case m == http.MethodPost && action == "attachment" && n == 5:
 		file, _, err := r.FormFile("data")
 		if err != nil {
@@ -436,4 +444,51 @@ func (s *Server) DropAttachmentData(id string) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	delete(s.blobs, id)
+}
+
+// blobURL is a signed blob storage URL for an attachment upload.
+func (s *Server) blobURL(cipherID, attID string, expired bool) string {
+	expiry := time.Now().Add(time.Hour)
+	if expired {
+		expiry = time.Now().Add(-time.Minute)
+	}
+	return s.URL() + "/blob/" + cipherID + "/" + attID + "?sv=2024-08-04&se=" + expiry.UTC().Format(time.RFC3339) + "&sr=b&sp=cw&sig=signature"
+}
+
+// azureBlob is blob storage: a PUT of a block blob with a valid signature
+// stores the attachment, which the server then treats as validated, as
+// its storage event handler does.
+func (s *Server) azureBlob(w http.ResponseWriter, r *http.Request, path string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.blobPuts = append(s.blobPuts, r.Header.Clone())
+	parts := strings.Split(strings.Trim(path, "/"), "/")
+	q := r.URL.Query()
+	expiry, err := time.Parse(time.RFC3339, q.Get("se"))
+	switch {
+	case r.Method != http.MethodPut || len(parts) != 3:
+		w.WriteHeader(405)
+	case q.Get("sig") != "signature" || err != nil || expiry.Before(time.Now()):
+		w.WriteHeader(403)
+	case r.Header.Get("x-ms-blob-type") != "BlockBlob" || r.Header.Get("x-ms-version") != q.Get("sv") || r.Header.Get("x-ms-date") == "" || r.Header.Get("Authorization") != "":
+		w.WriteHeader(400)
+	default:
+		data, _ := io.ReadAll(r.Body)
+		s.blobs[parts[2]] = data
+		w.WriteHeader(201)
+	}
+}
+
+// BlobPuts returns the headers of each blob storage request.
+func (s *Server) BlobPuts() []http.Header {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return slices.Clone(s.blobPuts)
+}
+
+// Renewals counts upload URL renewals.
+func (s *Server) Renewals() int {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.renewals
 }

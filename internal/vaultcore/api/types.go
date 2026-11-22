@@ -327,7 +327,13 @@ type AttachmentUploadRequest struct {
 	FileSize int64  `json:"fileSize"`
 }
 
-const FileUploadTypeDirect = 0
+// File upload types of an attachment upload: Direct posts the file to
+// the server; Azure puts it to a signed blob storage URL, which the server
+// learns of from the storage service.
+const (
+	FileUploadTypeDirect = 0
+	FileUploadTypeAzure  = 1
+)
 
 type AttachmentUploadResponse struct {
 	AttachmentID   string           `json:"attachmentId"`

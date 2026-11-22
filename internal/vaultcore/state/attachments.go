@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"time"
 
 	"github.com/txchen/govault/internal/vaultcore/api"
 	"github.com/txchen/govault/internal/vaultcore/crypto"
@@ -107,13 +108,25 @@ func (s *Service) UploadAttachment(ctx context.Context, cipherID, fileName strin
 	if err != nil {
 		return nil, err
 	}
-	if created.FileUploadType != api.FileUploadTypeDirect {
-		o.discardAttachment(cipherID, created.AttachmentID)
-		return nil, ErrUnsupportedUpload
+	switch created.FileUploadType {
+	case api.FileUploadTypeDirect:
+		_, err = withAuth(o, func(ctx context.Context, tok string) (struct{}, error) {
+			return struct{}{}, o.client.UploadAttachmentData(ctx, tok, cipherID, created.AttachmentID, encName, data)
+		})
+	case api.FileUploadTypeAzure:
+		// The server validates the blob once storage reports it.
+		uploadURL := created.URL
+		if api.AzureUploadExpired(uploadURL, time.Now()) {
+			uploadURL, err = withAuth(o, func(ctx context.Context, tok string) (string, error) {
+				return o.client.RenewAttachmentUploadURL(ctx, tok, cipherID, created.AttachmentID)
+			})
+		}
+		if err == nil {
+			err = o.client.UploadAzureBlob(o.ctx, uploadURL, data)
+		}
+	default:
+		err = ErrUnsupportedUpload
 	}
-	_, err = withAuth(o, func(ctx context.Context, tok string) (struct{}, error) {
-		return struct{}{}, o.client.UploadAttachmentData(ctx, tok, cipherID, created.AttachmentID, encName, data)
-	})
 	if err != nil {
 		o.discardAttachment(cipherID, created.AttachmentID)
 		return nil, err

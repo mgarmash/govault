@@ -49,6 +49,11 @@ type Config struct {
 	OnWrite func()
 	// EngHidesPasswords makes the Engineering collection hide passwords.
 	EngHidesPasswords bool
+	// AzureUploads answers attachment uploads as Bitwarden's cloud does:
+	// fileUploadType 1 with a signed blob storage URL, expired already
+	// when AzureURLExpired is set.
+	AzureUploads    bool
+	AzureURLExpired bool
 	// ClaimPadding adds a claim of this many bytes to access tokens, as
 	// claim-heavy servers issue them.
 	ClaimPadding int
@@ -74,6 +79,8 @@ type Server struct {
 	syncCount     int
 	userKeyID     string
 	items         []obj
+	blobPuts      []http.Header
+	renewals      int
 	folders       []obj
 	blobs         map[string][]byte
 	idSeq         int
@@ -238,6 +245,8 @@ func (s *Server) serve(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, 200, true)
 	case strings.HasPrefix(path, "/attachments/"):
 		s.attachmentData(w, path)
+	case strings.HasPrefix(path, "/blob/"):
+		s.azureBlob(w, r, path)
 	case strings.HasPrefix(path, "/api/"):
 		if !s.authorized(w, r) {
 			return
