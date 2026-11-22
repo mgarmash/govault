@@ -68,6 +68,7 @@ type UserPrefs struct {
 	GeneratorMode         string                `json:"generatorMode"`
 	PasswordOpts          gen.PasswordOptions   `json:"passwordOpts"`
 	PassphraseOpts        gen.PassphraseOptions `json:"passphraseOpts"`
+	MainWindow            *WindowState          `json:"mainWindow,omitempty"`
 }
 
 func DefaultUserPrefs() UserPrefs {

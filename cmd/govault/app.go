@@ -31,6 +31,7 @@ type DesktopShell struct {
 	model     *govaultui.AppModel
 
 	mainWin   *desktop.Window
+	winTrack  *govaultui.WindowTracker
 	trayScope *core.Scope
 
 	rtMu      sync.Mutex
@@ -182,6 +183,9 @@ func (s *DesktopShell) finishSetup() {
 	}
 
 	app.Cleanup(func() {
+		if shell.winTrack != nil {
+			shell.winTrack.Flush()
+		}
 		clip.ClearOnQuit()
 		if shell.trayScope != nil {
 			shell.trayScope.Dispose()
@@ -242,19 +246,33 @@ func (s *DesktopShell) OpenMainWindow() {
 		return
 	}
 
+	frame, width, height, maximize := govaultui.MainWindowPlacement(s.model.Prefs.Get().MainWindow)
+	track := govaultui.NewWindowTracker(s.model.SaveMainWindow, s.scope.Post)
+	s.winTrack = track
 	s.mainWin = desktop.OpenWindow(s.scope, desktop.WindowOptions{
 		Title:  "GoVault",
 		Key:    "main",
-		Width:  1100,
-		Height: 720,
+		Width:  width,
+		Height: height,
+		Frame:  frame,
 		Constraints: desktop.WindowConstraints{
-			MinWidth:  900,
-			MinHeight: 560,
+			MinWidth:  govaultui.MainWindowMinWidth,
+			MinHeight: govaultui.MainWindowMinHeight,
 		},
 	}, func(cx *core.Scope) core.Node {
 		win := desktop.CurrentWindow(cx)
 		if runtime.GOOS != "darwin" {
 			desktop.SetMenuBar(cx, desktop.MenuBarAutoHide)
+		}
+		cx.Effect(func() {
+			track.Observe(desktop.Frame(cx), desktop.Maximized(cx), desktop.FullScreen(cx))
+		})
+		if maximize {
+			cx.Post(func() {
+				if !desktop.Maximized(cx) {
+					desktop.ToggleMaximize(cx)
+				}
+			})
 		}
 		cx.Effect(func() {
 			vis := win.Visible() && !desktop.Minimized(cx)
@@ -274,6 +292,7 @@ func (s *DesktopShell) OpenMainWindow() {
 			}
 		})
 		cx.Cleanup(func() {
+			track.Flush()
 			s.model.SetMainWindowVisible(false)
 		})
 		return govaultui.MainWindowView(cx, s.model)
