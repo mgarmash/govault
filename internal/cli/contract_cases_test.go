@@ -9,6 +9,8 @@ type contractStep struct {
 	// Session passes the session key of the profile's last unlock.
 	Session bool   `json:"session,omitempty"`
 	Stdin   string `json:"stdin,omitempty"`
+	// Files are written to the case's temporary directory first.
+	Files map[string]string `json:"files,omitempty"`
 }
 
 // contractCase runs its steps in order, against a fresh profile that the

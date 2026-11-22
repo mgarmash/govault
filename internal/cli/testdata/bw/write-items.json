@@ -1,0 +1,132 @@
+{
+  "name": "write-items",
+  "steps": [
+    {
+      "args": [
+        "create",
+        "item",
+        "eyJ0eXBlIjoxLCJuYW1lIjoiTmV3IGxvZ2luIiwibm90ZXMiOiJtYWRlIGJ5IGEgY29udHJhY3QgdGVzdCIsImZhdm9yaXRlIjp0cnVlLCJmb2xkZXJJZCI6ImYwZjBmMGYwLWFhYWEtNGJiYi04Y2NjLWRkZGRkZGRkZGRkZCIsImZpZWxkcyI6W3sibmFtZSI6InBsYWluIiwidmFsdWUiOiJ0ZXh0IiwidHlwZSI6MH0seyJuYW1lIjoic2VjcmV0IiwidmFsdWUiOiJzMyIsInR5cGUiOjF9XSwibG9naW4iOnsidXJpcyI6W3sidXJpIjoiaHR0cHM6Ly9uZXcuZXhhbXBsZS5jb20iLCJtYXRjaCI6bnVsbH0seyJ1cmkiOiJodHRwczovL2FsdC5leGFtcGxlLmNvbSIsIm1hdGNoIjozfV0sInVzZXJuYW1lIjoibmV3dXNlciIsInBhc3N3b3JkIjoibmV3cGFzcyIsInRvdHAiOiJKQlNXWTNEUEVIUEszUFhQIn0sInJlcHJvbXB0IjowfQ=="
+      ],
+      "stdout": "{\"type\":1,\"favorite\":true,\"reprompt\":0,\"id\":\"b0000001-0000-4000-8000-000000000001\",\"collectionIds\":[],\"object\":\"item\",\"folderId\":\"f0f0f0f0-aaaa-4bbb-8ccc-dddddddddddd\",\"name\":\"New login\",\"notes\":\"made by a contract test\",\"fields\":[{\"type\":0,\"name\":\"plain\",\"value\":\"text\"},{\"type\":1,\"name\":\"secret\",\"value\":\"s3\"}],\"login\":{\"uris\":[{\"uri\":\"https://new.example.com\"},{\"uri\":\"https://alt.example.com\",\"match\":3}],\"fido2Credentials\":[],\"username\":\"newuser\",\"password\":\"newpass\",\"totp\":\"JBSWY3DPEHPK3PXP\",\"passwordRevisionDate\":null},\"passwordHistory\":[],\"creationDate\":\"{{TIME}}\",\"revisionDate\":\"{{TIME}}\",\"attachments\":[]}",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "get",
+        "item",
+        "b0000001-0000-4000-8000-000000000001"
+      ],
+      "stdout": "{\"type\":1,\"favorite\":true,\"reprompt\":0,\"id\":\"b0000001-0000-4000-8000-000000000001\",\"collectionIds\":[],\"object\":\"item\",\"folderId\":\"f0f0f0f0-aaaa-4bbb-8ccc-dddddddddddd\",\"name\":\"New login\",\"notes\":\"made by a contract test\",\"fields\":[{\"type\":0,\"name\":\"plain\",\"value\":\"text\"},{\"type\":1,\"name\":\"secret\",\"value\":\"s3\"}],\"login\":{\"uris\":[{\"uri\":\"https://new.example.com\"},{\"uri\":\"https://alt.example.com\",\"match\":3}],\"fido2Credentials\":[],\"username\":\"newuser\",\"password\":\"newpass\",\"totp\":\"JBSWY3DPEHPK3PXP\",\"passwordRevisionDate\":null},\"passwordHistory\":[],\"creationDate\":\"{{TIME}}\",\"revisionDate\":\"{{TIME}}\",\"attachments\":[]}",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "create",
+        "item",
+        "eyJ0eXBlIjoyLCJuYW1lIjoiTmV3IG5vdGUiLCJub3RlcyI6ImJvZHkiLCJzZWN1cmVOb3RlIjp7InR5cGUiOjB9fQ==",
+        "--pretty"
+      ],
+      "stdout": "{\n  \"type\": 2,\n  \"favorite\": false,\n  \"reprompt\": 0,\n  \"id\": \"b0000002-0000-4000-8000-000000000002\",\n  \"collectionIds\": [],\n  \"object\": \"item\",\n  \"name\": \"New note\",\n  \"notes\": \"body\",\n  \"fields\": [],\n  \"secureNote\": {\n    \"type\": 0\n  },\n  \"passwordHistory\": [],\n  \"creationDate\": \"{{TIME}}\",\n  \"revisionDate\": \"{{TIME}}\",\n  \"attachments\": []\n}",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "create",
+        "item",
+        "eyJ0eXBlIjozLCJuYW1lIjoiTmV3IGNhcmQiLCJjYXJkIjp7ImNhcmRob2xkZXJOYW1lIjoiQSBCIiwiYnJhbmQiOiJWaXNhIiwibnVtYmVyIjoiNDI0MjQyNDI0MjQyNDI0MiIsImV4cE1vbnRoIjoiMSIsImV4cFllYXIiOiIyMDMxIiwiY29kZSI6Ijk5OSJ9fQ==",
+        "--response"
+      ],
+      "stdout": "{\"success\":true,\"data\":{\"type\":3,\"favorite\":false,\"reprompt\":0,\"id\":\"b0000003-0000-4000-8000-000000000003\",\"collectionIds\":[],\"object\":\"item\",\"name\":\"New card\",\"fields\":[],\"card\":{\"cardholderName\":\"A B\",\"brand\":\"Visa\",\"number\":\"4242424242424242\",\"expMonth\":\"1\",\"expYear\":\"2031\",\"code\":\"999\"},\"passwordHistory\":[],\"creationDate\":\"{{TIME}}\",\"revisionDate\":\"{{TIME}}\",\"attachments\":[]}}",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "create",
+        "item",
+        "not base64 json"
+      ],
+      "stdout": "",
+      "stderr": "Error parsing the encoded request data.",
+      "exit": 1
+    },
+    {
+      "args": [
+        "edit",
+        "item",
+        "a0000002-0000-4000-8000-000000000002",
+        "eyJ0eXBlIjoxLCJmYXZvcml0ZSI6ZmFsc2UsInJlcHJvbXB0IjowLCJpZCI6ImEwMDAwMDAyLTAwMDAtNDAwMC04MDAwLTAwMDAwMDAwMDAwMiIsImNvbGxlY3Rpb25JZHMiOltdLCJvYmplY3QiOiJpdGVtIiwiZm9sZGVySWQiOiJmMWYxZjFmMS1hYWFhLTRiYmItOGNjYy1kZGRkZGRkZGRkZGQiLCJuYW1lIjoiR0hFIHJlbmFtZWQiLCJub3RlcyI6Im5vdyB3aXRoIG5vdGVzIiwiZmllbGRzIjpbeyJ0eXBlIjowLCJuYW1lIjoidGVhbSIsInZhbHVlIjoiY29yZSJ9XSwibG9naW4iOnsidXJpcyI6W3sidXJpIjoiaHR0cHM6Ly9naXRodWIuZXhhbXBsZS5jb20ifSx7InVyaSI6Imh0dHBzOi8vZ2hlMi5leGFtcGxlLmNvbSIsIm1hdGNoIjoxfV0sImZpZG8yQ3JlZGVudGlhbHMiOltdLCJ1c2VybmFtZSI6ImFsaWNlLWNvcnAiLCJwYXNzd29yZCI6ImdoZS1uZXciLCJwYXNzd29yZFJldmlzaW9uRGF0ZSI6bnVsbH0sInBhc3N3b3JkSGlzdG9yeSI6W10sImNyZWF0aW9uRGF0ZSI6IjIwMjYtMDEtMDJUMDM6MDQ6MDUuNjc4WiIsInJldmlzaW9uRGF0ZSI6IjIwMjYtMDItMDNUMDQ6MDU6MDYuNzg5WiIsImF0dGFjaG1lbnRzIjpbXX0="
+      ],
+      "stdout": "{\"type\":1,\"favorite\":false,\"reprompt\":0,\"id\":\"a0000002-0000-4000-8000-000000000002\",\"collectionIds\":[],\"object\":\"item\",\"folderId\":\"f1f1f1f1-aaaa-4bbb-8ccc-dddddddddddd\",\"name\":\"GHE renamed\",\"notes\":\"now with notes\",\"fields\":[{\"type\":0,\"name\":\"team\",\"value\":\"core\"}],\"login\":{\"uris\":[{\"uri\":\"https://github.example.com\"},{\"uri\":\"https://ghe2.example.com\",\"match\":1}],\"fido2Credentials\":[],\"username\":\"alice-corp\",\"password\":\"ghe-new\",\"passwordRevisionDate\":\"{{TIME}}\"},\"passwordHistory\":[{\"lastUsedDate\":\"{{TIME}}\",\"password\":\"ghe-secret\"}],\"creationDate\":\"2026-01-02T03:04:05.678Z\",\"revisionDate\":\"{{TIME}}\",\"attachments\":[]}",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "get",
+        "password",
+        "a0000002-0000-4000-8000-000000000002"
+      ],
+      "stdout": "ghe-new",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "edit",
+        "item",
+        "a000000c-0000-4000-8000-00000000000c",
+        "eyJ0eXBlIjoxLCJuYW1lIjoiT25seSBhIG5hbWUifQ=="
+      ],
+      "stdout": "{\"type\":1,\"favorite\":false,\"reprompt\":0,\"id\":\"a000000c-0000-4000-8000-00000000000c\",\"collectionIds\":[],\"object\":\"item\",\"name\":\"Only a name\",\"fields\":[],\"login\":{\"uris\":[],\"fido2Credentials\":[],\"passwordRevisionDate\":null},\"passwordHistory\":[],\"creationDate\":\"2026-01-02T03:04:05.678Z\",\"revisionDate\":\"{{TIME}}\",\"attachments\":[]}",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "edit",
+        "item",
+        "a0000008-0000-4000-8000-000000000008",
+        "eyJ0eXBlIjoxLCJuYW1lIjoiT25seSBhIG5hbWUifQ=="
+      ],
+      "stdout": "",
+      "stderr": "You do not have permission to edit this item",
+      "exit": 1
+    },
+    {
+      "args": [
+        "edit",
+        "item",
+        "a0000009-0000-4000-8000-000000000009",
+        "eyJ0eXBlIjoxLCJuYW1lIjoiT25seSBhIG5hbWUifQ=="
+      ],
+      "stdout": "",
+      "stderr": "You may not edit a deleted item. Use the restore command first.",
+      "exit": 1
+    },
+    {
+      "args": [
+        "edit",
+        "item",
+        "00000000-0000-4000-8000-000000000000",
+        "eyJ0eXBlIjoxLCJuYW1lIjoiT25seSBhIG5hbWUifQ=="
+      ],
+      "stdout": "",
+      "stderr": "Not found.",
+      "exit": 1
+    },
+    {
+      "args": [
+        "edit",
+        "item",
+        "a0000004-0000-4000-8000-000000000004"
+      ],
+      "stdout": "{\"type\":3,\"favorite\":false,\"reprompt\":0,\"id\":\"a0000004-0000-4000-8000-000000000004\",\"collectionIds\":[],\"object\":\"item\",\"name\":\"Visa via stdin\",\"fields\":[],\"card\":{\"brand\":\"Visa\",\"number\":\"4111111111111111\"},\"passwordHistory\":[],\"creationDate\":\"2026-01-02T03:04:05.678Z\",\"revisionDate\":\"{{TIME}}\",\"attachments\":[]}",
+      "stderr": "",
+      "exit": 0
+    }
+  ]
+}

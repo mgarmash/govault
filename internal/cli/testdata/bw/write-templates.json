@@ -1,0 +1,136 @@
+{
+  "name": "write-templates",
+  "steps": [
+    {
+      "args": [
+        "get",
+        "template",
+        "item"
+      ],
+      "stdout": "{\"type\":1,\"favorite\":false,\"reprompt\":0,\"name\":\"Item name\",\"notes\":\"Some notes about this item.\",\"fields\":[],\"passwordHistory\":[]}",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "get",
+        "template",
+        "item.field"
+      ],
+      "stdout": "{\"type\":0,\"name\":\"Field name\",\"value\":\"Some value\"}",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "get",
+        "template",
+        "item.login"
+      ],
+      "stdout": "{\"uris\":[],\"username\":\"jdoe\",\"password\":\"myp@ssword123\",\"totp\":\"JBSWY3DPEHPK3PXP\",\"fido2Credentials\":[]}",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "get",
+        "template",
+        "item.login.uri"
+      ],
+      "stdout": "{\"uri\":\"https://google.com\"}",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "get",
+        "template",
+        "item.card"
+      ],
+      "stdout": "{\"cardholderName\":\"John Doe\",\"brand\":\"visa\",\"number\":\"4242424242424242\",\"expMonth\":\"04\",\"expYear\":\"2023\",\"code\":\"123\"}",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "get",
+        "template",
+        "item.identity"
+      ],
+      "stdout": "{\"title\":\"Mr\",\"firstName\":\"John\",\"middleName\":\"William\",\"lastName\":\"Doe\",\"address1\":\"123 Any St\",\"address2\":\"Apt #123\",\"city\":\"New York\",\"state\":\"NY\",\"postalCode\":\"10001\",\"country\":\"US\",\"company\":\"Acme Inc.\",\"email\":\"john@company.com\",\"phone\":\"5555551234\",\"ssn\":\"000-123-4567\",\"username\":\"jdoe\",\"passportNumber\":\"US-123456789\",\"licenseNumber\":\"D123-12-123-12333\"}",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "get",
+        "template",
+        "item.securenote"
+      ],
+      "stdout": "{\"type\":0}",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "get",
+        "template",
+        "folder"
+      ],
+      "stdout": "{\"name\":\"Folder name\"}",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "get",
+        "template",
+        "collection"
+      ],
+      "stdout": "{\"organizationId\":\"00000000-0000-0000-0000-000000000000\",\"name\":\"Collection name\",\"externalId\":null}",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "get",
+        "template",
+        "item-collections"
+      ],
+      "stdout": "[\"collection-id1\",\"collection-id2\"]",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "get",
+        "template",
+        "org-collection"
+      ],
+      "stdout": "{\"organizationId\":\"00000000-0000-0000-0000-000000000000\",\"name\":\"Collection name\",\"externalId\":null,\"groups\":[{\"id\":\"00000000-0000-0000-0000-000000000000\",\"readOnly\":false,\"hidePasswords\":false,\"manage\":false},{\"id\":\"00000000-0000-0000-0000-000000000000\",\"readOnly\":false,\"hidePasswords\":false,\"manage\":false}],\"users\":[{\"id\":\"00000000-0000-0000-0000-000000000000\",\"readOnly\":false,\"hidePasswords\":false,\"manage\":false},{\"id\":\"00000000-0000-0000-0000-000000000000\",\"readOnly\":false,\"hidePasswords\":false,\"manage\":false}]}",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "get",
+        "template",
+        "foo"
+      ],
+      "stdout": "",
+      "stderr": "Unknown template object.",
+      "exit": 1
+    },
+    {
+      "args": [
+        "get",
+        "template",
+        "item",
+        "--pretty"
+      ],
+      "stdout": "{\n  \"type\": 1,\n  \"favorite\": false,\n  \"reprompt\": 0,\n  \"name\": \"Item name\",\n  \"notes\": \"Some notes about this item.\",\n  \"fields\": [],\n  \"passwordHistory\": []\n}",
+      "stderr": "",
+      "exit": 0
+    }
+  ]
+}

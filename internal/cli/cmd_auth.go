@@ -235,22 +235,8 @@ func (a *app) unlocked(fn func(v *profile.Vault) response) response {
 	if err != nil {
 		return errResponse(err)
 	}
-	if _, err := prof.Account(); err != nil {
-		return errResponse(err)
-	}
-	if err := prof.CheckSession(a.flags.session); errors.Is(err, profile.ErrLocked) && a.canPrompt() {
-		pw, fail := a.password("", &parsed{opts: map[string]string{}}, unlockPasswordRequired)
-		if fail != nil {
-			return *fail
-		}
-		key, err := prof.Unlock(a.ctx, profile.UnlockRequest{Password: []byte(pw), APIKey: a.apiKeyFromEnv()})
-		if errors.Is(err, profile.ErrInvalidPassword) {
-			return failure(invalidPasswordMessage)
-		}
-		if err != nil {
-			return errResponse(err)
-		}
-		a.flags.session = key
+	if fail := a.ensureUnlocked(prof); fail != nil {
+		return *fail
 	}
 	var r response
 	err = prof.Read(a.flags.session, a.apiKeyFromEnv(), func(v *profile.Vault) error {
@@ -261,6 +247,31 @@ func (a *app) unlocked(fn func(v *profile.Vault) response) response {
 		return errResponse(err)
 	}
 	return r
+}
+
+// ensureUnlocked unlocks a locked vault by prompting when interaction is
+// allowed, as bw does before a command that needs the vault.
+func (a *app) ensureUnlocked(prof *profile.Profile) *response {
+	fail := func(r response) *response { return &r }
+	if _, err := prof.Account(); err != nil {
+		return fail(errResponse(err))
+	}
+	if err := prof.CheckSession(a.flags.session); !errors.Is(err, profile.ErrLocked) || !a.canPrompt() {
+		return nil
+	}
+	pw, failed := a.password("", &parsed{opts: map[string]string{}}, unlockPasswordRequired)
+	if failed != nil {
+		return failed
+	}
+	key, err := prof.Unlock(a.ctx, profile.UnlockRequest{Password: []byte(pw), APIKey: a.apiKeyFromEnv()})
+	if errors.Is(err, profile.ErrInvalidPassword) {
+		return fail(failure(invalidPasswordMessage))
+	}
+	if err != nil {
+		return fail(errResponse(err))
+	}
+	a.flags.session = key
+	return nil
 }
 
 // twoFactorNames are the providers gv offers, in Bitwarden's order.

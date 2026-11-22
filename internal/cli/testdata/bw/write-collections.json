@@ -1,0 +1,49 @@
+{
+  "name": "write-collections",
+  "steps": [
+    {
+      "args": [
+        "edit",
+        "item-collections",
+        "a0000007-0000-4000-8000-000000000007",
+        "WyJjMGMwYzBjMC0xMTExLTQyMjItODMzMy00NDQ0NTU1NTY2NjYiLCJjMWMxYzFjMS0xMTExLTQyMjItODMzMy00NDQ0NTU1NTY2NjYiXQ=="
+      ],
+      "stdout": "{\"type\":1,\"favorite\":false,\"reprompt\":0,\"id\":\"a0000007-0000-4000-8000-000000000007\",\"collectionIds\":[\"c0c0c0c0-1111-4222-8333-444455556666\",\"c1c1c1c1-1111-4222-8333-444455556666\"],\"object\":\"item\",\"organizationId\":\"0f1e2d3c-4b5a-4968-8776-655443322110\",\"name\":\"Shared DB\",\"fields\":[],\"login\":{\"uris\":[{\"uri\":\"db.example.com:5432\",\"match\":1}],\"fido2Credentials\":[],\"username\":\"dbadmin\",\"password\":\"db-secret\",\"totp\":\"JBSWY3DPEHPK3PXP\",\"passwordRevisionDate\":null},\"passwordHistory\":[],\"creationDate\":\"2026-01-02T03:04:05.678Z\",\"revisionDate\":\"{{TIME}}\",\"attachments\":[]}",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "edit",
+        "item-collections",
+        "a0000002-0000-4000-8000-000000000002",
+        "W10="
+      ],
+      "stdout": "",
+      "stderr": "Item does not belong to an organization. Consider moving it first.",
+      "exit": 1
+    },
+    {
+      "args": [
+        "edit",
+        "item-collections",
+        "a0000008-0000-4000-8000-000000000008",
+        "W10="
+      ],
+      "stdout": "",
+      "stderr": "You do not have permission to edit this item",
+      "exit": 1
+    },
+    {
+      "args": [
+        "list",
+        "items",
+        "--collectionid",
+        "c1c1c1c1-1111-4222-8333-444455556666"
+      ],
+      "stdout": "[{\"type\":1,\"favorite\":false,\"reprompt\":0,\"id\":\"a0000008-0000-4000-8000-000000000008\",\"collectionIds\":[\"c1c1c1c1-1111-4222-8333-444455556666\"],\"object\":\"item\",\"organizationId\":\"0f1e2d3c-4b5a-4968-8776-655443322110\",\"name\":\"Hidden Prod\",\"fields\":[{\"type\":1,\"name\":\"api token\",\"value\":null},{\"type\":0,\"name\":\"region\",\"value\":\"eu-west\"}],\"login\":{\"uris\":[{\"uri\":\"https://prod.example.com\"}],\"fido2Credentials\":[],\"username\":\"root\",\"password\":null,\"totp\":null,\"passwordRevisionDate\":null},\"creationDate\":\"2026-01-02T03:04:05.678Z\",\"revisionDate\":\"2026-02-03T04:05:06.789Z\",\"attachments\":[]},{\"type\":1,\"favorite\":false,\"reprompt\":0,\"id\":\"a0000007-0000-4000-8000-000000000007\",\"collectionIds\":[\"c0c0c0c0-1111-4222-8333-444455556666\",\"c1c1c1c1-1111-4222-8333-444455556666\"],\"object\":\"item\",\"organizationId\":\"0f1e2d3c-4b5a-4968-8776-655443322110\",\"name\":\"Shared DB\",\"fields\":[],\"login\":{\"uris\":[{\"uri\":\"db.example.com:5432\",\"match\":1}],\"fido2Credentials\":[],\"username\":\"dbadmin\",\"password\":\"db-secret\",\"totp\":\"JBSWY3DPEHPK3PXP\",\"passwordRevisionDate\":null},\"passwordHistory\":[],\"creationDate\":\"2026-01-02T03:04:05.678Z\",\"revisionDate\":\"{{TIME}}\",\"attachments\":[]}]",
+      "stderr": "",
+      "exit": 0
+    }
+  ]
+}

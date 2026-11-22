@@ -36,6 +36,20 @@ type ServiceConfig struct {
 	NewRealtimeClient func(serverURL string) (realtime.Client, error)
 	OnStatusChange    func(LockStatus)
 	OnVaultUpdated    func()
+	// Tokens, when set, supplies access tokens instead of the refresh
+	// token kept in Secrets, for a client that manages its own sign-in,
+	// such as gv. A session unlocked with it is never local-only.
+	Tokens TokenSource
+	// NewClient, when set, builds the API client instead of the default
+	// one for the snapshot's server URL.
+	NewClient func(serverURL string) (*api.Client, error)
+}
+
+// TokenSource gives a Service its access tokens.
+type TokenSource interface {
+	// AccessToken returns a valid access token other than stale,
+	// renewing one when needed.
+	AccessToken(ctx context.Context, stale string) (string, error)
 }
 
 type Service struct {
@@ -449,7 +463,10 @@ func (s *Service) unlock(ctx context.Context, userKey *crypto.SymmetricKey, gen 
 	// be trusted or read; it is then local only.
 	// A local-only session builds no API client, so a malformed server
 	// address in the snapshot cannot keep a good vault shut.
-	_, credErr := s.loadRefreshToken(snap.AccountID, snap.ServerURL)
+	var credErr error
+	if s.cfg.Tokens == nil {
+		_, credErr = s.loadRefreshToken(snap.AccountID, snap.ServerURL)
+	}
 	localOnly := credErr != nil || snap.ServerURL == ""
 	var client *api.Client
 	if !localOnly {
@@ -940,7 +957,10 @@ func (s *Service) SaveCipher(ctx context.Context, c *Cipher) (*Cipher, error) {
 	payload.EncryptedFor = &userID
 
 	encResp, err := withAuth(o, func(ctx context.Context, tok string) (*api.EncryptedCipher, error) {
-		if c.ID == "" {
+		switch {
+		case c.ID == "" && c.OrganizationID != nil && *c.OrganizationID != "":
+			return o.client.CreateOrganizationCipher(ctx, tok, payload, c.CollectionIDs)
+		case c.ID == "":
 			return o.client.CreateCipher(ctx, tok, payload)
 		}
 		return o.client.UpdateCipher(ctx, tok, c.ID, payload)
@@ -1308,6 +1328,9 @@ func (s *Service) loadCurrentSnapshot() (*store.Snapshot, error) {
 }
 
 func (s *Service) newAPIClient(serverURL string) (*api.Client, error) {
+	if s.cfg.NewClient != nil {
+		return s.cfg.NewClient(serverURL)
+	}
 	return api.NewClient(api.ClientConfig{
 		ServerURL:  serverURL,
 		DeviceID:   s.cfg.DeviceID,

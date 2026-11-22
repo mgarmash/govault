@@ -9,7 +9,11 @@ import (
 	"github.com/txchen/govault/internal/vaultcore/profile"
 )
 
-const readOnlyNote = "gv is read-only: use the GoVault app, the web vault or bw to change your vault."
+const (
+	readOnlyNote = "gv is read-only: use the GoVault app, the web vault or bw to change your vault."
+	moveNote     = "gv cannot move items to an organization yet: it needs re-encrypting the item with the organization key."
+	orgAdminNote = "gv does not administer organizations."
+)
 
 func unsupported(name, why string) *command {
 	return &command{name: name, unsupported: why, args: []argument{{"args", false}, {"more", false}, {"rest", false}}}
@@ -46,11 +50,20 @@ var commands = []*command{
 	{name: "get", args: []argument{{"object", true}, {"id", true}}, summary: "Get an object from the vault.",
 		opts: []option{{long: "itemid", value: "itemid"}, {long: "output", value: "output"}, {long: "organizationid", value: "organizationid"}},
 		run:  (*app).get},
+	{name: "create", args: []argument{{"object", true}, {"encodedJson", false}}, summary: "Create an object in the vault.",
+		opts: []option{{long: "file", value: "file"}, {long: "itemid", value: "itemid"}, {long: "organizationid", value: "organizationid"}},
+		run:  (*app).create},
+	{name: "edit", args: []argument{{"object", true}, {"id", true}, {"encodedJson", false}}, summary: "Edit an object from the vault.",
+		opts: []option{{long: "organizationid", value: "organizationid"}}, run: (*app).edit},
+	{name: "delete", args: []argument{{"object", true}, {"id", true}}, summary: "Delete an object from the vault.",
+		opts: []option{{long: "itemid", value: "itemid"}, {long: "organizationid", value: "organizationid"}, {long: "permanent", short: 'p'}},
+		run:  (*app).delete},
+	{name: "restore", args: []argument{{"object", true}, {"id", true}}, summary: "Restores an object from the trash or archive.", run: (*app).restore},
+	{name: "archive", args: []argument{{"object", true}, {"id", true}}, summary: "Archive an object from the vault.", run: (*app).archive},
 	{name: "help", args: []argument{{"command", false}}},
-	unsupported("create", readOnlyNote), unsupported("edit", readOnlyNote), unsupported("delete", readOnlyNote),
-	unsupported("restore", readOnlyNote), unsupported("archive", readOnlyNote), unsupported("unarchive", readOnlyNote),
-	unsupported("move", readOnlyNote), unsupported("share", readOnlyNote), unsupported("confirm", readOnlyNote),
-	unsupported("import", readOnlyNote), unsupported("device-approval", readOnlyNote),
+	unsupported("move", moveNote), unsupported("share", moveNote),
+	unsupported("confirm", orgAdminNote), unsupported("device-approval", orgAdminNote),
+	unsupported("import", readOnlyNote),
 	unsupported("export", "gv does not export vaults yet; use the GoVault app's encrypted backup."),
 	unsupported("send", "gv does not support Bitwarden Send."), unsupported("receive", "gv does not support Bitwarden Send."),
 	unsupported("serve", "gv does not offer the bw serve HTTP API."),

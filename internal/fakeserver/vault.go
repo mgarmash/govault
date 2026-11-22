@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"crypto/x509"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -237,7 +238,8 @@ func (k *keys) attachmentData() []byte {
 	return data
 }
 
-func (s *Server) ciphers() []obj {
+// seedCiphers is the fixture vault the server starts with.
+func (s *Server) seedCiphers() []obj {
 	k := s.keys
 	uk := k.userKey
 
@@ -333,19 +335,21 @@ func (s *Server) ciphers() []obj {
 	empty := cipherBase(ItemEmpty, 1, "Empty login", uk)
 	empty["login"] = login(uk, "", "", "")
 
-	items := []obj{gh, ghe, note, card, ident, ssh, shared, hidden, trashed, arch, modes, empty}
-	if s.config().OmitPermissions {
-		for _, it := range items {
-			delete(it, "edit")
-			delete(it, "viewPassword")
-		}
-	}
-	return items
+	return []obj{gh, ghe, note, card, ident, ssh, shared, hidden, trashed, arch, modes, empty}
 }
 
-func (s *Server) syncBody() obj {
+func (s *Server) seedFolders() []obj {
+	return []obj{
+		{"id": FolderWork, "name": enc("Work", s.keys.userKey), "revisionDate": iso(revised), "object": "folder"},
+		{"id": FolderHome, "name": enc("Home", s.keys.userKey), "revisionDate": iso(revised), "object": "folder"},
+	}
+}
+
+// syncBody is the /api/sync answer, encoded while the caller holds s.mu
+// so no write changes the vault underneath.
+func (s *Server) syncBody() []byte {
 	k := s.keys
-	cfg := s.config()
+	cfg := s.cfg
 	org := obj{
 		"id": OrgID, "name": OrgName, "key": k.encOrgKey(), "status": 2, "type": 2, "enabled": true,
 		"useTotp": true, "usePolicies": true, "usersGetPremium": true, "selfHost": true,
@@ -368,21 +372,34 @@ func (s *Server) syncBody() obj {
 		{"id": CollectionEng, "organizationId": OrgID, "name": enc("Engineering", k.orgKey), "externalId": nil, "object": "collectionDetails", "readOnly": false, "hidePasswords": false, "manage": false},
 		{"id": CollectionSec, "organizationId": OrgID, "name": enc("Secrets", k.orgKey), "externalId": nil, "object": "collectionDetails", "readOnly": true, "hidePasswords": true, "manage": false},
 	}
-	folders := []obj{
-		{"id": FolderWork, "name": enc("Work", k.userKey), "revisionDate": iso(revised), "object": "folder"},
-		{"id": FolderHome, "name": enc("Home", k.userKey), "revisionDate": iso(revised), "object": "folder"},
+	ciphers := s.items
+	if cfg.OmitPermissions {
+		ciphers = nil
+		for _, it := range s.items {
+			cp := obj{}
+			for k, v := range it {
+				if k != "edit" && k != "viewPassword" {
+					cp[k] = v
+				}
+			}
+			ciphers = append(ciphers, cp)
+		}
+	}
+	var userKeyID any
+	if s.userKeyID != "" {
+		userKeyID = s.userKeyID
 	}
 	policies := []obj{}
 	for _, p := range cfg.Policies {
 		policies = append(policies, p)
 	}
-	return obj{
+	body, err := json.Marshal(obj{
 		"profile":     profile,
-		"folders":     folders,
+		"folders":     s.folders,
 		"collections": collections,
 		"policies":    policies,
 		"policiesNew": policies,
-		"ciphers":     s.ciphers(),
+		"ciphers":     ciphers,
 		"domains":     nil,
 		"sends":       []obj{},
 		"userDecryption": obj{
@@ -392,17 +409,12 @@ func (s *Server) syncBody() obj {
 				"masterKeyWrappedUserKey":   k.protectedUserKey(),
 				"salt":                      s.email,
 			},
-			"userKeyId": s.keyID(),
+			"userKeyId": userKeyID,
 		},
 		"object": "sync",
+	})
+	if err != nil {
+		panic(err)
 	}
-}
-
-func (s *Server) keyID() any {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	if s.userKeyID == "" {
-		return nil
-	}
-	return s.userKeyID
+	return body
 }

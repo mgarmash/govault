@@ -144,6 +144,19 @@ func (o *op) refreshAfter(ctx context.Context, stale string) (string, error) {
 	if cur != "" && cur != stale {
 		return cur, nil
 	}
+	if src := o.s.cfg.Tokens; src != nil {
+		tok, err := src.AccessToken(ctx, stale)
+		if err != nil {
+			return "", err
+		}
+		o.s.mu.Lock()
+		defer o.s.mu.Unlock()
+		if !o.currentLocked() {
+			return "", ErrLocked
+		}
+		o.s.accessToken = tok
+		return tok, nil
+	}
 	refreshTok, err := o.s.loadRefreshToken(o.accountID, o.snap.ServerURL)
 	if err != nil {
 		return "", err

@@ -1,0 +1,117 @@
+{
+  "name": "write-delete-restore",
+  "steps": [
+    {
+      "args": [
+        "delete",
+        "item",
+        "a0000003-0000-4000-8000-000000000003"
+      ],
+      "stdout": "",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "list",
+        "items",
+        "--trash"
+      ],
+      "stdout": "[{\"type\":1,\"favorite\":false,\"reprompt\":0,\"id\":\"a0000009-0000-4000-8000-000000000009\",\"collectionIds\":[],\"object\":\"item\",\"name\":\"Old GitHub\",\"fields\":[],\"login\":{\"uris\":[{\"uri\":\"https://github.com\"}],\"fido2Credentials\":[],\"username\":\"old\",\"password\":\"old-secret\",\"passwordRevisionDate\":null},\"passwordHistory\":[],\"creationDate\":\"2026-01-02T03:04:05.678Z\",\"revisionDate\":\"2026-02-03T04:05:06.789Z\",\"deletedDate\":\"2026-03-04T05:06:07.000Z\",\"attachments\":[]},{\"type\":2,\"favorite\":false,\"reprompt\":0,\"id\":\"a0000003-0000-4000-8000-000000000003\",\"collectionIds\":[],\"object\":\"item\",\"folderId\":\"f1f1f1f1-aaaa-4bbb-8ccc-dddddddddddd\",\"name\":\"Recovery codes\",\"notes\":\"code-1\\ncode-2\",\"fields\":[],\"secureNote\":{\"type\":0},\"passwordHistory\":[],\"creationDate\":\"2026-01-02T03:04:05.678Z\",\"revisionDate\":\"2026-02-03T04:05:06.789Z\",\"deletedDate\":\"{{TIME}}\",\"attachments\":[]}]",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "restore",
+        "item",
+        "a0000003-0000-4000-8000-000000000003"
+      ],
+      "stdout": "",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "restore",
+        "item",
+        "a0000003-0000-4000-8000-000000000003"
+      ],
+      "stdout": "",
+      "stderr": "Cipher is not in trash.",
+      "exit": 1
+    },
+    {
+      "args": [
+        "delete",
+        "item",
+        "a0000009-0000-4000-8000-000000000009",
+        "--permanent"
+      ],
+      "stdout": "",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "delete",
+        "item",
+        "a0000004-0000-4000-8000-000000000004",
+        "-p"
+      ],
+      "stdout": "",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "get",
+        "item",
+        "a0000004-0000-4000-8000-000000000004"
+      ],
+      "stdout": "",
+      "stderr": "Not found.",
+      "exit": 1
+    },
+    {
+      "args": [
+        "delete",
+        "item",
+        "00000000-0000-4000-8000-000000000000"
+      ],
+      "stdout": "",
+      "stderr": "Not found.",
+      "exit": 1
+    },
+    {
+      "args": [
+        "restore",
+        "item",
+        "00000000-0000-4000-8000-000000000000"
+      ],
+      "stdout": "",
+      "stderr": "Not found.",
+      "exit": 1
+    },
+    {
+      "args": [
+        "list",
+        "items",
+        "--trash"
+      ],
+      "stdout": "[]",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "restore",
+        "foo",
+        "x"
+      ],
+      "stdout": "",
+      "stderr": "Unknown object \"foo\". Allowed objects are: item.",
+      "exit": 1
+    }
+  ]
+}

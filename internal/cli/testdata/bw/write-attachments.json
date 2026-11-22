@@ -1,0 +1,122 @@
+{
+  "name": "write-attachments",
+  "steps": [
+    {
+      "args": [
+        "create",
+        "attachment",
+        "--file",
+        "{{TMP}}/report.txt",
+        "--itemid",
+        "a0000002-0000-4000-8000-000000000002"
+      ],
+      "stdout": "{\"type\":1,\"favorite\":false,\"reprompt\":0,\"id\":\"a0000002-0000-4000-8000-000000000002\",\"collectionIds\":[],\"object\":\"item\",\"name\":\"GitHub Enterprise\",\"fields\":[],\"login\":{\"uris\":[{\"uri\":\"https://github.example.com\"}],\"fido2Credentials\":[],\"username\":\"alice-corp\",\"password\":\"ghe-secret\",\"passwordRevisionDate\":null},\"passwordHistory\":[],\"creationDate\":\"2026-01-02T03:04:05.678Z\",\"revisionDate\":\"{{TIME}}\",\"attachments\":[{\"id\":\"att00000000001\",\"fileName\":\"report.txt\",\"size\":\"81\",\"sizeName\":\"81 Bytes\",\"url\":\"{{SERVER}}/attachments/a0000002-0000-4000-8000-000000000002/att00000000001\"}]}",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "get",
+        "attachment",
+        "report.txt",
+        "--itemid",
+        "a0000002-0000-4000-8000-000000000002",
+        "--raw"
+      ],
+      "stdout": "quarterly numbers\n",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "create",
+        "attachment",
+        "--file",
+        "{{TMP}}/report.txt"
+      ],
+      "stdout": "",
+      "stderr": "`itemid` option is required.",
+      "exit": 1
+    },
+    {
+      "args": [
+        "create",
+        "attachment",
+        "--itemid",
+        "a0000002-0000-4000-8000-000000000002"
+      ],
+      "stdout": "",
+      "stderr": "`file` option is required.",
+      "exit": 1
+    },
+    {
+      "args": [
+        "create",
+        "attachment",
+        "--file",
+        "{{TMP}}/missing.txt",
+        "--itemid",
+        "a0000002-0000-4000-8000-000000000002"
+      ],
+      "stdout": "",
+      "stderr": "Cannot find file at {{TMP}}/missing.txt",
+      "exit": 1
+    },
+    {
+      "args": [
+        "delete",
+        "attachment",
+        "att0readme0001",
+        "--itemid",
+        "a0000001-0000-4000-8000-000000000001"
+      ],
+      "stdout": "",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "delete",
+        "attachment",
+        "nope",
+        "--itemid",
+        "a0000002-0000-4000-8000-000000000002"
+      ],
+      "stdout": "",
+      "stderr": "Attachment `nope` was not found.",
+      "exit": 1
+    },
+    {
+      "args": [
+        "delete",
+        "attachment",
+        "nope",
+        "--itemid",
+        "a0000003-0000-4000-8000-000000000003"
+      ],
+      "stdout": "",
+      "stderr": "No attachments available for this item.",
+      "exit": 1
+    },
+    {
+      "args": [
+        "delete",
+        "attachment",
+        "nope"
+      ],
+      "stdout": "",
+      "stderr": "`itemid` option is required.",
+      "exit": 1
+    },
+    {
+      "args": [
+        "get",
+        "item",
+        "a0000001-0000-4000-8000-000000000001"
+      ],
+      "stdout": "{\"type\":1,\"favorite\":true,\"reprompt\":0,\"id\":\"a0000001-0000-4000-8000-000000000001\",\"collectionIds\":[],\"object\":\"item\",\"folderId\":\"f0f0f0f0-aaaa-4bbb-8ccc-dddddddddddd\",\"name\":\"GitHub\",\"notes\":\"Personal account\",\"fields\":[{\"type\":0,\"name\":\"recovery email\",\"value\":\"alice@recovery.example\"},{\"type\":1,\"name\":\"pin\",\"value\":\"4321\"},{\"type\":2,\"name\":\"2fa\",\"value\":\"true\"},{\"type\":3,\"name\":\"user\",\"linkedId\":100}],\"login\":{\"uris\":[{\"uri\":\"https://github.com/login\"},{\"uri\":\"https://gist.github.com\",\"match\":1}],\"fido2Credentials\":[],\"username\":\"alice\",\"password\":\"gh-secret\",\"totp\":\"JBSWY3DPEHPK3PXP\",\"passwordRevisionDate\":\"2025-12-01T00:00:00.000Z\"},\"passwordHistory\":[{\"lastUsedDate\":\"2025-12-01T00:00:00.000Z\",\"password\":\"old-gh-secret\"}],\"creationDate\":\"2026-01-02T03:04:05.678Z\",\"revisionDate\":\"{{TIME}}\",\"attachments\":[]}",
+      "stderr": "",
+      "exit": 0
+    }
+  ]
+}

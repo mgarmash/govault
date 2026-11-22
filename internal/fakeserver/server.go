@@ -8,7 +8,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"encoding/pem"
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
@@ -66,6 +65,10 @@ type Server struct {
 	revision      time.Time
 	syncCount     int
 	userKeyID     string
+	items         []obj
+	folders       []obj
+	blobs         map[string][]byte
+	idSeq         int
 	kdfIterations int
 }
 
@@ -101,11 +104,18 @@ func start(useTLS bool, opts []Option) *Server {
 	}
 	s.keys = newKeys(Email, Password, s.kdfIterations)
 	s.attachment = s.keys.attachmentData()
+	s.blobs = map[string][]byte{AttachmentID: s.attachment}
+	// The vault is seeded under the lock once the address is known, before
+	// any client can have it.
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	if useTLS {
 		s.http = httptest.NewTLSServer(http.HandlerFunc(s.serve))
 	} else {
 		s.http = httptest.NewServer(http.HandlerFunc(s.serve))
 	}
+	s.items = s.seedCiphers()
+	s.folders = s.seedFolders()
 	return s
 }
 
@@ -252,12 +262,13 @@ func (s *Server) api(w http.ResponseWriter, r *http.Request, path string) {
 		s.mu.Lock()
 		s.syncCount++
 		hook := s.cfg.OnSync
-		s.mu.Unlock()
 		body := s.syncBody()
+		s.mu.Unlock()
 		if hook != nil {
 			hook()
 		}
-		writeJSON(w, 200, body)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write(body)
 	case r.Method == http.MethodPost && path == "/api/accounts/key-management/user-key-id":
 		var body struct {
 			UserKeyID string `json:"userKeyId"`
@@ -290,17 +301,11 @@ func (s *Server) api(w http.ResponseWriter, r *http.Request, path string) {
 		}
 		writeJSON(w, 200, obj{"data": s.orgCollections(), "object": "list", "continuationToken": nil})
 	case r.Method == http.MethodGet && len(parts) == 5 && parts[1] == "ciphers" && parts[3] == "attachment":
-		if parts[2] != ItemGitHub || parts[4] != AttachmentID {
-			writeJSON(w, 404, obj{"message": "Attachment doesn't exist"})
-			return
-		}
-		writeJSON(w, 200, obj{
-			"id": AttachmentID, "url": s.URL() + "/attachments/" + ItemGitHub + "/" + AttachmentID + "?token=signed",
-			"fileName": enc(AttachmentName, s.keys.itemKey), "key": wrap(s.keys.attKey, s.keys.itemKey),
-			"size": fmt.Sprint(len(s.attachment)), "sizeName": "", "object": "attachment",
-		})
+		s.attachmentMeta(w, parts[2], parts[4])
 	default:
-		writeJSON(w, 404, obj{"message": "Not found"})
+		if !s.write(w, r, parts) {
+			writeJSON(w, 404, obj{"message": "Not found"})
+		}
 	}
 }
 
@@ -312,12 +317,20 @@ func (s *Server) orgCollections() []obj {
 }
 
 func (s *Server) attachmentData(w http.ResponseWriter, path string) {
-	if path != "/attachments/"+ItemGitHub+"/"+AttachmentID {
+	parts := strings.Split(strings.Trim(path, "/"), "/")
+	s.mu.Lock()
+	var data []byte
+	ok := false
+	if len(parts) == 3 {
+		data, ok = s.blobs[parts[2]]
+	}
+	s.mu.Unlock()
+	if !ok {
 		w.WriteHeader(404)
 		return
 	}
 	w.Header().Set("Content-Type", "application/octet-stream")
-	_, _ = w.Write(s.attachment)
+	_, _ = w.Write(data)
 }
 
 func (s *Server) token(w http.ResponseWriter, r *http.Request) {

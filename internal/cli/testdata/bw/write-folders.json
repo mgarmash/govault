@@ -1,0 +1,134 @@
+{
+  "name": "write-folders",
+  "steps": [
+    {
+      "args": [
+        "create",
+        "folder",
+        "eyJuYW1lIjoiQ3JlYXRlZCJ9"
+      ],
+      "stdout": "{\"name\":\"Created\",\"object\":\"folder\",\"id\":\"b0000001-0000-4000-8000-000000000001\"}",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "create",
+        "folder"
+      ],
+      "stdout": "{\"name\":\"From stdin\",\"object\":\"folder\",\"id\":\"b0000002-0000-4000-8000-000000000002\"}",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "create",
+        "folder"
+      ],
+      "stdout": "",
+      "stderr": "`requestJson` was not provided.",
+      "exit": 1
+    },
+    {
+      "args": [
+        "create",
+        "folder",
+        "%%%"
+      ],
+      "stdout": "",
+      "stderr": "Error parsing the encoded request data.",
+      "exit": 1
+    },
+    {
+      "args": [
+        "edit",
+        "folder",
+        "f0f0f0f0-aaaa-4bbb-8ccc-dddddddddddd",
+        "eyJuYW1lIjoiV29yayByZW5hbWVkIn0="
+      ],
+      "stdout": "{\"name\":\"Work renamed\",\"object\":\"folder\",\"id\":\"f0f0f0f0-aaaa-4bbb-8ccc-dddddddddddd\"}",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "edit",
+        "folder",
+        "00000000-0000-4000-8000-000000000000",
+        "eyJuYW1lIjoieCJ9"
+      ],
+      "stdout": "",
+      "stderr": "Not found.",
+      "exit": 1
+    },
+    {
+      "args": [
+        "delete",
+        "folder",
+        "f1f1f1f1-aaaa-4bbb-8ccc-dddddddddddd"
+      ],
+      "stdout": "",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "delete",
+        "folder",
+        "f1f1f1f1-aaaa-4bbb-8ccc-dddddddddddd"
+      ],
+      "stdout": "",
+      "stderr": "Not found.",
+      "exit": 1
+    },
+    {
+      "args": [
+        "list",
+        "folders"
+      ],
+      "stdout": "[{\"name\":\"Created\",\"object\":\"folder\",\"id\":\"b0000001-0000-4000-8000-000000000001\"},{\"name\":\"From stdin\",\"object\":\"folder\",\"id\":\"b0000002-0000-4000-8000-000000000002\"},{\"name\":\"Work renamed\",\"object\":\"folder\",\"id\":\"f0f0f0f0-aaaa-4bbb-8ccc-dddddddddddd\"},{\"name\":\"No Folder\",\"object\":\"folder\",\"id\":\"\"}]",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "get",
+        "item",
+        "a0000003-0000-4000-8000-000000000003"
+      ],
+      "stdout": "{\"type\":2,\"favorite\":false,\"reprompt\":0,\"id\":\"a0000003-0000-4000-8000-000000000003\",\"collectionIds\":[],\"object\":\"item\",\"name\":\"Recovery codes\",\"notes\":\"code-1\\ncode-2\",\"fields\":[],\"secureNote\":{\"type\":0},\"passwordHistory\":[],\"creationDate\":\"2026-01-02T03:04:05.678Z\",\"revisionDate\":\"2026-02-03T04:05:06.789Z\",\"attachments\":[]}",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "create",
+        "foo",
+        "x"
+      ],
+      "stdout": "",
+      "stderr": "Unknown object \"foo\". Allowed objects are: item, attachment, folder, org-collection.",
+      "exit": 1
+    },
+    {
+      "args": [
+        "edit",
+        "foo",
+        "x"
+      ],
+      "stdout": "",
+      "stderr": "Unknown object \"foo\". Allowed objects are: item, item-collections, folder, org-collection.",
+      "exit": 1
+    },
+    {
+      "args": [
+        "delete",
+        "foo",
+        "x"
+      ],
+      "stdout": "",
+      "stderr": "Unknown object \"foo\". Allowed objects are: item, attachment, folder, org-collection.",
+      "exit": 1
+    }
+  ]
+}

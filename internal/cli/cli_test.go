@@ -305,13 +305,13 @@ func TestTerminalOutputEndsLinesAndColors(t *testing.T) {
 
 func TestUnsupportedCommandsFailExplicitly(t *testing.T) {
 	g := newGV(t)
-	r := g.run("create", "item", "eyJ9", "--organizationid", "x")
-	if r.code != 1 || !strings.Contains(r.err, "`create` is not available in gv") {
-		t.Fatalf("create = %+v", r)
+	r := g.run("move", "x", "y", "eyJ9", "--organizationid", "x")
+	if r.code != 1 || !strings.Contains(r.err, "`move` is not available in gv") {
+		t.Fatalf("move = %+v", r)
 	}
-	r = g.run("delete", "item", "x", "--response")
-	if r.code != 1 || !strings.HasPrefix(r.out, `{"success":false,"message":"`+"`delete`") {
-		t.Fatalf("delete --response = %+v", r)
+	r = g.run("send", "text", "--response")
+	if r.code != 1 || !strings.HasPrefix(r.out, `{"success":false,"message":"`+"`send`") {
+		t.Fatalf("send --response = %+v", r)
 	}
 	if r := g.run("get", "exposed", "x"); r.code != 1 || r.err == "" {
 		t.Fatalf("get exposed = %+v", r)

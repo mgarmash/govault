@@ -222,8 +222,6 @@ func (a *app) get(p *parsed) response {
 	switch object {
 	case "exposed":
 		return failure("gv does not check passwords against breach services.")
-	case "template":
-		return failure("gv is read-only and has no templates for creating items.")
 	case "org-collection", "org-shared-folder":
 		return failure("gv does not read organization collection details yet; use `gv list org-collections`.")
 	case "send":
@@ -244,6 +242,12 @@ func (a *app) get(p *parsed) response {
 			return getCollection(v, id)
 		case "organization":
 			return getOrganization(v, id)
+		case "template":
+			t, ok := templates[templateAliases(id)]
+			if !ok {
+				return failure("Unknown template object.")
+			}
+			return success(templateData{template: t})
 		}
 		return a.getFingerprint(v, id)
 	})

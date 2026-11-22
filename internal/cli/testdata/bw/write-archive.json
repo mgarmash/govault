@@ -1,0 +1,85 @@
+{
+  "name": "write-archive",
+  "steps": [
+    {
+      "args": [
+        "archive",
+        "item",
+        "a0000005-0000-4000-8000-000000000005"
+      ],
+      "stdout": "",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "archive",
+        "item",
+        "a0000005-0000-4000-8000-000000000005"
+      ],
+      "stdout": "",
+      "stderr": "Item is already archived.",
+      "exit": 1
+    },
+    {
+      "args": [
+        "archive",
+        "item",
+        "a0000009-0000-4000-8000-000000000009"
+      ],
+      "stdout": "",
+      "stderr": "Item is in the trash, the item must be restored before archiving.",
+      "exit": 1
+    },
+    {
+      "args": [
+        "list",
+        "items",
+        "--archived"
+      ],
+      "stdout": "[{\"type\":1,\"favorite\":false,\"reprompt\":0,\"id\":\"a000000a-0000-4000-8000-00000000000a\",\"collectionIds\":[],\"object\":\"item\",\"name\":\"Archived GitHub\",\"fields\":[],\"login\":{\"uris\":[{\"uri\":\"https://github.com\"}],\"fido2Credentials\":[],\"username\":\"archived\",\"password\":\"arch-secret\",\"passwordRevisionDate\":null},\"passwordHistory\":[],\"creationDate\":\"2026-01-02T03:04:05.678Z\",\"revisionDate\":\"2026-02-03T04:05:06.789Z\",\"archivedDate\":\"2026-03-05T06:07:08.000Z\",\"attachments\":[]},{\"type\":4,\"favorite\":false,\"reprompt\":0,\"id\":\"a0000005-0000-4000-8000-000000000005\",\"collectionIds\":[],\"object\":\"item\",\"name\":\"Passport identity\",\"fields\":[],\"identity\":{\"title\":\"Ms\",\"firstName\":\"Alice\",\"lastName\":\"Example\",\"address1\":\"1 Main St\",\"city\":\"Springfield\",\"postalCode\":\"12345\",\"country\":\"US\",\"email\":\"alice@example.com\",\"username\":\"alice\"},\"passwordHistory\":[],\"creationDate\":\"2026-01-02T03:04:05.678Z\",\"revisionDate\":\"2026-02-03T04:05:06.789Z\",\"archivedDate\":\"{{TIME}}\",\"attachments\":[]}]",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "restore",
+        "item",
+        "a0000005-0000-4000-8000-000000000005"
+      ],
+      "stdout": "",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "restore",
+        "item",
+        "a000000a-0000-4000-8000-00000000000a"
+      ],
+      "stdout": "",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "list",
+        "items",
+        "--archived"
+      ],
+      "stdout": "[]",
+      "stderr": "",
+      "exit": 0
+    },
+    {
+      "args": [
+        "archive",
+        "foo",
+        "x"
+      ],
+      "stdout": "",
+      "stderr": "Unknown object \"foo\". Allowed objects are: item.",
+      "exit": 1
+    }
+  ]
+}

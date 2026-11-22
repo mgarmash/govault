@@ -75,10 +75,10 @@ func comparable(s string) string {
 }
 
 func TestContractMatchesBW(t *testing.T) {
-	srv := fakeserver.New()
-	defer srv.Close()
 	for _, c := range contractCases {
 		t.Run(c.Name, func(t *testing.T) {
+			srv := fakeserver.New()
+			defer srv.Close()
 			want := loadFixture(t, c.Name)
 			r := &gvRunner{srv: srv, ring: keyring.NewMemory()}
 			got := runCase(t, r, c, srv)

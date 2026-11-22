@@ -65,6 +65,11 @@ func runCase(t *testing.T, r runner, c contractCase, srv *fakeserver.Server) cap
 		for i, a := range recorded {
 			step.Args[i] = strings.ReplaceAll(a, "{{TMP}}", tmp)
 		}
+		for name, content := range step.Files {
+			if err := os.WriteFile(filepath.Join(tmp, name), []byte(content), 0o600); err != nil {
+				t.Fatal(err)
+			}
+		}
 		stdout, stderr, exit := r.run(t, step, stepEnv)
 		if m := sessionPattern.FindString(stdout); m != "" && exit == 0 && (step.Args[0] == "unlock" || step.Args[0] == "login") {
 			session = m
@@ -114,13 +119,6 @@ func TestCaptureBWFixtures(t *testing.T) {
 	if bin == "" {
 		t.Skip("set BW_BINARY to the official bw binary to regenerate contract fixtures")
 	}
-	srv := fakeserver.NewTLS(fakeserver.WithKDFIterations(600000))
-	defer srv.Close()
-	caFile := filepath.Join(t.TempDir(), "ca.pem")
-	if err := os.WriteFile(caFile, srv.CertPEM(), 0o600); err != nil {
-		t.Fatal(err)
-	}
-	r := &bwRunner{bin: bin, ca: caFile, srv: srv}
 	if err := os.MkdirAll(fixtureDir, 0o755); err != nil {
 		t.Fatal(err)
 	}
@@ -129,7 +127,15 @@ func TestCaptureBWFixtures(t *testing.T) {
 			continue
 		}
 		t.Run(c.Name, func(t *testing.T) {
-			got := runCase(t, r, c, srv)
+			// Each case gets a fresh server, so writes start from the
+			// fixture vault and new IDs are the same for bw and gv.
+			srv := fakeserver.NewTLS(fakeserver.WithKDFIterations(600000))
+			defer srv.Close()
+			caFile := filepath.Join(t.TempDir(), "ca.pem")
+			if err := os.WriteFile(caFile, srv.CertPEM(), 0o600); err != nil {
+				t.Fatal(err)
+			}
+			got := runCase(t, &bwRunner{bin: bin, ca: caFile, srv: srv}, c, srv)
 			raw, err := json.MarshalIndent(got, "", "  ")
 			if err != nil {
 				t.Fatal(err)
