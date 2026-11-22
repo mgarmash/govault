@@ -159,6 +159,26 @@ esac
 number="${version#v}"
 base="https://github.com/${repo}/releases/download/${version}"
 
+# Releases before v0.3.0 have no signed checksums; refuse them by version
+# too, not only by their missing signature.
+min_version="0.3.0"
+version_at_least() {
+  printf '%s\n' "$1" | awk -v min="$2" '
+    function part(v, i,   a) { split(v, a, "."); return a[i] + 0 }
+    {
+      v = $0
+      sub(/[-+].*/, "", v)
+      if (v !~ /^[0-9]+(\.[0-9]+)*$/) exit 1
+      for (i = 1; i <= 3; i++) {
+        if (part(v, i) > part(min, i)) exit 0
+        if (part(v, i) < part(min, i)) exit 1
+      }
+      exit 0
+    }'
+}
+version_at_least "$number" "$min_version" ||
+  fail "${version} is older than v${min_version}, the first release this installer can verify; install v${min_version} or later"
+
 if [ -z "$mode" ]; then
   distro=""
   if [ -r /etc/os-release ]; then
