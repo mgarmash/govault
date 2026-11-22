@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=GoVault
+Exec="GoVault"
+Icon=dev.txchen.govault
+Terminal=false
+StartupWMClass=dev.txchen.govault
+Categories=Utility;

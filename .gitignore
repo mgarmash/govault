@@ -23,3 +23,6 @@ Thumbs.db
 .vscode/
 *.swp
 *.swo
+
+# Staged by scripts/build-release.sh during a build
+cmd/govault/resources/
