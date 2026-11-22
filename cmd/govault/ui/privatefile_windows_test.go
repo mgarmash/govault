@@ -51,3 +51,27 @@ func TestPrivateTempFileHasAUserOnlyProtectedDACL(t *testing.T) {
 		t.Fatalf("the only entry is for %v, want the current user %v", sid, user.User.Sid)
 	}
 }
+
+func TestPrivateTempRequiresAUserOnlyDACL(t *testing.T) {
+	user, err := windows.GetCurrentProcessToken().GetTokenUser()
+	if err != nil {
+		t.Fatal(err)
+	}
+	everyone, err := windows.SecurityDescriptorFromString("D:(A;;FA;;;WD)")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := checkUserOnlyDACL(everyone, user.User.Sid); err == nil {
+		t.Fatal("a DACL open to everyone was accepted")
+	}
+	mine, err := windows.SecurityDescriptorFromString("D:P(A;;FA;;;" + user.User.Sid.String() + ")")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := checkUserOnlyDACL(mine, user.User.Sid); err != nil {
+		t.Fatalf("the user-only DACL was refused: %v", err)
+	}
+	if err := requirePersistentACLs(t.TempDir()); err != nil {
+		t.Fatalf("the temp folder (NTFS) was refused: %v", err)
+	}
+}

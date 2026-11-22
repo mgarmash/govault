@@ -115,11 +115,10 @@ type FaviconStore struct {
 	generation uint64
 	// account scopes the disk cache: icons live in a directory of the
 	// account's, under names that do not reveal the domain.
-	account    string
-	legacyOnce sync.Once
-	jobs       chan faviconJob
-	startOnce  sync.Once
-	onLoaded   func(domain string)
+	account   string
+	jobs      chan faviconJob
+	startOnce sync.Once
+	onLoaded  func(domain string)
 }
 
 type faviconEntry struct {
@@ -155,6 +154,9 @@ func NewFaviconStore(cfg FaviconStoreConfig) *FaviconStore {
 		jobs:     make(chan faviconJob, faviconQueueSize),
 	}
 	s.enabled.Store(true)
+	// Icons older versions saved under their domain names go as soon as
+	// the cache opens, whether icons are on or off.
+	s.removeLegacyFiles()
 	return s
 }
 
@@ -199,7 +201,6 @@ func (s *FaviconStore) Lookup(serverURL, domain string) []byte {
 
 // SetAccount scopes the cache to accountID; "" keeps icons in memory only.
 func (s *FaviconStore) SetAccount(accountID string) {
-	s.legacyOnce.Do(s.removeLegacyFiles)
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if s.account == accountID {
@@ -216,6 +217,7 @@ func (s *FaviconStore) SetAccount(accountID string) {
 // ClearAccount removes accountID's icons from memory and disk.
 func (s *FaviconStore) ClearAccount(accountID string) error {
 	s.ResetMemory()
+	s.removeLegacyFiles()
 	if s.cfg.CacheDir == "" || accountID == "" {
 		return nil
 	}

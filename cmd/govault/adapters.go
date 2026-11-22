@@ -43,14 +43,23 @@ type ClipboardAdapter struct {
 	mu    sync.Mutex
 	timer *time.Timer
 	// owned is the secret GoVault put on the clipboard and has yet to
-	// clear, so quitting can clear it if the clipboard still holds it.
+	// clear. It stays owned until a clipboard read shows it is gone, so
+	// quitting at any point before that still clears it.
 	owned string
+
+	// The clipboard as the app sees it; tests replace these.
+	post  func(func())
+	read  func(func(string))
+	write func(string)
 }
 
 func NewClipboardAdapter(scope *core.Scope) *ClipboardAdapter {
 	return &ClipboardAdapter{
 		scope:     scope,
 		concealed: NewConcealedClipboard(),
+		post:      scope.Post,
+		read:      scope.ReadClipboard,
+		write:     scope.SetClipboard,
 	}
 }
 
@@ -66,7 +75,7 @@ func (c *ClipboardAdapter) CopySecret(secret string, clearAfter time.Duration) (
 		return true, nil
 	}
 
-	c.scope.SetClipboard(secret)
+	c.write(secret)
 
 	c.mu.Lock()
 	if c.timer != nil {
@@ -77,24 +86,39 @@ func (c *ClipboardAdapter) CopySecret(secret string, clearAfter time.Duration) (
 	if clearAfter > 0 {
 		expected := secret
 		c.owned = secret
-		c.timer = time.AfterFunc(clearAfter, func() {
-			c.mu.Lock()
-			if c.owned == expected {
-				c.owned = ""
-			}
-			c.mu.Unlock()
-			c.scope.Post(func() {
-				c.scope.ReadClipboard(func(current string) {
-					if current == expected {
-						c.scope.SetClipboard("")
-					}
-				})
-			})
-		})
+		c.timer = time.AfterFunc(clearAfter, func() { c.expire(expected) })
 	}
 	c.mu.Unlock()
 
 	return false, nil
+}
+
+// expire clears expected if the clipboard still holds it, keeping it owned
+// until a later read confirms it is gone: the clear is only queued when it
+// is asked for.
+func (c *ClipboardAdapter) expire(expected string) {
+	c.post(func() {
+		c.read(func(current string) {
+			if current != expected {
+				c.release(expected)
+				return
+			}
+			c.write("")
+			c.read(func(after string) {
+				if after != expected {
+					c.release(expected)
+				}
+			})
+		})
+	})
+}
+
+func (c *ClipboardAdapter) release(secret string) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if c.owned == secret {
+		c.owned = ""
+	}
 }
 
 func (c *ClipboardAdapter) CopyPlain(text string) {

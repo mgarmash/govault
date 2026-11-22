@@ -218,3 +218,25 @@ func TestLogoutRemovesTheAccountIconCache(t *testing.T) {
 		t.Fatalf("account icon cache after logout: %v", err)
 	}
 }
+
+func TestLegacyIconFilesGoWhenTheCacheOpensAndOnLogout(t *testing.T) {
+	dir := t.TempDir()
+	legacy := filepath.Join(dir, "bank.example.com.png")
+	if err := os.WriteFile(legacy, testPNG, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	s := NewFaviconStore(FaviconStoreConfig{CacheDir: dir})
+	s.SetEnabled(false)
+	if _, err := os.Stat(legacy); !os.IsNotExist(err) {
+		t.Fatalf("a legacy icon named after a vault domain survived opening the cache: %v", err)
+	}
+	if err := os.WriteFile(legacy, testPNG, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := s.ClearAccount(""); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.Stat(legacy); !os.IsNotExist(err) {
+		t.Fatalf("a legacy icon survived logout: %v", err)
+	}
+}
