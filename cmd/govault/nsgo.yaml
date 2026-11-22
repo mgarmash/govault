@@ -13,6 +13,10 @@ build:
   installers: false
   targets: [macos_arm64, linux_x64, linux_arm64, windows_x64, windows_arm64]
 
+windows:
+  # Puts the installation directory, which holds gv.exe, on the user's Path.
+  command_line: true
+
 release:
   github: txchen/govault
 

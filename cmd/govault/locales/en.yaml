@@ -985,6 +985,46 @@ sshAgentUnavailable:
 sshAgentInUse: Another process already serves this socket.
 sshAgentNotSocket: The socket path exists and is not a socket.
 sshAgentUnsupported: Unix sockets are not supported on this system.
+commandLine:
+  message: Command Line
+  description: The Settings section for the gv command-line tool.
+commandLineTool:
+  message: gv command-line tool
+  description: gv is the name of the command and is not translated.
+commandLineToolNotInstalled: Use your vault from Terminal and scripts with Bitwarden CLI commands. Installing adds a link at /usr/local/bin/gv.
+commandLineToolInstalled:
+  message: "Installed at {path}. It updates with GoVault."
+  description: path is where the gv command is, such as /usr/local/bin/gv.
+commandLineToolHomebrew:
+  message: "Installed by Homebrew at {path}. Homebrew updates and removes it with GoVault."
+  description: path is where Homebrew linked the gv command.
+commandLineToolBroken:
+  message: "The link at {path} points to a copy of GoVault that is no longer there."
+  description: path is the gv link.
+commandLineToolOtherCopy:
+  message: "The link at {path} points to another copy of GoVault."
+  description: path is the gv link.
+commandLineToolForeign:
+  message: "Another program named gv is at {path}. GoVault does not replace it."
+  description: path is the other program.
+commandLineToolUnavailable: This copy of GoVault does not include the gv command.
+commandLineToolShadowed:
+  message: "Another gv at {path} may run instead in Terminal."
+  description: Shown under the gv tool's status when another gv is on the PATH. path is that program.
+installCommandLineTool:
+  message: Install
+  description: A button that installs the gv command-line tool.
+repairCommandLineTool:
+  message: Repair
+  description: A button that points the gv link back to this copy of GoVault.
+uninstallCommandLineTool:
+  message: Uninstall
+  description: A button that removes the gv link.
+commandLineToolPrompt:
+  message: GoVault wants to change the gv command in /usr/local/bin.
+  description: The reason macOS shows when it asks for an administrator password.
+commandLineToolChanged: The gv command changed in the meantime. Review its status and try again.
+commandLineToolFailed: Could not change the gv command
 biometricUnavailable: Touch ID unavailable on this Mac — pair a Touch ID keyboard or enroll in System Settings.
 biometricDetail: Keeps a wrapped key in the system keychain for fast unlock.
 biometricHardware: "Hardware-enforced: macOS releases the key only after Touch ID."

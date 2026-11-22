@@ -102,6 +102,16 @@ gv sync
 gv lock
 ```
 
+`gv` comes with GoVault; there is nothing else to download.
+
+| Installed with | Putting `gv` on your PATH | Removing it |
+|---|---|---|
+| Windows installer | Automatic: the installer adds its folder to your user Path (open a new terminal) | Uninstalling GoVault removes `gv` and the Path entry |
+| `install-linux.sh`, AppImage | Automatic: `~/.local/bin/gv` (`/usr/local/bin/gv` with `--system`), which keeps working without FUSE or a display and follows GoVault's updates | `install-linux.sh --uninstall` |
+| `.deb` or pacman package | Run `/opt/govault/gv`, or link it into your PATH | Removing the package removes it |
+| macOS app | **Settings → Command Line → Install** links `/usr/local/bin/gv` to the app (asks for an administrator password once) and updates with the app | **Settings → Command Line → Uninstall** |
+| Homebrew | Automatic with the cask | `brew uninstall --cask govault` |
+
 It supports `login` (master password with authenticator, email or YubiKey two-step login, or a personal API key), `unlock`, `lock`, `logout`, `status`, `sync`, `config server`, `list`, `get` (items, fields, TOTP codes, attachments, folders, collections, organizations, fingerprints), `generate` and `encode`. It cannot change the vault. `gv` keeps its own sign-in, separate from the app's, under `GoVault CLI` in your configuration directory (or `$BITWARDENCLI_APPDATA_DIR`), and keeps its credentials in the system keychain when there is one. See [docs/cli-design.md](docs/cli-design.md) for details and the few differences from `bw`.
 
 ## Why GoVault?

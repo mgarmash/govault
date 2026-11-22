@@ -5,6 +5,10 @@
 #
 # Arch-based systems get the pacman package, Debian-based systems the .deb,
 # and everything else the AppImage with a desktop entry and icon. Every
+# package carries gv, the command-line client: the packages at
+# /opt/govault/gv, and the AppImage installs a gv launcher beside it that
+# runs the gv inside the image, extracted again whenever the image changes,
+# so it needs neither FUSE nor a display. Every
 # download is checked against the release's checksums.txt, whose signature
 # is first verified with ssh-keygen against the GoVault release key pinned
 # below (scripts/release-signing-key.pub). Releases before v0.3.0 are not
@@ -84,6 +88,11 @@ else
 fi
 desktop_file="${share_dir}/applications/${app_id}.desktop"
 icon_file="${share_dir}/icons/hicolor/512x512/apps/${app_id}.png"
+gv_dir="${share_dir}/${slug}-gv"
+# The first line of the gv launcher; a gv without it is not ours.
+gv_marker="# gv launcher installed by GoVault's install-linux.sh"
+
+is_gv_launcher() { [ -f "$1" ] && [ "$(sed -n 2p "$1")" = "$gv_marker" ]; }
 
 run_maybe_root() {
   if [ "$system" = 1 ]; then as_root "$@"; else "$@"; fi
@@ -124,6 +133,10 @@ do_uninstall() {
         removed=1
       fi
     done
+    if is_gv_launcher "${b}/gv"; then
+      if [ -n "$runner" ]; then as_root rm -rf "${b}/gv" "${s}/${slug}-gv"; else rm -rf "${b}/gv" "${s}/${slug}-gv"; fi
+      removed=1
+    fi
   done
   if [ "$removed" = 1 ]; then
     say "GoVault was uninstalled. Your vault cache in ~/.local/share and settings were left in place."
@@ -280,6 +293,36 @@ EOF
     run_maybe_root install -m 644 "${work}/${app_id}.desktop" "$desktop_file"
     refresh_desktop
 
+    if [ -e "${bin_dir}/gv" ] && ! is_gv_launcher "${bin_dir}/gv"; then
+      say "Note: ${bin_dir}/gv is another program; it was left in place, so GoVault's gv was not installed."
+    else
+      cat > "${work}/gv" << EOF
+#!/bin/sh
+${gv_marker}
+# Runs the gv inside the GoVault AppImage, extracting it again when the
+# image changes, as an update does. Extracting needs no FUSE.
+image='${bin_dir}/${slug}'
+dir='${gv_dir}'
+stamp="\$(stat -L -c '%s %Y' "\$image" 2> /dev/null)" || { echo "gv: \$image is missing; reinstall GoVault" >&2; exit 1; }
+if [ ! -x "\$dir/gv" ] || [ "\$(cat "\$dir/stamp" 2> /dev/null)" != "\$stamp" ]; then
+  if mkdir -p "\$dir" 2> /dev/null && tmp="\$(mktemp -d "\$dir/.extract.XXXXXX" 2> /dev/null)"; then
+    if (cd "\$tmp" && "\$image" --appimage-extract gv > /dev/null 2>&1) && [ -x "\$tmp/squashfs-root/gv" ]; then
+      mv -f "\$tmp/squashfs-root/gv" "\$dir/gv" && printf '%s\\n' "\$stamp" > "\$dir/stamp"
+    fi
+    rm -rf "\$tmp"
+  fi
+fi
+[ -x "\$dir/gv" ] || { echo "gv: could not extract gv from \$image" >&2; exit 1; }
+exec "\$dir/gv" "\$@"
+EOF
+      run_maybe_root install -m 755 "${work}/gv" "${bin_dir}/gv"
+      if run_maybe_root "${bin_dir}/gv" --version > /dev/null 2>&1; then
+        say "Installed gv, the command-line client: ${bin_dir}/gv"
+      else
+        say "Note: ${bin_dir}/gv could not extract gv from the AppImage."
+      fi
+    fi
+
     case ":${PATH}:" in
       *":${bin_dir}:"*) ;;
       *) say "Note: ${bin_dir} is not on your PATH; GoVault still appears in your app launcher." ;;
@@ -288,4 +331,7 @@ EOF
     ;;
 esac
 
+case "$mode" in
+  pacman | deb) say "Its command-line client is /opt/${slug}/gv." ;;
+esac
 say "GoVault ${version} is installed. Open it from your app launcher or run: ${slug}"

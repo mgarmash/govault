@@ -130,6 +130,10 @@ func SettingsView(cx *core.Scope, m *AppModel) core.Node {
 						When: func() bool { return m.Hooks.SSHAgent != nil },
 						Then: func(cx *core.Scope) core.Node { return sshAgentSection(m) },
 					},
+					core.Show{
+						When: func() bool { return m.Hooks.CommandLineTool != nil },
+						Then: func(cx *core.Scope) core.Node { return commandLineSection(m) },
+					},
 					section(locales.Backup(cx), card(
 						settingsRow(
 							locales.ExportBackup(cx),

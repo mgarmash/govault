@@ -75,6 +75,17 @@ Build `cmd/gv` separately with `CGO_ENABLED=0` for each desktop artifact's OS an
 
 NSGo v0.2.0 copies executable resource modes, but a resource copy does not sign nested code or create PATH entries. Its macOS signer explicitly handles libraries, Sparkle and extensions before signing the app. Linux package generation creates one GUI link; AppRun targets the GUI. NSIS recursively stages payload files. Add an explicit companion-binary staging step or extend these packagers before final assembly. Detect foreign `gv` commands/links and report the conflict without overwriting them. [Resources](https://github.com/nsgo-dev/nsgo/blob/v0.2.0/cmd/nsgo/resources.go#L18-L44) · [Signing](https://github.com/nsgo-dev/nsgo/blob/v0.2.0/cmd/nsgo/sign.go#L133-L178) · [Linux layout](https://github.com/nsgo-dev/nsgo/blob/v0.2.0/cmd/nsgo/linuxpkg.go#L210-L218) · [AppDir](https://github.com/nsgo-dev/nsgo/blob/v0.2.0/cmd/nsgo/appimage.go#L75-L103) · [NSIS](https://github.com/nsgo-dev/nsgo/blob/v0.2.0/cmd/nsgo/nsis.go#L495-L499)
 
+### Packaging status
+
+`scripts/build-release.sh` compiles `gv` per target (`CGO_ENABLED=0`, `-trimpath`, the version from `nsgo.yaml`), stages it as that target's NSGo resource in `cmd/govault/resources/` (which exists only during the build) and runs `go tool nsgo build` for one target at a time, so the app's packager carries and signs it with everything else, before checksums and update feeds.
+
+| Distribution | State |
+| --- | --- |
+| Windows NSIS | Done. Console-subsystem `gv.exe` in the installation directory, Authenticode-signed with the app's PE files; `windows.command_line` adds the directory to the user's Path once, broadcasts `WM_SETTINGCHANGE` and removes only its own entry on uninstall. It also installs NSGo's `GoVault.com` console companion. |
+| AppImage | Done. `gv` at the image root. `install-linux.sh` installs a `gv` launcher beside the image that extracts it with `--appimage-extract` (no FUSE) and extracts again whenever the image changes, so GUI-initiated updates refresh it. It never replaces a `gv` it did not install. |
+| Debian, Arch | Partly. `/opt/govault/gv` is in both packages; the package-owned `/usr/bin/gv` link needs NSGo, whose package builder writes only the app's own `/usr/bin` link. |
+| macOS DMG, Homebrew | Blocked on NSGo. The Settings installer is done, but NSGo v0.2.0 copies resources to `Contents/Resources` and offers no step to place a helper in `Contents/MacOS` and sign it with the Developer ID before it signs the app. A helper signed only ad hoc would pass `codesign --verify --deep --strict` but fail notarization. |
+
 ## Core reuse and security boundaries
 
 | Reuse | Add or adapt |

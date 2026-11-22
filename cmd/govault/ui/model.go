@@ -17,6 +17,7 @@ import (
 
 	"github.com/nsgo-dev/nsgo/core"
 	"github.com/nsgo-dev/nsgo/ui"
+	"github.com/txchen/govault/cmd/govault/clitool"
 	"github.com/txchen/govault/cmd/govault/locales"
 	"github.com/txchen/govault/internal/vaultcore/api"
 	"github.com/txchen/govault/internal/vaultcore/crypto"
@@ -164,6 +165,9 @@ type PlatformHooks struct {
 	// ChooseSavePath asks where to save a file without creating or changing
 	// it. done may run on any goroutine.
 	ChooseSavePath func(name string, done func(path string, ok bool, err error))
+	// CommandLineTool installs the bundled gv command; nil where the app
+	// does not manage it (only macOS does).
+	CommandLineTool CommandLineTool
 }
 
 var ErrBiometricCancelled = errors.New("biometric authentication cancelled")
@@ -393,6 +397,9 @@ type AppModel struct {
 	BiometricKind     *core.Signal[core.BiometricKind]
 	BiometricHardware *core.Signal[bool]
 
+	CommandLineTool     *core.Signal[clitool.Report]
+	CommandLineToolBusy *core.Signal[bool]
+
 	LoginServer   *core.Signal[string]
 	LoginEmail    *core.Signal[string]
 	LoginPassword *core.Signal[string]
@@ -582,6 +589,8 @@ func NewAppModel(app *core.Scope, coreSvc state.VaultService, hooks PlatformHook
 		Route:               core.NewSignal(app, RouteVault),
 		BiometricKind:       core.NewSignal(app, core.BiometricNone),
 		BiometricHardware:   core.NewSignal(app, false),
+		CommandLineTool:     core.NewSignal(app, clitool.Report{}),
+		CommandLineToolBusy: core.NewSignal(app, false),
 		LoginServer:         core.NewSignal(app, p.ServerURL),
 		LoginEmail:          core.NewSignal(app, p.Email),
 		LoginPassword:       core.NewSignal(app, ""),

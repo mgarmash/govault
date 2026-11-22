@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	_ "embed"
+	"github.com/txchen/govault/cmd/govault/clitool"
 	"path/filepath"
 	"runtime"
 	"sync"
@@ -163,6 +164,11 @@ func (s *DesktopShell) platformHooks(secrets store.SecretStore) govaultui.Platfo
 	}
 	if s.sshAgent != nil {
 		hooks.SSHAgent = s.sshAgent
+	}
+	if runtime.GOOS == "darwin" {
+		if tool, err := clitool.New(); err == nil {
+			hooks.CommandLineTool = tool
+		}
 	}
 	return hooks
 }

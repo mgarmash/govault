@@ -1632,6 +1632,12 @@ var Parameters = map[string][]string{
 	"AppVersion":                {"version"},
 	"DevelopmentVersion":        {"version"},
 	"SshAgentUnavailable":       {"reason"},
+	"CommandLineToolInstalled":  {"path"},
+	"CommandLineToolHomebrew":   {"path"},
+	"CommandLineToolBroken":     {"path"},
+	"CommandLineToolOtherCopy":  {"path"},
+	"CommandLineToolForeign":    {"path"},
+	"CommandLineToolShadowed":   {"path"},
 	"BiometricAppGated":         {"method"},
 	"PromptAutomaticallyDetail": {"method"},
 	"ErrorServer":               {"status", "detail"},
@@ -1732,6 +1738,12 @@ type Translation struct {
 	AppVersion                func(version string) string
 	DevelopmentVersion        func(version string) string
 	SshAgentUnavailable       func(reason string) string
+	CommandLineToolInstalled  func(path string) string
+	CommandLineToolHomebrew   func(path string) string
+	CommandLineToolBroken     func(path string) string
+	CommandLineToolOtherCopy  func(path string) string
+	CommandLineToolForeign    func(path string) string
+	CommandLineToolShadowed   func(path string) string
 	BiometricAppGated         func(method string) string
 	PromptAutomaticallyDetail func(method string) string
 	ErrorServer               func(status string, detail string) string
@@ -2225,6 +2237,16 @@ const (
 	textSshAgentInUse
 	textSshAgentNotSocket
 	textSshAgentUnsupported
+	textCommandLine
+	textCommandLineTool
+	textCommandLineToolNotInstalled
+	textCommandLineToolUnavailable
+	textInstallCommandLineTool
+	textRepairCommandLineTool
+	textUninstallCommandLineTool
+	textCommandLineToolPrompt
+	textCommandLineToolChanged
+	textCommandLineToolFailed
 	textBiometricUnavailable
 	textBiometricDetail
 	textBiometricHardware
@@ -2760,6 +2782,16 @@ var keyOfText = [numTexts]string{
 	"sshAgentInUse",
 	"sshAgentNotSocket",
 	"sshAgentUnsupported",
+	"commandLine",
+	"commandLineTool",
+	"commandLineToolNotInstalled",
+	"commandLineToolUnavailable",
+	"installCommandLineTool",
+	"repairCommandLineTool",
+	"uninstallCommandLineTool",
+	"commandLineToolPrompt",
+	"commandLineToolChanged",
+	"commandLineToolFailed",
 	"biometricUnavailable",
 	"biometricDetail",
 	"biometricHardware",
@@ -3293,6 +3325,16 @@ var textsEn = i18n.NewTexts(""+
 	"Another process already serves this socket."+
 	"The socket path exists and is not a socket."+
 	"Unix sockets are not supported on this system."+
+	"Command Line"+
+	"gv command-line tool"+
+	"Use your vault from Terminal and scripts with Bitwarden CLI commands. Installing adds a link at /usr/local/bin/gv."+
+	"This copy of GoVault does not include the gv command."+
+	"Install"+
+	"Repair"+
+	"Uninstall"+
+	"GoVault wants to change the gv command in /usr/local/bin."+
+	"The gv command changed in the meantime. Review its status and try again."+
+	"Could not change the gv command"+
 	"Touch ID unavailable on this Mac — pair a Touch ID keyboard or enroll in System Settings."+
 	"Keeps a wrapped key in the system keychain for fast unlock."+
 	"Hardware-enforced: macOS releases the key only after Touch ID."+
@@ -3823,6 +3865,16 @@ var textsEn = i18n.NewTexts(""+
 		43,
 		43,
 		46,
+		12,
+		20,
+		114,
+		53,
+		7,
+		6,
+		9,
+		57,
+		72,
+		31,
 		91,
 		59,
 		62,
@@ -4356,6 +4408,16 @@ var textsDe = i18n.NewTexts(""+
 	"Ein anderer Prozess verwendet diesen Socket bereits."+
 	"Der Socket-Pfad existiert und ist kein Socket."+
 	"Unix-Sockets werden auf diesem System nicht unterstützt."+
+	""+
+	""+
+	""+
+	""+
+	""+
+	""+
+	""+
+	""+
+	""+
+	""+
 	"Touch ID auf diesem Mac nicht verfügbar – kopple eine Touch ID-Tastatur oder richte es in den Systemeinstellungen ein."+
 	"Speichert einen geschützten Schlüssel im System-Schlüsselbund zum schnellen Entsperren."+
 	"Hardware-Schutz: macOS gibt den Schlüssel erst nach Touch ID frei."+
@@ -4886,6 +4948,16 @@ var textsDe = i18n.NewTexts(""+
 		52,
 		46,
 		57,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
 		121,
 		90,
 		67,
@@ -5419,6 +5491,16 @@ var textsEs = i18n.NewTexts(""+
 	"Otro proceso ya está usando este socket."+
 	"La ruta del socket existe y no es un socket."+
 	"Los sockets Unix no son compatibles en este sistema."+
+	""+
+	""+
+	""+
+	""+
+	""+
+	""+
+	""+
+	""+
+	""+
+	""+
 	"Touch ID no está disponible en este Mac — enlaza un teclado con Touch ID o configúralo en Ajustes del Sistema."+
 	"Guarda una clave envuelta en el llavero del sistema para desbloquear rápido."+
 	"Protección por hardware: macOS solo libera la clave tras Touch ID."+
@@ -5949,6 +6031,16 @@ var textsEs = i18n.NewTexts(""+
 		41,
 		44,
 		52,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
 		114,
 		77,
 		67,
@@ -6482,6 +6574,16 @@ var textsFr = i18n.NewTexts(""+
 	"Un autre processus utilise déjà ce socket."+
 	"Ce chemin existe et n’est pas un socket."+
 	"Les sockets Unix ne sont pas pris en charge sur ce système."+
+	""+
+	""+
+	""+
+	""+
+	""+
+	""+
+	""+
+	""+
+	""+
+	""+
 	"Touch ID indisponible sur ce Mac — jumelez un clavier Touch ID ou configurez-le dans Réglages Système."+
 	"Conserve une clé chiffrée dans le trousseau système pour un déverrouillage rapide."+
 	"Protection matérielle : macOS ne libère la clé qu’après Touch ID."+
@@ -7012,6 +7114,16 @@ var textsFr = i18n.NewTexts(""+
 		44,
 		42,
 		60,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
 		106,
 		86,
 		71,
@@ -7545,6 +7657,16 @@ var textsJa = i18n.NewTexts(""+
 	"別のプロセスがこのソケットを使用中です。"+
 	"このパスは既に存在し、ソケットではありません。"+
 	"このシステムでは Unix ソケットがサポートされていません。"+
+	""+
+	""+
+	""+
+	""+
+	""+
+	""+
+	""+
+	""+
+	""+
+	""+
 	"この Mac では Touch ID を利用できません。Touch ID 対応キーボードをペアリングするか、「システム設定」で登録してください。"+
 	"すばやくロック解除できるよう、ラップされたキーをシステムキーチェーンに保存します。"+
 	"ハードウェアレベルの保護：macOS は Touch ID 認証後にのみキーを解放します。"+
@@ -8075,6 +8197,16 @@ var textsJa = i18n.NewTexts(""+
 		60,
 		69,
 		81,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
 		168,
 		123,
 		103,
@@ -8608,6 +8740,16 @@ var textsKo = i18n.NewTexts(""+
 	"다른 프로세스가 이미 이 소켓을 사용 중입니다."+
 	"해당 경로가 이미 존재하며 소켓이 아닙니다."+
 	"이 시스템에서는 Unix 소켓이 지원되지 않습니다."+
+	""+
+	""+
+	""+
+	""+
+	""+
+	""+
+	""+
+	""+
+	""+
+	""+
 	"이 Mac에서 Touch ID를 사용할 수 없습니다. Touch ID 키보드를 페어링하거나 “시스템 설정”에서 등록하세요."+
 	"빠른 잠금 해제를 위해 래핑된 키를 시스템 키체인에 보관합니다."+
 	"하드웨어 수준 보호: macOS는 Touch ID 인증 후에만 키를 해제합니다."+
@@ -9138,6 +9280,16 @@ var textsKo = i18n.NewTexts(""+
 		64,
 		60,
 		64,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
 		140,
 		87,
 		86,
@@ -9671,6 +9823,16 @@ var textsPtBR = i18n.NewTexts(""+
 	"Outro processo já está usando este socket."+
 	"O caminho do socket existe e não é um socket."+
 	"Sockets Unix não são suportados neste sistema."+
+	""+
+	""+
+	""+
+	""+
+	""+
+	""+
+	""+
+	""+
+	""+
+	""+
 	"Touch ID indisponível neste Mac — emparelhe um teclado com Touch ID ou configure nos Ajustes do Sistema."+
 	"Mantém uma chave protegida nas chaves do sistema para desbloqueio rápido."+
 	"Proteção por hardware: o macOS libera a chave somente após Touch ID."+
@@ -10201,6 +10363,16 @@ var textsPtBR = i18n.NewTexts(""+
 		44,
 		47,
 		48,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
 		107,
 		75,
 		71,
@@ -10734,6 +10906,16 @@ var textsRu = i18n.NewTexts(""+
 	"Этот сокет уже используется другим процессом."+
 	"Путь существует и не является сокетом."+
 	"Unix-сокеты не поддерживаются в этой системе."+
+	""+
+	""+
+	""+
+	""+
+	""+
+	""+
+	""+
+	""+
+	""+
+	""+
 	"Touch ID недоступен на этом Mac — подключите клавиатуру с Touch ID или настройте его в Системных настройках."+
 	"Хранит защищённый ключ в системной связке ключей для быстрой разблокировки."+
 	"Аппаратная защита: macOS выдаёт ключ только после проверки Touch ID."+
@@ -11264,6 +11446,16 @@ var textsRu = i18n.NewTexts(""+
 		84,
 		70,
 		79,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
 		182,
 		140,
 		113,
@@ -11797,6 +11989,16 @@ var textsZhHans = i18n.NewTexts(""+
 	"另一个进程已占用此套接字。"+
 	"该路径已存在，且不是套接字文件。"+
 	"此系统不支持 Unix 套接字。"+
+	""+
+	""+
+	""+
+	""+
+	""+
+	""+
+	""+
+	""+
+	""+
+	""+
 	"此 Mac 上 Touch ID 不可用——请配对带有 Touch ID 的键盘或在“系统设置”中注册指纹。"+
 	"在系统钥匙串中保存封装密钥以实现快速解锁。"+
 	"硬件级保护：macOS 仅在通过 Touch ID 验证后释放密钥。"+
@@ -12327,6 +12529,16 @@ var textsZhHans = i18n.NewTexts(""+
 		39,
 		48,
 		36,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
 		112,
 		63,
 		70,
@@ -12860,6 +13072,16 @@ var textsZhHant = i18n.NewTexts(""+
 	"另一個程序已使用此通訊端。"+
 	"該路徑已存在，且不是通訊端檔案。"+
 	"此系統不支援 Unix 通訊端。"+
+	""+
+	""+
+	""+
+	""+
+	""+
+	""+
+	""+
+	""+
+	""+
+	""+
 	"此 Mac 上無法使用 Touch ID——請配對具備 Touch ID 的鍵盤或在「系統設定」中註冊指紋。"+
 	"在系統鑰匙圈中保存封裝金鑰以快速解鎖。"+
 	"硬體級保護：macOS 僅在通過 Touch ID 驗證後釋放金鑰。"+
@@ -13390,6 +13612,16 @@ var textsZhHant = i18n.NewTexts(""+
 		39,
 		48,
 		36,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
 		114,
 		57,
 		70,
@@ -13771,6 +14003,24 @@ func Supply(lang string, t Translation) {
 	}
 	if t.SshAgentUnavailable != nil {
 		s.SshAgentUnavailable = t.SshAgentUnavailable
+	}
+	if t.CommandLineToolInstalled != nil {
+		s.CommandLineToolInstalled = t.CommandLineToolInstalled
+	}
+	if t.CommandLineToolHomebrew != nil {
+		s.CommandLineToolHomebrew = t.CommandLineToolHomebrew
+	}
+	if t.CommandLineToolBroken != nil {
+		s.CommandLineToolBroken = t.CommandLineToolBroken
+	}
+	if t.CommandLineToolOtherCopy != nil {
+		s.CommandLineToolOtherCopy = t.CommandLineToolOtherCopy
+	}
+	if t.CommandLineToolForeign != nil {
+		s.CommandLineToolForeign = t.CommandLineToolForeign
+	}
+	if t.CommandLineToolShadowed != nil {
+		s.CommandLineToolShadowed = t.CommandLineToolShadowed
 	}
 	if t.BiometricAppGated != nil {
 		s.BiometricAppGated = t.BiometricAppGated
@@ -24651,6 +24901,238 @@ func SshAgentUnsupported(cx *core.Scope) string { return For(cx).SshAgentUnsuppo
 
 // SshAgentUnsupported is the package's SshAgentUnsupported in the language of msgs.
 func (msgs Messages) SshAgentUnsupported() string { return msgs.text(textSshAgentUnsupported) }
+
+// CommandLine says "Command Line"
+// in the language the app shows under cx.
+//
+// The Settings section for the gv command-line tool.
+func CommandLine(cx *core.Scope) string { return For(cx).CommandLine() }
+
+// CommandLine is the package's CommandLine in the language of msgs.
+func (msgs Messages) CommandLine() string { return msgs.text(textCommandLine) }
+
+// CommandLineTool says "gv command-line tool"
+// in the language the app shows under cx.
+//
+// gv is the name of the command and is not translated.
+func CommandLineTool(cx *core.Scope) string { return For(cx).CommandLineTool() }
+
+// CommandLineTool is the package's CommandLineTool in the language of msgs.
+func (msgs Messages) CommandLineTool() string { return msgs.text(textCommandLineTool) }
+
+// CommandLineToolNotInstalled says "Use your vault from Terminal and scripts with Bitwarden CLI commands. Installing adds a link at /usr/local/bin/gv."
+// in the language the app shows under cx.
+func CommandLineToolNotInstalled(cx *core.Scope) string { return For(cx).CommandLineToolNotInstalled() }
+
+// CommandLineToolNotInstalled is the package's CommandLineToolNotInstalled in the language of msgs.
+func (msgs Messages) CommandLineToolNotInstalled() string {
+	return msgs.text(textCommandLineToolNotInstalled)
+}
+
+// CommandLineToolInstalled says "Installed at {path}. It updates with GoVault."
+// in the language the app shows under cx.
+//
+// path is where the gv command is, such as /usr/local/bin/gv.
+func CommandLineToolInstalled(cx *core.Scope, path string) string {
+	return For(cx).CommandLineToolInstalled(path)
+}
+
+// CommandLineToolInstalled is the package's CommandLineToolInstalled in the language of msgs.
+func (msgs Messages) CommandLineToolInstalled(path string) string {
+	if i18n.IsPseudo(msgs.lang) {
+		return i18n.Pseudo(msgs.lang, Messages{lang: Source, mark: true}.CommandLineToolInstalled(path))
+	}
+	for lang := msgs.lang; ; lang = i18n.Parent(lang) {
+		if f := supplied[lang].CommandLineToolInstalled; f != nil {
+			return f(path)
+		}
+		switch lang {
+		case "", "en":
+			return "Installed at " + msgs.arg(path) + ". It updates with GoVault."
+		}
+	}
+}
+
+// CommandLineToolHomebrew says "Installed by Homebrew at {path}. Homebrew updates and removes it with GoVault."
+// in the language the app shows under cx.
+//
+// path is where Homebrew linked the gv command.
+func CommandLineToolHomebrew(cx *core.Scope, path string) string {
+	return For(cx).CommandLineToolHomebrew(path)
+}
+
+// CommandLineToolHomebrew is the package's CommandLineToolHomebrew in the language of msgs.
+func (msgs Messages) CommandLineToolHomebrew(path string) string {
+	if i18n.IsPseudo(msgs.lang) {
+		return i18n.Pseudo(msgs.lang, Messages{lang: Source, mark: true}.CommandLineToolHomebrew(path))
+	}
+	for lang := msgs.lang; ; lang = i18n.Parent(lang) {
+		if f := supplied[lang].CommandLineToolHomebrew; f != nil {
+			return f(path)
+		}
+		switch lang {
+		case "", "en":
+			return "Installed by Homebrew at " + msgs.arg(path) + ". Homebrew updates and removes it with GoVault."
+		}
+	}
+}
+
+// CommandLineToolBroken says "The link at {path} points to a copy of GoVault that is no longer there."
+// in the language the app shows under cx.
+//
+// path is the gv link.
+func CommandLineToolBroken(cx *core.Scope, path string) string {
+	return For(cx).CommandLineToolBroken(path)
+}
+
+// CommandLineToolBroken is the package's CommandLineToolBroken in the language of msgs.
+func (msgs Messages) CommandLineToolBroken(path string) string {
+	if i18n.IsPseudo(msgs.lang) {
+		return i18n.Pseudo(msgs.lang, Messages{lang: Source, mark: true}.CommandLineToolBroken(path))
+	}
+	for lang := msgs.lang; ; lang = i18n.Parent(lang) {
+		if f := supplied[lang].CommandLineToolBroken; f != nil {
+			return f(path)
+		}
+		switch lang {
+		case "", "en":
+			return "The link at " + msgs.arg(path) + " points to a copy of GoVault that is no longer there."
+		}
+	}
+}
+
+// CommandLineToolOtherCopy says "The link at {path} points to another copy of GoVault."
+// in the language the app shows under cx.
+//
+// path is the gv link.
+func CommandLineToolOtherCopy(cx *core.Scope, path string) string {
+	return For(cx).CommandLineToolOtherCopy(path)
+}
+
+// CommandLineToolOtherCopy is the package's CommandLineToolOtherCopy in the language of msgs.
+func (msgs Messages) CommandLineToolOtherCopy(path string) string {
+	if i18n.IsPseudo(msgs.lang) {
+		return i18n.Pseudo(msgs.lang, Messages{lang: Source, mark: true}.CommandLineToolOtherCopy(path))
+	}
+	for lang := msgs.lang; ; lang = i18n.Parent(lang) {
+		if f := supplied[lang].CommandLineToolOtherCopy; f != nil {
+			return f(path)
+		}
+		switch lang {
+		case "", "en":
+			return "The link at " + msgs.arg(path) + " points to another copy of GoVault."
+		}
+	}
+}
+
+// CommandLineToolForeign says "Another program named gv is at {path}. GoVault does not replace it."
+// in the language the app shows under cx.
+//
+// path is the other program.
+func CommandLineToolForeign(cx *core.Scope, path string) string {
+	return For(cx).CommandLineToolForeign(path)
+}
+
+// CommandLineToolForeign is the package's CommandLineToolForeign in the language of msgs.
+func (msgs Messages) CommandLineToolForeign(path string) string {
+	if i18n.IsPseudo(msgs.lang) {
+		return i18n.Pseudo(msgs.lang, Messages{lang: Source, mark: true}.CommandLineToolForeign(path))
+	}
+	for lang := msgs.lang; ; lang = i18n.Parent(lang) {
+		if f := supplied[lang].CommandLineToolForeign; f != nil {
+			return f(path)
+		}
+		switch lang {
+		case "", "en":
+			return "Another program named gv is at " + msgs.arg(path) + ". GoVault does not replace it."
+		}
+	}
+}
+
+// CommandLineToolUnavailable says "This copy of GoVault does not include the gv command."
+// in the language the app shows under cx.
+func CommandLineToolUnavailable(cx *core.Scope) string { return For(cx).CommandLineToolUnavailable() }
+
+// CommandLineToolUnavailable is the package's CommandLineToolUnavailable in the language of msgs.
+func (msgs Messages) CommandLineToolUnavailable() string {
+	return msgs.text(textCommandLineToolUnavailable)
+}
+
+// CommandLineToolShadowed says "Another gv at {path} may run instead in Terminal."
+// in the language the app shows under cx.
+//
+// Shown under the gv tool's status when another gv is on the PATH. path is that program.
+func CommandLineToolShadowed(cx *core.Scope, path string) string {
+	return For(cx).CommandLineToolShadowed(path)
+}
+
+// CommandLineToolShadowed is the package's CommandLineToolShadowed in the language of msgs.
+func (msgs Messages) CommandLineToolShadowed(path string) string {
+	if i18n.IsPseudo(msgs.lang) {
+		return i18n.Pseudo(msgs.lang, Messages{lang: Source, mark: true}.CommandLineToolShadowed(path))
+	}
+	for lang := msgs.lang; ; lang = i18n.Parent(lang) {
+		if f := supplied[lang].CommandLineToolShadowed; f != nil {
+			return f(path)
+		}
+		switch lang {
+		case "", "en":
+			return "Another gv at " + msgs.arg(path) + " may run instead in Terminal."
+		}
+	}
+}
+
+// InstallCommandLineTool says "Install"
+// in the language the app shows under cx.
+//
+// A button that installs the gv command-line tool.
+func InstallCommandLineTool(cx *core.Scope) string { return For(cx).InstallCommandLineTool() }
+
+// InstallCommandLineTool is the package's InstallCommandLineTool in the language of msgs.
+func (msgs Messages) InstallCommandLineTool() string { return msgs.text(textInstallCommandLineTool) }
+
+// RepairCommandLineTool says "Repair"
+// in the language the app shows under cx.
+//
+// A button that points the gv link back to this copy of GoVault.
+func RepairCommandLineTool(cx *core.Scope) string { return For(cx).RepairCommandLineTool() }
+
+// RepairCommandLineTool is the package's RepairCommandLineTool in the language of msgs.
+func (msgs Messages) RepairCommandLineTool() string { return msgs.text(textRepairCommandLineTool) }
+
+// UninstallCommandLineTool says "Uninstall"
+// in the language the app shows under cx.
+//
+// A button that removes the gv link.
+func UninstallCommandLineTool(cx *core.Scope) string { return For(cx).UninstallCommandLineTool() }
+
+// UninstallCommandLineTool is the package's UninstallCommandLineTool in the language of msgs.
+func (msgs Messages) UninstallCommandLineTool() string {
+	return msgs.text(textUninstallCommandLineTool)
+}
+
+// CommandLineToolPrompt says "GoVault wants to change the gv command in /usr/local/bin."
+// in the language the app shows under cx.
+//
+// The reason macOS shows when it asks for an administrator password.
+func CommandLineToolPrompt(cx *core.Scope) string { return For(cx).CommandLineToolPrompt() }
+
+// CommandLineToolPrompt is the package's CommandLineToolPrompt in the language of msgs.
+func (msgs Messages) CommandLineToolPrompt() string { return msgs.text(textCommandLineToolPrompt) }
+
+// CommandLineToolChanged says "The gv command changed in the meantime. Review its status and try again."
+// in the language the app shows under cx.
+func CommandLineToolChanged(cx *core.Scope) string { return For(cx).CommandLineToolChanged() }
+
+// CommandLineToolChanged is the package's CommandLineToolChanged in the language of msgs.
+func (msgs Messages) CommandLineToolChanged() string { return msgs.text(textCommandLineToolChanged) }
+
+// CommandLineToolFailed says "Could not change the gv command"
+// in the language the app shows under cx.
+func CommandLineToolFailed(cx *core.Scope) string { return For(cx).CommandLineToolFailed() }
+
+// CommandLineToolFailed is the package's CommandLineToolFailed in the language of msgs.
+func (msgs Messages) CommandLineToolFailed() string { return msgs.text(textCommandLineToolFailed) }
 
 // BiometricUnavailable says "Touch ID unavailable on this Mac — pair a Touch ID keyboard or enroll in System Settings."
 // in the language the app shows under cx.
