@@ -41,6 +41,9 @@ type DesktopShell struct {
 	mainWin   *desktop.Window
 	winTrack  *govaultui.WindowTracker
 	trayScope *core.Scope
+	tray      trayIcon
+	// newTray adds the tray icon; tests record it instead.
+	newTray func(cx *core.Scope, opts desktop.TrayOptions) trayIcon
 
 	rtMu      sync.Mutex
 	rtRunning bool
@@ -203,9 +206,7 @@ func (s *DesktopShell) finishSetup() {
 			shell.winTrack.Flush()
 		}
 		clip.ClearOnQuit()
-		if shell.trayScope != nil {
-			shell.trayScope.Dispose()
-		}
+		shell.removeTray()
 	})
 
 	if !desktop.LaunchedAtLogin(app) || !p.ShowTrayIcon {
@@ -327,20 +328,51 @@ func (s *DesktopShell) SetTrayVisible(on bool) {
 		return
 	}
 	if !on {
-		s.trayScope.Dispose()
-		s.trayScope = nil
+		s.removeTray()
 		return
 	}
-	s.trayScope = s.scope.Child()
+	// NSGo gives a new scope, and a tray icon, to the owner running as they
+	// are made, not to the scope they are made from. The Settings switch
+	// runs under its own row, which a re-render of Settings disposes, so
+	// the scope is made under the app scope and the icon under that scope.
+	s.scope.Run(func() { s.trayScope = s.scope.Child() })
 	icon, template := trayColorPNG, false
 	if runtime.GOOS == "darwin" {
 		icon, template = trayTemplatePNG, true
 	}
-	desktop.NewTray(s.trayScope, desktop.TrayOptions{
+	opts := desktop.TrayOptions{
 		Icon:     icon,
 		Template: template,
 		Tooltip:  "GoVault",
 		OnClick:  s.OpenMainWindow,
 		Menu:     s.trayMenu,
-	})
+	}
+	newTray := s.newTray
+	if newTray == nil {
+		newTray = addTray
+	}
+	scope := s.trayScope
+	scope.Run(func() { s.tray = newTray(scope, opts) })
+}
+
+// trayIcon is the part of a tray icon the shell uses.
+type trayIcon interface{ Remove() }
+
+func addTray(cx *core.Scope, opts desktop.TrayOptions) trayIcon {
+	if tr := desktop.NewTray(cx, opts); tr != nil {
+		return tr
+	}
+	return nil
+}
+
+// removeTray takes the tray icon off the menu bar or notification area now.
+func (s *DesktopShell) removeTray() {
+	if s.tray != nil {
+		s.tray.Remove()
+		s.tray = nil
+	}
+	if s.trayScope != nil {
+		s.trayScope.Dispose()
+		s.trayScope = nil
+	}
 }
