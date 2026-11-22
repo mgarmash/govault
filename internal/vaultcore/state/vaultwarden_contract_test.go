@@ -117,3 +117,55 @@ func TestVaultwardenAcceptsACreate(t *testing.T) {
 		t.Fatalf("encryptedFor = %q, want %q", d.EncryptedFor, env.profileID)
 	}
 }
+
+func TestVaultwardenAcceptsEveryKindOfItemWrite(t *testing.T) {
+	env := newVaultTestEnv(t)
+	svc := loggedInTestService(t, env)
+	ctx := context.Background()
+	check := func(what string) {
+		t.Helper()
+		env.mu.Lock()
+		body := append([]byte(nil), env.lastBody...)
+		env.mu.Unlock()
+		d, err := decodeAsVaultwarden(body)
+		if err != nil || d.EncryptedFor != env.profileID {
+			t.Fatalf("%s: Vaultwarden 1.37.5 would answer 422: %v (encryptedFor %q)", what, err, d.EncryptedFor)
+		}
+	}
+	for what, change := range map[string]func(c *Cipher){
+		"favorite":    func(c *Cipher) { c.Favorite = !c.Favorite },
+		"folder move": func(c *Cipher) { c.FolderID = nil },
+		"rename":      func(c *Cipher) { c.Name = "Renamed" },
+	} {
+		c, _ := svc.GetCipher("c-1")
+		change(c)
+		if _, err := svc.SaveCipher(ctx, c); err != nil {
+			t.Fatalf("%s: %v", what, err)
+		}
+		check(what)
+	}
+	// A clone or an import creates a new item from a copy of another.
+	c, _ := svc.GetCipher("c-1")
+	c.ID, c.Key, c.Name = "", nil, "GitHub (Copy)"
+	if _, err := svc.SaveCipher(ctx, c); err != nil {
+		t.Fatal(err)
+	}
+	check("clone")
+}
+
+func TestEncryptedForIsTheSessionUser(t *testing.T) {
+	env := newVaultTestEnv(t)
+	svc := loggedInTestService(t, env)
+	o, err := svc.beginOp(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer o.end()
+	if got := o.encryptedFor(); got == nil || *got != env.profileID {
+		t.Fatalf("encryptedFor = %v, want the profile ID %q from the signed-in session", got, env.profileID)
+	}
+	o.accountID = "alice@example.com"
+	if got := o.encryptedFor(); got != nil {
+		t.Fatalf("an account known only by email sent encryptedFor %q", *got)
+	}
+}

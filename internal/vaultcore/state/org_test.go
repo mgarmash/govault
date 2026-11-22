@@ -7,6 +7,7 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"errors"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"sync"
@@ -75,6 +76,7 @@ func TestService_OrganizationCollectionsAndOrgCiphers(t *testing.T) {
 	}
 	personal := api.EncryptedCipher{ID: "c-me", Type: api.CipherTypeLogin, Name: *mustEnc(t, "Personal Mail", userKey), RevisionDate: &rev}
 	var lastPayload api.CipherPayload
+	var lastBody []byte
 
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch {
@@ -107,10 +109,12 @@ func TestService_OrganizationCollectionsAndOrgCiphers(t *testing.T) {
 			mu.Unlock()
 			_ = json.NewEncoder(w).Encode(out)
 		case r.Method == http.MethodPut && r.URL.Path == "/api/ciphers/c-org":
+			body, _ := io.ReadAll(r.Body)
 			var p api.CipherPayload
-			_ = json.NewDecoder(r.Body).Decode(&p)
+			_ = json.Unmarshal(body, &p)
 			mu.Lock()
 			lastPayload = p
+			lastBody = body
 			orgCipher.Name = p.Name
 			orgCipher.Login = p.Login
 			orgCipher.Key = p.Key
@@ -174,6 +178,12 @@ func TestService_OrganizationCollectionsAndOrgCiphers(t *testing.T) {
 	}
 	mu.Lock()
 	payload := lastPayload
+	// An organization item's update names the signed-in user as
+	// encryptedFor too, as Bitwarden's clients do.
+	orgBody := append([]byte(nil), lastBody...)
+	if d, err := decodeAsVaultwarden(orgBody); err != nil || d.EncryptedFor != "acct-1" || d.OrganizationID == nil || *d.OrganizationID != orgID {
+		t.Fatalf("Vaultwarden 1.37.5 would refuse the organization update: %v (encryptedFor %q)", err, d.EncryptedFor)
+	}
 	mu.Unlock()
 	if payload.OrganizationID == nil || *payload.OrganizationID != orgID || len(payload.CollectionIDs) != 1 {
 		t.Fatalf("payload org/collections = %v %v", payload.OrganizationID, payload.CollectionIDs)
