@@ -565,7 +565,15 @@ func sidebarRow(e sidebarEntry) core.Node {
 		})
 	}
 	return sidebarTooltip(e.label, core.View{
-		TestID: e.testID,
+		TestID:     e.testID,
+		Accessible: true,
+		Label:      e.label,
+		AccessibilityDescriptionFunc: func() string {
+			if e.count == nil || e.badge && e.count() == 0 {
+				return ""
+			}
+			return fmt.Sprintf("%d", e.count())
+		},
 		ClassFunc: func() string {
 			if e.active() {
 				return "flex-row items-center gap-2 h-[28px] px-2 rounded-[6px] bg-gv-sel"
@@ -578,7 +586,10 @@ func sidebarRow(e sidebarEntry) core.Node {
 }
 
 // sidebarTooltip shows a sidebar row's whole label as the pointer rests on
-// it, so a label cut off in a narrow sidebar can still be read.
+// it, so a label cut off in a narrow sidebar can still be read. The row
+// names itself with the label and describes itself with its count, so
+// screen readers, which NSGo gives a tooltip as a description where the
+// row's text differs from it, read the label once.
 func sidebarTooltip(label string, row core.Node) core.Node {
 	return ui.Tooltip{Text: label, Placement: core.PlaceRight, Trigger: row}
 }
@@ -598,6 +609,27 @@ func folderRow(cx *core.Scope, m *AppModel, folder state.Folder) core.Node {
 	}
 	return sidebarTooltip(folder.Name, core.View{
 		TestID: "sidebar-folder",
+		// One element for screen readers, whose actions are the folder menu's.
+		Accessible: true,
+		Label:      folder.Name,
+		AccessibilityDescriptionFunc: func() string {
+			return fmt.Sprintf("%d", m.AllCounts.Get().ByFolder[folder.ID])
+		},
+		AccessibilityActions: []core.AccessibilityAction{
+			{Name: "rename", Label: locales.RenameFolderMenu(cx)},
+			{Name: "delete", Label: locales.DeleteFolder(cx)},
+		},
+		OnAccessibilityAction: func(name string) {
+			if m.SyncState.Get() == SyncOffline {
+				return
+			}
+			switch name {
+			case "rename":
+				m.OpenRenameFolderModal(folder)
+			case "delete":
+				m.DeleteFolder(cx, folder)
+			}
+		},
 		ClassFunc: func() string {
 			if active() {
 				return "flex-row items-center gap-2 h-[28px] pl-2 pr-1 rounded-[6px] bg-gv-sel"
