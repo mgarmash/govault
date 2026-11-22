@@ -1544,104 +1544,105 @@ func For(cx *core.Scope) Messages {
 // its method, for the TSX declarations of the messages
 // (tsx.RegisterMessages).
 var Parameters = map[string][]string{
-	"TwoFactorEnterEmailCodeTo": {"email"},
-	"TwoFactorOtherProvider":    {"number"},
-	"TwoFactorUnsupported":      {"methods"},
-	"TwoFactorEmailFailed":      {"reason"},
-	"TwoFactorEmailSentTo":      {"email"},
-	"UnlockWith":                {"method"},
-	"BiometricEnableReason":     {"method"},
-	"BiometricDisabled":         {"method"},
-	"BiometricEnabled":          {"method"},
-	"BiometricEnabledDetail":    {"method"},
-	"LogOutSecretsLeft":         {"reason"},
-	"SyncedWhen":                {"when"},
-	"MinutesAgo":                {"count"},
-	"HoursAgo":                  {"count"},
-	"DaysAgo":                   {"count"},
-	"ShortDate":                 {"date"},
-	"ItemCount":                 {"count"},
-	"SearchIn":                  {"section"},
-	"SearchOnlyIn":              {"section"},
-	"NothingInSectionMatches":   {"section", "query"},
-	"NothingMatches":            {"query"},
-	"WebsiteNumbered":           {"number"},
-	"RevealField":               {"field"},
-	"CopyField":                 {"field"},
-	"PasswordHistory":           {"count"},
-	"UsedUntil":                 {"date"},
-	"SecondsLeft":               {"seconds"},
-	"UpdatedOn":                 {"date"},
-	"CreatedOn":                 {"date"},
-	"DeletedWhen":               {"when"},
-	"Copied":                    {"field"},
-	"ClearsInConcealed":         {"seconds"},
-	"ClearsIn":                  {"seconds"},
-	"RepromptPrompt":            {"action"},
-	"RepromptBiometricReason":   {"action"},
-	"DeletePermanentlyMessage":  {"name"},
-	"EmptyTrashMessage":         {"count"},
-	"TrashReadOnlyKept":         {"count"},
-	"TrashChangedKept":          {"count"},
-	"TrashPartlyDeleted":        {"count"},
-	"TrashSomeNotDeleted":       {"reason"},
-	"CloneName":                 {"name"},
-	"DeleteFolderMessage":       {"name"},
-	"NewItemOfType":             {"kind"},
-	"EditItemOfType":            {"kind"},
-	"SshKeyGenerateFailed":      {"reason"},
-	"PasskeySiteCreated":        {"site", "date"},
-	"PasskeyCreated":            {"date"},
-	"DownloadFile":              {"file"},
-	"DeleteFile":                {"file"},
-	"DeleteAttachmentMessage":   {"file"},
-	"Bytes":                     {"count"},
-	"Kilobytes":                 {"size"},
-	"Megabytes":                 {"size"},
-	"Gigabytes":                 {"size"},
-	"Terabytes":                 {"size"},
-	"EntropyBits":               {"bits"},
-	"OpenItem":                  {"name"},
-	"UsedInItems":               {"count"},
-	"WeakShort":                 {"count"},
-	"CardExpired":               {"expiry"},
-	"CardExpires":               {"expiry"},
-	"BackupPasswordTooShort":    {"count"},
-	"BackupIncomplete":          {"count"},
-	"BackupFileTooLarge":        {"size"},
-	"ImportResult":              {"created", "updated"},
-	"ImportSomeFailed":          {"count", "reason"},
-	"ImportSkipped":             {"count"},
-	"ImportSummary":             {"file", "added", "changed", "identical"},
-	"ImportGroupChanged":        {"count"},
-	"ImportGroupNew":            {"count"},
-	"ImportGroupIdentical":      {"count"},
-	"ImportApply":               {"create", "update", "skip"},
-	"SharedVaultOf":             {"organization"},
-	"OrganizationCollections":   {"organization", "collections"},
-	"ShowIdentical":             {"count"},
-	"HideIdentical":             {"count"},
-	"ImportDiffers":             {"fields", "destination"},
-	"ImportAlreadyIn":           {"destination"},
-	"KdfArgon2id":               {"memory", "iterations", "threads"},
-	"KdfPBKDF2":                 {"iterations"},
-	"LastSyncAt":                {"date"},
-	"AfterMinutes":              {"count"},
-	"AfterHours":                {"count"},
-	"AfterSeconds":              {"count"},
-	"AppVersion":                {"version"},
-	"DevelopmentVersion":        {"version"},
-	"SshAgentUnavailable":       {"reason"},
-	"CommandLineToolInstalled":  {"path"},
-	"CommandLineToolHomebrew":   {"path"},
-	"CommandLineToolBroken":     {"path"},
-	"CommandLineToolOtherCopy":  {"path"},
-	"CommandLineToolForeign":    {"path"},
-	"CommandLineToolShadowed":   {"path"},
-	"BiometricAppGated":         {"method"},
-	"PromptAutomaticallyDetail": {"method"},
-	"ErrorServer":               {"status", "detail"},
-	"ErrorWithDetail":           {"detail"},
+	"TwoFactorEnterEmailCodeTo":  {"email"},
+	"TwoFactorOtherProvider":     {"number"},
+	"TwoFactorUnsupported":       {"methods"},
+	"TwoFactorEmailFailed":       {"reason"},
+	"TwoFactorEmailSentTo":       {"email"},
+	"UnlockWith":                 {"method"},
+	"BiometricEnableReason":      {"method"},
+	"BiometricDisabled":          {"method"},
+	"BiometricEnabled":           {"method"},
+	"BiometricEnabledDetail":     {"method"},
+	"LogOutSecretsLeft":          {"reason"},
+	"SyncedWhen":                 {"when"},
+	"MinutesAgo":                 {"count"},
+	"HoursAgo":                   {"count"},
+	"DaysAgo":                    {"count"},
+	"ShortDate":                  {"date"},
+	"ItemCount":                  {"count"},
+	"SearchIn":                   {"section"},
+	"SearchOnlyIn":               {"section"},
+	"NothingInSectionMatches":    {"section", "query"},
+	"NothingMatches":             {"query"},
+	"WebsiteNumbered":            {"number"},
+	"RevealField":                {"field"},
+	"CopyField":                  {"field"},
+	"PasswordHistory":            {"count"},
+	"UsedUntil":                  {"date"},
+	"SecondsLeft":                {"seconds"},
+	"UpdatedOn":                  {"date"},
+	"CreatedOn":                  {"date"},
+	"DeletedWhen":                {"when"},
+	"Copied":                     {"field"},
+	"ClearsInConcealed":          {"seconds"},
+	"ClearsIn":                   {"seconds"},
+	"RepromptPrompt":             {"action"},
+	"RepromptBiometricReason":    {"action"},
+	"DeletePermanentlyMessage":   {"name"},
+	"EmptyTrashMessage":          {"count"},
+	"TrashReadOnlyKept":          {"count"},
+	"TrashChangedKept":           {"count"},
+	"TrashPartlyDeleted":         {"count"},
+	"TrashSomeNotDeleted":        {"reason"},
+	"CloneName":                  {"name"},
+	"DeleteFolderMessage":        {"name"},
+	"NewItemOfType":              {"kind"},
+	"EditItemOfType":             {"kind"},
+	"SshKeyGenerateFailed":       {"reason"},
+	"PasskeySiteCreated":         {"site", "date"},
+	"PasskeyCreated":             {"date"},
+	"DownloadFile":               {"file"},
+	"DeleteFile":                 {"file"},
+	"DeleteAttachmentMessage":    {"file"},
+	"Bytes":                      {"count"},
+	"Kilobytes":                  {"size"},
+	"Megabytes":                  {"size"},
+	"Gigabytes":                  {"size"},
+	"Terabytes":                  {"size"},
+	"EntropyBits":                {"bits"},
+	"OpenItem":                   {"name"},
+	"UsedInItems":                {"count"},
+	"WeakShort":                  {"count"},
+	"CardExpired":                {"expiry"},
+	"CardExpires":                {"expiry"},
+	"BackupPasswordTooShort":     {"count"},
+	"BackupIncomplete":           {"count"},
+	"BackupFileTooLarge":         {"size"},
+	"ImportResult":               {"created", "updated"},
+	"ImportSomeFailed":           {"count", "reason"},
+	"ImportSkipped":              {"count"},
+	"ImportSummary":              {"file", "added", "changed", "identical"},
+	"ImportGroupChanged":         {"count"},
+	"ImportGroupNew":             {"count"},
+	"ImportGroupIdentical":       {"count"},
+	"ImportApply":                {"create", "update", "skip"},
+	"SharedVaultOf":              {"organization"},
+	"OrganizationCollections":    {"organization", "collections"},
+	"ShowIdentical":              {"count"},
+	"HideIdentical":              {"count"},
+	"ImportDiffers":              {"fields", "destination"},
+	"ImportAlreadyIn":            {"destination"},
+	"KdfArgon2id":                {"memory", "iterations", "threads"},
+	"KdfPBKDF2":                  {"iterations"},
+	"LastSyncAt":                 {"date"},
+	"AfterMinutes":               {"count"},
+	"AfterHours":                 {"count"},
+	"AfterSeconds":               {"count"},
+	"AppVersion":                 {"version"},
+	"DevelopmentVersion":         {"version"},
+	"SshAgentUnavailable":        {"reason"},
+	"CommandLineToolInstalled":   {"path"},
+	"CommandLineToolHomebrew":    {"path"},
+	"CommandLineToolBroken":      {"path"},
+	"CommandLineToolOtherCopy":   {"path"},
+	"CommandLineToolForeign":     {"path"},
+	"CommandLineToolShadowed":    {"path"},
+	"CommandLineToolOtherOnPath": {"path"},
+	"BiometricAppGated":          {"method"},
+	"PromptAutomaticallyDetail":  {"method"},
+	"ErrorServer":                {"status", "detail"},
+	"ErrorWithDetail":            {"detail"},
 }
 
 // Translation is a language's messages another package supplies:
@@ -1649,105 +1650,106 @@ var Parameters = map[string][]string{
 // of the others; a key or a field left out leaves the message to the
 // catalog.
 type Translation struct {
-	Texts                     map[string]string
-	TwoFactorEnterEmailCodeTo func(email string) string
-	TwoFactorOtherProvider    func(number int) string
-	TwoFactorUnsupported      func(methods string) string
-	TwoFactorEmailFailed      func(reason string) string
-	TwoFactorEmailSentTo      func(email string) string
-	UnlockWith                func(method string) string
-	BiometricEnableReason     func(method string) string
-	BiometricDisabled         func(method string) string
-	BiometricEnabled          func(method string) string
-	BiometricEnabledDetail    func(method string) string
-	LogOutSecretsLeft         func(reason string) string
-	SyncedWhen                func(when string) string
-	MinutesAgo                func(count int) string
-	HoursAgo                  func(count int) string
-	DaysAgo                   func(count int) string
-	ShortDate                 func(hc string, date time.Time) string
-	ItemCount                 func(count int) string
-	SearchIn                  func(section string) string
-	SearchOnlyIn              func(section string) string
-	NothingInSectionMatches   func(section string, query string) string
-	NothingMatches            func(query string) string
-	WebsiteNumbered           func(number int) string
-	RevealField               func(field string) string
-	CopyField                 func(field string) string
-	PasswordHistory           func(count int) string
-	UsedUntil                 func(hc string, date time.Time) string
-	SecondsLeft               func(seconds int) string
-	UpdatedOn                 func(hc string, date time.Time) string
-	CreatedOn                 func(hc string, date time.Time) string
-	DeletedWhen               func(when string) string
-	Copied                    func(field string) string
-	ClearsInConcealed         func(seconds int) string
-	ClearsIn                  func(seconds int) string
-	RepromptPrompt            func(action string) string
-	RepromptBiometricReason   func(action string) string
-	DeletePermanentlyMessage  func(name string) string
-	EmptyTrashMessage         func(count int) string
-	TrashReadOnlyKept         func(count int) string
-	TrashChangedKept          func(count int) string
-	TrashPartlyDeleted        func(count int) string
-	TrashSomeNotDeleted       func(reason string) string
-	CloneName                 func(name string) string
-	DeleteFolderMessage       func(name string) string
-	NewItemOfType             func(kind string) string
-	EditItemOfType            func(kind string) string
-	SshKeyGenerateFailed      func(reason string) string
-	PasskeySiteCreated        func(hc string, site string, date time.Time) string
-	PasskeyCreated            func(hc string, date time.Time) string
-	DownloadFile              func(file string) string
-	DeleteFile                func(file string) string
-	DeleteAttachmentMessage   func(file string) string
-	Bytes                     func(count int) string
-	Kilobytes                 func(size float64) string
-	Megabytes                 func(size float64) string
-	Gigabytes                 func(size float64) string
-	Terabytes                 func(size float64) string
-	EntropyBits               func(bits int) string
-	OpenItem                  func(name string) string
-	UsedInItems               func(count int) string
-	WeakShort                 func(count int) string
-	CardExpired               func(expiry string) string
-	CardExpires               func(expiry string) string
-	BackupPasswordTooShort    func(count int) string
-	BackupIncomplete          func(count int) string
-	BackupFileTooLarge        func(size int) string
-	ImportResult              func(created int, updated int) string
-	ImportSomeFailed          func(count int, reason string) string
-	ImportSkipped             func(count int) string
-	ImportSummary             func(file string, added int, changed int, identical int) string
-	ImportGroupChanged        func(count int) string
-	ImportGroupNew            func(count int) string
-	ImportGroupIdentical      func(count int) string
-	ImportApply               func(create int, update int, skip int) string
-	SharedVaultOf             func(organization string) string
-	OrganizationCollections   func(organization string, collections string) string
-	ShowIdentical             func(count int) string
-	HideIdentical             func(count int) string
-	ImportDiffers             func(fields string, destination string) string
-	ImportAlreadyIn           func(destination string) string
-	KdfArgon2id               func(memory int, iterations int, threads int) string
-	KdfPBKDF2                 func(iterations int) string
-	LastSyncAt                func(hc string, date time.Time) string
-	AfterMinutes              func(count int) string
-	AfterHours                func(count int) string
-	AfterSeconds              func(count int) string
-	AppVersion                func(version string) string
-	DevelopmentVersion        func(version string) string
-	SshAgentUnavailable       func(reason string) string
-	CommandLineToolInstalled  func(path string) string
-	CommandLineToolHomebrew   func(path string) string
-	CommandLineToolBroken     func(path string) string
-	CommandLineToolOtherCopy  func(path string) string
-	CommandLineToolForeign    func(path string) string
-	CommandLineToolShadowed   func(path string) string
-	BiometricAppGated         func(method string) string
-	PromptAutomaticallyDetail func(method string) string
-	ErrorServer               func(status string, detail string) string
-	ErrorWithDetail           func(detail string) string
+	Texts                      map[string]string
+	TwoFactorEnterEmailCodeTo  func(email string) string
+	TwoFactorOtherProvider     func(number int) string
+	TwoFactorUnsupported       func(methods string) string
+	TwoFactorEmailFailed       func(reason string) string
+	TwoFactorEmailSentTo       func(email string) string
+	UnlockWith                 func(method string) string
+	BiometricEnableReason      func(method string) string
+	BiometricDisabled          func(method string) string
+	BiometricEnabled           func(method string) string
+	BiometricEnabledDetail     func(method string) string
+	LogOutSecretsLeft          func(reason string) string
+	SyncedWhen                 func(when string) string
+	MinutesAgo                 func(count int) string
+	HoursAgo                   func(count int) string
+	DaysAgo                    func(count int) string
+	ShortDate                  func(hc string, date time.Time) string
+	ItemCount                  func(count int) string
+	SearchIn                   func(section string) string
+	SearchOnlyIn               func(section string) string
+	NothingInSectionMatches    func(section string, query string) string
+	NothingMatches             func(query string) string
+	WebsiteNumbered            func(number int) string
+	RevealField                func(field string) string
+	CopyField                  func(field string) string
+	PasswordHistory            func(count int) string
+	UsedUntil                  func(hc string, date time.Time) string
+	SecondsLeft                func(seconds int) string
+	UpdatedOn                  func(hc string, date time.Time) string
+	CreatedOn                  func(hc string, date time.Time) string
+	DeletedWhen                func(when string) string
+	Copied                     func(field string) string
+	ClearsInConcealed          func(seconds int) string
+	ClearsIn                   func(seconds int) string
+	RepromptPrompt             func(action string) string
+	RepromptBiometricReason    func(action string) string
+	DeletePermanentlyMessage   func(name string) string
+	EmptyTrashMessage          func(count int) string
+	TrashReadOnlyKept          func(count int) string
+	TrashChangedKept           func(count int) string
+	TrashPartlyDeleted         func(count int) string
+	TrashSomeNotDeleted        func(reason string) string
+	CloneName                  func(name string) string
+	DeleteFolderMessage        func(name string) string
+	NewItemOfType              func(kind string) string
+	EditItemOfType             func(kind string) string
+	SshKeyGenerateFailed       func(reason string) string
+	PasskeySiteCreated         func(hc string, site string, date time.Time) string
+	PasskeyCreated             func(hc string, date time.Time) string
+	DownloadFile               func(file string) string
+	DeleteFile                 func(file string) string
+	DeleteAttachmentMessage    func(file string) string
+	Bytes                      func(count int) string
+	Kilobytes                  func(size float64) string
+	Megabytes                  func(size float64) string
+	Gigabytes                  func(size float64) string
+	Terabytes                  func(size float64) string
+	EntropyBits                func(bits int) string
+	OpenItem                   func(name string) string
+	UsedInItems                func(count int) string
+	WeakShort                  func(count int) string
+	CardExpired                func(expiry string) string
+	CardExpires                func(expiry string) string
+	BackupPasswordTooShort     func(count int) string
+	BackupIncomplete           func(count int) string
+	BackupFileTooLarge         func(size int) string
+	ImportResult               func(created int, updated int) string
+	ImportSomeFailed           func(count int, reason string) string
+	ImportSkipped              func(count int) string
+	ImportSummary              func(file string, added int, changed int, identical int) string
+	ImportGroupChanged         func(count int) string
+	ImportGroupNew             func(count int) string
+	ImportGroupIdentical       func(count int) string
+	ImportApply                func(create int, update int, skip int) string
+	SharedVaultOf              func(organization string) string
+	OrganizationCollections    func(organization string, collections string) string
+	ShowIdentical              func(count int) string
+	HideIdentical              func(count int) string
+	ImportDiffers              func(fields string, destination string) string
+	ImportAlreadyIn            func(destination string) string
+	KdfArgon2id                func(memory int, iterations int, threads int) string
+	KdfPBKDF2                  func(iterations int) string
+	LastSyncAt                 func(hc string, date time.Time) string
+	AfterMinutes               func(count int) string
+	AfterHours                 func(count int) string
+	AfterSeconds               func(count int) string
+	AppVersion                 func(version string) string
+	DevelopmentVersion         func(version string) string
+	SshAgentUnavailable        func(reason string) string
+	CommandLineToolInstalled   func(path string) string
+	CommandLineToolHomebrew    func(path string) string
+	CommandLineToolBroken      func(path string) string
+	CommandLineToolOtherCopy   func(path string) string
+	CommandLineToolForeign     func(path string) string
+	CommandLineToolShadowed    func(path string) string
+	CommandLineToolOtherOnPath func(path string) string
+	BiometricAppGated          func(method string) string
+	PromptAutomaticallyDetail  func(method string) string
+	ErrorServer                func(status string, detail string) string
+	ErrorWithDetail            func(detail string) string
 }
 
 var supplied = map[string]Translation{}
@@ -2241,6 +2243,7 @@ const (
 	textCommandLineTool
 	textCommandLineToolNotInstalled
 	textCommandLineToolUnavailable
+	textCommandLineToolUntrusted
 	textInstallCommandLineTool
 	textRepairCommandLineTool
 	textUninstallCommandLineTool
@@ -2786,6 +2789,7 @@ var keyOfText = [numTexts]string{
 	"commandLineTool",
 	"commandLineToolNotInstalled",
 	"commandLineToolUnavailable",
+	"commandLineToolUntrusted",
 	"installCommandLineTool",
 	"repairCommandLineTool",
 	"uninstallCommandLineTool",
@@ -3329,6 +3333,7 @@ var textsEn = i18n.NewTexts(""+
 	"gv command-line tool"+
 	"Use your vault from Terminal and scripts with Bitwarden CLI commands. Installing adds a link at /usr/local/bin/gv."+
 	"This copy of GoVault does not include the gv command."+
+	"To install the gv command for all users of this Mac, use the signed GoVault release in the Applications folder."+
 	"Install"+
 	"Repair"+
 	"Uninstall"+
@@ -3869,6 +3874,7 @@ var textsEn = i18n.NewTexts(""+
 		20,
 		114,
 		53,
+		111,
 		7,
 		6,
 		9,
@@ -4412,6 +4418,7 @@ var textsDe = i18n.NewTexts(""+
 	"Befehlszeilentool gv"+
 	"Nutze deinen Tresor im Terminal und in Skripten mit Bitwarden-CLI-Befehlen. Die Installation legt einen Link unter /usr/local/bin/gv an."+
 	"Diese Kopie von GoVault enthält den Befehl gv nicht."+
+	""+
 	"Installieren"+
 	"Reparieren"+
 	"Deinstallieren"+
@@ -4952,6 +4959,7 @@ var textsDe = i18n.NewTexts(""+
 		20,
 		136,
 		53,
+		0,
 		12,
 		10,
 		14,
@@ -5495,6 +5503,7 @@ var textsEs = i18n.NewTexts(""+
 	"Herramienta de línea de comandos gv"+
 	"Usa tu caja fuerte desde Terminal y scripts con comandos de Bitwarden CLI. Al instalar se añade un enlace en /usr/local/bin/gv."+
 	"Esta copia de GoVault no incluye el comando gv."+
+	""+
 	"Instalar"+
 	"Reparar"+
 	"Desinstalar"+
@@ -6035,6 +6044,7 @@ var textsEs = i18n.NewTexts(""+
 		36,
 		128,
 		47,
+		0,
 		8,
 		7,
 		11,
@@ -6578,6 +6588,7 @@ var textsFr = i18n.NewTexts(""+
 	"Outil en ligne de commande gv"+
 	"Utilisez votre coffre dans Terminal et vos scripts avec des commandes Bitwarden CLI. L’installation crée un lien dans /usr/local/bin/gv."+
 	"Cette copie de GoVault n’inclut pas la commande gv."+
+	""+
 	"Installer"+
 	"Réparer"+
 	"Désinstaller"+
@@ -7118,6 +7129,7 @@ var textsFr = i18n.NewTexts(""+
 		29,
 		139,
 		53,
+		0,
 		9,
 		8,
 		13,
@@ -7661,6 +7673,7 @@ var textsJa = i18n.NewTexts(""+
 	"gv コマンドラインツール"+
 	"ターミナルやスクリプトから Bitwarden CLI コマンドで保管庫を利用できます。インストールすると /usr/local/bin/gv にリンクを作成します。"+
 	"この GoVault には gv コマンドが含まれていません。"+
+	""+
 	"インストール"+
 	"修復"+
 	"アンインストール"+
@@ -8201,6 +8214,7 @@ var textsJa = i18n.NewTexts(""+
 		33,
 		181,
 		67,
+		0,
 		18,
 		6,
 		24,
@@ -8744,6 +8758,7 @@ var textsKo = i18n.NewTexts(""+
 	"gv 명령줄 도구"+
 	"터미널과 스크립트에서 Bitwarden CLI 명령으로 보관함을 사용합니다. 설치하면 /usr/local/bin/gv에 링크가 추가됩니다."+
 	"이 GoVault 사본에는 gv 명령이 포함되어 있지 않습니다."+
+	""+
 	"설치"+
 	"복구"+
 	"제거"+
@@ -9284,6 +9299,7 @@ var textsKo = i18n.NewTexts(""+
 		19,
 		149,
 		71,
+		0,
 		6,
 		6,
 		6,
@@ -9827,6 +9843,7 @@ var textsPtBR = i18n.NewTexts(""+
 	"Ferramenta de linha de comando gv"+
 	"Use seu cofre no Terminal e em scripts com comandos do Bitwarden CLI. A instalação cria um link em /usr/local/bin/gv."+
 	"Esta cópia do GoVault não inclui o comando gv."+
+	""+
 	"Instalar"+
 	"Reparar"+
 	"Desinstalar"+
@@ -10367,6 +10384,7 @@ var textsPtBR = i18n.NewTexts(""+
 		33,
 		119,
 		48,
+		0,
 		8,
 		7,
 		11,
@@ -10910,6 +10928,7 @@ var textsRu = i18n.NewTexts(""+
 	"Утилита командной строки gv"+
 	"Работайте с хранилищем из Терминала и скриптов командами Bitwarden CLI. Установка создаст ссылку /usr/local/bin/gv."+
 	"Эта копия GoVault не включает команду gv."+
+	""+
 	"Установить"+
 	"Исправить"+
 	"Удалить"+
@@ -11450,6 +11469,7 @@ var textsRu = i18n.NewTexts(""+
 		49,
 		186,
 		66,
+		0,
 		20,
 		18,
 		14,
@@ -11993,6 +12013,7 @@ var textsZhHans = i18n.NewTexts(""+
 	"gv 命令行工具"+
 	"在“终端”和脚本中使用 Bitwarden CLI 命令访问密码库。安装后会在 /usr/local/bin/gv 创建链接。"+
 	"此 GoVault 副本不包含 gv 命令。"+
+	""+
 	"安装"+
 	"修复"+
 	"卸载"+
@@ -12533,6 +12554,7 @@ var textsZhHans = i18n.NewTexts(""+
 		18,
 		121,
 		40,
+		0,
 		6,
 		6,
 		6,
@@ -13076,6 +13098,7 @@ var textsZhHant = i18n.NewTexts(""+
 	"gv 命令列工具"+
 	"在「終端機」與指令碼中使用 Bitwarden CLI 指令存取密碼庫。安裝會在 /usr/local/bin/gv 建立連結。"+
 	"此 GoVault 副本不包含 gv 指令。"+
+	""+
 	"安裝"+
 	"修復"+
 	"解除安裝"+
@@ -13616,6 +13639,7 @@ var textsZhHant = i18n.NewTexts(""+
 		18,
 		124,
 		40,
+		0,
 		6,
 		6,
 		12,
@@ -14021,6 +14045,9 @@ func Supply(lang string, t Translation) {
 	}
 	if t.CommandLineToolShadowed != nil {
 		s.CommandLineToolShadowed = t.CommandLineToolShadowed
+	}
+	if t.CommandLineToolOtherOnPath != nil {
+		s.CommandLineToolOtherOnPath = t.CommandLineToolOtherOnPath
 	}
 	if t.BiometricAppGated != nil {
 		s.BiometricAppGated = t.BiometricAppGated
@@ -25148,10 +25175,10 @@ func (msgs Messages) CommandLineToolUnavailable() string {
 	return msgs.text(textCommandLineToolUnavailable)
 }
 
-// CommandLineToolShadowed says "Another gv at {path} may run instead in Terminal."
+// CommandLineToolShadowed says "Another gv at {path} comes first on the default PATH and runs instead in Terminal."
 // in the language the app shows under cx.
 //
-// Shown under the gv tool's status when another gv is on the PATH. path is that program.
+// Shown under the gv tool's status when another gv is in a directory the default PATH searches first. path is that program.
 func CommandLineToolShadowed(cx *core.Scope, path string) string {
 	return For(cx).CommandLineToolShadowed(path)
 }
@@ -25167,7 +25194,7 @@ func (msgs Messages) CommandLineToolShadowed(path string) string {
 		}
 		switch lang {
 		case "", "en":
-			return "Another gv at " + msgs.arg(path) + " may run instead in Terminal."
+			return "Another gv at " + msgs.arg(path) + " comes first on the default PATH and runs instead in Terminal."
 		case "de":
 			return "Im Terminal wird möglicherweise stattdessen ein anderes gv unter " + path + " ausgeführt."
 		case "es":
@@ -25188,6 +25215,39 @@ func (msgs Messages) CommandLineToolShadowed(path string) string {
 			return "在「終端機」中可能會改為執行位於 " + path + " 的另一個 gv。"
 		}
 	}
+}
+
+// CommandLineToolOtherOnPath says "Another gv is at {path}, later on the default PATH; GoVault's runs first."
+// in the language the app shows under cx.
+//
+// Shown under the gv tool's status when another gv is in a directory the default PATH searches after GoVault's link. path is that program.
+func CommandLineToolOtherOnPath(cx *core.Scope, path string) string {
+	return For(cx).CommandLineToolOtherOnPath(path)
+}
+
+// CommandLineToolOtherOnPath is the package's CommandLineToolOtherOnPath in the language of msgs.
+func (msgs Messages) CommandLineToolOtherOnPath(path string) string {
+	if i18n.IsPseudo(msgs.lang) {
+		return i18n.Pseudo(msgs.lang, Messages{lang: Source, mark: true}.CommandLineToolOtherOnPath(path))
+	}
+	for lang := msgs.lang; ; lang = i18n.Parent(lang) {
+		if f := supplied[lang].CommandLineToolOtherOnPath; f != nil {
+			return f(path)
+		}
+		switch lang {
+		case "", "en":
+			return "Another gv is at " + msgs.arg(path) + ", later on the default PATH; GoVault's runs first."
+		}
+	}
+}
+
+// CommandLineToolUntrusted says "To install the gv command for all users of this Mac, use the signed GoVault release in the Applications folder."
+// in the language the app shows under cx.
+func CommandLineToolUntrusted(cx *core.Scope) string { return For(cx).CommandLineToolUntrusted() }
+
+// CommandLineToolUntrusted is the package's CommandLineToolUntrusted in the language of msgs.
+func (msgs Messages) CommandLineToolUntrusted() string {
+	return msgs.text(textCommandLineToolUntrusted)
 }
 
 // InstallCommandLineTool says "Install"

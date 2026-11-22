@@ -1,6 +1,10 @@
 // Package clitool installs, repairs and removes the link that puts the gv
 // command inside GoVault's app bundle on the macOS PATH. It changes only
 // links that point into a GoVault bundle and never replaces another gv.
+//
+// The link serves every user of the Mac, so it is made only to the gv of
+// a GoVault.app in /Applications that GoVault's Developer ID signs, along
+// paths no one but root and administrators can change.
 package clitool
 
 import (
@@ -17,6 +21,20 @@ const LinkPath = "/usr/local/bin/gv"
 
 // bundleSuffix ends every gv path inside a GoVault app bundle.
 const bundleSuffix = "/GoVault.app/Contents/MacOS/gv"
+
+// TrustedBundle is the only app bundle a link may point into.
+const TrustedBundle = "/Applications/GoVault.app"
+
+// TeamID is the Apple team that signs GoVault releases.
+const TeamID = "68S3R4UWP6"
+
+// DeveloperOverride, set to 1 in the environment, lets a development build
+// outside /Applications or without GoVault's signature install the link.
+// The app offers no way to set it.
+const DeveloperOverride = "GOVAULT_CLI_TOOL_DEVELOPER"
+
+// ErrUntrusted means this copy of GoVault may not be linked for all users.
+var ErrUntrusted = errors.New("clitool: this copy of GoVault cannot provide the gv command for all users")
 
 // State is what Inspect found.
 type State int
@@ -36,12 +54,16 @@ const (
 	Foreign
 )
 
-// Report is the state with the path it concerns. Shadow names another gv
-// on the PATH that is not GoVault's, even when the link is fine.
+// Report is the state with the path it concerns. Shadow names a gv that
+// is not GoVault's in a directory the default PATH searches before the
+// link's; Later names one searched after it, which does not run instead.
+// Untrusted, when set, is why this copy may not be installed or repaired.
 type Report struct {
-	State  State
-	Path   string
-	Shadow string
+	State     State
+	Path      string
+	Shadow    string
+	Later     string
+	Untrusted error
 }
 
 // Action is a change Apply makes.
@@ -56,6 +78,12 @@ const (
 // Actions are what a report allows. A foreign gv and Homebrew's link are
 // never changed.
 func (r Report) Actions() []Action {
+	if r.Untrusted != nil {
+		if r.State == Installed || r.State == Broken || r.State == OtherCopy {
+			return []Action{Uninstall}
+		}
+		return nil
+	}
 	switch r.State {
 	case NotInstalled:
 		return []Action{Install}
@@ -81,10 +109,16 @@ type Tool struct {
 	Link string
 	// HomebrewBins are the bin directories of Homebrew prefixes.
 	HomebrewBins []string
-	// SearchDirs are the PATH directories checked for another gv.
+	// SearchDirs are the default PATH's directories, in its order.
 	SearchDirs []string
 	// RunPrivileged runs a shell script as an administrator.
 	RunPrivileged func(script, prompt string) error
+	// Trust checks that Bundled may be linked for all users and that the
+	// link's directory is safe; nil means trusted.
+	Trust func(bundled, linkDir string) error
+	// TrustedOwner is the shell test the privileged script applies to the
+	// owner's user ID ($1) of the link's directory.
+	TrustedOwner string
 }
 
 // New returns the Tool for the gv beside this executable.
@@ -93,21 +127,57 @@ func New() (*Tool, error) {
 	if err != nil {
 		return nil, err
 	}
-	home, _ := os.UserHomeDir()
-	dirs := []string{"/usr/local/bin", "/opt/homebrew/bin", "/usr/bin", "/bin", "/usr/sbin", "/sbin"}
-	if raw, err := os.ReadFile("/etc/paths"); err == nil {
-		dirs = append(dirs, strings.Fields(string(raw))...)
-	}
-	if home != "" {
-		dirs = append(dirs, filepath.Join(home, "bin"), filepath.Join(home, ".local", "bin"), filepath.Join(home, "go", "bin"))
-	}
 	return &Tool{
 		Bundled:       filepath.Join(filepath.Dir(exe), "gv"),
 		Link:          LinkPath,
 		HomebrewBins:  []string{"/opt/homebrew/bin", "/usr/local/bin"},
-		SearchDirs:    dirs,
+		SearchDirs:    defaultPath(),
 		RunPrivileged: osascript,
+		Trust:         trustInstall,
+		TrustedOwner:  `[ "$1" = 0 ] || /usr/sbin/dseditgroup -o checkmember -m "$(/usr/bin/id -nu "$1")" admin >/dev/null 2>&1`,
 	}, nil
+}
+
+// defaultPath is the PATH macOS's path_helper gives login shells:
+// /etc/paths, then each file in /etc/paths.d in name order. A shell's own
+// startup files may change it; Settings reports only this order.
+func defaultPath() []string {
+	var dirs []string
+	add := func(file string) {
+		if raw, err := os.ReadFile(file); err == nil {
+			dirs = append(dirs, strings.Fields(string(raw))...)
+		}
+	}
+	add("/etc/paths")
+	if names, err := filepath.Glob("/etc/paths.d/*"); err == nil {
+		for _, n := range names {
+			add(n)
+		}
+	}
+	return dirs
+}
+
+// trustInstall accepts only the signed GoVault.app in /Applications, or
+// any bundle under DeveloperOverride, along safe paths.
+func trustInstall(bundled, linkDir string) error {
+	app := strings.TrimSuffix(bundled, "/Contents/MacOS/gv")
+	if os.Getenv(DeveloperOverride) != "1" {
+		if real, err := filepath.EvalSymlinks(app); err != nil || real != TrustedBundle || app != TrustedBundle {
+			return fmt.Errorf("%w: it is not %s", ErrUntrusted, TrustedBundle)
+		}
+		req := `anchor apple generic and certificate 1[field.1.2.840.113635.100.6.2.6] exists and certificate leaf[field.1.2.840.113635.100.6.1.13] exists and certificate leaf[subject.OU] = "` + TeamID + `"`
+		for _, path := range []string{app, bundled} {
+			if out, err := exec.Command("/usr/bin/codesign", "--verify", "--strict", "-R="+req, path).CombinedOutput(); err != nil {
+				return fmt.Errorf("%w: %s is not signed by GoVault's Developer ID: %s", ErrUntrusted, path, strings.TrimSpace(string(out)))
+			}
+		}
+	}
+	for _, path := range []string{bundled, linkDir} {
+		if err := safeAncestors(path, isAdmin); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func isGoVaultTarget(target string) bool { return strings.HasSuffix(target, bundleSuffix) }
@@ -126,6 +196,9 @@ func (t *Tool) Inspect() Report {
 		return Report{State: Unavailable}
 	}
 	r := t.inspectLink()
+	if t.Trust != nil {
+		r.Untrusted = t.Trust(t.Bundled, filepath.Dir(t.Link))
+	}
 	if r.State == NotInstalled {
 		for _, dir := range t.HomebrewBins {
 			p := filepath.Join(dir, "gv")
@@ -138,7 +211,7 @@ func (t *Tool) Inspect() Report {
 			}
 		}
 	}
-	r.Shadow = t.shadow()
+	r.Shadow, r.Later = t.others()
 	return r
 }
 
@@ -162,47 +235,72 @@ func (t *Tool) inspectLink() Report {
 	return Report{State: OtherCopy, Path: t.Link}
 }
 
-// shadow finds a gv on the PATH that is not GoVault's.
-func (t *Tool) shadow() string {
+// others finds the first gv that is not GoVault's in the default PATH
+// before the link's directory, and the first after it.
+func (t *Tool) others() (before, after string) {
+	linkDir := filepath.Dir(t.Link)
+	passed := false
 	for _, dir := range t.SearchDirs {
-		p := filepath.Join(dir, "gv")
-		if p == t.Link {
+		if filepath.Clean(dir) == linkDir {
+			passed = true
 			continue
 		}
+		p := filepath.Join(dir, "gv")
 		if _, err := os.Lstat(p); err != nil {
 			continue
 		}
 		if target, err := os.Readlink(p); err == nil && isGoVaultTarget(target) {
 			continue
 		}
-		if !samePath(p, t.Bundled) {
-			return p
+		if samePath(p, t.Bundled) {
+			continue
+		}
+		switch {
+		case !passed && before == "":
+			before = p
+		case passed && after == "":
+			after = p
 		}
 	}
-	return ""
+	return before, after
 }
 
 // exitChanged is the status the scripts exit with when the link is no
 // longer what Inspect saw.
 const exitChanged = 17
 
-// Script is the shell script that applies action, checking first, as the
-// administrator, that the link is still in the state that allows it.
+// Script is the shell script that applies action. As the administrator,
+// it enters the link's directory, checks that directory is owned by root
+// or an administrator and writable by no one else, and then works on the
+// link by its name inside it, checking first that the link is still in the
+// state that allows the action.
 func (t *Tool) Script(action Action) string {
-	link, target := shellQuote(t.Link), shellQuote(t.Bundled)
-	ours := fmt.Sprintf(`[ -L %[1]s ] || exit %[2]d; case "$(/usr/bin/readlink %[1]s)" in *%[3]s) ;; *) exit %[2]d;; esac`, link, exitChanged, bundleSuffix)
+	dir, name, target := shellQuote(filepath.Dir(t.Link)), shellQuote(filepath.Base(t.Link)), shellQuote(t.Bundled)
+	owner := t.TrustedOwner
+	if owner == "" {
+		owner = `[ "$1" = 0 ]`
+	}
+	enter := fmt.Sprintf(`cd -P -- %[1]s || exit %[2]d; set -- $(/usr/bin/stat -f '%%u %%g %%Lp' .); m=0$3; `+
+		`[ $((m & 2)) = 0 ] || exit %[2]d; if [ $((m & 16)) != 0 ]; then [ "$2" = 0 ] || [ "$2" = 80 ] || exit %[2]d; fi; `+
+		`trusted() { %[3]s; }; trusted "$1" || exit %[2]d`, dir, exitChanged, owner)
+	ours := fmt.Sprintf(`[ -L %[1]s ] || exit %[2]d; case "$(/usr/bin/readlink %[1]s)" in *%[3]s) ;; *) exit %[2]d;; esac`, name, exitChanged, bundleSuffix)
 	switch action {
 	case Install:
-		return fmt.Sprintf(`if [ -e %[1]s ] || [ -L %[1]s ]; then exit %[2]d; fi; /bin/mkdir -p %[3]s && /bin/ln -s %[4]s %[1]s`,
-			link, exitChanged, shellQuote(filepath.Dir(t.Link)), target)
+		return fmt.Sprintf(`/bin/mkdir -p %[1]s || exit 1; %[2]s; if [ -e %[3]s ] || [ -L %[3]s ]; then exit %[4]d; fi; /bin/ln -s %[5]s %[3]s`,
+			dir, enter, name, exitChanged, target)
 	case Repair:
-		return ours + fmt.Sprintf(`; /bin/ln -sfn %s %s`, target, link)
+		return enter + "; " + ours + fmt.Sprintf(`; /bin/ln -sfn %s %s`, target, name)
 	}
-	return ours + fmt.Sprintf(`; /bin/rm %s`, link)
+	return enter + "; " + ours + fmt.Sprintf(`; /bin/rm -- %s`, name)
 }
 
 // Apply makes the change, prompting once for administrator rights.
 func (t *Tool) Apply(action Action, prompt string) error {
+	if action != Uninstall && t.Trust != nil {
+		if err := t.Trust(t.Bundled, filepath.Dir(t.Link)); err != nil {
+			return err
+		}
+	}
 	return t.RunPrivileged(t.Script(action), prompt)
 }
 

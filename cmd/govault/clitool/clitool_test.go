@@ -1,4 +1,4 @@
-//go:build unix
+//go:build darwin
 
 package clitool
 
@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -35,7 +36,10 @@ func newFixture(t *testing.T) *fixture {
 		Bundled:      bundle(t, filepath.Join(root, "Applications")),
 		Link:         filepath.Join(root, "usr", "local", "bin", "gv"),
 		HomebrewBins: []string{filepath.Join(root, "homebrew", "bin")},
-		SearchDirs:   []string{filepath.Join(root, "usr", "local", "bin"), filepath.Join(root, "other", "bin")},
+		SearchDirs:   []string{filepath.Join(root, "first", "bin"), filepath.Join(root, "usr", "local", "bin"), filepath.Join(root, "other", "bin")},
+		// The tests own their directories; macOS requires root or an
+		// administrator.
+		TrustedOwner: `[ "$1" = "$(/usr/bin/id -u)" ]`,
 		// The script runs as the user here; macOS runs it as an administrator.
 		RunPrivileged: func(script, prompt string) error {
 			out, err := exec.Command("/bin/sh", "-c", script).CombinedOutput()
@@ -130,8 +134,94 @@ func TestHomebrewAndShadowedInstalls(t *testing.T) {
 	if err := os.WriteFile(other, []byte("x"), 0o755); err != nil {
 		t.Fatal(err)
 	}
-	if r := f.tool.Inspect(); r.Shadow != other {
-		t.Fatalf("shadow = %q, want %q", r.Shadow, other)
+	// Searched after the link: another copy, which does not run instead.
+	if r := f.tool.Inspect(); r.Shadow != "" || r.Later != other {
+		t.Fatalf("report = %+v, want %q later on the PATH", r, other)
+	}
+	first := filepath.Join(f.root, "first", "bin", "gv")
+	if err := os.MkdirAll(filepath.Dir(first), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(first, []byte("x"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if r := f.tool.Inspect(); r.Shadow != first {
+		t.Fatalf("shadow = %q, want %q", r.Shadow, first)
+	}
+}
+
+// An untrusted copy offers no install or repair, and Apply refuses them,
+// but an installed link can still be removed.
+func TestUntrustedCopiesCannotInstall(t *testing.T) {
+	f := newFixture(t)
+	f.tool.Trust = func(string, string) error { return ErrUntrusted }
+	r := f.tool.Inspect()
+	if r.Untrusted == nil || len(r.Actions()) != 0 {
+		t.Fatalf("report = %+v, actions %v", r, r.Actions())
+	}
+	if err := f.tool.Apply(Install, "p"); !errors.Is(err, ErrUntrusted) {
+		t.Fatalf("install = %v", err)
+	}
+	if _, err := os.Lstat(f.tool.Link); err == nil {
+		t.Fatal("an untrusted copy was linked")
+	}
+	f.tool.Trust = nil
+	if err := f.tool.Apply(Install, "p"); err != nil {
+		t.Fatal(err)
+	}
+	f.tool.Trust = func(string, string) error { return ErrUntrusted }
+	if a := f.tool.Inspect().Actions(); len(a) != 1 || a[0] != Uninstall {
+		t.Fatalf("actions of an installed untrusted copy = %v", a)
+	}
+	if err := f.tool.Apply(Uninstall, "p"); err != nil {
+		t.Fatal(err)
+	}
+}
+
+// The real trust check refuses a bundle outside /Applications.
+func TestTrustRequiresTheApplicationsBundle(t *testing.T) {
+	t.Setenv(DeveloperOverride, "")
+	f := newFixture(t)
+	if err := trustInstall(f.tool.Bundled, filepath.Dir(f.tool.Link)); !errors.Is(err, ErrUntrusted) || !strings.Contains(err.Error(), TrustedBundle) {
+		t.Fatalf("trust = %v", err)
+	}
+}
+
+// Paths others can change are refused, as are their descendants.
+func TestSafeAncestorsRefusesWritablePaths(t *testing.T) {
+	trusted := func(uint32) bool { return true }
+	root := t.TempDir()
+	open := filepath.Join(root, "open")
+	if err := os.MkdirAll(filepath.Join(open, "GoVault.app"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chmod(open, 0o777); err != nil {
+		t.Fatal(err)
+	}
+	if err := safeAncestors(filepath.Join(open, "GoVault.app"), trusted); !errors.Is(err, ErrUntrusted) || !strings.Contains(err.Error(), open) {
+		t.Fatalf("world-writable ancestor = %v", err)
+	}
+	if err := safeAncestors(root, func(uint32) bool { return false }); !errors.Is(err, ErrUntrusted) {
+		t.Fatalf("untrusted owner = %v", err)
+	}
+}
+
+// The privileged script refuses a link directory others can write, which
+// it checks after entering it.
+func TestScriptRefusesAWritableLinkDirectory(t *testing.T) {
+	f := newFixture(t)
+	dir := filepath.Dir(f.tool.Link)
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chmod(dir, 0o777); err != nil {
+		t.Fatal(err)
+	}
+	if err := f.tool.Apply(Install, "p"); !errors.Is(err, ErrChanged) {
+		t.Fatalf("install into a world-writable directory = %v", err)
+	}
+	if _, err := os.Lstat(f.tool.Link); err == nil {
+		t.Fatal("the link was made")
 	}
 }
 

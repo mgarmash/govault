@@ -71,8 +71,13 @@ func commandLineToolStatus(cx *core.Scope, r clitool.Report) string {
 	case clitool.Foreign:
 		return locales.CommandLineToolForeign(cx, r.Path)
 	}
+	if r.Untrusted != nil && r.State != clitool.Homebrew {
+		s += "\n" + locales.CommandLineToolUntrusted(cx)
+	}
 	if r.Shadow != "" {
 		s += "\n" + locales.CommandLineToolShadowed(cx, r.Shadow)
+	} else if r.Later != "" {
+		s += "\n" + locales.CommandLineToolOtherOnPath(cx, r.Later)
 	}
 	return s
 }

@@ -1009,8 +1009,12 @@ commandLineToolForeign:
   description: path is the other program.
 commandLineToolUnavailable: This copy of GoVault does not include the gv command.
 commandLineToolShadowed:
-  message: "Another gv at {path} may run instead in Terminal."
-  description: Shown under the gv tool's status when another gv is on the PATH. path is that program.
+  message: "Another gv at {path} comes first on the default PATH and runs instead in Terminal."
+  description: Shown under the gv tool's status when another gv is in a directory the default PATH searches first. path is that program.
+commandLineToolOtherOnPath:
+  message: "Another gv is at {path}, later on the default PATH; GoVault's runs first."
+  description: Shown under the gv tool's status when another gv is in a directory the default PATH searches after GoVault's link. path is that program.
+commandLineToolUntrusted: To install the gv command for all users of this Mac, use the signed GoVault release in the Applications folder.
 installCommandLineTool:
   message: Install
   description: A button that installs the gv command-line tool.
