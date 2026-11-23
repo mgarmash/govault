@@ -465,7 +465,9 @@ func (c *Client) do(
 			return nil, ctx.Err()
 		}
 		if errors.Is(err, ErrRedirectRefused) {
-			return nil, err
+			// The refused target is not repeated: it can carry a
+			// signature.
+			return nil, ErrRedirectRefused
 		}
 		return nil, fmt.Errorf("%w: %v", ErrNetworkOffline, redactURLError(err))
 	}
