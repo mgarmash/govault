@@ -54,6 +54,10 @@ type Config struct {
 	// when AzureURLExpired is set.
 	AzureUploads    bool
 	AzureURLExpired bool
+	// BlobFails makes blob storage refuse every upload, and
+	// AttachmentDeleteFails the server refuse attachment deletes.
+	BlobFails             bool
+	AttachmentDeleteFails bool
 	// ClaimPadding adds a claim of this many bytes to access tokens, as
 	// claim-heavy servers issue them.
 	ClaimPadding int

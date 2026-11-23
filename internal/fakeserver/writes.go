@@ -322,6 +322,8 @@ func (s *Server) writeCipher(w http.ResponseWriter, r *http.Request, parts []str
 		data, _ := io.ReadAll(file)
 		s.blobs[parts[4]] = data
 		w.WriteHeader(200)
+	case m == http.MethodDelete && action == "attachment" && n == 5 && s.cfg.AttachmentDeleteFails:
+		errMessage(w, 500, "storage unavailable")
 	case m == http.MethodDelete && action == "attachment" && n == 5:
 		atts, _ := it["attachments"].([]obj)
 		it["attachments"] = slices.DeleteFunc(slices.Clone(atts), func(a obj) bool { return a["id"] == parts[4] })
@@ -468,6 +470,8 @@ func (s *Server) azureBlob(w http.ResponseWriter, r *http.Request, path string) 
 	switch {
 	case r.Method != http.MethodPut || len(parts) != 3:
 		w.WriteHeader(405)
+	case s.cfg.BlobFails:
+		w.WriteHeader(500)
 	case q.Get("sig") != "signature" || err != nil || expiry.Before(time.Now()):
 		w.WriteHeader(403)
 	case r.Header.Get("x-ms-blob-type") != "BlockBlob" || r.Header.Get("x-ms-version") != q.Get("sv") || r.Header.Get("x-ms-date") == "" || r.Header.Get("Authorization") != "":

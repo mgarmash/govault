@@ -128,7 +128,9 @@ func (s *Service) UploadAttachment(ctx context.Context, cipherID, fileName strin
 		err = ErrUnsupportedUpload
 	}
 	if err != nil {
-		o.discardAttachment(cipherID, created.AttachmentID)
+		if derr := o.discardAttachment(cipherID, created.AttachmentID); derr != nil {
+			return nil, errors.Join(err, derr)
+		}
 		return nil, err
 	}
 	return o.refreshCipher(c, created.CipherResponse)
@@ -154,13 +156,37 @@ func (s *Service) DeleteAttachment(ctx context.Context, cipherID, attachmentID s
 	return o.refreshCipher(c, nil)
 }
 
-func (o *op) discardAttachment(cipherID, attachmentID string) {
+// discardTimeout bounds the removal of an unfinished attachment.
+const discardTimeout = 30 * time.Second
+
+// discardAttachment removes an attachment the server allocated but did not
+// receive. It runs on a fresh context, so a cancelled upload still cleans
+// up, and reports a removal that failed.
+func (o *op) discardAttachment(cipherID, attachmentID string) error {
 	if attachmentID == "" {
-		return
+		return nil
 	}
-	_, _ = withAuth(o, func(ctx context.Context, tok string) (struct{}, error) {
+	ctx, cancel := context.WithTimeout(context.WithoutCancel(o.ctx), discardTimeout)
+	defer cancel()
+	outer := o.ctx
+	o.ctx = ctx
+	defer func() { o.ctx = outer }()
+	_, err := withAuth(o, func(ctx context.Context, tok string) (struct{}, error) {
 		return struct{}{}, o.client.DeleteAttachment(ctx, tok, cipherID, attachmentID)
 	})
+	if err != nil {
+		return &AttachmentNotRemovedError{AttachmentID: attachmentID}
+	}
+	return nil
+}
+
+// AttachmentNotRemovedError means an upload failed and the attachment the
+// server allocated for it could not be removed; the item lists it until
+// it is deleted.
+type AttachmentNotRemovedError struct{ AttachmentID string }
+
+func (e *AttachmentNotRemovedError) Error() string {
+	return "state: the unfinished attachment " + e.AttachmentID + " could not be removed from the server; delete it"
 }
 
 // lookupAttachment finds the attachment after checking the organization

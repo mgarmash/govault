@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/txchen/govault/internal/fakeserver"
@@ -40,6 +41,34 @@ func TestAttachmentUploadToAzureStorage(t *testing.T) {
 		g.mustRun("sync", "-f")
 		if got := g.mustRun("get", "attachment", "notes.txt", "--itemid", fakeserver.ItemGitHubEnt, "--raw"); got != "azure attachment" {
 			t.Fatalf("downloaded %q", got)
+		}
+	}
+}
+
+// A failed upload removes the attachment the server allocated, and says
+// so when that removal fails too.
+func TestFailedUploadCleansUpOrSaysItCouldNot(t *testing.T) {
+	for _, deleteFails := range []bool{false, true} {
+		g := newGV(t)
+		g.srv.Configure(func(c *fakeserver.Config) {
+			c.Premium, c.AzureUploads, c.BlobFails, c.AttachmentDeleteFails = true, true, true, deleteFails
+		})
+		g.login()
+		file := filepath.Join(t.TempDir(), "notes.txt")
+		_ = os.WriteFile(file, []byte("x"), 0o600)
+		r := g.run("create", "attachment", "--file", file, "--itemid", fakeserver.ItemGitHubEnt)
+		if r.code != 1 {
+			t.Fatalf("upload to failing storage = %+v", r)
+		}
+		var item struct{ Attachments []json.RawMessage }
+		raw, _ := json.Marshal(g.srv.Item(fakeserver.ItemGitHubEnt))
+		_ = json.Unmarshal(raw, &item)
+		atts := item.Attachments
+		switch {
+		case !deleteFails && len(atts) != 0:
+			t.Fatalf("the allocated attachment was left: %v", atts)
+		case deleteFails && (len(atts) != 1 || !strings.Contains(r.err, "could not be removed")):
+			t.Fatalf("a failed removal = %+v with %d attachments listed", r, len(atts))
 		}
 	}
 }
