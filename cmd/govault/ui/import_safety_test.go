@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/nsgo-dev/nsgo/core"
+	"github.com/nsgo-dev/nsgo/nsgotest"
 	"github.com/txchen/govault/internal/vaultcore/export"
 	"github.com/txchen/govault/internal/vaultcore/state"
 )
@@ -36,7 +37,7 @@ func TestUpdatingAProtectedItemOnImportAsksForTheMasterPassword(t *testing.T) {
 	backup, _ := export.Build([]*state.Cipher{&changed}, nil)
 	path := writeBackup(t, t.TempDir(), "plain.json", backup, "")
 	app, m, _ := startSecurityApp(t, svc, PlatformHooks{})
-	app.PickFiles = func(core.FilesRequest) []core.File {
+	app.PickFiles = func(nsgotest.FilePick) []core.File {
 		return []core.File{{Name: filepath.Base(path), Path: path}}
 	}
 	app.Post(func() { m.StartImport(m.Scope) })

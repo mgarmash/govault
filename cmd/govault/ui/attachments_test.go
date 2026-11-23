@@ -33,7 +33,7 @@ func TestAttachmentsCardUploadDownloadDelete(t *testing.T) {
 		model.RefreshVaultData()
 		return MainWindowView(cx, model)
 	}, nsgotest.Size(1100, 900))
-	app.PickFiles = func(core.FilesRequest) []core.File {
+	app.PickFiles = func(nsgotest.FilePick) []core.File {
 		return []core.File{{Name: "invoice.pdf", Size: 8, Path: upload}}
 	}
 	app.OnAlert = func(core.AlertConfig) int { return 1 }

@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/nsgo-dev/nsgo/core"
+	"github.com/nsgo-dev/nsgo/nsgotest"
 	"github.com/txchen/govault/internal/vaultcore/api"
 	"github.com/txchen/govault/internal/vaultcore/crypto"
 	"github.com/txchen/govault/internal/vaultcore/export"
@@ -107,7 +108,7 @@ func TestImportReviewLeavesConflictsUntilApproved(t *testing.T) {
 	encrypted := writeBackup(t, dir, "encrypted.json", backup, "correct horse")
 	pick := plain
 	app, m, _ := startSecurityApp(t, svc, PlatformHooks{})
-	app.PickFiles = func(core.FilesRequest) []core.File {
+	app.PickFiles = func(nsgotest.FilePick) []core.File {
 		return []core.File{{Name: filepath.Base(pick), Path: pick}}
 	}
 

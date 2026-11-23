@@ -215,7 +215,7 @@ func SettingsView(cx *core.Scope, m *AppModel) core.Node {
 								},
 								VariantFunc: func() ui.BadgeVariant {
 									if m.Hooks.IsClipboardConcealed != nil && m.Hooks.IsClipboardConcealed() {
-										return ui.BadgeUp
+										return ui.BadgeSuccess
 									}
 									return ui.BadgeNeutral
 								},

@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/nsgo-dev/nsgo/core"
+	"github.com/nsgo-dev/nsgo/nsgotest"
 	"github.com/txchen/govault/internal/vaultcore/api"
 	"github.com/txchen/govault/internal/vaultcore/state"
 )
@@ -40,7 +41,7 @@ func TestUploadWithFailedLocalCopyIsDone(t *testing.T) {
 		t.Fatal(err)
 	}
 	app, m, root := startSecurityApp(t, svc, PlatformHooks{})
-	app.PickFiles = func(core.FilesRequest) []core.File {
+	app.PickFiles = func(nsgotest.FilePick) []core.File {
 		return []core.File{{Name: "invoice.pdf", Size: 8, Path: upload}}
 	}
 	app.Post(func() { m.SelectCipher(root, "c-github") })
