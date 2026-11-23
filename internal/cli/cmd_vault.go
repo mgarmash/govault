@@ -577,10 +577,11 @@ func (a *app) getFingerprint(v *profile.Vault, id string) response {
 	var phrase []string
 	switch {
 	case id == "me":
-		if len(v.Profile.PublicKey) == 0 {
+		key := v.PublicKey()
+		if len(key) == 0 {
 			return failure("No public key available for the active user.")
 		}
-		phrase, _ = gen.FingerprintPhrase(v.AccountID, v.Profile.PublicKey)
+		phrase, _ = gen.FingerprintPhrase(v.AccountID, key)
 	case isGUID(id):
 		if key, err := v.UserPublicKey(a.ctx, id); err == nil {
 			phrase, _ = gen.FingerprintPhrase(id, key)

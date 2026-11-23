@@ -36,9 +36,6 @@ type ViewProfile struct {
 	ID      string
 	Email   string
 	Premium bool
-	// PublicKey is the user's RSA public key (SPKI DER), derived from the
-	// private key, or nil when the account has none.
-	PublicKey []byte
 }
 
 // ViewCollection is a collection as the server describes it.
@@ -110,12 +107,6 @@ func OpenVault(rawSync []byte, userKey *crypto.SymmetricKey) (*VaultView, error)
 		userKey:    ownKey,
 		orgKeys:    data.orgKeys,
 	}
-	if wrapped := wrappedPrivateKey(&resp.Profile); wrapped != "" {
-		if priv, err := crypto.DecryptPrivateKey(wrapped, ownKey); err == nil {
-			v.Profile.PublicKey, _ = x509.MarshalPKIXPublicKey(&priv.PublicKey)
-			crypto.ZeroPrivateKey(priv)
-		}
-	}
 	for i := range resp.Ciphers {
 		enc := &resp.Ciphers[i]
 		c := data.ciphers[enc.ID]
@@ -185,6 +176,22 @@ func parsePolicies(raw json.RawMessage) []Policy {
 		out = append(out, Policy{OrganizationID: p.OrganizationID, Type: p.Type, Enabled: p.Enabled, Data: p.Data})
 	}
 	return out
+}
+
+// PublicKey derives the user's RSA public key (SPKI DER) from the private
+// key the sync holds, or returns nil when the account has none.
+func (v *VaultView) PublicKey() []byte {
+	wrapped := wrappedPrivateKey(&v.enc.Profile)
+	if wrapped == "" {
+		return nil
+	}
+	priv, err := crypto.DecryptPrivateKey(wrapped, v.userKey)
+	if err != nil {
+		return nil
+	}
+	defer crypto.ZeroPrivateKey(priv)
+	der, _ := x509.MarshalPKIXPublicKey(&priv.PublicKey)
+	return der
 }
 
 // Close wipes the view's keys.
