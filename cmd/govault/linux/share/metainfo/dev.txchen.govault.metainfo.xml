@@ -63,6 +63,11 @@
     <display_length compare="ge">768</display_length>
   </requires>
   <releases>
+    <release version="0.4.1" date="2026-11-22">
+      <description>
+        <p>The gv command-line client shows verification codes on free bitwarden.com accounts too, computed on the device like the app.</p>
+      </description>
+    </release>
     <release version="0.4.0" date="2026-11-22">
       <description>
         <p>GoVault adds gv, a command-line client compatible with the Bitwarden CLI, YubiKey OTP two-step login, new device verification, and attachment uploads on bitwarden.com.</p>
