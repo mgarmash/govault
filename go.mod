@@ -37,4 +37,4 @@ require (
 
 tool github.com/nsgo-dev/nsgo/cmd/nsgo
 
-replace github.com/nsgo-dev/nsgo => github.com/txchen/nsgo v0.2.1-0.20261122235715-cae54e688488
+replace github.com/nsgo-dev/nsgo => github.com/txchen/nsgo v0.2.1-0.20261123000502-9479e26cc297

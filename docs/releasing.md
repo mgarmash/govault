@@ -14,7 +14,7 @@ scripts/build-release.sh -target linux_x64 -installers -output /tmp/out
 | macOS app and DMG | `GoVault.app/Contents/MacOS/gv`, signed with the app's identity and the identifier `dev.txchen.govault.gv` before the app (with the hardened runtime and a timestamp when notarizing), so the app's signature seals it |
 | `.deb`, pacman | `/opt/govault/gv` and a package-owned `/usr/bin/gv` link |
 | AppImage | `gv` at the image root, which `scripts/install-linux.sh` extracts |
-| Windows installer | `gv.exe` in the installation folder, signed with the app; `windows.path` puts the folder on the user's Path when it is not there yet and records that it did (`NsgoPathAdded` in the uninstall key), and the uninstaller removes the entry only when the installer added it |
+| Windows installer | `gv.exe` in the installation folder, signed with the app; `windows.path` puts the folder on the user's Path when it is not there yet and records the folder it added (`NsgoPathAddedDir` in the uninstall key); an upgrade into another folder removes the recorded one first, and the uninstaller removes only the recorded folder, never an entry that was on Path before |
 
 Store builds leave `gv` out. Sign `checksums.txt` afterwards with `scripts/sign-checksums.sh` as before.
 
@@ -28,7 +28,7 @@ codesign -dv dist/GoVault-<version>-macos_arm64/GoVault.app/Contents/MacOS/gv   
 dist/GoVault-<version>-macos_arm64/GoVault.app/Contents/MacOS/gv --version          # nsgo.yaml's version
 bsdtar -tvf dist/releases/govault-<version>-linux-x64.pkg.tar.gz | grep -E 'gv|metainfo'   # opt/govault/gv, usr/bin/gv, usr/share/metainfo/dev.txchen.govault.metainfo.xml
 appstreamcli validate --no-net cmd/govault/linux/share/metainfo/dev.txchen.govault.metainfo.xml
-grep -n 'gv.exe\|UserPath\|NsgoPathAdded' dist/GoVault-<version>-windows_x64/GoVault.nsi
+grep -n 'gv.exe\|UserPath\|NsgoPathAddedDir' dist/GoVault-<version>-windows_x64/GoVault.nsi
 ```
 
 ## NSGo fork
@@ -36,10 +36,10 @@ grep -n 'gv.exe\|UserPath\|NsgoPathAdded' dist/GoVault-<version>-windows_x64/GoV
 Upstream NSGo v0.2.0 cannot package a command beside the app. Until a release of it can, `go.mod` replaces it with the fork that adds `commands` and `windows.path`:
 
 ```
-replace github.com/nsgo-dev/nsgo => github.com/txchen/nsgo v0.2.1-0.20261122235715-cae54e688488
+replace github.com/nsgo-dev/nsgo => github.com/txchen/nsgo v0.2.1-0.20261123000502-9479e26cc297
 ```
 
-That is branch `govault/v0.2.0-companions` of [txchen/nsgo](https://github.com/txchen/nsgo), v0.2.0 plus commands, their linker flags and signing identifiers, `linux.share`, and Windows Path entries removed only by the installer that added them; the app and `go tool nsgo` both build with it. When upstream ships `commands`, require that release and remove the `replace` line.
+That is branch `govault/v0.2.0-companions` of [txchen/nsgo](https://github.com/txchen/nsgo), v0.2.0 plus commands, their linker flags and signing identifiers, `linux.share`, and Windows Path entries removed only by the installer that added them, by folder; the app and `go tool nsgo` both build with it. When upstream ships `commands`, require that release and remove the `replace` line.
 
 ## Homebrew cask
 
