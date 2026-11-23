@@ -414,7 +414,35 @@ func TestImportReportsItemsTheLocalCopyMissed(t *testing.T) {
 	g.srv.Configure(func(c *fakeserver.Config) { c.OnWrite = func() { _ = os.Chmod(dir, 0o500) } })
 	r := g.run("import", "bitwardenjson", file)
 	_ = os.Chmod(dir, 0o700)
-	if r.code != 1 || !strings.Contains(r.err, "src-1: created as ") || !strings.Contains(r.err, "not archived now") {
+	if r.code != 1 || !strings.Contains(r.err, "src-1: created as ") || !strings.Contains(r.err, "archiving it again was skipped") {
+		t.Fatalf("import = %+v", r)
+	}
+}
+
+// When the server archives the imported item but the local copy misses
+// the archive, the import says the archive is on the server.
+func TestImportReportsAnArchiveTheLocalCopyMissed(t *testing.T) {
+	if os.Geteuid() == 0 {
+		t.Skip("root writes read-only directories")
+	}
+	g := newGV(t)
+	g.srv.Configure(func(c *fakeserver.Config) { c.Premium = true })
+	g.login()
+	file := filepath.Join(t.TempDir(), "in.json")
+	_ = os.WriteFile(file, []byte(`{"encrypted":false,"folders":[],"items":[`+
+		`{"id":"src-1","type":2,"name":"kept","archivedDate":"2026-01-01T00:00:00.000Z","secureNote":{"type":0}}]}`), 0o600)
+	dir := filepath.Dir(profileFile(g, "profile.json"))
+	writes := 0
+	g.srv.Configure(func(c *fakeserver.Config) {
+		c.OnWrite = func() {
+			if writes++; writes == 2 {
+				_ = os.Chmod(dir, 0o500)
+			}
+		}
+	})
+	r := g.run("import", "bitwardenjson", file)
+	_ = os.Chmod(dir, 0o700)
+	if r.code != 1 || !strings.Contains(r.err, "archived on the server; the local copy does not show the archive") {
 		t.Fatalf("import = %+v", r)
 	}
 }

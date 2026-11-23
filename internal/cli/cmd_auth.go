@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/txchen/govault/internal/vaultcore/api"
+	"github.com/txchen/govault/internal/vaultcore/crypto"
 	"github.com/txchen/govault/internal/vaultcore/profile"
 )
 
@@ -357,7 +358,10 @@ func (a *app) login(p *parsed) response {
 		}
 		code = otp
 	}
-	login, err := prof.BeginPasswordLogin(a.ctx, email, []byte(pw))
+	pwBytes := []byte(pw)
+	login, err := prof.BeginPasswordLogin(a.ctx, email, pwBytes)
+	// The derived key is all the login keeps.
+	crypto.ZeroBytes(pwBytes)
 	if err != nil {
 		return loginFailure(err, prof)
 	}

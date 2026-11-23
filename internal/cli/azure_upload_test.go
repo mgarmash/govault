@@ -72,3 +72,19 @@ func TestFailedUploadCleansUpOrSaysItCouldNot(t *testing.T) {
 		}
 	}
 }
+
+// A direct upload the server refuses still warns about the attachment its
+// failed cleanup left, after the server's message.
+func TestRefusedDirectUploadWarnsAboutWhatItLeft(t *testing.T) {
+	g := newGV(t)
+	g.srv.Configure(func(c *fakeserver.Config) {
+		c.Premium, c.DirectUploadFails, c.AttachmentDeleteFails = true, true, true
+	})
+	g.login()
+	file := filepath.Join(t.TempDir(), "notes.txt")
+	_ = os.WriteFile(file, []byte("x"), 0o600)
+	r := g.run("create", "attachment", "--file", file, "--itemid", fakeserver.ItemGitHubEnt)
+	if r.code != 1 || !strings.Contains(r.err, "Upload refused") || !strings.Contains(r.err, "is still on the server") {
+		t.Fatalf("refused upload = %+v", r)
+	}
+}

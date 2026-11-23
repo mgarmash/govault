@@ -58,6 +58,8 @@ type Config struct {
 	// AttachmentDeleteFails the server refuse attachment deletes.
 	BlobFails             bool
 	AttachmentDeleteFails bool
+	// DirectUploadFails refuses direct attachment uploads with a message.
+	DirectUploadFails bool
 	// ClaimPadding adds a claim of this many bytes to access tokens, as
 	// claim-heavy servers issue them.
 	ClaimPadding int

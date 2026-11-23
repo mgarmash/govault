@@ -313,6 +313,8 @@ func (s *Server) writeCipher(w http.ResponseWriter, r *http.Request, parts []str
 	case m == http.MethodGet && action == "attachment" && n == 6 && parts[5] == "renew":
 		s.renewals++
 		writeJSON(w, 200, obj{"url": s.blobURL(id, parts[4], false), "fileUploadType": 1, "object": "attachment-fileUpload"})
+	case m == http.MethodPost && action == "attachment" && n == 5 && s.cfg.DirectUploadFails:
+		errMessage(w, 400, "Upload refused")
 	case m == http.MethodPost && action == "attachment" && n == 5:
 		file, _, err := r.FormFile("data")
 		if err != nil {

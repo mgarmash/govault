@@ -102,6 +102,10 @@ func (a *app) writing(fn func(w *profile.Writer) response) response {
 func (a *app) writeFailure(err error, permission string) response {
 	var apiErr *api.APIError
 	var local *state.LocalCopyError
+	var notRemoved *state.AttachmentNotRemovedError
+	if errors.As(err, &notRemoved) {
+		a.warn("Warning: the upload failed and the attachment it started, " + notRemoved.AttachmentID + ", is still on the server; delete it with `gv delete attachment`.")
+	}
 	switch {
 	case errors.As(err, &local):
 		a.warn("Warning: the server has the change, but gv could not record it in its local copy; run `gv sync`.")

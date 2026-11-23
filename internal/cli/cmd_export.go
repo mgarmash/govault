@@ -559,8 +559,10 @@ func (a *app) importVault(w *profile.Writer, v *export.Vault, path string) respo
 			saved, err = w.SaveCipher(a.ctx, c)
 		}
 		// An archived item is archived again where the account may archive.
+		archiveSent := false
 		if err == nil && it.ArchivedDate != nil && saved != nil {
 			if w.View.Profile.Premium {
+				archiveSent = true
 				err = w.ArchiveCipher(a.ctx, saved.ID)
 			} else {
 				unarchived = append(unarchived, "  - "+idOrUnknown(it.ID))
@@ -577,8 +579,11 @@ func (a *app) importVault(w *profile.Writer, v *export.Vault, path string) respo
 				created = saved.ID
 			}
 			note := fmt.Sprintf("  - %s: created as %s, not recorded in the local copy", idOrUnknown(it.ID), created)
-			if it.ArchivedDate != nil {
-				note += "; it was archived and is not archived now"
+			switch {
+			case archiveSent:
+				note = fmt.Sprintf("  - %s: created as %s and archived on the server; the local copy does not show the archive", idOrUnknown(it.ID), created)
+			case it.ArchivedDate != nil:
+				note += "; it was archived in the file, and archiving it again was skipped"
 			}
 			unrecorded = append(unrecorded, note)
 			continue
