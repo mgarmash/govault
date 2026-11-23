@@ -24,9 +24,13 @@ func TestDependenciesExcludeGUIAndCgo(t *testing.T) {
 		goos, goarch, _ := strings.Cut(target, "/")
 		cmd := exec.Command("go", "list", "-deps", "-f", "{{.ImportPath}} {{len .CgoFiles}} {{if .Error}}{{.Error}}{{end}}", ".")
 		cmd.Env = append(os.Environ(), "GOOS="+goos, "GOARCH="+goarch, "CGO_ENABLED=0")
-		out, err := cmd.CombinedOutput()
+		// Only stdout: a cold module cache adds "go: downloading" lines to
+		// stderr.
+		var stderr strings.Builder
+		cmd.Stderr = &stderr
+		out, err := cmd.Output()
 		if err != nil {
-			t.Fatalf("%s: go list: %v\n%s", target, err, out)
+			t.Fatalf("%s: go list: %v\n%s%s", target, err, out, stderr.String())
 		}
 		for _, line := range strings.Split(strings.TrimSpace(string(out)), "\n") {
 			fields := strings.Fields(line)
