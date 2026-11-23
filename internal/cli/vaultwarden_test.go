@@ -173,7 +173,7 @@ func runAPIKeySuite(t *testing.T, url string, client *http.Client, acct vwAccoun
 		delete(vw.env, "BW_SESSION")
 		vw.must(t, "sync", "-f")
 		if vw.spoil.armed.Load() {
-			t.Fatal("the sync sent no authenticated request")
+			t.Fatal("the sync did not request /api/sync")
 		}
 		t.Log("ok: locked sync -f renewed a rejected token")
 		vw.env["BW_SESSION"] = session
@@ -197,15 +197,17 @@ type vwRun struct {
 	spoil  *spoilingTransport
 }
 
-// spoilingTransport, armed, sends the next authenticated request with a
-// bearer the server rejects, as an expired or revoked token is.
+// spoilingTransport, armed, sends the next /api/sync request with a
+// bearer the server rejects, as an expired or revoked token is. It spoils
+// the sync itself, which a sync cannot do without, so only a renewal and
+// retry let it succeed.
 type spoilingTransport struct {
 	base  http.RoundTripper
 	armed atomic.Bool
 }
 
 func (s *spoilingTransport) RoundTrip(r *http.Request) (*http.Response, error) {
-	if r.Header.Get("Authorization") != "" && s.armed.CompareAndSwap(true, false) {
+	if r.Header.Get("Authorization") != "" && strings.HasSuffix(r.URL.Path, "/api/sync") && s.armed.CompareAndSwap(true, false) {
 		r = r.Clone(r.Context())
 		r.Header.Set("Authorization", "Bearer eyJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJ4In0.invalid")
 	}

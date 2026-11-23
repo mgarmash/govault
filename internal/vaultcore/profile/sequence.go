@@ -16,8 +16,7 @@ func (s sequencedStore) SaveSnapshot(snap *store.Snapshot) error {
 	if err != nil {
 		return err
 	}
-	snap.Sequence = seq + 1
-	return s.FileStore.SaveSnapshot(snap)
+	return s.saveAfter(snap, seq)
 }
 
 // saveAfter saves snap as the successor of the snapshot numbered seq,
