@@ -245,3 +245,98 @@ func TestScriptsQuotePaths(t *testing.T) {
 		t.Fatalf("link target = %q", target)
 	}
 }
+
+// grantACL lets nobody add and remove entries in dir, leaving its POSIX
+// mode as it was.
+func grantACL(t *testing.T, dir string) {
+	t.Helper()
+	if out, err := exec.Command("/bin/chmod", "+a", "user:nobody allow add_file,delete_child", dir).CombinedOutput(); err != nil {
+		t.Skipf("cannot set an ACL here: %v %s", err, out)
+	}
+	fi, _ := os.Stat(dir)
+	if fi.Mode().Perm()&0o022 != 0 {
+		t.Fatalf("the ACL changed the mode: %v", fi.Mode())
+	}
+}
+
+// An ACL granting a non-administrator changes is refused on the bundle's
+// paths, in the privileged script, and for uninstall.
+func TestACLGrantsAreRefused(t *testing.T) {
+	f := newFixture(t)
+	app := filepath.Dir(filepath.Dir(filepath.Dir(f.tool.Bundled)))
+	grantACL(t, app)
+	if err := safeAncestors(f.tool.Bundled, func(uint32) bool { return true }); !errors.Is(err, ErrUntrusted) || !strings.Contains(err.Error(), "access list") {
+		t.Fatalf("bundle with an ACL grant = %v", err)
+	}
+
+	dir := filepath.Dir(f.tool.Link)
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	grantACL(t, dir)
+	if err := f.tool.Apply(Install, "p"); !errors.Is(err, ErrChanged) {
+		t.Fatalf("script install into a directory with an ACL grant = %v", err)
+	}
+	if _, err := os.Lstat(f.tool.Link); err == nil {
+		t.Fatal("the link was made")
+	}
+	f.tool.Trust = func(string, string) error { return nil }
+	if err := f.tool.Apply(Uninstall, "p"); !errors.Is(err, ErrUntrusted) {
+		t.Fatalf("uninstall from a directory with an ACL grant = %v", err)
+	}
+}
+
+func TestParseACL(t *testing.T) {
+	for listing, want := range map[string]string{
+		"drwxr-xr-x  2 a b 64 x d\n 0: group:everyone deny delete\n":                        "",
+		"drwxr-xr-x  2 a b 64 x d\n 0: group:admin allow add_file,delete_child\n":           "",
+		"drwxr-xr-x  2 a b 64 x d\n 0: user:bob inherited allow list,add_file\n":            "user:bob",
+		"-rw-r--r--  1 a b 1 x f\n 0: user:root allow write\n 1: group:staff allow write\n": "group:staff",
+		"-rw-r--r--  1 a b 1 x f\n 0: user:bob allow read,readattr\n":                       "",
+	} {
+		if got := parseACL(listing); got != want {
+			t.Errorf("parseACL(%q) = %q, want %q", listing, got, want)
+		}
+	}
+}
+
+// Release builds ignore the developer override.
+func TestReleaseBuildsIgnoreTheDeveloperOverride(t *testing.T) {
+	t.Setenv(DeveloperOverride, "1")
+	if developerOverride() {
+		t.Fatal("the override is honored without the govaultdev tag")
+	}
+	f := newFixture(t)
+	if err := trustInstall(f.tool.Bundled, filepath.Dir(f.tool.Link)); !errors.Is(err, ErrUntrusted) {
+		t.Fatalf("trust with the override set = %v", err)
+	}
+}
+
+// Directories, dangling links and files that are not executable named gv
+// are not reported: no shell runs them.
+func TestOnlyExecutableGVsAreReported(t *testing.T) {
+	f := newFixture(t)
+	first := filepath.Join(f.root, "first", "bin")
+	if err := os.MkdirAll(filepath.Join(first, "gv"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	other := filepath.Join(f.root, "other", "bin")
+	if err := os.MkdirAll(other, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Symlink(filepath.Join(f.root, "missing"), filepath.Join(other, "gv")); err != nil {
+		t.Fatal(err)
+	}
+	if r := f.tool.Inspect(); r.Shadow != "" || r.Later != "" {
+		t.Fatalf("report = %+v", r)
+	}
+	if err := os.Remove(filepath.Join(other, "gv")); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(other, "gv"), []byte("x"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if r := f.tool.Inspect(); r.Later != "" {
+		t.Fatalf("a file that is not executable was reported: %+v", r)
+	}
+}

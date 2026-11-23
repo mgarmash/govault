@@ -25297,7 +25297,7 @@ func (msgs Messages) CommandLineToolUnavailable() string {
 	return msgs.text(textCommandLineToolUnavailable)
 }
 
-// CommandLineToolShadowed says "Another gv at {path} comes first on the default PATH and runs instead in Terminal."
+// CommandLineToolShadowed says "Another gv at {path} comes first on the default PATH, so Terminal may run it instead."
 // in the language the app shows under cx.
 //
 // Shown under the gv tool's status when another gv is in a directory the default PATH searches first. path is that program.
@@ -25316,7 +25316,7 @@ func (msgs Messages) CommandLineToolShadowed(path string) string {
 		}
 		switch lang {
 		case "", "en":
-			return "Another gv at " + msgs.arg(path) + " comes first on the default PATH and runs instead in Terminal."
+			return "Another gv at " + msgs.arg(path) + " comes first on the default PATH, so Terminal may run it instead."
 		case "de":
 			return "Im Terminal wird möglicherweise stattdessen ein anderes gv unter " + path + " ausgeführt."
 		case "es":
@@ -25339,7 +25339,7 @@ func (msgs Messages) CommandLineToolShadowed(path string) string {
 	}
 }
 
-// CommandLineToolOtherOnPath says "Another gv is at {path}, later on the default PATH; GoVault's runs first."
+// CommandLineToolOtherOnPath says "Another gv is at {path}, later on the default PATH; with that PATH, GoVault's runs first."
 // in the language the app shows under cx.
 //
 // Shown under the gv tool's status when another gv is in a directory the default PATH searches after GoVault's link. path is that program.
@@ -25358,7 +25358,7 @@ func (msgs Messages) CommandLineToolOtherOnPath(path string) string {
 		}
 		switch lang {
 		case "", "en":
-			return "Another gv is at " + msgs.arg(path) + ", later on the default PATH; GoVault's runs first."
+			return "Another gv is at " + msgs.arg(path) + ", later on the default PATH; with that PATH, GoVault's runs first."
 		}
 	}
 }

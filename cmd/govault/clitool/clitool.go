@@ -28,9 +28,9 @@ const TrustedBundle = "/Applications/GoVault.app"
 // TeamID is the Apple team that signs GoVault releases.
 const TeamID = "68S3R4UWP6"
 
-// DeveloperOverride, set to 1 in the environment, lets a development build
-// outside /Applications or without GoVault's signature install the link.
-// The app offers no way to set it.
+// DeveloperOverride, set to 1 in the environment of a build with the
+// govaultdev tag, lets it install the link from outside /Applications or
+// without GoVault's signature. Release builds ignore it.
 const DeveloperOverride = "GOVAULT_CLI_TOOL_DEVELOPER"
 
 // ErrUntrusted means this copy of GoVault may not be linked for all users.
@@ -161,7 +161,7 @@ func defaultPath() []string {
 // any bundle under DeveloperOverride, along safe paths.
 func trustInstall(bundled, linkDir string) error {
 	app := strings.TrimSuffix(bundled, "/Contents/MacOS/gv")
-	if os.Getenv(DeveloperOverride) != "1" {
+	if !developerOverride() {
 		if real, err := filepath.EvalSymlinks(app); err != nil || real != TrustedBundle || app != TrustedBundle {
 			return fmt.Errorf("%w: it is not %s", ErrUntrusted, TrustedBundle)
 		}
@@ -246,7 +246,9 @@ func (t *Tool) others() (before, after string) {
 			continue
 		}
 		p := filepath.Join(dir, "gv")
-		if _, err := os.Lstat(p); err != nil {
+		// Only what a shell would run counts: an executable regular file,
+		// directly or through links.
+		if fi, err := os.Stat(p); err != nil || !fi.Mode().IsRegular() || fi.Mode().Perm()&0o111 == 0 {
 			continue
 		}
 		if target, err := os.Readlink(p); err == nil && isGoVaultTarget(target) {
@@ -282,7 +284,10 @@ func (t *Tool) Script(action Action) string {
 	}
 	enter := fmt.Sprintf(`cd -P -- %[1]s || exit %[2]d; set -- $(/usr/bin/stat -f '%%u %%g %%Lp' .); m=0$3; `+
 		`[ $((m & 2)) = 0 ] || exit %[2]d; if [ $((m & 16)) != 0 ]; then [ "$2" = 0 ] || [ "$2" = 80 ] || exit %[2]d; fi; `+
-		`trusted() { %[3]s; }; trusted "$1" || exit %[2]d`, dir, exitChanged, owner)
+		`trusted() { %[3]s; }; trusted "$1" || exit %[2]d; `+
+		`/bin/ls -lde . | /usr/bin/sed 1d | /usr/bin/grep -Ev '^ *[0-9]+: (user:root|group:admin|group:wheel) ' | `+
+		`/usr/bin/grep -Eq ' allow [^ ]*(write|append|delete|add_file|add_subdirectory|writeattr|writeextattr|writesecurity|chown)' && exit %[2]d`,
+		dir, exitChanged, owner)
 	ours := fmt.Sprintf(`[ -L %[1]s ] || exit %[2]d; case "$(/usr/bin/readlink %[1]s)" in *%[3]s) ;; *) exit %[2]d;; esac`, name, exitChanged, bundleSuffix)
 	switch action {
 	case Install:
@@ -298,6 +303,12 @@ func (t *Tool) Script(action Action) string {
 func (t *Tool) Apply(action Action, prompt string) error {
 	if action != Uninstall && t.Trust != nil {
 		if err := t.Trust(t.Bundled, filepath.Dir(t.Link)); err != nil {
+			return err
+		}
+	}
+	// Removing the link still needs a protected directory to work in.
+	if action == Uninstall && t.Trust != nil {
+		if err := safeAncestors(filepath.Dir(t.Link), isAdmin); err != nil {
 			return err
 		}
 	}
