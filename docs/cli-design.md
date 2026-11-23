@@ -126,7 +126,7 @@ As planned, before NSGo could package commands: NSGo v0.2.0 copies executable re
 
 ### Packaging status
 
-`cmd/govault/nsgo.yaml` declares `gv` as one of the app's `commands` (`package: ../gv`), so `nsgo build` compiles it per desktop target (`CGO_ENABLED=0`, stripped and `-trimpath` for a release) and packages and signs it with everything else, before checksums and update feeds. This needs the NSGo fork `go.mod` replaces upstream with until upstream ships the feature ([releasing.md](releasing.md#nsgo-fork)).
+`cmd/govault/nsgo.yaml` declares `gv` as one of the app's `commands` (`package: ../gv`), so `nsgo build` compiles it per desktop target (`CGO_ENABLED=0`, stripped and `-trimpath` for a release) and packages and signs it with everything else, before checksums and update feeds. NSGo has packaged commands since v0.3.0.
 
 | Distribution | State |
 | --- | --- |

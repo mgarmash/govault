@@ -31,16 +31,6 @@ appstreamcli validate --no-net cmd/govault/linux/share/metainfo/dev.txchen.govau
 grep -n 'gv.exe\|UserPath\|NsgoPathAddedDir' dist/GoVault-<version>-windows_x64/GoVault.nsi
 ```
 
-## NSGo fork
-
-Upstream NSGo v0.2.0 cannot package a command beside the app. Until a release of it can, `go.mod` replaces it with the fork that adds `commands` and `windows.path`:
-
-```
-replace github.com/nsgo-dev/nsgo => github.com/txchen/nsgo v0.2.1-0.20261123000502-9479e26cc297
-```
-
-That is branch `govault/v0.2.0-companions` of [txchen/nsgo](https://github.com/txchen/nsgo), v0.2.0 plus commands, their linker flags and signing identifiers, `linux.share`, and Windows Path entries removed only by the installer that added them, by folder; the app and `go tool nsgo` both build with it. When upstream ships `commands`, require that release and remove the `replace` line.
-
 ## Homebrew cask
 
 The tap's `govault` cask links `gv` with the cask `binary` stanza, so Homebrew creates and removes `$(brew --prefix)/bin/gv` and every cask upgrade updates it with the app:
