@@ -156,7 +156,7 @@ func (s *Service) Login(ctx context.Context, req LoginRequest) error {
 		}
 	}
 
-	tok, err := client.LoginPassword(ctx, email, pwHash, twoFactor)
+	tok, err := client.LoginPasswordWith(ctx, email, pwHash, api.PasswordLoginOptions{TwoFactor: twoFactor, NewDeviceOTP: req.NewDeviceOTP})
 	if err != nil {
 		if usedRemembered && errors.Is(err, api.ErrTwoFactorRequired) {
 			_ = s.cfg.Secrets.Delete(rememberKey)
@@ -275,6 +275,22 @@ func (s *Service) SendEmailTwoFactorCode(ctx context.Context, req LoginRequest) 
 	}
 	crypto.ZeroBytes(masterKey[:])
 	return client.SendEmailTwoFactorLogin(ctx, req.Email, pwHash)
+}
+
+// ResendNewDeviceOTP asks the server to email the new device verification
+// code again, for the login req describes.
+func (s *Service) ResendNewDeviceOTP(ctx context.Context, req LoginRequest) error {
+	if want := req.SameAccount; want != nil {
+		if trusted := s.TrustedServerURL(want.ID); trusted != "" && serverOrigin(trusted) != serverOrigin(req.ServerURL) {
+			return ErrDifferentAccount
+		}
+	}
+	client, _, masterKey, pwHash, err := s.prepareLogin(ctx, req)
+	if err != nil {
+		return err
+	}
+	crypto.ZeroBytes(masterKey[:])
+	return client.ResendNewDeviceOTP(ctx, req.Email, pwHash)
 }
 
 func (s *Service) prepareLogin(ctx context.Context, req LoginRequest) (*api.Client, crypto.KDFConfig, [32]byte, string, error) {

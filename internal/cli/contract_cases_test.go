@@ -20,6 +20,8 @@ type contractCase struct {
 	Name  string         `json:"name"`
 	State string         `json:"state"`
 	Steps []contractStep `json:"steps"`
+	// Server, when set, configures the case's fresh server first.
+	Server func(*fakeserver.Config) `json:"-"`
 }
 
 func s(args ...string) contractStep { return contractStep{Args: args, Session: true} }
@@ -191,5 +193,12 @@ var contractCases = []contractCase{
 		{Args: []string{"login", fakeserver.Email, "--passwordenv", "PW"}, Env: map[string]string{"PW": fakeserver.Password}},
 		s("get", "username", fakeserver.ItemGitHub),
 		locked("login", fakeserver.Email, fakeserver.Password),
+	}},
+	// Bitwarden's new device verification, which bw only prompts for.
+	{Name: "login-new-device", State: "configured", Server: func(c *fakeserver.Config) { c.NewDeviceOTP = "424242" }, Steps: []contractStep{
+		{Args: []string{"login", fakeserver.Email, "--passwordenv", "PW", "--nointeraction"}, Env: map[string]string{"PW": fakeserver.Password}},
+		{Args: []string{"login", fakeserver.Email, "--passwordenv", "PW", "--method", "0", "--code", "424242", "--nointeraction"}, Env: map[string]string{"PW": fakeserver.Password}},
+		{Args: []string{"login", fakeserver.Email, "--passwordenv", "PW", "--response", "--nointeraction"}, Env: map[string]string{"PW": fakeserver.Password}},
+		locked("status"),
 	}},
 }

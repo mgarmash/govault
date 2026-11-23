@@ -77,11 +77,24 @@ func (l *PasswordLogin) SendEmailCode(ctx context.Context) error {
 	return l.client.SendEmailTwoFactorLogin(ctx, l.email, l.hash)
 }
 
+// ResendNewDeviceCode asks the server to email the new device verification
+// code again, for this device.
+func (l *PasswordLogin) ResendNewDeviceCode(ctx context.Context) error {
+	return l.client.ResendNewDeviceOTP(ctx, l.email, l.hash)
+}
+
 // Complete signs in, with twoFactor when the server asked for it
 // (*api.TwoFactorRequiredError), syncs, and returns a session key for the
 // unlocked vault.
 func (l *PasswordLogin) Complete(ctx context.Context, twoFactor *api.TwoFactorLogin) (string, error) {
-	tok, err := l.client.LoginPassword(ctx, l.email, l.hash, twoFactor)
+	return l.CompleteWith(ctx, api.PasswordLoginOptions{TwoFactor: twoFactor})
+}
+
+// CompleteWith is Complete with every option of the password grant, such
+// as the new device verification code the server asked for with
+// *api.NewDeviceVerificationRequiredError.
+func (l *PasswordLogin) CompleteWith(ctx context.Context, opts api.PasswordLoginOptions) (string, error) {
+	tok, err := l.client.LoginPasswordWith(ctx, l.email, l.hash, opts)
 	if err != nil {
 		return "", err
 	}

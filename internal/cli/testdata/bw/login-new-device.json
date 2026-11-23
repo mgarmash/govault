@@ -1,0 +1,54 @@
+{
+  "name": "login-new-device",
+  "steps": [
+    {
+      "args": [
+        "login",
+        "alice@example.com",
+        "--passwordenv",
+        "PW",
+        "--nointeraction"
+      ],
+      "stdout": "",
+      "stderr": "Code is required.",
+      "exit": 1
+    },
+    {
+      "args": [
+        "login",
+        "alice@example.com",
+        "--passwordenv",
+        "PW",
+        "--method",
+        "0",
+        "--code",
+        "424242",
+        "--nointeraction"
+      ],
+      "stdout": "",
+      "stderr": "Code is required.",
+      "exit": 1
+    },
+    {
+      "args": [
+        "login",
+        "alice@example.com",
+        "--passwordenv",
+        "PW",
+        "--response",
+        "--nointeraction"
+      ],
+      "stdout": "{\"success\":false,\"message\":\"Code is required.\"}",
+      "stderr": "",
+      "exit": 1
+    },
+    {
+      "args": [
+        "status"
+      ],
+      "stdout": "{\"serverUrl\":\"{{SERVER}}\",\"lastSync\":null,\"status\":\"unauthenticated\"}",
+      "stderr": "",
+      "exit": 0
+    }
+  ]
+}

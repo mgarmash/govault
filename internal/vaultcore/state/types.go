@@ -297,6 +297,10 @@ type LoginRequest struct {
 	TwoFactorCode     string
 	RememberDevice    bool
 
+	// NewDeviceOTP is the code the server emailed after refusing a login
+	// from this device with *api.NewDeviceVerificationRequiredError.
+	NewDeviceOTP string
+
 	// SameAccount, when set, is the account of the local vault this
 	// sign-in renews (Sign In Again). A login to any other account or
 	// server is refused with ErrDifferentAccount before anything is saved.
@@ -331,6 +335,7 @@ type VaultService interface {
 	Status() LockStatus
 	Login(ctx context.Context, req LoginRequest) error
 	SendEmailTwoFactorCode(ctx context.Context, req LoginRequest) error
+	ResendNewDeviceOTP(ctx context.Context, req LoginRequest) error
 	UnlockWithPassword(ctx context.Context, masterPassword []byte) error
 	UnlockWithUserKey(ctx context.Context, userKey *crypto.SymmetricKey) error
 	EnableBiometricUnlock(secrets store.SecretStore) error

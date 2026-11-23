@@ -167,6 +167,7 @@ func (c *Client) DeleteFolder(ctx context.Context, accessToken, folderID string)
 **Typed API errors**:
 - `ErrUnauthorized` (HTTP 401 -> trigger token refresh once; if refresh fails, lock & require re-login)
 - `ErrTwoFactorRequired` (HTTP 400 with `TwoFactorProviders` in body -> clear user-facing error noting 2FA login is Phase 2)
+- `ErrNewDeviceVerificationRequired` (HTTP 400, `error: device_error`, `ErrorModel.Message: "new device verification required"`; repeat the password grant with `newDeviceOtp`) and `ErrInvalidNewDeviceOTP` (`ErrorModel.Message: "invalid new device otp"`); see `internal/vaultcore/api/newdevice.go`
 - `ErrRevisionConflict` (stale `lastKnownRevisionDate` -> re-sync before retrying write)
 - `ErrNetworkOffline` (allow seamless offline read access from local snapshot)
 

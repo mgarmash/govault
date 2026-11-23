@@ -163,6 +163,22 @@ func (c *Client) Prelogin(ctx context.Context, email string) (crypto.KDFConfig, 
 }
 
 func (c *Client) LoginPassword(ctx context.Context, email, masterPasswordHash string, twoFactor *TwoFactorLogin) (*TokenResponse, error) {
+	return c.LoginPasswordWith(ctx, email, masterPasswordHash, PasswordLoginOptions{TwoFactor: twoFactor})
+}
+
+// PasswordLoginOptions are the optional parts of a password grant.
+type PasswordLoginOptions struct {
+	TwoFactor *TwoFactorLogin
+	// NewDeviceOTP answers a *NewDeviceVerificationRequiredError with the
+	// code the server emailed.
+	NewDeviceOTP string
+}
+
+// LoginPasswordWith signs in with the password grant. It returns a
+// *TwoFactorRequiredError or *NewDeviceVerificationRequiredError when the
+// server asks for a code.
+func (c *Client) LoginPasswordWith(ctx context.Context, email, masterPasswordHash string, opts PasswordLoginOptions) (*TokenResponse, error) {
+	twoFactor := opts.TwoFactor
 	normEmail := crypto.NormalizeEmail(email)
 	form := url.Values{
 		"grant_type":       {"password"},
@@ -182,6 +198,9 @@ func (c *Client) LoginPassword(ctx context.Context, email, masterPasswordHash st
 		} else {
 			form.Set("twoFactorRemember", "0")
 		}
+	}
+	if otp := strings.Join(strings.Fields(opts.NewDeviceOTP), ""); otp != "" {
+		form.Set("newDeviceOtp", otp)
 	}
 	headers := map[string]string{
 		"Auth-Email": base64.RawURLEncoding.EncodeToString([]byte(normEmail)),
@@ -487,6 +506,9 @@ func classifyError(status int, body []byte) error {
 	if status == http.StatusBadRequest {
 		if tfErr, ok := parseTwoFactorChallenge(body); ok {
 			return tfErr
+		}
+		if ndErr := newDeviceError(status, body); ndErr != nil {
+			return ndErr
 		}
 	}
 

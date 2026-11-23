@@ -142,6 +142,7 @@ func (s *Service) Login(_ context.Context, req state.LoginRequest) error {
 }
 
 func (s *Service) SendEmailTwoFactorCode(context.Context, state.LoginRequest) error { return nil }
+func (s *Service) ResendNewDeviceOTP(context.Context, state.LoginRequest) error     { return nil }
 
 func (s *Service) UnlockWithPassword(_ context.Context, pw []byte) error {
 	if len(pw) == 0 {

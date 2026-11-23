@@ -150,6 +150,21 @@ twoFactorEmailFailed:
 twoFactorEmailSentTo: "A verification code was sent to {email}."
 twoFactorEmailSent: A verification code was sent to your email.
 
+# New device verification
+
+newDeviceTitle:
+  message: Verify your identity
+  description: Title of the sign-in step where Bitwarden asks for a code it emailed because it does not recognize this device. Bitwarden's apps use the same words.
+newDeviceEnterCodeTo:
+  message: "Your server doesn’t recognize this device. Enter the code sent to {email}."
+  description: Shown under the title of the new device verification step. email is the account's email address.
+newDeviceCodeInvalid:
+  message: Invalid or expired verification code. Check the code, or choose Resend Code to get a new one.
+  description: Shown when the server rejects the emailed code. A code works only once and for a few minutes.
+newDeviceFootnote:
+  message: Bitwarden asks for this code on each new device for accounts without two-step login.
+  description: The small print under the new device verification step.
+
 # Lock screen
 
 lockedTitle: GoVault is Locked

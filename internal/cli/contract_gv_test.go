@@ -79,6 +79,9 @@ func TestContractMatchesBW(t *testing.T) {
 		t.Run(c.Name, func(t *testing.T) {
 			srv := fakeserver.New()
 			defer srv.Close()
+			if c.Server != nil {
+				srv.Configure(c.Server)
+			}
 			want := loadFixture(t, c.Name)
 			r := &gvRunner{srv: srv, ring: keyring.NewMemory()}
 			got := runCase(t, r, c, srv)

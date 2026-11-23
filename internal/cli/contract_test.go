@@ -133,6 +133,9 @@ func TestCaptureBWFixtures(t *testing.T) {
 			// fixture vault and new IDs are the same for bw and gv.
 			srv := fakeserver.NewTLS(fakeserver.WithKDFIterations(600000))
 			defer srv.Close()
+			if c.Server != nil {
+				srv.Configure(c.Server)
+			}
 			caFile := filepath.Join(t.TempDir(), "ca.pem")
 			if err := os.WriteFile(caFile, srv.CertPEM(), 0o600); err != nil {
 				t.Fatal(err)

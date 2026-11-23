@@ -1549,6 +1549,7 @@ var Parameters = map[string][]string{
 	"TwoFactorUnsupported":       {"methods"},
 	"TwoFactorEmailFailed":       {"reason"},
 	"TwoFactorEmailSentTo":       {"email"},
+	"NewDeviceEnterCodeTo":       {"email"},
 	"UnlockWith":                 {"method"},
 	"BiometricEnableReason":      {"method"},
 	"BiometricDisabled":          {"method"},
@@ -1656,6 +1657,7 @@ type Translation struct {
 	TwoFactorUnsupported       func(methods string) string
 	TwoFactorEmailFailed       func(reason string) string
 	TwoFactorEmailSentTo       func(email string) string
+	NewDeviceEnterCodeTo       func(email string) string
 	UnlockWith                 func(method string) string
 	BiometricEnableReason      func(method string) string
 	BiometricDisabled          func(method string) string
@@ -1818,6 +1820,9 @@ const (
 	textTwoFactorYubiKeyInvalid
 	textTwoFactorYubiKeyNotRegistered
 	textTwoFactorEmailSent
+	textNewDeviceTitle
+	textNewDeviceCodeInvalid
+	textNewDeviceFootnote
 	textLockedTitle
 	textUnlock
 	textOrUseMasterPassword
@@ -2364,6 +2369,9 @@ var keyOfText = [numTexts]string{
 	"twoFactorYubiKeyInvalid",
 	"twoFactorYubiKeyNotRegistered",
 	"twoFactorEmailSent",
+	"newDeviceTitle",
+	"newDeviceCodeInvalid",
+	"newDeviceFootnote",
 	"lockedTitle",
 	"unlock",
 	"orUseMasterPassword",
@@ -2908,6 +2916,9 @@ var textsEn = i18n.NewTexts(""+
 	"The server did not accept this YubiKey code. Touch your YubiKey again to enter a new one."+
 	"This YubiKey is not registered with your account. Use a YubiKey you added in your vault web settings."+
 	"A verification code was sent to your email."+
+	"Verify your identity"+
+	"Invalid or expired verification code. Check the code, or choose Resend Code to get a new one."+
+	"Bitwarden asks for this code on each new device for accounts without two-step login."+
 	"GoVault is Locked"+
 	"Unlock"+
 	"or use your master password"+
@@ -3449,6 +3460,9 @@ var textsEn = i18n.NewTexts(""+
 		89,
 		101,
 		43,
+		20,
+		93,
+		84,
 		17,
 		6,
 		27,
@@ -3993,6 +4007,9 @@ var textsDe = i18n.NewTexts(""+
 	"Der Server hat diesen YubiKey-Code nicht akzeptiert. Berühre deinen YubiKey erneut für einen neuen Code."+
 	"Dieser YubiKey ist nicht für dein Konto registriert. Verwende einen YubiKey aus deinen Web-Tresor-Einstellungen."+
 	"Ein Verifizierungscode wurde an deine E-Mail gesendet."+
+	""+
+	""+
+	""+
 	"GoVault ist gesperrt"+
 	"Entsperren"+
 	"oder Master-Passwort verwenden"+
@@ -4534,6 +4551,9 @@ var textsDe = i18n.NewTexts(""+
 		106,
 		113,
 		54,
+		0,
+		0,
+		0,
 		20,
 		10,
 		30,
@@ -5078,6 +5098,9 @@ var textsEs = i18n.NewTexts(""+
 	"El servidor no aceptó este código de YubiKey. Toca tu YubiKey de nuevo para introducir uno nuevo."+
 	"Esta YubiKey no está registrada en tu cuenta. Usa una YubiKey que hayas añadido en los ajustes web de tu caja fuerte."+
 	"Se envió un código de verificación a tu correo electrónico."+
+	""+
+	""+
+	""+
 	"GoVault está bloqueado"+
 	"Desbloquear"+
 	"o usa tu contraseña maestra"+
@@ -5619,6 +5642,9 @@ var textsEs = i18n.NewTexts(""+
 		99,
 		119,
 		63,
+		0,
+		0,
+		0,
 		23,
 		11,
 		28,
@@ -6163,6 +6189,9 @@ var textsFr = i18n.NewTexts(""+
 	"Le serveur n’a pas accepté ce code YubiKey. Touchez à nouveau votre YubiKey pour en saisir un nouveau."+
 	"Cette YubiKey n’est pas enregistrée sur votre compte. Utilisez une YubiKey ajoutée dans les paramètres web de votre coffre."+
 	"Un code de vérification a été envoyé à votre adresse e-mail."+
+	""+
+	""+
+	""+
 	"GoVault est verrouillé"+
 	"Déverrouiller"+
 	"ou utiliser le mot de passe principal"+
@@ -6704,6 +6733,9 @@ var textsFr = i18n.NewTexts(""+
 		106,
 		128,
 		65,
+		0,
+		0,
+		0,
 		23,
 		14,
 		37,
@@ -7248,6 +7280,9 @@ var textsJa = i18n.NewTexts(""+
 	"サーバーがこの YubiKey コードを受け入れませんでした。もう一度 YubiKey にタッチして新しいコードを入力してください。"+
 	"この YubiKey はアカウントに登録されていません。ウェブ保管庫の設定で追加した YubiKey を使用してください。"+
 	"認証コードをメールで送信しました。"+
+	""+
+	""+
+	""+
 	"GoVault はロックされています"+
 	"ロック解除"+
 	"またはマスターパスワードを使用"+
@@ -7789,6 +7824,9 @@ var textsJa = i18n.NewTexts(""+
 		162,
 		147,
 		51,
+		0,
+		0,
+		0,
 		38,
 		15,
 		45,
@@ -8333,6 +8371,9 @@ var textsKo = i18n.NewTexts(""+
 	"서버가 이 YubiKey 코드를 거부했습니다. YubiKey를 다시 터치하여 새 코드를 입력하세요."+
 	"이 YubiKey는 계정에 등록되어 있지 않습니다. 웹 보관함 설정에서 추가한 YubiKey를 사용하세요."+
 	"이메일로 인증 코드를 보냈습니다."+
+	""+
+	""+
+	""+
 	"GoVault 잠김"+
 	"잠금 해제"+
 	"또는 마스터 비밀번호 사용"+
@@ -8874,6 +8915,9 @@ var textsKo = i18n.NewTexts(""+
 		113,
 		123,
 		46,
+		0,
+		0,
+		0,
 		14,
 		13,
 		36,
@@ -9418,6 +9462,9 @@ var textsPtBR = i18n.NewTexts(""+
 	"O servidor não aceitou este código da YubiKey. Toque novamente na sua YubiKey para inserir um novo."+
 	"Esta YubiKey não está registrada na sua conta. Use uma YubiKey adicionada nas configurações web do seu cofre."+
 	"Um código de verificação foi enviado para seu e-mail."+
+	""+
+	""+
+	""+
 	"O GoVault está bloqueado"+
 	"Desbloquear"+
 	"ou use sua senha principal"+
@@ -9959,6 +10006,9 @@ var textsPtBR = i18n.NewTexts(""+
 		101,
 		113,
 		56,
+		0,
+		0,
+		0,
 		25,
 		11,
 		26,
@@ -10503,6 +10553,9 @@ var textsRu = i18n.NewTexts(""+
 	"Сервер не принял этот код YubiKey. Прикоснитесь к YubiKey ещё раз, чтобы ввести новый код."+
 	"Этот YubiKey не зарегистрирован в вашем аккаунте. Используйте YubiKey, добавленный в веб-настройках хранилища."+
 	"Код подтверждения отправлен на вашу эл. почту."+
+	""+
+	""+
+	""+
 	"GoVault заблокирован"+
 	"Разблокировать"+
 	"или используйте мастер-пароль"+
@@ -11044,6 +11097,9 @@ var textsRu = i18n.NewTexts(""+
 		149,
 		190,
 		84,
+		0,
+		0,
+		0,
 		32,
 		28,
 		55,
@@ -11588,6 +11644,9 @@ var textsZhHans = i18n.NewTexts(""+
 	"服务器未接受此 YubiKey 验证码。请再次轻触你的 YubiKey 以输入新的验证码。"+
 	"此 YubiKey 未注册到你的账户。请使用你在网页端密码库设置中添加的 YubiKey。"+
 	"验证码已发送至你的电子邮箱。"+
+	""+
+	""+
+	""+
 	"GoVault 已锁定"+
 	"解锁"+
 	"或使用主密码"+
@@ -12129,6 +12188,9 @@ var textsZhHans = i18n.NewTexts(""+
 		99,
 		101,
 		42,
+		0,
+		0,
+		0,
 		17,
 		6,
 		18,
@@ -12673,6 +12735,9 @@ var textsZhHant = i18n.NewTexts(""+
 	"伺服器未接受此 YubiKey 驗證碼。請再次輕觸您的 YubiKey 以輸入新的驗證碼。"+
 	"此 YubiKey 未註冊至您的帳戶。請使用您在網頁版密碼庫設定中新增的 YubiKey。"+
 	"驗證碼已傳送至您的電子郵件。"+
+	""+
+	""+
+	""+
 	"GoVault 已鎖定"+
 	"解鎖"+
 	"或使用主密碼"+
@@ -13214,6 +13279,9 @@ var textsZhHant = i18n.NewTexts(""+
 		99,
 		101,
 		42,
+		0,
+		0,
+		0,
 		17,
 		6,
 		18,
@@ -13778,6 +13846,9 @@ func Supply(lang string, t Translation) {
 	}
 	if t.TwoFactorEmailSentTo != nil {
 		s.TwoFactorEmailSentTo = t.TwoFactorEmailSentTo
+	}
+	if t.NewDeviceEnterCodeTo != nil {
+		s.NewDeviceEnterCodeTo = t.NewDeviceEnterCodeTo
 	}
 	if t.UnlockWith != nil {
 		s.UnlockWith = t.UnlockWith
@@ -14797,6 +14868,57 @@ func TwoFactorEmailSent(cx *core.Scope) string { return For(cx).TwoFactorEmailSe
 
 // TwoFactorEmailSent is the package's TwoFactorEmailSent in the language of msgs.
 func (msgs Messages) TwoFactorEmailSent() string { return msgs.text(textTwoFactorEmailSent) }
+
+// NewDeviceTitle says "Verify your identity"
+// in the language the app shows under cx.
+//
+// Title of the sign-in step where Bitwarden asks for a code it emailed because it does not recognize this device. Bitwarden's apps use the same words.
+func NewDeviceTitle(cx *core.Scope) string { return For(cx).NewDeviceTitle() }
+
+// NewDeviceTitle is the package's NewDeviceTitle in the language of msgs.
+func (msgs Messages) NewDeviceTitle() string { return msgs.text(textNewDeviceTitle) }
+
+// NewDeviceEnterCodeTo says "Your server doesn’t recognize this device. Enter the code sent to {email}."
+// in the language the app shows under cx.
+//
+// Shown under the title of the new device verification step. email is the account's email address.
+func NewDeviceEnterCodeTo(cx *core.Scope, email string) string {
+	return For(cx).NewDeviceEnterCodeTo(email)
+}
+
+// NewDeviceEnterCodeTo is the package's NewDeviceEnterCodeTo in the language of msgs.
+func (msgs Messages) NewDeviceEnterCodeTo(email string) string {
+	if i18n.IsPseudo(msgs.lang) {
+		return i18n.Pseudo(msgs.lang, Messages{lang: Source, mark: true}.NewDeviceEnterCodeTo(email))
+	}
+	for lang := msgs.lang; ; lang = i18n.Parent(lang) {
+		if f := supplied[lang].NewDeviceEnterCodeTo; f != nil {
+			return f(email)
+		}
+		switch lang {
+		case "", "en":
+			return "Your server doesn’t recognize this device. Enter the code sent to " + msgs.arg(email) + "."
+		}
+	}
+}
+
+// NewDeviceCodeInvalid says "Invalid or expired verification code. Check the code, or choose Resend Code to get a new one."
+// in the language the app shows under cx.
+//
+// Shown when the server rejects the emailed code. A code works only once and for a few minutes.
+func NewDeviceCodeInvalid(cx *core.Scope) string { return For(cx).NewDeviceCodeInvalid() }
+
+// NewDeviceCodeInvalid is the package's NewDeviceCodeInvalid in the language of msgs.
+func (msgs Messages) NewDeviceCodeInvalid() string { return msgs.text(textNewDeviceCodeInvalid) }
+
+// NewDeviceFootnote says "Bitwarden asks for this code on each new device for accounts without two-step login."
+// in the language the app shows under cx.
+//
+// The small print under the new device verification step.
+func NewDeviceFootnote(cx *core.Scope) string { return For(cx).NewDeviceFootnote() }
+
+// NewDeviceFootnote is the package's NewDeviceFootnote in the language of msgs.
+func (msgs Messages) NewDeviceFootnote() string { return msgs.text(textNewDeviceFootnote) }
 
 // LockedTitle says "GoVault is Locked"
 // in the language the app shows under cx.

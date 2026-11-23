@@ -13,6 +13,9 @@ const authFieldHeight core.Points = 34
 
 func LoginView(cx *core.Scope, m *AppModel) core.Node {
 	return core.Dynamic(func(cx *core.Scope) core.Node {
+		if prompt := m.NewDevice.Get(); prompt != nil {
+			return NewDeviceView(cx, m, prompt)
+		}
 		if prompt := m.TwoFactor.Get(); prompt != nil {
 			return TwoFactorView(cx, m, prompt)
 		}

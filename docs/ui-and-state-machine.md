@@ -56,6 +56,7 @@ GoVault runs as a desktop app with an optional menu bar icon (`desktop.SetShutdo
   +-----+------+                           +---+--------+---+   |
         ^                                      |        |       |
         | Logout()                     Success |        +-> 2FA challenge -> TwoFactor step
+        |                                      |        +-> device_error -> NewDevice step
         | or WS LogOut(11)                     v        +---> Auth Error (inline, back to LoggedOut)
         |                               +------+-----+
         +-------------------------------|  Unlocked  |<-------------------------+
@@ -118,6 +119,7 @@ Centered card (`420px` wide) inside Main Window:
 ```
 - Pressing `Enter` in Master Password submits; button shows spinner + disabled state during KDF + login (`Argon2id` may take 200–600 ms).
 - **Two-step verification step**: if the server answers with a 2FA challenge, the same card switches to a verification step: a method selector when the account offers more than one of Authenticator App, Email and YubiKey (segmented buttons while they fit the card in the current language, measured with `MeasureText`, otherwise a full-width popup), Send/Resend Code for email, a monospace code field (`Enter` verifies; for YubiKey a masked field the key types its OTP and `Enter` into), a "Remember this device" checkbox, Verify, and Back to Sign In. A wrong code shows an inline error; unsupported-only providers show a message naming them.
+- **New device verification step**: if Bitwarden answers a password login with `device_error` / "new device verification required" (an account without two-step login, on a device the server does not know), the card shows "Verify your identity" with "Enter the code sent to <email>", a monospace code field (`Enter` verifies), Resend Code (`POST /api/accounts/resend-new-device-otp` with this device's `Device-Identifier`), Verify, and Back to Sign In. Verify repeats the password login with `newDeviceOtp`; a wrong or expired code clears the field and shows an inline error. The server emails the first code with its refusal, so there is no Send Code.
 
 #### Screen B: Lock Screen (`StatusLocked`)
 

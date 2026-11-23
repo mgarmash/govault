@@ -414,6 +414,11 @@ type AppModel struct {
 	TwoFactorSending  *core.Signal[bool]
 	TwoFactorNotice   *core.Signal[string]
 
+	// NewDevice is the new device verification step, while it shows. It
+	// shares the code, sending and notice signals with two-step login;
+	// only one of the two shows at a time.
+	NewDevice *core.Signal[*NewDevicePrompt]
+
 	LockPassword    *core.Signal[string]
 	LockBusy        *core.Signal[bool]
 	LockError       *core.Signal[string]
@@ -603,6 +608,7 @@ func NewAppModel(app *core.Scope, coreSvc state.VaultService, hooks PlatformHook
 		TwoFactorRemember:   core.NewSignal(app, false),
 		TwoFactorSending:    core.NewSignal(app, false),
 		TwoFactorNotice:     core.NewSignal(app, ""),
+		NewDevice:           core.NewSignal[*NewDevicePrompt](app, nil),
 		LockPassword:        core.NewSignal(app, ""),
 		LockBusy:            core.NewSignal(app, false),
 		LockError:           core.NewSignal(app, ""),
@@ -1015,6 +1021,8 @@ func (m *AppModel) submitLogin(req state.LoginRequest) {
 	m.LoginError.Set("")
 	verifying := req.TwoFactorCode != ""
 	provider := req.TwoFactorProvider
+	verifyingDevice := req.NewDeviceOTP != ""
+	email := req.Email
 	ctx := state.WithAuthAttempt(context.Background(), m.Core.AuthAttempt())
 	gen := m.LockGeneration()
 
@@ -1026,6 +1034,10 @@ func (m *AppModel) submitLogin(req state.LoginRequest) {
 				return
 			}
 			m.LoginBusy.Set(false)
+			if err != nil && (verifyingDevice || errors.Is(err, api.ErrNewDeviceVerificationRequired)) {
+				m.newDeviceFailed(err, email)
+				return
+			}
 			if err != nil {
 				m.loginFailed(err, verifying, provider)
 				return
@@ -1137,6 +1149,102 @@ func (m *AppModel) SendTwoFactorEmail() {
 	}()
 }
 
+// NewDevicePrompt is the new device verification step: Bitwarden emailed
+// a code because it does not recognize this device.
+type NewDevicePrompt struct {
+	Email string
+}
+
+// newDeviceFailed handles a login that met, or answered, new device
+// verification.
+func (m *AppModel) newDeviceFailed(err error, email string) {
+	var tfErr *api.TwoFactorRequiredError
+	switch {
+	case errors.Is(err, api.ErrNewDeviceVerificationRequired):
+		m.enterNewDevice(email)
+	case errors.Is(err, api.ErrInvalidNewDeviceOTP):
+		m.TwoFactorCode.Set("")
+		m.LoginError.Set(locales.NewDeviceCodeInvalid(m.Scope))
+	case errors.As(err, &tfErr):
+		m.NewDevice.Set(nil)
+		m.enterTwoFactor(tfErr.Challenge)
+	default:
+		m.LoginError.Set(m.errorText(err))
+	}
+}
+
+func (m *AppModel) enterNewDevice(email string) {
+	m.TwoFactor.Set(nil)
+	m.TwoFactorCode.Set("")
+	m.TwoFactorNotice.Set("")
+	m.LoginError.Set("")
+	m.NewDevice.Set(&NewDevicePrompt{Email: email})
+}
+
+// VerifyNewDevice signs in again with the emailed code.
+func (m *AppModel) VerifyNewDevice() {
+	if m.LoginBusy.Get() || m.NewDevice.Get() == nil {
+		return
+	}
+	code := strings.Join(strings.Fields(m.TwoFactorCode.Get()), "")
+	if code == "" {
+		m.LoginError.Set(locales.TwoFactorCodeRequired(m.Scope))
+		return
+	}
+	req, ok := m.loginRequest()
+	if !ok {
+		m.CancelNewDevice()
+		return
+	}
+	req.NewDeviceOTP = code
+	m.submitLogin(req)
+}
+
+// ResendNewDeviceCode asks the server to email the code again.
+func (m *AppModel) ResendNewDeviceCode() {
+	prompt := m.NewDevice.Get()
+	if m.TwoFactorSending.Get() || prompt == nil {
+		return
+	}
+	req, ok := m.loginRequest()
+	if !ok {
+		m.CancelNewDevice()
+		return
+	}
+	m.TwoFactorSending.Set(true)
+	m.LoginError.Set("")
+	m.TwoFactorNotice.Set("")
+	gen := m.LockGeneration()
+
+	go func() {
+		defer crypto.ZeroBytes(req.MasterPassword)
+		err := m.Core.ResendNewDeviceOTP(context.Background(), req)
+		m.Scope.Post(func() {
+			if gen != m.LockGeneration() {
+				return
+			}
+			m.TwoFactorSending.Set(false)
+			if m.NewDevice.Get() != prompt {
+				return
+			}
+			if err != nil {
+				m.LoginError.Set(locales.TwoFactorEmailFailed(m.Scope, m.errorText(err)))
+				return
+			}
+			m.TwoFactorNotice.Set(m.emailSentNotice(prompt.Email))
+		})
+	}()
+}
+
+// CancelNewDevice goes back to the sign-in form.
+func (m *AppModel) CancelNewDevice() {
+	m.NewDevice.Set(nil)
+	m.TwoFactorCode.Set("")
+	m.TwoFactorNotice.Set("")
+	m.LoginError.Set("")
+	m.ReleaseSecureInput()
+}
+
 func (m *AppModel) CancelTwoFactor() {
 	m.TwoFactor.Set(nil)
 	m.TwoFactorCode.Set("")
@@ -1185,6 +1293,7 @@ func (m *AppModel) BackToUnlock() {
 	m.LoginPassword.Set("")
 	m.LoginError.Set("")
 	m.TwoFactor.Set(nil)
+	m.NewDevice.Set(nil)
 	m.TwoFactorCode.Set("")
 	m.ReSignIn.Set(false)
 	m.ReleaseSecureInput()
@@ -1194,6 +1303,7 @@ func (m *AppModel) finishLogin(serverURL, email string) {
 	m.ReSignIn.Set(false)
 	m.LoginPassword.Set("")
 	m.TwoFactor.Set(nil)
+	m.NewDevice.Set(nil)
 	m.TwoFactorCode.Set("")
 	m.TwoFactorNotice.Set("")
 	// Who just signed in comes from the service, never from settings left

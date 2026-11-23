@@ -422,7 +422,23 @@ func (a *app) login(p *parsed) response {
 			}
 			code = otp
 		}
-		key, err = login.Complete(a.ctx, &api.TwoFactorLogin{Provider: provider, Token: code})
+		twoFactor = &api.TwoFactorLogin{Provider: provider, Token: code}
+		key, err = login.Complete(a.ctx, twoFactor)
+		if errors.As(err, &tfErr) {
+			return failure("Login failed.")
+		}
+	}
+	// New device verification, as bw asks for it: only by prompt, with no
+	// option to pass the code, and "Code is required." without one.
+	if errors.Is(err, api.ErrNewDeviceVerificationRequired) {
+		var otp string
+		if a.canPrompt() {
+			otp, _ = a.env.Terminal.ReadLine(newDevicePrompt)
+		}
+		if strings.TrimSpace(otp) == "" {
+			return failure("Code is required.")
+		}
+		key, err = login.CompleteWith(a.ctx, api.PasswordLoginOptions{TwoFactor: twoFactor, NewDeviceOTP: otp})
 		if errors.As(err, &tfErr) {
 			return failure("Login failed.")
 		}
@@ -433,6 +449,11 @@ func (a *app) login(p *parsed) response {
 	a.flags.session = key
 	return success(sessionMessage("You are logged in!", key))
 }
+
+// newDevicePrompt is bw's prompt for the code Bitwarden emails when a
+// password login comes from a device it does not know
+// (apps/cli/src/auth/commands/login.command.ts).
+const newDevicePrompt = "New device verification required. Enter OTP sent to login email:"
 
 // chooseProvider prompts for a two-step method: an index into
 // twoFactorProviders, -2 to cancel, -1 when nothing was chosen.

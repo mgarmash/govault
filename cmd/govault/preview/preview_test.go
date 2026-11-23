@@ -142,4 +142,11 @@ func TestPreviewMainWindow(t *testing.T) {
 		m.SelectTwoFactorProvider(api.TwoFactorEmail)
 		m.TwoFactorNotice.Set("A verification code was sent to a***@northwind.dev.")
 	})
+	scene("15-newdevice-light", core.AppearanceLight, func() {
+		m.CancelTwoFactor()
+		m.NewDevice.Set(&NewDevicePrompt{Email: "alex@northwind.dev"})
+	})
+	scene("16-newdevice-resent-dark", core.AppearanceDark, func() {
+		m.TwoFactorNotice.Set("A verification code was sent to alex@northwind.dev.")
+	})
 }

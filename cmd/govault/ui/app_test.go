@@ -36,6 +36,10 @@ type mockVaultService struct {
 	logins            int
 	rejectMessage     string // the error message for a wrong code
 	emailSends        int
+	// newDeviceCode, when set, makes a login without it meet new device
+	// verification, and newDeviceSends counts resends.
+	newDeviceCode  string
+	newDeviceSends int
 
 	organizations []state.Organization
 	collections   []state.Collection
@@ -121,6 +125,15 @@ func (m *mockVaultService) Login(_ context.Context, req state.LoginRequest) erro
 	if string(req.MasterPassword) != m.password {
 		return api.ErrUnauthorized
 	}
+	if m.newDeviceCode != "" {
+		switch req.NewDeviceOTP {
+		case m.newDeviceCode:
+		case "":
+			return &api.NewDeviceVerificationRequiredError{Message: "new device verification required"}
+		default:
+			return fmt.Errorf("%w", api.ErrInvalidNewDeviceOTP)
+		}
+	}
 	wantProvider := m.twoFactorProvider
 	if wantProvider == 0 {
 		wantProvider = api.TwoFactorEmail
@@ -162,6 +175,16 @@ func (m *mockVaultService) SendEmailTwoFactorCode(_ context.Context, req state.L
 		return api.ErrUnauthorized
 	}
 	m.emailSends++
+	return nil
+}
+
+func (m *mockVaultService) ResendNewDeviceOTP(_ context.Context, req state.LoginRequest) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if string(req.MasterPassword) != m.password {
+		return api.ErrUnauthorized
+	}
+	m.newDeviceSends++
 	return nil
 }
 
@@ -573,6 +596,63 @@ func TestLoginTwoFactorEmailVerify(t *testing.T) {
 	svc.mu.RUnlock()
 	if sends != 1 {
 		t.Fatalf("email sends = %d, want 1", sends)
+	}
+	if len(releases) == 0 || !releases[len(releases)-1] {
+		t.Fatalf("secure input not force-released after login: %v", releases)
+	}
+}
+
+func TestLoginNewDeviceVerification(t *testing.T) {
+	svc := newMockVaultService(state.StatusLoggedOut)
+	svc.newDeviceCode = "424242"
+	var releases []bool
+	var model *AppModel
+
+	app := nsgotest.Start(t, func(cx *core.Scope) core.Node {
+		model = NewAppModel(cx, svc, PlatformHooks{ReleaseSecureInput: func(force bool) { releases = append(releases, force) }})
+		model.MainWinVisible.Set(true)
+		return MainWindowView(cx, model)
+	}, nsgotest.Size(980, 720))
+
+	app.Type("id:login-server", "https://vault.example.com")
+	app.Type("id:login-email", "alice@example.com")
+	app.Type("id:login-password", "master-password")
+	app.Press("id:login-submit")
+	app.WaitFor("id:newdevice-screen", 2*time.Second)
+	app.Find("text:Your server doesn’t recognize this device. Enter the code sent to alice@example.com.")
+
+	app.Press("id:newdevice-verify")
+	app.WaitFor("text:Enter the verification code.", 2*time.Second)
+
+	app.Press("id:newdevice-resend")
+	app.WaitFor("text:A verification code was sent to alice@example.com.", 2*time.Second)
+
+	app.Type("id:newdevice-code", "111111")
+	app.Press("id:newdevice-verify")
+	app.WaitFor("text:Invalid or expired verification code. Check the code, or choose Resend Code to get a new one.", 2*time.Second)
+	if got := model.TwoFactorCode.Get(); got != "" {
+		t.Fatalf("code field after a wrong code = %q", got)
+	}
+
+	// Back to Sign In leaves the step; signing in again returns to it.
+	n := len(releases)
+	app.Press("id:newdevice-back")
+	app.WaitFor("id:login-screen", 2*time.Second)
+	if len(releases) == n || !releases[len(releases)-1] {
+		t.Fatalf("secure input not released on Back to Sign In: %v", releases)
+	}
+	app.Press("id:login-submit")
+	app.WaitFor("id:newdevice-screen", 2*time.Second)
+
+	app.Type("id:newdevice-code", "424 242")
+	app.Press("id:newdevice-verify")
+	app.WaitFor("id:vault-shell", 2*time.Second)
+
+	svc.mu.RLock()
+	sends, last := svc.newDeviceSends, svc.lastLogin
+	svc.mu.RUnlock()
+	if sends != 1 || last.NewDeviceOTP != "424242" || last.TwoFactorCode != "" {
+		t.Fatalf("resends = %d, last login = %+v", sends, last)
 	}
 	if len(releases) == 0 || !releases[len(releases)-1] {
 		t.Fatalf("secure input not force-released after login: %v", releases)

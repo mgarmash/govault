@@ -172,6 +172,72 @@ func TestLoginTwoFactorWithoutInteraction(t *testing.T) {
 	}
 }
 
+func TestLoginNewDeviceVerification(t *testing.T) {
+	g := newGV(t)
+	g.srv.Configure(func(c *fakeserver.Config) { c.NewDeviceOTP = "424242" })
+	g.env["PW"] = fakeserver.Password
+
+	// Without interaction gv reports the code is needed and exits, as bw
+	// does; the server has already emailed one.
+	if r := g.run("login", fakeserver.Email, "--passwordenv", "PW", "--nointeraction"); r.code != 1 || r.err != "Code is required." {
+		t.Fatalf("no interaction = %+v", r)
+	}
+	// --code is a two-step code; it does not answer the device check.
+	if r := g.run("login", fakeserver.Email, "--passwordenv", "PW", "--method", "0", "--code", "424242", "--nointeraction"); r.code != 1 || r.err != "Code is required." {
+		t.Fatalf("--code = %+v", r)
+	}
+
+	g.term = &scriptedTerminal{answers: []string{"000000"}}
+	if r := g.run("login", fakeserver.Email, "--passwordenv", "PW"); r.code != 1 || r.err != "invalid new device otp" {
+		t.Fatalf("wrong code = %+v", r)
+	}
+	if len(g.term.prompts) != 1 || g.term.prompts[0] != "New device verification required. Enter OTP sent to login email:" {
+		t.Fatalf("prompts = %q", g.term.prompts)
+	}
+	if st := g.mustRun("status"); !strings.Contains(st, `"status":"unauthenticated"`) {
+		t.Fatalf("status after a wrong code = %s", st)
+	}
+
+	g.term = &scriptedTerminal{answers: []string{" 424242 "}}
+	key := g.mustRun("login", fakeserver.Email, "--passwordenv", "PW", "--raw")
+	if len(key) != 88 {
+		t.Fatalf("session key = %q", key)
+	}
+	if f := lastTokenForm(g.srv); f["newDeviceOtp"] != "424242" || f["grant_type"] != "password" {
+		t.Fatalf("verified login form = %v", f)
+	}
+	if n := g.srv.NewDeviceCodesSent(); n != 4 {
+		t.Fatalf("codes issued = %d, want 4", n)
+	}
+	if n := g.srv.EmailCodesSent(); n != 0 {
+		t.Fatalf("two-step emails = %d", n)
+	}
+}
+
+// API keys and two-step accounts never meet the device check, and gv
+// never sends newDeviceOtp unasked.
+func TestLoginNewDeviceVerificationSkipped(t *testing.T) {
+	g := newGV(t)
+	g.srv.Configure(func(c *fakeserver.Config) { c.NewDeviceOTP = "424242" })
+	g.env["BW_CLIENTID"], g.env["BW_CLIENTSECRET"] = fakeserver.ClientID, fakeserver.ClientSecret
+	g.mustRun("login", "--apikey", "--nointeraction")
+	g.mustRun("logout")
+	delete(g.env, "BW_CLIENTID")
+	delete(g.env, "BW_CLIENTSECRET")
+
+	g.srv.Configure(func(c *fakeserver.Config) { c.TwoFactor = map[int]string{0: "012345"} })
+	g.env["PW"] = fakeserver.Password
+	g.mustRun("login", fakeserver.Email, "--passwordenv", "PW", "--method", "0", "--code", "012345", "--nointeraction")
+	if n := g.srv.NewDeviceCodesSent(); n != 0 {
+		t.Fatalf("codes issued = %d", n)
+	}
+	for _, r := range g.srv.Requests() {
+		if _, ok := r.Form["newDeviceOtp"]; ok {
+			t.Fatalf("newDeviceOtp sent: %v", r.Form)
+		}
+	}
+}
+
 func TestLockedReadPromptsForTheMasterPassword(t *testing.T) {
 	g := newGV(t)
 	g.login()

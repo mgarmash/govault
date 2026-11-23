@@ -87,8 +87,13 @@ type vaultTestEnv struct {
 	lastUpdateRev *time.Time
 	require2FA    bool
 	emailSends    int
-	blobs         map[string][]byte
-	blobAuth      []string
+	// requireNewDevice asks an unknown device for a new device
+	// verification code, "112233", as Bitwarden's cloud does.
+	requireNewDevice bool
+	knownDevices     map[string]bool
+	newDeviceSends   int
+	blobs            map[string][]byte
+	blobAuth         []string
 
 	profileID   string
 	accessTok   string
@@ -259,6 +264,31 @@ func newVaultTestEnv(t *testing.T) *vaultTestEnv {
 						return
 					}
 				}
+				env.mu.Lock()
+				ndv := env.requireNewDevice && !require2FA && !env.knownDevices[r.FormValue("deviceIdentifier")]
+				env.mu.Unlock()
+				if ndv {
+					switch otp := r.FormValue("newDeviceOtp"); otp {
+					case "112233":
+						env.mu.Lock()
+						if env.knownDevices == nil {
+							env.knownDevices = map[string]bool{}
+						}
+						env.knownDevices[r.FormValue("deviceIdentifier")] = true
+						env.mu.Unlock()
+					case "":
+						env.mu.Lock()
+						env.newDeviceSends++
+						env.mu.Unlock()
+						w.WriteHeader(http.StatusBadRequest)
+						_, _ = w.Write([]byte(`{"error":"device_error","error_description":"New device verification required","ErrorModel":{"Message":"new device verification required","Object":"error"}}`))
+						return
+					default:
+						w.WriteHeader(http.StatusBadRequest)
+						_, _ = w.Write([]byte(`{"error":"device_error","error_description":"Invalid New Device OTP","ErrorModel":{"Message":"invalid new device otp","Object":"error"}}`))
+						return
+					}
+				}
 				_ = json.NewEncoder(w).Encode(resp)
 			case "refresh_token":
 				env.mu.Lock()
@@ -290,6 +320,18 @@ func newVaultTestEnv(t *testing.T) *vaultTestEnv {
 					ExpiresIn:    3600,
 					TokenType:    "Bearer",
 				})
+			}
+
+		case r.Method == http.MethodPost && r.URL.Path == "/api/accounts/resend-new-device-otp":
+			var body struct {
+				Email              string `json:"email"`
+				MasterPasswordHash string `json:"masterPasswordHash"`
+			}
+			_ = json.NewDecoder(r.Body).Decode(&body)
+			if body.MasterPasswordHash == expectedHash && body.Email == env.email && r.Header.Get("Device-Identifier") != "" {
+				env.mu.Lock()
+				env.newDeviceSends++
+				env.mu.Unlock()
 			}
 
 		case r.Method == http.MethodPost && r.URL.Path == "/api/two-factor/send-email-login":
@@ -805,6 +847,58 @@ func TestService_RealtimeSyncAndLogout(t *testing.T) {
 		}
 	case <-timeout.C:
 		t.Fatalf("timed out waiting for LogOut push")
+	}
+}
+
+func TestService_NewDeviceVerification(t *testing.T) {
+	env := newVaultTestEnv(t)
+	env.requireNewDevice = true
+	fileStore := store.NewFileStore(t.TempDir())
+	secrets := newMemSecretStore()
+	svc, err := NewService(ServiceConfig{Store: fileStore, Secrets: secrets, DeviceID: "dev-1", HTTPClient: env.server.Client()})
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx := context.Background()
+	req := LoginRequest{ServerURL: env.server.URL, Email: env.email, MasterPassword: env.password}
+
+	if err := svc.Login(ctx, req); !errors.Is(err, api.ErrNewDeviceVerificationRequired) {
+		t.Fatalf("Login from a new device = %v, want new device verification", err)
+	}
+	if svc.Status() != StatusLoggedOut {
+		t.Fatalf("status after challenge = %v", svc.Status())
+	}
+	if _, err := fileStore.LoadSnapshot("acct-1"); err == nil {
+		t.Fatal("snapshot persisted before the device was verified")
+	}
+	if err := svc.ResendNewDeviceOTP(ctx, req); err != nil || env.newDeviceSends != 2 {
+		t.Fatalf("ResendNewDeviceOTP = %v, sends = %d", err, env.newDeviceSends)
+	}
+
+	wrong := req
+	wrong.NewDeviceOTP = "000000"
+	if err := svc.Login(ctx, wrong); !errors.Is(err, api.ErrInvalidNewDeviceOTP) || svc.Status() != StatusLoggedOut {
+		t.Fatalf("wrong code = %v, status %v", err, svc.Status())
+	}
+
+	ok := req
+	ok.NewDeviceOTP = "112 233"
+	if err := svc.Login(ctx, ok); err != nil {
+		t.Fatalf("Login with code: %v", err)
+	}
+	if svc.Status() != StatusUnlocked || len(svc.Search("", SearchFilter{})) != 1 {
+		t.Fatalf("status = %v after verified login", svc.Status())
+	}
+
+	// Sign In Again resends only to the server the account signed in to.
+	again := req
+	again.ServerURL = "https://elsewhere.example"
+	again.SameAccount = &Account{ID: "acct-1", ServerURL: env.server.URL, Email: env.email}
+	if svc.TrustedServerURL("acct-1") == "" {
+		t.Fatal("no sign-in record after login")
+	}
+	if err := svc.ResendNewDeviceOTP(ctx, again); !errors.Is(err, ErrDifferentAccount) {
+		t.Fatalf("resend to an untrusted server = %v", err)
 	}
 }
 

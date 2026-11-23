@@ -260,7 +260,10 @@ func emailCodeRow(m *AppModel) core.Node {
 	}
 }
 
-func twoFactorEmblem() core.Node {
+func twoFactorEmblem() core.Node { return codeEmblem(lucide.ShieldCheck) }
+
+// codeEmblem is the badge over a sign-in step that asks for a code.
+func codeEmblem(glyph func() *core.SVG) core.Node {
 	const size core.Points = 56
 	return core.View{
 		Style: core.Style{
@@ -274,7 +277,7 @@ func twoFactorEmblem() core.Node {
 			},
 		},
 		Children: []core.Node{
-			core.Icon{SVG: lucide.ShieldCheck(), Style: core.Style{Width: core.Pt(size * 0.5), Height: core.Pt(size * 0.5), Color: core.RGB(0xffffff)}},
+			core.Icon{SVG: glyph(), Style: core.Style{Width: core.Pt(size * 0.5), Height: core.Pt(size * 0.5), Color: core.RGB(0xffffff)}},
 		},
 	}
 }

@@ -57,6 +57,11 @@ type Config struct {
 	// ClaimPadding adds a claim of this many bytes to access tokens, as
 	// claim-heavy servers issue them.
 	ClaimPadding int
+	// NewDeviceOTP, when set, turns on Bitwarden's new device verification
+	// (which Vaultwarden does not have): a password login without two-step
+	// login from a device the server does not know must send this code in
+	// newDeviceOtp (DeviceValidator.cs in bitwarden/server).
+	NewDeviceOTP string
 }
 
 // Server is a running fake server.
@@ -75,6 +80,8 @@ type Server struct {
 	rejectNext    bool
 	tokenSeq      int
 	emailSends    int
+	deviceSends   int
+	knownDevices  map[string]bool
 	revision      time.Time
 	syncCount     int
 	userKeyID     string
@@ -187,6 +194,14 @@ func (s *Server) RejectNextToken() {
 	s.rejectNext = true
 }
 
+// NewDeviceCodesSent counts new device verification codes issued, by a
+// login challenge or a resend.
+func (s *Server) NewDeviceCodesSent() int {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.deviceSends
+}
+
 // EmailCodesSent counts email two-factor codes requested.
 func (s *Server) EmailCodesSent() int {
 	s.mu.Lock()
@@ -238,6 +253,15 @@ func (s *Server) serve(w http.ResponseWriter, r *http.Request) {
 		s.mu.Lock()
 		s.emailSends++
 		s.mu.Unlock()
+		w.WriteHeader(200)
+	case r.Method == http.MethodPost && path == "/api/accounts/resend-new-device-otp":
+		// Bitwarden answers success whatever the secret, so a resend
+		// cannot test a password.
+		if s.config().NewDeviceOTP != "" && r.Header.Get("Device-Identifier") != "" {
+			s.mu.Lock()
+			s.deviceSends++
+			s.mu.Unlock()
+		}
 		w.WriteHeader(200)
 	case r.Method == http.MethodGet && path == "/api/config":
 		writeJSON(w, 200, obj{"version": "2026.1.0", "gitHash": "fake", "server": obj{"name": "Vaultwarden", "url": "https://github.com/dani-garcia/vaultwarden"}, "environment": obj{"vault": s.URL(), "api": s.URL() + "/api", "identity": s.URL() + "/identity", "notifications": s.URL() + "/notifications", "sso": ""}, "featureStates": obj{}, "object": "config"})
@@ -365,6 +389,8 @@ func (s *Server) token(w http.ResponseWriter, r *http.Request) {
 				s.twoFactorChallenge(w, f.Get("twoFactorToken") != "")
 				return
 			}
+		} else if !s.verifyDevice(w, f.Get("deviceIdentifier"), f.Get("newDeviceOtp")) {
+			return
 		}
 		writeJSON(w, 200, s.issue("password", true))
 	case "refresh_token":
@@ -389,6 +415,32 @@ func (s *Server) token(w http.ResponseWriter, r *http.Request) {
 	default:
 		writeJSON(w, 400, obj{"error": "unsupported_grant_type"})
 	}
+}
+
+// verifyDevice applies new device verification to a password login from
+// an account without two-step login, answering as Bitwarden's
+// DeviceValidator does when it refuses.
+func (s *Server) verifyDevice(w http.ResponseWriter, device, otp string) bool {
+	want := s.config().NewDeviceOTP
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if want == "" || (otp == "" && s.knownDevices[device]) {
+		return true
+	}
+	switch {
+	case otp == "":
+		s.deviceSends++
+		writeJSON(w, 400, obj{"error": "device_error", "error_description": "New device verification required", "ErrorModel": obj{"Message": "new device verification required", "Object": "error"}})
+		return false
+	case otp != want:
+		writeJSON(w, 400, obj{"error": "device_error", "error_description": "Invalid New Device OTP", "ErrorModel": obj{"Message": "invalid new device otp", "Object": "error"}})
+		return false
+	}
+	if s.knownDevices == nil {
+		s.knownDevices = map[string]bool{}
+	}
+	s.knownDevices[device] = true
+	return true
 }
 
 // GrantCount counts token grants of grantType issued so far.
