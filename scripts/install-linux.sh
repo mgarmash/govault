@@ -105,26 +105,37 @@ write_gv_launcher() {
     printf '#!/bin/sh\n%s\n' "$gv_marker"
     printf "image='%s'\n" "$quoted"
     cat << 'LAUNCHER'
-# Runs the gv inside the GoVault AppImage, extracted without FUSE.
+# Runs the gv inside the GoVault AppImage, extracted without FUSE into this
+# user's cache, one immutable entry per image digest.
 digest() {
   if command -v sha256sum > /dev/null 2>&1; then sha256sum < "$1"; else shasum -a 256 < "$1"; fi | cut -d ' ' -f 1
 }
 [ -f "$image" ] || { echo "gv: $image is missing; reinstall GoVault" >&2; exit 1; }
 dir="${XDG_CACHE_HOME:-$HOME/.cache}/govault-gv"
+# Root runs only what root extracted.
+if [ "$(id -u)" = 0 ] && [ -e "$dir" ] && [ "$(stat -c %u "$dir" 2> /dev/null || stat -f %u "$dir")" != 0 ]; then
+  echo "gv: as root, $dir must belong to root; set XDG_CACHE_HOME to a directory of root's" >&2
+  exit 1
+fi
 id="$(digest "$image")"
 [ -n "$id" ] || { echo "gv: cannot read $image" >&2; exit 1; }
-if [ ! -x "$dir/gv" ] || [ "$(cat "$dir/stamp" 2> /dev/null)" != "$id" ]; then
-  ok=0
+entry="$dir/$id"
+if [ ! -x "$entry/gv" ]; then
   if (umask 077 && mkdir -p "$dir") && tmp="$(mktemp -d "$dir/.extract.XXXXXX")"; then
     if (cd "$tmp" && "$image" --appimage-extract gv > /dev/null 2>&1) && [ -x "$tmp/squashfs-root/gv" ] &&
       [ "$(digest "$image")" = "$id" ]; then
-      rm -f "$dir/stamp" && mv -f "$tmp/squashfs-root/gv" "$dir/gv" && printf '%s\n' "$id" > "$dir/stamp" && ok=1
+      # Publishing renames a whole directory: a concurrent refresh finds
+      # either nothing or a complete entry, never a mix.
+      mkdir "$tmp/entry" && mv "$tmp/squashfs-root/gv" "$tmp/entry/gv" && mv "$tmp/entry" "$entry" 2> /dev/null
+      for old in "$dir"/*; do
+        [ "$old" = "$entry" ] || [ ! -d "$old" ] || rm -rf "$old"
+      done
     fi
     rm -rf "$tmp"
   fi
-  [ "$ok" = 1 ] || { echo "gv: could not extract gv from $image; it was not run" >&2; exit 1; }
+  [ -x "$entry/gv" ] || { echo "gv: could not extract gv from $image; it was not run" >&2; exit 1; }
 fi
-exec "$dir/gv" "$@"
+exec "$entry/gv" "$@"
 LAUNCHER
   } > "$2"
 }
@@ -335,7 +346,11 @@ EOF
     else
       write_gv_launcher "${bin_dir}/${slug}" "${work}/gv"
       run_maybe_root install -m 755 "${work}/gv" "${bin_dir}/gv"
-      if run_maybe_root "${bin_dir}/gv" --version > /dev/null 2>&1; then
+      # The check runs gv as the installing user, never as root: a cache
+      # the user can write must not run with root's rights.
+      if [ "$(id -u)" = 0 ]; then
+        say "Installed gv, the command-line client: ${bin_dir}/gv"
+      elif "${bin_dir}/gv" --version > /dev/null 2>&1; then
         say "Installed gv, the command-line client: ${bin_dir}/gv"
       else
         say "Note: ${bin_dir}/gv could not extract gv from the AppImage."

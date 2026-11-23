@@ -94,8 +94,9 @@ func TestInstallerGVLauncher(t *testing.T) {
 	if out, _ := f.run(); out != "v2 --version" || f.extractions() != 2 {
 		t.Fatalf("after an update = %q after %d extractions", out, f.extractions())
 	}
-	if _, err := os.Stat(filepath.Join(f.dir, ".cache", "govault-gv", "gv")); err != nil {
-		t.Fatalf("no private cache: %v", err)
+	entries, _ := filepath.Glob(filepath.Join(f.dir, ".cache", "govault-gv", "*", "gv"))
+	if len(entries) != 1 {
+		t.Fatalf("cache entries = %v, want the current image's only", entries)
 	}
 }
 
@@ -158,5 +159,70 @@ func TestInstallerUninstallRemovesTheLauncher(t *testing.T) {
 	_, _ = cmd.CombinedOutput()
 	if _, err := os.Stat(filepath.Join(local, "gv")); err != nil {
 		t.Fatal("uninstall removed another program named gv")
+	}
+}
+
+// Concurrent first runs publish one complete entry: each runs the gv of
+// the image it hashed.
+func TestInstallerGVLauncherConcurrentRefresh(t *testing.T) {
+	f := newLauncher(t)
+	f.writeImage("v1", false)
+	errs := make(chan string, 8)
+	for range 8 {
+		go func() {
+			out, err := f.run()
+			if err != nil || out != "v1 --version" {
+				errs <- out
+				return
+			}
+			errs <- ""
+		}()
+	}
+	for range 8 {
+		if e := <-errs; e != "" {
+			t.Fatalf("a concurrent run said %q", e)
+		}
+	}
+	entries, _ := filepath.Glob(filepath.Join(f.dir, ".cache", "govault-gv", "*", "gv"))
+	if len(entries) != 1 {
+		t.Fatalf("cache entries = %v", entries)
+	}
+}
+
+// The system install never runs gv with root's rights.
+func TestSystemInstallDoesNotRunGVAsRoot(t *testing.T) {
+	src, err := os.ReadFile("../../scripts/install-linux.sh")
+	if err != nil {
+		t.Fatal(err)
+	}
+	text := string(src)
+	if strings.Contains(text, `run_maybe_root "${bin_dir}/gv"`) || strings.Contains(text, `as_root "${bin_dir}/gv"`) {
+		t.Fatal("install-linux.sh runs gv through root")
+	}
+	if !strings.Contains(text, `elif "${bin_dir}/gv" --version`) {
+		t.Fatal("the smoke check no longer runs as the installing user")
+	}
+}
+
+// Run as root, the launcher refuses a cache root does not own, as a cache
+// inherited from the invoking user through sudo would be.
+func TestInstallerGVLauncherAsRootRefusesAUserCache(t *testing.T) {
+	f := newLauncher(t)
+	f.writeImage("v1", false)
+	if _, err := f.run(); err != nil {
+		t.Fatal(err)
+	}
+	shims := filepath.Join(f.dir, "shims")
+	if err := os.MkdirAll(shims, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(shims, "id"), []byte("#!/bin/sh\necho 0\n"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	cmd := exec.Command(f.launcher, "--version")
+	cmd.Env = append(os.Environ(), "HOME="+f.dir, "XDG_CACHE_HOME=", "PATH="+shims+":"+os.Getenv("PATH"))
+	out, err := cmd.CombinedOutput()
+	if err == nil || strings.Contains(string(out), "v1") || !strings.Contains(string(out), "must belong to root") {
+		t.Fatalf("as root = %q, %v", out, err)
 	}
 }
