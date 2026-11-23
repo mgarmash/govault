@@ -94,9 +94,10 @@ func TestInstallerGVLauncher(t *testing.T) {
 	if out, _ := f.run(); out != "v2 --version" || f.extractions() != 2 {
 		t.Fatalf("after an update = %q after %d extractions", out, f.extractions())
 	}
+	// The older image's entry stays until no launch can be starting it.
 	entries, _ := filepath.Glob(filepath.Join(f.dir, ".cache", "govault-gv", "*", "gv"))
-	if len(entries) != 1 {
-		t.Fatalf("cache entries = %v, want the current image's only", entries)
+	if len(entries) != 2 {
+		t.Fatalf("cache entries = %v, want one per image", entries)
 	}
 }
 
@@ -204,9 +205,9 @@ func TestSystemInstallDoesNotRunGVAsRoot(t *testing.T) {
 	}
 }
 
-// Run as root, the launcher refuses a cache root does not own, as a cache
-// inherited from the invoking user through sudo would be.
-func TestInstallerGVLauncherAsRootRefusesAUserCache(t *testing.T) {
+// The launcher refuses to run as root, which would run what a user's
+// cache holds.
+func TestInstallerGVLauncherRefusesRoot(t *testing.T) {
 	f := newLauncher(t)
 	f.writeImage("v1", false)
 	if _, err := f.run(); err != nil {
@@ -222,7 +223,7 @@ func TestInstallerGVLauncherAsRootRefusesAUserCache(t *testing.T) {
 	cmd := exec.Command(f.launcher, "--version")
 	cmd.Env = append(os.Environ(), "HOME="+f.dir, "XDG_CACHE_HOME=", "PATH="+shims+":"+os.Getenv("PATH"))
 	out, err := cmd.CombinedOutput()
-	if err == nil || strings.Contains(string(out), "v1") || !strings.Contains(string(out), "must belong to root") {
+	if err == nil || strings.Contains(string(out), "v1") || !strings.Contains(string(out), "run gv as a normal user") {
 		t.Fatalf("as root = %q, %v", out, err)
 	}
 }

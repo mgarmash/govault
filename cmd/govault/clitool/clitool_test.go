@@ -290,9 +290,9 @@ func TestParseACL(t *testing.T) {
 	for listing, want := range map[string]string{
 		"drwxr-xr-x  2 a b 64 x d\n 0: group:everyone deny delete\n":                        "",
 		"drwxr-xr-x  2 a b 64 x d\n 0: group:admin allow add_file,delete_child\n":           "",
-		"drwxr-xr-x  2 a b 64 x d\n 0: user:bob inherited allow list,add_file\n":            "user:bob",
-		"-rw-r--r--  1 a b 1 x f\n 0: user:root allow write\n 1: group:staff allow write\n": "group:staff",
-		"-rw-r--r--  1 a b 1 x f\n 0: user:bob allow read,readattr\n":                       "",
+		"drwxr-xr-x  2 a b 64 x d\n 0: user:bob inherited allow list,add_file\n":            "0: user:bob inherited allow list,add_file",
+		"-rw-r--r--  1 a b 1 x f\n 0: user:root allow write\n 1: group:staff allow write\n": "1: group:staff allow write",
+		"-rw-r--r--  1 a b 1 x f\n 0: user:bob allow read,readattr\n":                       "0: user:bob allow read,readattr",
 	} {
 		if got := parseACL(listing); got != want {
 			t.Errorf("parseACL(%q) = %q, want %q", listing, got, want)
@@ -338,5 +338,29 @@ func TestOnlyExecutableGVsAreReported(t *testing.T) {
 	}
 	if r := f.tool.Inspect(); r.Later != "" {
 		t.Fatalf("a file that is not executable was reported: %+v", r)
+	}
+}
+
+// The privileged script rejects an entry for a principal whose name has a
+// space, as the parser does.
+func TestScriptACLRuleReadsMultiwordPrincipals(t *testing.T) {
+	f := newFixture(t)
+	script := f.tool.Script(Install)
+	i := strings.Index(script, "/bin/ls -lde . | ")
+	j := strings.Index(script[i:], " && exit")
+	rule := strings.Replace(script[i:i+j], "/bin/ls -lde . | /usr/bin/sed 1d | ", "", 1)
+	for entry, unsafe := range map[string]bool{
+		" 0: group:Domain Users allow add_file":     true,
+		" 0: group:admin allow add_file":            false,
+		" 0: group:admin inherited allow add_file":  false,
+		" 0: group:everyone deny delete":            false,
+		" 0: group:x allow y inherited allow write": true,
+	} {
+		cmd := exec.Command("/bin/sh", "-c", rule)
+		cmd.Stdin = strings.NewReader(entry + "\n")
+		err := cmd.Run()
+		if got := err == nil; got != unsafe {
+			t.Errorf("%q: script says unsafe=%v", entry, got)
+		}
 	}
 }

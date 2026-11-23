@@ -56,15 +56,11 @@ func safeAncestors(path string, trustedUID func(uint32) bool) error {
 	}
 }
 
-// aclMutations are the ACL rights that change an entry or what a
-// directory holds.
-var aclMutations = []string{"write", "append", "delete", "delete_child", "add_file", "add_subdirectory", "writeattr", "writeextattr", "writesecurity", "chown"}
-
-// aclTrusted are the principals that may hold mutation rights.
+// aclTrusted are the principals an allow entry may name.
 var aclTrusted = []string{"user:root", "group:admin", "group:wheel"}
 
-// aclMutators names the first principal other than root, admin or wheel
-// that path's access list allows to change it, or "".
+// aclMutators names the first access-list entry of path that is not
+// positively safe, or "".
 func aclMutators(path string) (string, error) {
 	out, err := exec.Command("/bin/ls", "-lde", path).Output()
 	if err != nil {
@@ -73,25 +69,27 @@ func aclMutators(path string) (string, error) {
 	return parseACL(string(out)), nil
 }
 
-// parseACL reads ls -le's entries: " 0: user:bob [inherited] allow add_file,...".
+// parseACL reads ls -le's entries, " 0: <principal> [inherited] allow|deny
+// <rights>", from the right, as a principal's name can hold spaces. Only
+// deny entries and allow entries to root, admin or wheel are safe; any
+// other entry, or one it cannot read, is returned.
 func parseACL(listing string) string {
 	lines := strings.Split(strings.TrimRight(listing, "\n"), "\n")
 	for _, line := range lines[1:] {
 		f := strings.Fields(line)
 		if len(f) < 4 || !strings.HasSuffix(f[0], ":") {
-			continue
+			return strings.TrimSpace(line)
 		}
-		who, rest := f[1], f[2:]
-		if rest[0] == "inherited" {
-			rest = rest[1:]
+		kind, principal := f[len(f)-2], f[1:len(f)-2]
+		if n := len(principal); n > 1 && principal[n-1] == "inherited" {
+			principal = principal[:n-1]
 		}
-		if len(rest) < 2 || rest[0] != "allow" || slices.Contains(aclTrusted, who) {
-			continue
-		}
-		for _, right := range strings.Split(rest[1], ",") {
-			if slices.Contains(aclMutations, right) {
-				return who
-			}
+		who := strings.Join(principal, " ")
+		switch {
+		case kind == "deny" && who != "":
+		case kind == "allow" && slices.Contains(aclTrusted, who):
+		default:
+			return strings.TrimSpace(line)
 		}
 	}
 	return ""

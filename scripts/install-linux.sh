@@ -112,9 +112,9 @@ digest() {
 }
 [ -f "$image" ] || { echo "gv: $image is missing; reinstall GoVault" >&2; exit 1; }
 dir="${XDG_CACHE_HOME:-$HOME/.cache}/govault-gv"
-# Root runs only what root extracted.
-if [ "$(id -u)" = 0 ] && [ -e "$dir" ] && [ "$(stat -c %u "$dir" 2> /dev/null || stat -f %u "$dir")" != 0 ]; then
-  echo "gv: as root, $dir must belong to root; set XDG_CACHE_HOME to a directory of root's" >&2
+# Root would run what a user's cache holds: gv runs as a normal user only.
+if [ "$(id -u)" = 0 ]; then
+  echo "gv: run gv as a normal user, not as root" >&2
   exit 1
 fi
 id="$(digest "$image")"
@@ -126,10 +126,14 @@ if [ ! -x "$entry/gv" ]; then
       [ "$(digest "$image")" = "$id" ]; then
       # Publishing renames a whole directory: a concurrent refresh finds
       # either nothing or a complete entry, never a mix.
-      mkdir "$tmp/entry" && mv "$tmp/squashfs-root/gv" "$tmp/entry/gv" && mv "$tmp/entry" "$entry" 2> /dev/null
-      for old in "$dir"/*; do
-        [ "$old" = "$entry" ] || [ ! -d "$old" ] || rm -rf "$old"
-      done
+      # mv -T never moves into an existing entry; without it, publish only
+      # where none exists.
+      if mkdir "$tmp/entry" && mv "$tmp/squashfs-root/gv" "$tmp/entry/gv"; then
+        mv -T "$tmp/entry" "$entry" 2> /dev/null || { [ -e "$entry" ] || mv "$tmp/entry" "$entry" 2> /dev/null; }
+      fi
+      # Entries of other images go once no launch can still be starting
+      # them.
+      find "$dir" -mindepth 1 -maxdepth 1 -type d ! -name "$id" ! -name '.extract.*' -mmin +60 -exec rm -rf {} + 2> /dev/null
     fi
     rm -rf "$tmp"
   fi
