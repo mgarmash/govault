@@ -10,33 +10,17 @@ import (
 	"os"
 )
 
-// transportError is a safe diagnostic for a failed request: the
-// operation, the URL without credentials or query, and the kind of
-// failure. Nested errors are never formatted, as their text can quote a
-// signed URL, such as a redirect's Location.
-type transportError struct {
-	op, url, kind string
-	err           error
-}
-
-func (e *transportError) Error() string {
-	if e.url == "" {
-		return e.kind
-	}
-	return e.op + " " + e.url + ": " + e.kind
-}
-
-// Unwrap keeps errors.Is and errors.As working for callers.
-func (e *transportError) Unwrap() error { return e.err }
-
-// redactURLError replaces err with a transportError.
-func redactURLError(err error) error {
-	te := &transportError{kind: transportKind(err), err: err}
+// transportDiagnostic describes a failed request safely: the operation,
+// the URL without credentials or query, and the kind of failure. Nested
+// errors are never formatted, as their text can quote a signed URL, such
+// as a redirect's Location.
+func transportDiagnostic(err error) string {
+	kind := transportKind(err)
 	var ue *url.Error
 	if errors.As(err, &ue) {
-		te.op, te.url = ue.Op, RedactURL(ue.URL)
+		return ue.Op + " " + RedactURL(ue.URL) + ": " + kind
 	}
-	return te
+	return kind
 }
 
 func transportKind(err error) string {

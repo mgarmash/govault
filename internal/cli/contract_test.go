@@ -86,7 +86,6 @@ func runCase(t *testing.T, r runner, c contractCase, srv *fakeserver.Server) cap
 
 var (
 	isoTime    = regexp.MustCompile(`20\d\d-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3}Z`)
-	tmpNames   = regexp.MustCompile(`(/private)?/var/folders/[^"\s]+?/Test[^/"\s]*/\d+`)
 	exportName = regexp.MustCompile(`(bitwarden(?:_encrypted)?)_export_\d{14}`)
 )
 

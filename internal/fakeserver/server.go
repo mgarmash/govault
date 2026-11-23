@@ -4,7 +4,6 @@
 package fakeserver
 
 import (
-	"crypto/rsa"
 	"encoding/base64"
 	"encoding/json"
 	"encoding/pem"
@@ -89,7 +88,6 @@ type Server struct {
 	deviceSends   int
 	knownDevices  map[string]bool
 	revision      time.Time
-	syncCount     int
 	userKeyID     string
 	items         []obj
 	blobPuts      []http.Header
@@ -215,13 +213,6 @@ func (s *Server) EmailCodesSent() int {
 	return s.emailSends
 }
 
-// SyncCount counts /api/sync requests.
-func (s *Server) SyncCount() int {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	return s.syncCount
-}
-
 // UserPublicKey is the fixture account's public key (SPKI, base64).
 func UserPublicKey() string { return publicKeyB64(parsePriv(userPrivateKeyB64)) }
 
@@ -307,7 +298,6 @@ func (s *Server) api(w http.ResponseWriter, r *http.Request, path string) {
 	switch {
 	case r.Method == http.MethodGet && path == "/api/sync":
 		s.mu.Lock()
-		s.syncCount++
 		hook := s.cfg.OnSync
 		body := s.syncBody()
 		s.mu.Unlock()
@@ -557,6 +547,3 @@ func writeJSON(w http.ResponseWriter, status int, v any) {
 	w.WriteHeader(status)
 	_ = json.NewEncoder(w).Encode(v)
 }
-
-// PeerPrivateKey exists so fingerprint tests can check a peer lookup.
-func PeerPrivateKey() *rsa.PrivateKey { return parsePriv(peerPrivateKeyB64) }

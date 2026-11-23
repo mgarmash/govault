@@ -62,60 +62,62 @@ func (p *Profile) credentialsAD(ps *profileState, acct *accountState) []byte {
 	return ad
 }
 
-// loadCredentials reads the account's credentials. A file backend needs
-// userKey to open them; without it they are absent (nil, nil).
-func (p *Profile) loadCredentials(ps *profileState, acct *accountState, userKey *crypto.SymmetricKey) (*credentials, error) {
-	var raw []byte
+// credentialsFileKey is the key that seals the credentials file: kept in
+// the credential store, or derived from userKey for the file backend.
+// Reading takes an existing key; writing creates the credential store's
+// first. ok is false when there is none to use, which means no
+// credentials.
+func (p *Profile) credentialsFileKey(ps *profileState, acct *accountState, userKey *crypto.SymmetricKey, create bool) (key [32]byte, ok bool, err error) {
 	switch acct.Credentials {
 	case backendKeyring:
 		if p.opts.Keyring == nil {
-			return nil, errors.New("profile: this account's credentials are in a credential store that is not available now")
+			return key, false, errors.New("profile: this account's credentials are in a credential store that is not available now")
+		}
+		if create {
+			key, err = p.keyringKey(ps)
+			return key, err == nil, err
 		}
 		v, err := p.opts.Keyring.Get(keyringService, ps.ProfileID)
 		if errors.Is(err, keyring.ErrNotFound) {
-			return nil, nil
+			return key, false, nil
 		}
 		if err != nil {
-			return nil, err
+			return key, false, err
 		}
 		defer crypto.ZeroBytes(v)
 		if len(v) != 32 {
-			return nil, fmt.Errorf("profile: the credential store holds no %s key", credentialsFile)
+			return key, false, fmt.Errorf("profile: the credential store holds no %s key", credentialsFile)
 		}
-		sealed, err := os.ReadFile(p.path(credentialsFile))
-		if errors.Is(err, os.ErrNotExist) {
-			return nil, nil
-		}
-		if err != nil {
-			return nil, err
-		}
-		var key [32]byte
 		copy(key[:], v)
-		defer crypto.ZeroBytes(key[:])
-		if raw, err = crypto.Open(key, sealed, p.credentialsAD(ps, acct)); err != nil {
-			return nil, fmt.Errorf("profile: %s: %w", credentialsFile, err)
-		}
+		return key, true, nil
 	case backendFile:
 		if userKey == nil {
-			return nil, nil
+			return key, false, nil
 		}
-		sealed, err := os.ReadFile(p.path(credentialsFile))
-		if errors.Is(err, os.ErrNotExist) {
-			return nil, nil
-		}
-		if err != nil {
-			return nil, err
-		}
-		key, err := p.credentialsKey(userKey)
-		if err != nil {
-			return nil, err
-		}
-		defer crypto.ZeroBytes(key[:])
-		if raw, err = crypto.Open(key, sealed, p.credentialsAD(ps, acct)); err != nil {
-			return nil, fmt.Errorf("profile: %s: %w", credentialsFile, err)
-		}
-	default:
+		key, err = p.credentialsKey(userKey)
+		return key, err == nil, err
+	}
+	return key, false, nil
+}
+
+// loadCredentials reads the account's credentials. A file backend needs
+// userKey to open them; without it they are absent (nil, nil).
+func (p *Profile) loadCredentials(ps *profileState, acct *accountState, userKey *crypto.SymmetricKey) (*credentials, error) {
+	key, ok, err := p.credentialsFileKey(ps, acct, userKey, false)
+	defer crypto.ZeroBytes(key[:])
+	if err != nil || !ok {
+		return nil, err
+	}
+	sealed, err := os.ReadFile(p.path(credentialsFile))
+	if errors.Is(err, os.ErrNotExist) {
 		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	raw, err := crypto.Open(key, sealed, p.credentialsAD(ps, acct))
+	if err != nil {
+		return nil, fmt.Errorf("profile: %s: %w", credentialsFile, err)
 	}
 	defer crypto.ZeroBytes(raw)
 	var c credentials
@@ -134,48 +136,26 @@ func (p *Profile) credentialsKey(userKey *crypto.SymmetricKey) ([32]byte, error)
 	return crypto.SealKey(raw[:], credentialsInfo)
 }
 
-// saveCredentials writes c to the account's backend. The file backend
-// needs userKey; without one the credentials stay in memory only.
+// saveCredentials seals c into the credentials file. The credential store
+// keeps a fixed-size key, as tokens can outgrow what some stores hold
+// (Windows Credential Manager's 2,560 bytes); the file backend needs
+// userKey, and without one the credentials stay in memory only.
 func (p *Profile) saveCredentials(ps *profileState, acct *accountState, c *credentials, userKey *crypto.SymmetricKey) error {
+	key, ok, err := p.credentialsFileKey(ps, acct, userKey, true)
+	defer crypto.ZeroBytes(key[:])
+	if err != nil || !ok {
+		return err
+	}
 	raw, err := json.Marshal(c)
 	if err != nil {
 		return err
 	}
 	defer crypto.ZeroBytes(raw)
-	switch acct.Credentials {
-	case backendKeyring:
-		// The credential store keeps a fixed-size key, which seals the
-		// record on disk: tokens can outgrow what some stores hold, as
-		// Windows Credential Manager's 2,560 bytes.
-		if p.opts.Keyring == nil {
-			return errors.New("profile: the credential store is not available")
-		}
-		key, err := p.keyringKey(ps)
-		if err != nil {
-			return err
-		}
-		defer crypto.ZeroBytes(key[:])
-		sealed, err := crypto.Seal(key, raw, p.credentialsAD(ps, acct))
-		if err != nil {
-			return err
-		}
-		return privatefile.WriteFile(p.path(credentialsFile), sealed)
-	case backendFile:
-		if userKey == nil {
-			return nil
-		}
-		key, err := p.credentialsKey(userKey)
-		if err != nil {
-			return err
-		}
-		defer crypto.ZeroBytes(key[:])
-		sealed, err := crypto.Seal(key, raw, p.credentialsAD(ps, acct))
-		if err != nil {
-			return err
-		}
-		return privatefile.WriteFile(p.path(credentialsFile), sealed)
+	sealed, err := crypto.Seal(key, raw, p.credentialsAD(ps, acct))
+	if err != nil {
+		return err
 	}
-	return nil
+	return privatefile.WriteFile(p.path(credentialsFile), sealed)
 }
 
 // keyringKey returns the profile's credentials key from the credential

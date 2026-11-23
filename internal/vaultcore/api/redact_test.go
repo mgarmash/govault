@@ -16,7 +16,7 @@ func TestTransportErrorsDropURLSecrets(t *testing.T) {
 		t.Fatalf("RedactURL = %q", got)
 	}
 	err := &url.Error{Op: "Get", URL: "https://blob.example.com/a?sig=SECRET", Err: errors.New("connection reset")}
-	if msg := redactURLError(err).Error(); strings.Contains(msg, "SECRET") || strings.Contains(msg, "connection reset") {
+	if msg := transportDiagnostic(err); strings.Contains(msg, "SECRET") || strings.Contains(msg, "connection reset") {
 		t.Fatalf("redacted = %q", msg)
 	}
 }
@@ -26,12 +26,9 @@ func TestTransportErrorsDropURLSecrets(t *testing.T) {
 func TestTransportDiagnosticsDoNotFormatNestedErrors(t *testing.T) {
 	inner := errors.New(`failed to parse Location header "https://evil.example/x?sig=SECRET": invalid`)
 	err := &url.Error{Op: "Get", URL: "https://vault.example/api/x?token=SECRET2", Err: inner}
-	msg := redactURLError(err).Error()
+	msg := transportDiagnostic(err)
 	if strings.Contains(msg, "SECRET") || !strings.Contains(msg, "https://vault.example/api/x") {
 		t.Fatalf("diagnostic = %q", msg)
-	}
-	if !errors.Is(redactURLError(err), inner) {
-		t.Fatal("the cause is lost to errors.Is")
 	}
 }
 

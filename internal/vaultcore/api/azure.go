@@ -67,7 +67,7 @@ func (c *Client) UploadAzureBlob(ctx context.Context, blobURL string, data []byt
 		if ctx.Err() != nil {
 			return ctx.Err()
 		}
-		return fmt.Errorf("%w: %v", ErrNetworkOffline, redactURLError(err))
+		return fmt.Errorf("%w: %s", ErrNetworkOffline, transportDiagnostic(err))
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusCreated {

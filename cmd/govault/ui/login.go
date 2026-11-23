@@ -148,8 +148,6 @@ func formField(label string, field core.Node) core.Node {
 	}
 }
 
-func labeledField(label string, field core.Node) core.Node { return formField(label, field) }
-
 func sizedInput(in base.Input, height core.Points) ui.Input {
 	in.Style = core.Style{Height: core.Pt(height), FontSize: 13, CornerRadius: 7}.Merge(in.Style)
 	return ui.Input(in)

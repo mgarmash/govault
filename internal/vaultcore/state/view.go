@@ -55,11 +55,9 @@ type ViewOrganization struct {
 	Status  int
 	Type    int
 	Enabled bool
-	UseTotp bool
 	// CanViewAllCollections: an owner or admin, or a custom role that may
 	// edit or delete any collection.
 	CanViewAllCollections bool
-	HasKey                bool
 }
 
 // Policy is an organization policy from the sync.
@@ -154,13 +152,13 @@ func OpenVault(rawSync []byte, userKey *crypto.SymmetricKey) (*VaultView, error)
 		})
 	}
 	for _, o := range resp.Profile.Organizations {
-		v.Organizations = append(v.Organizations, viewOrganization(o, data.orgKeys[o.ID] != nil))
+		v.Organizations = append(v.Organizations, viewOrganization(o))
 	}
 	v.Policies = parsePolicies(resp.Policies)
 	return v, nil
 }
 
-func viewOrganization(o api.ProfileOrganization, hasKey bool) ViewOrganization {
+func viewOrganization(o api.ProfileOrganization) ViewOrganization {
 	var perms struct {
 		EditAnyCollection   bool `json:"editAnyCollection"`
 		DeleteAnyCollection bool `json:"deleteAnyCollection"`
@@ -168,9 +166,7 @@ func viewOrganization(o api.ProfileOrganization, hasKey bool) ViewOrganization {
 	_ = json.Unmarshal(o.Extra["permissions"], &perms)
 	return ViewOrganization{
 		ID: o.ID, Name: o.Name, Status: o.Status, Type: o.Type, Enabled: o.Enabled,
-		UseTotp:               profileFlag(o.Extra, "useTotp"),
 		CanViewAllCollections: o.Type == OrgUserOwner || o.Type == OrgUserAdmin || perms.EditAnyCollection || perms.DeleteAnyCollection,
-		HasKey:                hasKey,
 	}
 }
 

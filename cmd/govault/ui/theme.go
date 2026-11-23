@@ -128,8 +128,6 @@ func FilledStar() *core.SVG { return filledStar }
 
 var shieldMark = core.MustParseSVG([]byte(`<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.6 4.6 5.4v5.8c0 4.7 3.1 8.6 7.4 10.2 4.3-1.6 7.4-5.5 7.4-10.2V5.4z" fill="currentColor" fill-opacity="0.18"/><circle cx="12" cy="10.6" r="2.3"/><path d="M12 12.9v3.4"/></svg>`))
 
-func ShieldMark() *core.SVG { return shieldMark }
-
 // brandEmblem renders the app's mark on a deep-blue squircle.
 func brandEmblem(size core.Points) core.Node {
 	return core.View{

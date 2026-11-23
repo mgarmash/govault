@@ -88,7 +88,6 @@ else
 fi
 desktop_file="${share_dir}/applications/${app_id}.desktop"
 icon_file="${share_dir}/icons/hicolor/512x512/apps/${app_id}.png"
-gv_dir="${share_dir}/${slug}-gv"
 # The first line of the gv launcher; a gv without it is not ours.
 gv_marker="# gv launcher installed by GoVault's install-linux.sh"
 

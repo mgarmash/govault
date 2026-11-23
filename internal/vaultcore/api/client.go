@@ -469,7 +469,7 @@ func (c *Client) do(
 			// signature.
 			return nil, ErrRedirectRefused
 		}
-		return nil, fmt.Errorf("%w: %v", ErrNetworkOffline, redactURLError(err))
+		return nil, fmt.Errorf("%w: %s", ErrNetworkOffline, transportDiagnostic(err))
 	}
 	defer resp.Body.Close()
 
@@ -637,7 +637,7 @@ func (c *Client) DownloadAttachmentBytes(ctx context.Context, accessToken, downl
 		if ctx.Err() != nil {
 			return nil, ctx.Err()
 		}
-		return nil, fmt.Errorf("%w: %v", ErrNetworkOffline, redactURLError(err))
+		return nil, fmt.Errorf("%w: %s", ErrNetworkOffline, transportDiagnostic(err))
 	}
 	defer resp.Body.Close()
 	if resp.ContentLength > MaxAttachmentWireSize {
