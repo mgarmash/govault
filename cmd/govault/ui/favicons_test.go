@@ -77,13 +77,20 @@ func waitLoaded(t *testing.T, ch <-chan string, want string) {
 	}
 }
 
-func waitHits(t *testing.T, srv *iconServer, want int32) {
+// waitHits waits until store has finished every fetch it accepted, so no
+// later fetch can still arrive, and checks the server's hit count.
+func waitHits(t *testing.T, store *FaviconStore, srv *iconServer, want int32) {
 	t.Helper()
 	deadline := time.Now().Add(2 * time.Second)
-	for srv.hits.Load() < want && time.Now().Before(deadline) {
-		time.Sleep(5 * time.Millisecond)
+	for time.Now().Before(deadline) {
+		store.mu.Lock()
+		idle := len(store.inflight) == 0
+		store.mu.Unlock()
+		if idle {
+			break
+		}
+		time.Sleep(time.Millisecond)
 	}
-	time.Sleep(20 * time.Millisecond)
 	if got := srv.hits.Load(); got != want {
 		t.Fatalf("server hits = %d, want %d", got, want)
 	}
@@ -118,10 +125,10 @@ func TestFaviconStoreCachesDedupsAndClears(t *testing.T) {
 		store.Lookup(srv.URL, "missing.example.com")
 		store.Lookup(srv.URL, "html.example.com")
 	}
-	waitHits(t, srv, 3)
+	waitHits(t, store, srv, 3)
 	store.Lookup(srv.URL, "missing.example.com")
 	store.Lookup(srv.URL, "html.example.com")
-	waitHits(t, srv, 3)
+	waitHits(t, store, srv, 3)
 
 	fresh := NewFaviconStore(FaviconStoreConfig{CacheDir: dir, HTTPClient: srv.Client()})
 	fresh.SetAccount("acct-1")
@@ -143,14 +150,14 @@ func TestFaviconStoreCachesDedupsAndClears(t *testing.T) {
 		t.Fatal("Clear kept the memory entry")
 	}
 	waitLoaded(t, loaded, "github.com")
-	waitHits(t, srv, 4)
+	waitHits(t, store, srv, 4)
 
 	store.SetEnabled(false)
 	store.ResetMemory()
 	if store.Lookup(srv.URL, "github.com") != nil {
 		t.Fatal("disabled store returned an icon")
 	}
-	waitHits(t, srv, 4)
+	waitHits(t, store, srv, 4)
 }
 
 func TestShowFaviconsToggleGatesFetches(t *testing.T) {

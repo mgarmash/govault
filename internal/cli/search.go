@@ -8,6 +8,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"sync"
 	"unicode"
 
 	"golang.org/x/net/idna"
@@ -255,9 +256,18 @@ func matchesAnyURL(c *state.Cipher, target string, defaultMatch int) bool {
 	return false
 }
 
-var collator = collate.New(language.English, collate.IgnoreCase, collate.IgnoreDiacritics, collate.Numeric)
+// collator is not safe for concurrent use: in-process callers, such as
+// tests running several commands, take it under collatorMu.
+var (
+	collatorMu sync.Mutex
+	collator   = collate.New(language.English, collate.IgnoreCase, collate.IgnoreDiacritics, collate.Numeric)
+)
 
-func compareNames(a, b string) int { return collator.CompareString(a, b) }
+func compareNames(a, b string) int {
+	collatorMu.Lock()
+	defer collatorMu.Unlock()
+	return collator.CompareString(a, b)
+}
 
 // sortItems orders items by name, then login items by name and username,
 // as bw's locale sorting function does.

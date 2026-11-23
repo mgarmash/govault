@@ -298,23 +298,6 @@ func TestInputFilesAreBoundedBeforeReading(t *testing.T) {
 	}
 }
 
-// No export is written that import would refuse for its size.
-func TestExportRefusesFilesImportCannotRead(t *testing.T) {
-	g := newGV(t)
-	g.login()
-	saved := maxExportSize
-	maxExportSize = 1 << 20
-	defer func() { maxExportSize = saved }()
-	g.mustRun("create", "item", b64(`{"type":2,"name":"big","notes":"`+strings.Repeat("x", 1<<20)+`","secureNote":{"type":0}}`))
-	target := filepath.Join(t.TempDir(), "big.json")
-	if r := g.run("export", "--format", "json", "--output", target); r.code != 1 || !strings.Contains(r.err, "larger than 1 MiB") {
-		t.Fatalf("oversize export = %+v", r)
-	}
-	if _, err := os.Stat(target); err == nil {
-		t.Fatal("the oversize export was written")
-	}
-}
-
 // A readable item whose type body does not decrypt stops decrypted
 // exports, which would otherwise print it without its body.
 func TestExportRefusesAnUnreadableTypeBody(t *testing.T) {
@@ -382,20 +365,6 @@ func TestZipPathsAreSafe(t *testing.T) {
 	}
 }
 
-// The ZIP's data.json is held to the size import reads.
-func TestZipManifestIsBounded(t *testing.T) {
-	g := newGV(t)
-	g.login()
-	saved := maxExportSize
-	maxExportSize = 1 << 20
-	defer func() { maxExportSize = saved }()
-	g.mustRun("create", "item", b64(`{"type":2,"name":"big","notes":"`+strings.Repeat("x", 1<<20)+`","secureNote":{"type":0}}`))
-	target := filepath.Join(t.TempDir(), "big.zip")
-	if r := g.run("export", "--format", "zip", "--output", target); r.code != 1 || !strings.Contains(r.err, "data.json is larger") {
-		t.Fatalf("oversize zip = %+v", r)
-	}
-}
-
 // An import whose items reach the server but not the local copy says so,
 // with the created IDs and an archive it could not restore.
 func TestImportReportsItemsTheLocalCopyMissed(t *testing.T) {
@@ -444,5 +413,25 @@ func TestImportReportsAnArchiveTheLocalCopyMissed(t *testing.T) {
 	_ = os.Chmod(dir, 0o700)
 	if r.code != 1 || !strings.Contains(r.err, "archived on the server; the local copy does not show the archive") {
 		t.Fatalf("import = %+v", r)
+	}
+}
+
+// No JSON export, and no ZIP whose data.json, is written that import would
+// refuse for its size: here a limit below the seeded vault's.
+func TestExportsAreHeldToTheImportLimit(t *testing.T) {
+	g := newGV(t)
+	g.login()
+	saved := maxExportSize
+	maxExportSize = 1024
+	defer func() { maxExportSize = saved }()
+	dir := t.TempDir()
+	for format, want := range map[string]string{"json": "The export is larger than", "zip": "The export's data.json is larger than"} {
+		target := filepath.Join(dir, "out."+format)
+		if r := g.run("export", "--format", format, "--output", target); r.code != 1 || !strings.Contains(r.err, want) {
+			t.Fatalf("oversize %s = %+v", format, r)
+		}
+		if _, err := os.Stat(target); err == nil {
+			t.Fatalf("the oversize %s was written", format)
+		}
 	}
 }

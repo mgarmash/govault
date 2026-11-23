@@ -7,11 +7,11 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 
 	"github.com/txchen/govault/internal/fakeserver"
-	"github.com/txchen/govault/internal/vaultcore/crypto"
 	"github.com/txchen/govault/internal/vaultcore/keyring"
 	"github.com/txchen/govault/internal/vaultcore/totp"
 )
@@ -71,10 +71,6 @@ func TestBitwardenCloud(t *testing.T) {
 	runAPIKeySuite(t, server, http.DefaultClient, acct, keyring.NewMemory())
 }
 
-// isFake reports a fake server address, against which the write suite
-// always runs.
-func isFake(url string) bool { return strings.HasPrefix(url, "http://127.0.0.1:") }
-
 // The suite itself is checked against the fake server.
 func TestServerSuiteOnFakeServer(t *testing.T) {
 	srv := fakeserver.New()
@@ -82,11 +78,16 @@ func TestServerSuiteOnFakeServer(t *testing.T) {
 	runServerSuite(t, srv.URL(), srv.Client(), vwAccount{
 		email: fakeserver.Email, password: fakeserver.Password,
 		clientID: fakeserver.ClientID, clientSecret: fakeserver.ClientSecret,
+		fake: true,
 	})
 }
 
 type vwAccount struct {
 	email, password, totpSeed, clientID, clientSecret string
+	// fake runs the item-by-item read and write sweep once, in the
+	// password run, and always writes there; the API-key runs keep their
+	// grant-specific steps and one read.
+	fake bool
 }
 
 func runServerSuite(t *testing.T, url string, client *http.Client, acct vwAccount) {
@@ -106,7 +107,7 @@ func runServerSuite(t *testing.T, url string, client *http.Client, acct vwAccoun
 		vw.env["PW"] = password
 		vw.env["BW_SESSION"] = vw.must(t, args...)
 		vw.checkReads(t)
-		if writesEnabled() || isFake(url) {
+		if writesEnabled() || acct.fake {
 			vw.checkWrites(t)
 		}
 		vw.must(t, "lock")
@@ -156,17 +157,24 @@ func runAPIKeySuite(t *testing.T, url string, client *http.Client, acct vwAccoun
 	t.Log("ok: unlock --passwordenv --raw")
 	delete(vw.env, "BW_CLIENTID")
 	delete(vw.env, "BW_CLIENTSECRET")
-	vw.checkReads(t)
-	if writesEnabled() || isFake(url) {
-		vw.checkWrites(t)
+	if acct.fake {
+		vw.checkOneRead(t)
+	} else {
+		vw.checkReads(t)
+		if writesEnabled() {
+			vw.checkWrites(t)
+		}
 	}
 	if withKeyring {
 		// A token the server rejects is renewed with a second client
 		// credentials exchange; there is no refresh token.
-		vw.spoilAccessToken(t, ring)
+		vw.spoil.armed.Store(true)
 		session := vw.env["BW_SESSION"]
 		delete(vw.env, "BW_SESSION")
 		vw.must(t, "sync", "-f")
+		if vw.spoil.armed.Load() {
+			t.Fatal("the sync sent no authenticated request")
+		}
 		t.Log("ok: locked sync -f renewed a rejected token")
 		vw.env["BW_SESSION"] = session
 	}
@@ -186,11 +194,34 @@ type vwRun struct {
 	env    map[string]string
 	ring   keyring.Store
 	client *http.Client
+	spoil  *spoilingTransport
+}
+
+// spoilingTransport, armed, sends the next authenticated request with a
+// bearer the server rejects, as an expired or revoked token is.
+type spoilingTransport struct {
+	base  http.RoundTripper
+	armed atomic.Bool
+}
+
+func (s *spoilingTransport) RoundTrip(r *http.Request) (*http.Response, error) {
+	if r.Header.Get("Authorization") != "" && s.armed.CompareAndSwap(true, false) {
+		r = r.Clone(r.Context())
+		r.Header.Set("Authorization", "Bearer eyJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJ4In0.invalid")
+	}
+	return s.base.RoundTrip(r)
 }
 
 func newVW(t *testing.T, url string, client *http.Client, ring *keyring.Memory) *vwRun {
 	dir := t.TempDir()
-	vw := &vwRun{env: map[string]string{"HOME": dir, "BITWARDENCLI_APPDATA_DIR": filepath.Join(dir, "bw")}, client: client}
+	base := client.Transport
+	if base == nil {
+		base = http.DefaultTransport
+	}
+	spoil := &spoilingTransport{base: base}
+	c := *client
+	c.Transport = spoil
+	vw := &vwRun{env: map[string]string{"HOME": dir, "BITWARDENCLI_APPDATA_DIR": filepath.Join(dir, "bw")}, client: &c, spoil: spoil}
 	if ring != nil {
 		vw.ring = ring
 	}
@@ -279,22 +310,6 @@ func (vw *vwRun) checkReads(t *testing.T) {
 	}
 	vw.must(t, "get", "fingerprint", "me")
 	t.Logf("ok: status, sync -f, list items/folders/collections/organizations, get item (%d items), fields %v, fingerprint", len(items), got)
-	leftovers := 0
-	for _, args := range [][]string{{"list", "items", "--trash"}, {"list", "items", "--archived"}, {"list", "folders"}, {"list", "items"}} {
-		var list []struct{ Name string }
-		if r := vw.run(args...); r.code == 0 {
-			_ = json.Unmarshal([]byte(r.out), &list)
-		}
-		for _, o := range list {
-			if strings.HasPrefix(o.Name, "gv-write-test-") {
-				leftovers++
-			}
-		}
-		if args[len(args)-1] != "items" && args[len(args)-1] != "folders" {
-			t.Logf("%s: %d", strings.Join(args, " "), len(list))
-		}
-	}
-	t.Logf("gv-write-test objects in the vault: %d", leftovers)
 	for _, it := range items {
 		if name, _ := it["name"].(string); strings.HasPrefix(name, "GV Test") {
 			t.Logf("fixture %q revision %v", name, it["revisionDate"])
@@ -323,41 +338,13 @@ func (vw *vwRun) revisions(t *testing.T) map[string]string {
 	return out
 }
 
-func (vw *vwRun) spoilAccessToken(t *testing.T, ring *keyring.Memory) {
-	dir := filepath.Join(vw.env["BITWARDENCLI_APPDATA_DIR"], "GoVault CLI")
-	var ps struct{ ProfileID string }
-	var acct struct{ AccountID, LoginID string }
-	for name, v := range map[string]any{"profile.json": &ps, "account.json": &acct} {
-		raw, err := os.ReadFile(filepath.Join(dir, name))
-		if err != nil {
-			t.Fatal(err)
-		}
-		_ = json.Unmarshal(raw, v)
+// checkOneRead checks the session reads the vault after a sync.
+func (vw *vwRun) checkOneRead(t *testing.T) {
+	vw.must(t, "sync", "-f")
+	var items []struct{ ID string }
+	if err := json.Unmarshal([]byte(vw.must(t, "list", "items")), &items); err != nil || len(items) == 0 {
+		t.Fatalf("list items: %d items, %v", len(items), err)
 	}
-	// The credential store keeps the key that seals credentials.json.
-	k, err := ring.Get("GoVault CLI", ps.ProfileID)
-	if err != nil || len(k) != 32 {
-		t.Fatalf("credential store key: %v", err)
-	}
-	var key [32]byte
-	copy(key[:], k)
-	ad, _ := json.Marshal(struct{ ProfileID, AccountID, LoginID string }{ps.ProfileID, acct.AccountID, acct.LoginID})
-	sealed, err := os.ReadFile(filepath.Join(dir, "credentials.json"))
-	if err != nil {
-		t.Fatal(err)
-	}
-	plain, err := crypto.Open(key, sealed, ad)
-	if err != nil {
-		t.Fatal(err)
-	}
-	var c map[string]any
-	_ = json.Unmarshal(plain, &c)
-	c["accessToken"] = "eyJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJ4In0.invalid"
-	spoiled, _ := json.Marshal(c)
-	if sealed, err = crypto.Seal(key, spoiled, ad); err != nil {
-		t.Fatal(err)
-	}
-	if err := os.WriteFile(filepath.Join(dir, "credentials.json"), sealed, 0o600); err != nil {
-		t.Fatal(err)
-	}
+	vw.must(t, "get", "item", items[0].ID)
+	t.Log("ok: sync -f, list items, get item")
 }

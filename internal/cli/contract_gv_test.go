@@ -77,6 +77,9 @@ func comparable(s string) string {
 func TestContractMatchesBW(t *testing.T) {
 	for _, c := range contractCases {
 		t.Run(c.Name, func(t *testing.T) {
+			// Each scenario has its own server and profile; its steps run
+			// in order.
+			t.Parallel()
 			srv := fakeserver.New()
 			defer srv.Close()
 			if c.Server != nil {

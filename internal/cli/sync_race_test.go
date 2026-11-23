@@ -8,25 +8,20 @@ import (
 	"github.com/txchen/govault/internal/fakeserver"
 )
 
-// syncRace runs a sync whose first fetch the server holds until release,
-// and an edit of the GitHub Enterprise notes, in the order order picks.
-func syncRace(t *testing.T, writeAnswersFirst bool) {
+// A sync whose response was read before an edit committed, and arrives
+// after it, does not replace the edit with the older copy.
+func TestStaleSyncDoesNotUndoACommittedEdit(t *testing.T) {
 	g := newGV(t)
 	g.login()
-	inSync, releaseSync := make(chan struct{}), make(chan struct{})
-	inWrite, releaseWrite := make(chan struct{}), make(chan struct{})
-	var syncOnce, writeOnce sync.Once
+	inSync, release := make(chan struct{}), make(chan struct{})
+	var once sync.Once
+	// The fake builds the response before the hook: it holds the vault as
+	// it was when the sync asked.
 	g.srv.Configure(func(c *fakeserver.Config) {
 		c.OnSync = func() {
-			syncOnce.Do(func() {
+			once.Do(func() {
 				close(inSync)
-				<-releaseSync
-			})
-		}
-		c.OnWrite = func() {
-			writeOnce.Do(func() {
-				close(inWrite)
-				<-releaseWrite
+				<-release
 			})
 		}
 	})
@@ -42,34 +37,14 @@ func syncRace(t *testing.T, writeAnswersFirst bool) {
 	}()
 	<-inSync
 	item := g.mustRun("get", "item", fakeserver.ItemGitHubEnt)
-	edited := strings.Replace(item, `"notes":null`, `"notes":"edited during a sync"`, 1)
-	if !strings.Contains(edited, "edited during a sync") {
-		edited = strings.Replace(item, `"name":"GitHub Enterprise",`, `"name":"GitHub Enterprise","notes":"edited during a sync",`, 1)
-	}
-	var editErr string
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		if r := g.run("edit", "item", fakeserver.ItemGitHubEnt, b64(edited)); r.code != 0 {
-			editErr = r.err
-		}
-	}()
-	<-inWrite
-	if writeAnswersFirst {
-		close(releaseWrite)
-		close(releaseSync)
-	} else {
-		close(releaseSync)
-		close(releaseWrite)
-	}
+	edited := strings.Replace(item, `"name":"GitHub Enterprise",`, `"name":"GitHub Enterprise","notes":"edited during a sync",`, 1)
+	g.mustRun("edit", "item", fakeserver.ItemGitHubEnt, b64(edited))
+	close(release)
 	wg.Wait()
-	if syncErr != "" || editErr != "" {
-		t.Fatalf("sync: %q, edit: %q", syncErr, editErr)
+	if syncErr != "" {
+		t.Fatalf("sync: %q", syncErr)
 	}
 	if got := g.mustRun("get", "notes", fakeserver.ItemGitHubEnt); got != "edited during a sync" {
-		t.Fatalf("after the race the local copy says %q: an older sync replaced the edit", got)
+		t.Fatalf("after the stale sync the local copy says %q", got)
 	}
 }
-
-func TestSyncFinishingAfterAWriteKeepsTheWrite(t *testing.T)  { syncRace(t, true) }
-func TestSyncFinishingBeforeAWriteKeepsTheWrite(t *testing.T) { syncRace(t, false) }

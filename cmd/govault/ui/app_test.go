@@ -45,6 +45,9 @@ type mockVaultService struct {
 	collections   []state.Collection
 
 	downloadGate chan struct{}
+	// downloaded, when set, receives the bytes each download returns, so
+	// a test can see the app wipe them.
+	downloaded chan []byte
 
 	// localCopyFails makes saves succeed on the "server" but report a
 	// failed local copy, as state.Service does when the snapshot write fails.
@@ -900,7 +903,11 @@ func (m *mockVaultService) DownloadAttachment(_ context.Context, cipherID, attac
 	}
 	for _, a := range c.Attachments {
 		if a.ID == attachmentID {
-			return []byte("contents of " + a.FileName), a.FileName, nil
+			data := []byte("contents of " + a.FileName)
+			if m.downloaded != nil {
+				m.downloaded <- data
+			}
+			return data, a.FileName, nil
 		}
 	}
 	return nil, "", state.ErrAttachmentNotFound

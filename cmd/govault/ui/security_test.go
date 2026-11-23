@@ -94,6 +94,7 @@ func TestLockRevokesPendingSecretActions(t *testing.T) {
 	svc.status = state.StatusUnlocked
 	svc.ciphers["c-github"].Reprompt = 0
 	svc.downloadGate = make(chan struct{})
+	svc.downloaded = make(chan []byte, 1)
 	svc.mu.Unlock()
 	app.Post(func() {
 		m.LockState.Set(state.StatusUnlocked)
@@ -105,8 +106,10 @@ func TestLockRevokesPendingSecretActions(t *testing.T) {
 	app.WaitUntil(2*time.Second, func() bool { return m.AttachmentBusy.Get() == "att-1" })
 	app.Post(m.Lock)
 	close(svc.downloadGate)
-	time.Sleep(50 * time.Millisecond)
-	app.Post(func() {})
+	// The download's UI step wipes what arrived after the lock; then it
+	// is done.
+	data := <-svc.downloaded
+	app.WaitUntil(2*time.Second, func() bool { return wiped(data) })
 	if chooses.Load() != 0 {
 		t.Fatalf("save dialog opened after lock: %d", chooses.Load())
 	}
@@ -139,6 +142,7 @@ func TestRevokedAttachmentSaveLeavesDestinationUntouched(t *testing.T) {
 	if err := os.WriteFile(dest, []byte("original"), 0o644); err != nil {
 		t.Fatal(err)
 	}
+	svc.downloaded = make(chan []byte, 1)
 	var pending func(string, bool, error)
 	app, m, root := startSecurityApp(t, svc, PlatformHooks{
 		ChooseSavePath: func(_ string, done func(string, bool, error)) { pending = done },
@@ -156,10 +160,11 @@ func TestRevokedAttachmentSaveLeavesDestinationUntouched(t *testing.T) {
 	app.WaitFor("id:detail-attachment-download-0", 2*time.Second)
 	app.Press("id:detail-attachment-download-0")
 	app.WaitUntil(2*time.Second, func() bool { return pending != nil })
+	data := <-svc.downloaded
 	app.Post(m.Lock)
 	pending(dest, true, nil)
-	app.Post(func() {})
-	time.Sleep(50 * time.Millisecond)
+	// A save confirmed after the lock wipes the bytes instead of writing.
+	app.WaitUntil(2*time.Second, func() bool { return wiped(data) })
 	untouched("save confirmed after lock")
 
 	explicit := saveTarget{dir: dir, name: "codes.txt", replace: true}
@@ -239,4 +244,13 @@ func TestTOTPRevealBoundToCipher(t *testing.T) {
 	}
 	app.WaitUntil(2*time.Second, func() bool { return m.TOTPCode.Get() != "" })
 	app.Find("id:detail-totp-section >> text:••• •••")
+}
+
+func wiped(b []byte) bool {
+	for _, c := range b {
+		if c != 0 {
+			return false
+		}
+	}
+	return true
 }

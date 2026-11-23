@@ -3,6 +3,7 @@ package ui
 import (
 	"encoding/json"
 	"testing"
+	"testing/synctest"
 	"time"
 
 	"github.com/nsgo-dev/nsgo/core"
@@ -26,6 +27,11 @@ func TestMainWindowPlacement(t *testing.T) {
 }
 
 func TestWindowTrackerSavesChangesNotFullScreen(t *testing.T) {
+	// Virtual time: the opening interval and the save delay pass at once.
+	synctest.Test(t, testWindowTracker)
+}
+
+func testWindowTracker(t *testing.T) {
 	var saved []WindowState
 	posted := make(chan func(), 4)
 	tr := NewWindowTracker(func(st WindowState) { saved = append(saved, st) }, func(fn func()) { posted <- fn })
@@ -41,9 +47,7 @@ func TestWindowTrackerSavesChangesNotFullScreen(t *testing.T) {
 	if len(saved) != 0 {
 		t.Fatalf("saved frames from while the window opened: %+v", saved)
 	}
-	tr.mu.Lock()
-	tr.settleUntil = time.Time{}
-	tr.mu.Unlock()
+	time.Sleep(windowSettle)
 
 	tr.Observe(frame(100, 100, 1100, 720), false, false)
 	tr.Observe(frame(100, 100, 1100, 720), false, false)
