@@ -36,7 +36,7 @@ grep -n 'gv.exe\|UserPath\|NsgoPathAdded' dist/GoVault-<version>-windows_x64/GoV
 Upstream NSGo v0.2.0 cannot package a command beside the app. Until a release of it can, `go.mod` replaces it with the fork that adds `commands` and `windows.path`:
 
 ```
-replace github.com/nsgo-dev/nsgo => github.com/txchen/nsgo v0.2.1-0.20261122233002-5c0766a98dbc
+replace github.com/nsgo-dev/nsgo => github.com/txchen/nsgo v0.2.1-0.20261122235715-cae54e688488
 ```
 
 That is branch `govault/v0.2.0-companions` of [txchen/nsgo](https://github.com/txchen/nsgo), v0.2.0 plus commands, their linker flags and signing identifiers, `linux.share`, and Windows Path entries removed only by the installer that added them; the app and `go tool nsgo` both build with it. When upstream ships `commands`, require that release and remove the `replace` line.

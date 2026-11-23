@@ -36,8 +36,8 @@ github.com/segmentio/encoding v0.5.4 h1:OW1VRern8Nw6ITAtwSZ7Idrl3MXCFwXHPgqESYfv
 github.com/segmentio/encoding v0.5.4/go.mod h1:HS1ZKa3kSN32ZHVZ7ZLPLXWvOVIiZtyJnO1gPH1sKt0=
 github.com/stretchr/testify v1.6.1 h1:hDPOHmpOpP40lSULcqw7IrRb/u7w6RpDC9399XyoNd0=
 github.com/stretchr/testify v1.6.1/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
-github.com/txchen/nsgo v0.2.1-0.20261122233002-5c0766a98dbc h1:F3B2qR45qGdRN1m+JZ42jIDg3ItxJMVFtG7jkRJcfz4=
-github.com/txchen/nsgo v0.2.1-0.20261122233002-5c0766a98dbc/go.mod h1:zVeObRFp8Ei49tpmMgH1FNeIWos1fY7ta0T6w+PxrGM=
+github.com/txchen/nsgo v0.2.1-0.20261122235715-cae54e688488 h1:/ltqXwEpem7Nzs4JK9BhaSZc2URdvdz+SuXsdK1vdAU=
+github.com/txchen/nsgo v0.2.1-0.20261122235715-cae54e688488/go.mod h1:zVeObRFp8Ei49tpmMgH1FNeIWos1fY7ta0T6w+PxrGM=
 github.com/vmihailenco/msgpack/v5 v5.4.1 h1:cQriyiUvjTwOHg8QZaPihLWeRAAVoCpE00IUPn0Bjt8=
 github.com/vmihailenco/msgpack/v5 v5.4.1/go.mod h1:GaZTsDaehaPpQVyxrf5mtQlH+pc21PIudVV/E3rRQok=
 github.com/vmihailenco/tagparser/v2 v2.0.0 h1:y09buUbR+b5aycVFQs/g70pqKVZNBmxwAhO7/IwNM9g=
