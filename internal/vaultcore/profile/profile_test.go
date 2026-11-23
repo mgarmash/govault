@@ -364,3 +364,29 @@ func TestConcurrentTransitions(t *testing.T) {
 		t.Fatalf("after logout: files %v, keyring items %d", files, h.ring.Len())
 	}
 }
+
+// A login that fails at its last step leaves no active account: the
+// account record is written last.
+func TestLoginFailingAtTheLastStepLeavesNoAccount(t *testing.T) {
+	h := newHarness(t, true)
+	beforeAccountCommit = func() error { return errors.New("disk full") }
+	defer func() { beforeAccountCommit = nil }()
+	l, err := h.open().BeginPasswordLogin(context.Background(), fakeserver.Email, []byte(fakeserver.Password))
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = l.Complete(context.Background(), nil)
+	l.Close()
+	if err == nil {
+		t.Fatal("the login succeeded")
+	}
+	p := h.open()
+	if _, err := p.activeAccount(); !errors.Is(err, ErrNotLoggedIn) {
+		t.Fatalf("after the failed login: %v", err)
+	}
+	if _, err := os.Stat(filepath.Join(h.dir, credentialsFile)); err == nil {
+		t.Fatal("the credentials of the failed login are still there")
+	}
+	beforeAccountCommit = nil
+	h.loginPassword()
+}

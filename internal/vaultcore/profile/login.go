@@ -27,6 +27,10 @@ type PasswordLogin struct {
 
 // BeginPasswordLogin derives the master key for email at the configured
 // server. It refuses while an account is signed in.
+// beforeAccountCommit, set by tests, runs just before a login writes the
+// active account record.
+var beforeAccountCommit func() error
+
 func (p *Profile) BeginPasswordLogin(ctx context.Context, email string, password []byte) (*PasswordLogin, error) {
 	ps, e, err := p.loggedOutEndpoints()
 	if err != nil {
@@ -245,11 +249,21 @@ func (p *Profile) commitLogin(ctx context.Context, startPS *profileState, r logi
 				return err
 			}
 		}
+		if err := p.saveProfile(ps); err != nil {
+			return err
+		}
+		if beforeAccountCommit != nil {
+			if err := beforeAccountCommit(); err != nil {
+				return err
+			}
+		}
+		// The active account record is the last write: until it lands,
+		// the login is pending and rolled back.
 		if err := writeJSON(p.path(accountFile), acct); err != nil {
 			return err
 		}
 		committed = true
-		return p.saveProfile(ps)
+		return nil
 	})
 	return session, err
 }
