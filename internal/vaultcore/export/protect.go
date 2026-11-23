@@ -57,17 +57,6 @@ func EncryptWithPassword(v *Vault, password []byte, cfg crypto.KDFConfig) ([]byt
 	if len(password) == 0 {
 		return nil, errors.New("export: a backup password is required")
 	}
-	var saltBytes [16]byte
-	if _, err := rand.Read(saltBytes[:]); err != nil {
-		return nil, err
-	}
-	salt := base64.StdEncoding.EncodeToString(saltBytes[:])
-	key, err := deriveKey(password, salt, cfg)
-	if err != nil {
-		return nil, err
-	}
-	defer key.Zero()
-
 	plain := *v
 	plain.Encrypted = false
 	plaintext, err := json.Marshal(plain)
@@ -75,13 +64,38 @@ func EncryptWithPassword(v *Vault, password []byte, cfg crypto.KDFConfig) ([]byt
 		return nil, err
 	}
 	defer crypto.ZeroBytes(plaintext)
-	data, err := crypto.EncryptBytes(plaintext, key)
+	f, err := sealWithPassword(plaintext, password, cfg)
 	if err != nil {
 		return nil, err
 	}
+	out, err := json.MarshalIndent(f, "", "  ")
+	if err == nil && len(out) > MaxFileSize {
+		crypto.ZeroBytes(out)
+		return nil, ErrBackupTooLarge
+	}
+	return out, err
+}
+
+// sealWithPassword encrypts plaintext into a password-protected export
+// under a new salt, with cfg's KDF fields.
+func sealWithPassword(plaintext, password []byte, cfg crypto.KDFConfig) (protectedFile, error) {
+	var saltBytes [16]byte
+	if _, err := rand.Read(saltBytes[:]); err != nil {
+		return protectedFile{}, err
+	}
+	salt := base64.StdEncoding.EncodeToString(saltBytes[:])
+	key, err := deriveKey(password, salt, cfg)
+	if err != nil {
+		return protectedFile{}, err
+	}
+	defer key.Zero()
+	data, err := crypto.EncryptBytes(plaintext, key)
+	if err != nil {
+		return protectedFile{}, err
+	}
 	validation, err := crypto.EncryptString(randomGUID(), key)
 	if err != nil {
-		return nil, err
+		return protectedFile{}, err
 	}
 	f := protectedFile{
 		Encrypted: true, PasswordProtected: true, Salt: salt,
@@ -92,12 +106,7 @@ func EncryptWithPassword(v *Vault, password []byte, cfg crypto.KDFConfig) ([]byt
 		mem, par := cfg.MemoryMB, cfg.Parallelism
 		f.KDFMemory, f.KDFParallelism = &mem, &par
 	}
-	out, err := json.MarshalIndent(f, "", "  ")
-	if err == nil && len(out) > MaxFileSize {
-		crypto.ZeroBytes(out)
-		return nil, ErrBackupTooLarge
-	}
-	return out, err
+	return f, nil
 }
 
 // NeedsPassword reports whether data is a password-protected export.
