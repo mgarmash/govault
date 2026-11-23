@@ -3,6 +3,7 @@
 package clitool
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -44,10 +45,8 @@ func safeAncestors(path string, trustedUID func(uint32) bool) error {
 			case !trustedUID(st.Uid):
 				return fmt.Errorf("%w: %s belongs to a user who is not an administrator", ErrUntrusted, p)
 			}
-			if who, err := aclMutators(p); err != nil {
-				return fmt.Errorf("%w: cannot read the access list of %s: %v", ErrUntrusted, p, err)
-			} else if who != "" {
-				return fmt.Errorf("%w: its access list lets %s change %s", ErrUntrusted, who, p)
+			if err := checkACL(p); err != nil {
+				return fmt.Errorf("%w: %s: %v", ErrUntrusted, p, err)
 			}
 		}
 		if p == filepath.Dir(p) {
@@ -59,26 +58,29 @@ func safeAncestors(path string, trustedUID func(uint32) bool) error {
 // aclTrusted are the principals an allow entry may name.
 var aclTrusted = []string{"user:root", "group:admin", "group:wheel"}
 
-// aclMutators names the first access-list entry of path that is not
-// positively safe, or "".
-func aclMutators(path string) (string, error) {
+// checkACL reads path's access list and returns an error unless every
+// entry is positively safe.
+func checkACL(path string) error {
 	out, err := exec.Command("/bin/ls", "-lde", path).Output()
 	if err != nil {
-		return "", err
+		return fmt.Errorf("cannot read the access list: %v", err)
 	}
-	return parseACL(string(out)), nil
+	return parseACL(string(out))
 }
 
 // parseACL reads ls -le's entries, " 0: <principal> [inherited] allow|deny
 // <rights>", from the right, as a principal's name can hold spaces. Only
-// deny entries and allow entries to root, admin or wheel are safe; any
-// other entry, or one it cannot read, is returned.
-func parseACL(listing string) string {
+// deny entries and allow entries to root, admin or wheel are safe. Every
+// entry is checked; each one that is not safe, or that it cannot read,
+// including a blank line among them, is in the error.
+func parseACL(listing string) error {
 	lines := strings.Split(strings.TrimRight(listing, "\n"), "\n")
+	var errs []error
 	for _, line := range lines[1:] {
 		f := strings.Fields(line)
 		if len(f) < 4 || !strings.HasSuffix(f[0], ":") {
-			return strings.TrimSpace(line)
+			errs = append(errs, fmt.Errorf("malformed access-list entry %q", line))
+			continue
 		}
 		kind, principal := f[len(f)-2], f[1:len(f)-2]
 		if n := len(principal); n > 1 && principal[n-1] == "inherited" {
@@ -89,10 +91,10 @@ func parseACL(listing string) string {
 		case kind == "deny" && who != "":
 		case kind == "allow" && slices.Contains(aclTrusted, who):
 		default:
-			return strings.TrimSpace(line)
+			errs = append(errs, fmt.Errorf("access-list entry %q lets %s change it", strings.TrimSpace(line), who))
 		}
 	}
-	return ""
+	return errors.Join(errs...)
 }
 
 // isAdmin reports root or a member of the admin group.

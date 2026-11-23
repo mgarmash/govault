@@ -265,7 +265,7 @@ func TestACLGrantsAreRefused(t *testing.T) {
 	f := newFixture(t)
 	app := filepath.Dir(filepath.Dir(filepath.Dir(f.tool.Bundled)))
 	grantACL(t, app)
-	if err := safeAncestors(f.tool.Bundled, func(uint32) bool { return true }); !errors.Is(err, ErrUntrusted) || !strings.Contains(err.Error(), "access list") {
+	if err := safeAncestors(f.tool.Bundled, func(uint32) bool { return true }); !errors.Is(err, ErrUntrusted) || !strings.Contains(err.Error(), "access-list entry") {
 		t.Fatalf("bundle with an ACL grant = %v", err)
 	}
 
@@ -287,16 +287,31 @@ func TestACLGrantsAreRefused(t *testing.T) {
 }
 
 func TestParseACL(t *testing.T) {
-	for listing, want := range map[string]string{
-		"drwxr-xr-x  2 a b 64 x d\n 0: group:everyone deny delete\n":                        "",
-		"drwxr-xr-x  2 a b 64 x d\n 0: group:admin allow add_file,delete_child\n":           "",
-		"drwxr-xr-x  2 a b 64 x d\n 0: user:bob inherited allow list,add_file\n":            "0: user:bob inherited allow list,add_file",
-		"-rw-r--r--  1 a b 1 x f\n 0: user:root allow write\n 1: group:staff allow write\n": "1: group:staff allow write",
-		"-rw-r--r--  1 a b 1 x f\n 0: user:bob allow read,readattr\n":                       "0: user:bob allow read,readattr",
+	const head = "drwxr-xr-x  2 a b 64 x d\n"
+	for entries, unsafe := range map[string]bool{
+		"":                                 false,
+		" 0: group:everyone deny delete\n": false,
+		" 0: group:admin allow add_file,delete_child\n":            false,
+		" 0: group:Domain Users inherited deny delete\n":           false,
+		" 0: user:bob inherited allow list,add_file\n":             true,
+		" 0: user:root allow write\n 1: group:staff allow write\n": true,
+		" 0: user:bob allow read,readattr\n":                       true,
+		" 0: group:Domain Users allow add_file,delete_child\n":     true,
+		" 0: group:My admin allow write\n":                         true,
+		" garbled\n":                                               true,
+		// A blank line among entries is malformed, and the entries after
+		// it are still read.
+		" 0: group:admin allow write\n   \n 1: group:wheel allow write\n": true,
+		" 0: group:admin allow write\n\n 1: group:wheel allow write\n":    true,
 	} {
-		if got := parseACL(listing); got != want {
-			t.Errorf("parseACL(%q) = %q, want %q", listing, got, want)
+		err := parseACL(head + entries)
+		if (err != nil) != unsafe {
+			t.Errorf("parseACL(%q) = %v, want unsafe=%v", entries, err, unsafe)
 		}
+	}
+	err := parseACL(head + " 0: group:admin allow write\n \n 1: user:eve allow write\n")
+	if err == nil || !strings.Contains(err.Error(), "malformed") || !strings.Contains(err.Error(), "user:eve") {
+		t.Fatalf("every entry is not checked: %v", err)
 	}
 }
 
@@ -346,15 +361,16 @@ func TestOnlyExecutableGVsAreReported(t *testing.T) {
 func TestScriptACLRuleReadsMultiwordPrincipals(t *testing.T) {
 	f := newFixture(t)
 	script := f.tool.Script(Install)
-	i := strings.Index(script, "/bin/ls -lde . | ")
+	i := strings.Index(script, `printf '%s\n' "$acl" | /usr/bin/sed 1d | `)
 	j := strings.Index(script[i:], " && exit")
-	rule := strings.Replace(script[i:i+j], "/bin/ls -lde . | /usr/bin/sed 1d | ", "", 1)
+	rule := strings.Replace(script[i:i+j], `printf '%s\n' "$acl" | /usr/bin/sed 1d | `, "", 1)
 	for entry, unsafe := range map[string]bool{
 		" 0: group:Domain Users allow add_file":     true,
 		" 0: group:admin allow add_file":            false,
 		" 0: group:admin inherited allow add_file":  false,
 		" 0: group:everyone deny delete":            false,
 		" 0: group:x allow y inherited allow write": true,
+		"   ": true,
 	} {
 		cmd := exec.Command("/bin/sh", "-c", rule)
 		cmd.Stdin = strings.NewReader(entry + "\n")
@@ -362,5 +378,22 @@ func TestScriptACLRuleReadsMultiwordPrincipals(t *testing.T) {
 		if got := err == nil; got != unsafe {
 			t.Errorf("%q: script says unsafe=%v", entry, got)
 		}
+	}
+}
+
+// The privileged script refuses when the access list cannot be listed.
+func TestScriptFailsClosedWhenTheListingFails(t *testing.T) {
+	f := newFixture(t)
+	script := f.tool.Script(Install)
+	i := strings.Index(script, `acl="$(/bin/ls -lde .)"`)
+	j := strings.Index(script[i:], " && exit")
+	if i < 0 || j < 0 {
+		t.Fatal("the access-list check is not in the script")
+	}
+	check := strings.Replace(script[i:i+j+len(" && exit 17")], "/bin/ls -lde .", "/usr/bin/false", 1)
+	err := exec.Command("/bin/sh", "-c", check+"; exit 0").Run()
+	var exit *exec.ExitError
+	if !errors.As(err, &exit) || exit.ExitCode() != exitChanged {
+		t.Fatalf("a failed listing = %v, want exit %d", err, exitChanged)
 	}
 }

@@ -285,8 +285,10 @@ func (t *Tool) Script(action Action) string {
 	enter := fmt.Sprintf(`cd -P -- %[1]s || exit %[2]d; set -- $(/usr/bin/stat -f '%%u %%g %%Lp' .); m=0$3; `+
 		`[ $((m & 2)) = 0 ] || exit %[2]d; if [ $((m & 16)) != 0 ]; then [ "$2" = 0 ] || [ "$2" = 80 ] || exit %[2]d; fi; `+
 		`trusted() { %[3]s; }; trusted "$1" || exit %[2]d; `+
-		`/bin/ls -lde . | /usr/bin/sed 1d | /usr/bin/grep -Ev '^ *[0-9]+: (user:root|group:admin|group:wheel)( inherited)? allow [^ ]+$' | `+
-		`/usr/bin/grep -Ev '^ *[0-9]+: .+ deny [^ ]+$' | /usr/bin/grep -q . && exit %[2]d`,
+		// A listing that fails is not an empty access list.
+		`acl="$(/bin/ls -lde .)" || exit %[2]d; `+
+		`printf '%%s\n' "$acl" | /usr/bin/sed 1d | /usr/bin/grep -Ev '^ *[0-9]+: (user:root|group:admin|group:wheel)( inherited)? allow [^ ]+$' | `+
+		`/usr/bin/grep -Ev '^ *[0-9]+: .+ deny [^ ]+$' | /usr/bin/grep -q '^' && exit %[2]d`,
 		dir, exitChanged, owner)
 	ours := fmt.Sprintf(`[ -L %[1]s ] || exit %[2]d; case "$(/usr/bin/readlink %[1]s)" in *%[3]s) ;; *) exit %[2]d;; esac`, name, exitChanged, bundleSuffix)
 	switch action {
