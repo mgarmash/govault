@@ -187,6 +187,7 @@ Every API request of both GoVault clients sends `Bitwarden-Client-Name` (`deskto
 - **Prompts need a terminal.** bw's prompts also read piped stdin; gv prompts only when stdin is a terminal and otherwise reports the missing input, as with `--nointeraction`.
 - **Wrong master password** prints bw 2026.11's SDK message, `Cryptography error, The decryption operation failed`, without its internal log lines.
 - **API-key login** prints a session key that unlocks nothing, as bw does; `unlock` provides the usable one.
+- **TOTP codes for every account.** `get totp` computes the code locally (RFC 6238) for any account, as the GoVault app does; bw refuses accounts without premium, unless the item's organization uses TOTP, with `Premium status is required to use this feature.` Item output is unchanged: like bw, it shows the stored secret, and blanks it only where passwords are hidden.
 - **Attachments of items whose passwords are hidden** are refused, as in the GoVault app; bw downloads them.
 - **Password generator policies** of organizations are not applied to `generate`.
 - **Regular-expression URI matching** uses Go's RE2 syntax, which lacks lookaround and backreferences.

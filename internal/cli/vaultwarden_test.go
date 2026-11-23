@@ -249,10 +249,6 @@ func (vw *vwRun) checkReads(t *testing.T) {
 			if v, ok := login[f].(string); ok && v != "" {
 				r := vw.run("get", f, id)
 				switch {
-				// As bw, TOTP codes need premium, or an organization
-				// that uses them.
-				case f == "totp" && r.code == 1 && r.err == "Premium status is required to use this feature.":
-					got["totp (premium required)"]++
 				case r.code != 0 || r.out == "":
 					t.Fatalf("get %s: exit %d: %s", f, r.code, r.err)
 				default:

@@ -369,21 +369,7 @@ func getScalar(v *profile.Vault, object, id string) response {
 	if err != nil || code == "" {
 		return failure("Couldn't generate TOTP code.")
 	}
-	if !v.Profile.Premium && !orgUsesTOTP(v, c) {
-		return failure("Premium status is required to use this feature.")
-	}
 	return str(code)
-}
-
-func orgUsesTOTP(v *profile.Vault, c *state.Cipher) bool {
-	if c.OrganizationID == nil || *c.OrganizationID == "" {
-		return false
-	}
-	var on bool
-	if raw, ok := c.Extra["organizationUseTotp"]; ok && string(raw) == "true" {
-		on = true
-	}
-	return on
 }
 
 func (a *app) getAttachment(v *profile.Vault, id string, p *parsed) response {

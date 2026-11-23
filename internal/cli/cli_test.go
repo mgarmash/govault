@@ -8,10 +8,12 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 	"unicode"
 
 	"github.com/txchen/govault/internal/fakeserver"
 	"github.com/txchen/govault/internal/vaultcore/keyring"
+	"github.com/txchen/govault/internal/vaultcore/totp"
 )
 
 // scriptedTerminal answers prompts in order and records them.
@@ -490,5 +492,23 @@ func TestConfigServerOverridesRouteServices(t *testing.T) {
 	}
 	if r := g.run("config", "server", "--api", "http://api.example.com"); r.err != "Logout required before server config update." {
 		t.Fatalf("config while logged in = %+v", r)
+	}
+}
+
+// Accounts without premium get TOTP codes too, as in the GoVault app.
+func TestTOTPCodesWithoutPremium(t *testing.T) {
+	g := newGV(t)
+	g.srv.Configure(func(c *fakeserver.Config) { c.Premium = false })
+	g.login()
+	got := g.mustRun("get", "totp", fakeserver.ItemGitHub)
+	cfg, err := totp.ParseTOTP(fakeserver.TOTPSecret)
+	if err != nil {
+		t.Fatal(err)
+	}
+	now := time.Now()
+	want, _, _, _ := totp.Generate(cfg, now)
+	prev, _, _, _ := totp.Generate(cfg, now.Add(-30*time.Second))
+	if len(got) != 6 || (got != want && got != prev) {
+		t.Fatalf("totp = %q, want %q", got, want)
 	}
 }
