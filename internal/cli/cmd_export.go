@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path"
 	"path/filepath"
 	"regexp"
 	"slices"
@@ -306,15 +307,21 @@ var (
 func (a *app) exportZip(v *profile.Vault) ([]byte, error) {
 	var buf bytes.Buffer
 	zw := zip.NewWriter(&buf)
+	manifest := a.prettyJSON(exportPlain(v))
+	if len(manifest) > maxExportSize {
+		return nil, fmt.Errorf("The export's data.json is larger than %d MiB, which no GoVault or gv import reads.", maxExportSize>>20)
+	}
 	w, err := zw.Create("data.json")
 	if err != nil {
 		return nil, err
 	}
-	if _, err := w.Write(a.prettyJSON(exportPlain(v))); err != nil {
+	if _, err := w.Write(manifest); err != nil {
 		return nil, err
 	}
 	collapse := regexp.MustCompile(`__+`)
-	used := map[string]bool{}
+	// Paths are compared as an extractor would resolve them: cleaned and
+	// without case. The manifest's is taken.
+	used := map[string]bool{"data.json": true}
 	unique := func(stem, suffix string, n *int) string {
 		for {
 			name := stem + suffix
@@ -322,8 +329,8 @@ func (a *app) exportZip(v *profile.Vault) ([]byte, error) {
 				name = fmt.Sprintf("%s_%d%s", stem, *n, suffix)
 			}
 			*n++
-			if !used[strings.ToLower(name)] {
-				used[strings.ToLower(name)] = true
+			if key := strings.ToLower(path.Clean(name)); !used[key] {
+				used[key] = true
 				return name
 			}
 		}
@@ -333,7 +340,7 @@ func (a *app) exportZip(v *profile.Vault) ([]byte, error) {
 		if len(c.Attachments) == 0 {
 			continue
 		}
-		stem := collapse.ReplaceAllString(zipUnsafe.ReplaceAllString(c.Name, "_"), "_")
+		stem := safeComponent(collapse.ReplaceAllString(zipUnsafe.ReplaceAllString(c.Name, "_"), "_"))
 		n := dirCount[stem]
 		dir := unique("attachments/"+stem, "", &n)
 		dirCount[stem] = n
@@ -347,7 +354,10 @@ func (a *app) exportZip(v *profile.Vault) ([]byte, error) {
 			if parts := strings.Split(at.FileName, "."); len(parts) > 1 {
 				base, suffix = strings.Join(parts[:len(parts)-1], ""), "."+parts[len(parts)-1]
 			}
-			base = collapse.ReplaceAllString(zipUnsafeName.ReplaceAllString(base, "_"), "_")
+			base = safeComponent(collapse.ReplaceAllString(zipUnsafeName.ReplaceAllString(base, "_"), "_"))
+			if suffix != "" {
+				suffix = "." + collapse.ReplaceAllString(zipUnsafeName.ReplaceAllString(suffix[1:], "_"), "_")
+			}
 			k := fileCount[base+suffix]
 			name := unique(dir+"/"+base, suffix, &k)
 			fileCount[base+suffix] = k
@@ -364,6 +374,15 @@ func (a *app) exportZip(v *profile.Vault) ([]byte, error) {
 		return nil, err
 	}
 	return buf.Bytes(), nil
+}
+
+// safeComponent keeps an archive path component from naming the current
+// or parent directory, or nothing.
+func safeComponent(s string) string {
+	if strings.Trim(s, ".") == "" {
+		return strings.Repeat("_", max(len(s), 1))
+	}
+	return s
 }
 
 var importFormats = []string{"bitwardencsv", "bitwardenjson", "bitwardenpasswordprotected"}
@@ -520,7 +539,7 @@ func (a *app) importVault(w *profile.Writer, v *export.Vault, path string) respo
 		}
 		fileFolder[f.ID] = created.ID
 	}
-	var skipped, unarchived []string
+	var skipped, unarchived, unrecorded []string
 	for _, it := range v.Items {
 		it.OrganizationID, it.CollectionIDs = nil, nil
 		if it.FolderID != nil {
@@ -548,13 +567,32 @@ func (a *app) importVault(w *profile.Writer, v *export.Vault, path string) respo
 			}
 		}
 		var local *state.LocalCopyError
-		if err != nil && !errors.As(err, &local) {
+		if errors.As(err, &local) {
+			// The server has the item; the local copy does not, and an
+			// archived item was not archived again.
+			created := "unknown ID"
+			if local.Cipher != nil {
+				created = local.Cipher.ID
+			} else if saved != nil {
+				created = saved.ID
+			}
+			note := fmt.Sprintf("  - %s: created as %s, not recorded in the local copy", idOrUnknown(it.ID), created)
+			if it.ArchivedDate != nil {
+				note += "; it was archived and is not archived now"
+			}
+			unrecorded = append(unrecorded, note)
+			continue
+		}
+		if err != nil {
 			r := a.writeFailure(err, noEditPermission)
 			r.message = fmt.Sprintf("Import stopped at %s: %s", idOrUnknown(it.ID), r.message)
 			return r
 		}
 	}
 	var notes []string
+	if len(unrecorded) > 0 {
+		return failure(fmt.Sprintf("Imported %s, but %d item(s) need attention; run `gv sync` and check them:\n%s", path, len(unrecorded), strings.Join(unrecorded, "\n")))
+	}
 	if len(skipped) > 0 {
 		notes = append(notes, fmt.Sprintf("%d item(s) could not be imported and were skipped:\n%s", len(skipped), strings.Join(skipped, "\n")))
 	}

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"os"
+	"path"
 	"path/filepath"
 	"slices"
 	"sort"
@@ -311,5 +312,109 @@ func TestExportRefusesFilesImportCannotRead(t *testing.T) {
 	}
 	if _, err := os.Stat(target); err == nil {
 		t.Fatal("the oversize export was written")
+	}
+}
+
+// A readable item whose type body does not decrypt stops decrypted
+// exports, which would otherwise print it without its body.
+func TestExportRefusesAnUnreadableTypeBody(t *testing.T) {
+	g := newGV(t)
+	g.srv.Mutate(fakeserver.ItemEmpty, func(it map[string]any, _, personal func(string) any) {
+		it["type"], it["login"] = 6, nil
+		it["bankAccount"] = map[string]any{"bankName": personal("First Bank"), "accountNumber": "2.AAAAAAAAAAAAAAAAAAAAAA==|AAAAAAAAAAAAAAAAAAAAAA==|AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="}
+	})
+	g.login()
+	if out := g.mustRun("get", "item", fakeserver.ItemEmpty); !strings.Contains(out, fakeserver.ItemEmpty) {
+		t.Fatalf("the item itself should still read: %s", out)
+	}
+	dir := t.TempDir()
+	for _, args := range [][]string{{"--format", "json"}, {"--password", "pw"}, {"--format", "zip"}} {
+		target := filepath.Join(dir, strings.Join(args, ""))
+		r := g.run(append([]string{"export", "--output", target}, args...)...)
+		if r.code != 1 || !strings.Contains(r.err, fakeserver.ItemEmpty) {
+			t.Fatalf("export %v = %+v", args, r)
+		}
+		if _, err := os.Stat(target); err == nil {
+			t.Fatalf("export %v wrote a file", args)
+		}
+	}
+}
+
+// Archive paths never step out of their directory or reach data.json,
+// whatever item and file names sanitize to.
+func TestZipPathsAreSafe(t *testing.T) {
+	g := newGV(t)
+	g.srv.Configure(func(c *fakeserver.Config) { c.Premium = true })
+	g.login()
+	dir := t.TempDir()
+	for _, c := range []struct{ item, file string }{{"..", "a.txt"}, {".", "b.txt"}, {"x", "data.j/son"}, {"y", "..."}} {
+		var it struct{ ID string }
+		_ = json.Unmarshal([]byte(g.mustRun("create", "item", b64(`{"type":2,"name":"`+c.item+`","secureNote":{"type":0}}`))), &it)
+		file := filepath.Join(dir, "upload")
+		_ = os.WriteFile(file, []byte(c.item), 0o600)
+		named := filepath.Join(dir, strings.ReplaceAll(c.file, "/", "_"))
+		_ = os.Rename(file, named)
+		g.mustRun("create", "attachment", "--file", named, "--itemid", it.ID)
+	}
+	g.mustRun("sync", "-f")
+	zipFile := filepath.Join(dir, "export.zip")
+	g.mustRun("export", "--format", "zip", "--output", zipFile)
+	zr, err := zip.OpenReader(zipFile)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer zr.Close()
+	seen := map[string]bool{}
+	for _, f := range zr.File {
+		clean := strings.ToLower(path.Clean(f.Name))
+		if seen[clean] {
+			t.Fatalf("two entries extract to %s", clean)
+		}
+		seen[clean] = true
+		for _, part := range strings.Split(f.Name, "/") {
+			if part == "." || part == ".." || part == "" {
+				t.Fatalf("unsafe archive path %q", f.Name)
+			}
+		}
+		if f.Name != "data.json" && clean == "data.json" {
+			t.Fatalf("%q extracts over data.json", f.Name)
+		}
+	}
+}
+
+// The ZIP's data.json is held to the size import reads.
+func TestZipManifestIsBounded(t *testing.T) {
+	g := newGV(t)
+	g.login()
+	saved := maxExportSize
+	maxExportSize = 1 << 20
+	defer func() { maxExportSize = saved }()
+	g.mustRun("create", "item", b64(`{"type":2,"name":"big","notes":"`+strings.Repeat("x", 1<<20)+`","secureNote":{"type":0}}`))
+	target := filepath.Join(t.TempDir(), "big.zip")
+	if r := g.run("export", "--format", "zip", "--output", target); r.code != 1 || !strings.Contains(r.err, "data.json is larger") {
+		t.Fatalf("oversize zip = %+v", r)
+	}
+}
+
+// An import whose items reach the server but not the local copy says so,
+// with the created IDs and an archive it could not restore.
+func TestImportReportsItemsTheLocalCopyMissed(t *testing.T) {
+	if os.Geteuid() == 0 {
+		t.Skip("root writes read-only directories")
+	}
+	g := newGV(t)
+	g.srv.Configure(func(c *fakeserver.Config) { c.Premium = true })
+	g.login()
+	file := filepath.Join(t.TempDir(), "in.json")
+	_ = os.WriteFile(file, []byte(`{"encrypted":false,"folders":[],"items":[`+
+		`{"id":"src-1","type":2,"name":"kept","archivedDate":"2026-01-01T00:00:00.000Z","secureNote":{"type":0}}]}`), 0o600)
+	// The server takes the item; then the profile directory refuses the
+	// local copy's update.
+	dir := filepath.Dir(profileFile(g, "profile.json"))
+	g.srv.Configure(func(c *fakeserver.Config) { c.OnWrite = func() { _ = os.Chmod(dir, 0o500) } })
+	r := g.run("import", "bitwardenjson", file)
+	_ = os.Chmod(dir, 0o700)
+	if r.code != 1 || !strings.Contains(r.err, "src-1: created as ") || !strings.Contains(r.err, "not archived now") {
+		t.Fatalf("import = %+v", r)
 	}
 }

@@ -125,7 +125,13 @@ func OpenVault(rawSync []byte, userKey *crypto.SymmetricKey) (*VaultView, error)
 			continue
 		}
 		if field := typeDataField(enc.Type); field != "" {
-			if obj, err := v.decryptTypeData(c, enc.Extra[field]); err == nil && obj != nil {
+			obj, err := v.decryptTypeData(c, enc.Extra[field])
+			switch {
+			case err != nil && (c.OrganizationID == nil || *c.OrganizationID == ""):
+				// The item reads, but its body does not: an export
+				// would lose it.
+				v.Unreadable = append(v.Unreadable, c.ID)
+			case err == nil && obj != nil:
 				v.typeData[c.ID] = obj
 			}
 		}
