@@ -132,6 +132,8 @@ Bitwarden's mobile apps are native, but its desktop app is an Electron and Angul
 
 GoVault does not replace everything the official app does. It has no Intel Mac build, no Bitwarden Send and no browser-extension integration, and accounts are created on your server's web vault. GoVault keeps the passkeys stored in your vault, shows them on each item, and can remove them, but it cannot create passkeys or sign in with them. Use the Bitwarden browser extension for that.
 
+On a free bitwarden.com account, GoVault shows the verification codes of your logins' TOTP secrets, in the app and with `gv get totp`, and runs Vault Health (reused and weak passwords, expiring cards, unsecured websites). The official apps include these with Premium; GoVault computes both locally on your device. Premium features that rely on Bitwarden's servers still need Premium: attachments, the Archive, YubiKey and Duo two-step login setup, emergency access, and file Sends.
+
 ## Features
 
 **Compatible with your server**
