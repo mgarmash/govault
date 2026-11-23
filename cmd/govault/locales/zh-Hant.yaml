@@ -79,6 +79,13 @@ twoFactorEmailFailed: "無法傳送驗證郵件。{reason}"
 twoFactorEmailSentTo: "驗證碼已傳送至 {email}。"
 twoFactorEmailSent: 驗證碼已傳送至您的電子郵件。
 
+# New device verification
+
+newDeviceTitle: 驗證您的身分
+newDeviceEnterCodeTo: "伺服器無法辨識此裝置。請輸入傳送至 {email} 的驗證碼。"
+newDeviceCodeInvalid: 驗證碼無效或已逾期。請檢查驗證碼，或選擇「重新傳送驗證碼」以取得新的驗證碼。
+newDeviceFootnote: 對於未啟用兩步驟登入的帳戶，Bitwarden 會在每次使用新裝置時要求輸入此驗證碼。
+
 # Lock screen
 
 lockedTitle: GoVault 已鎖定
@@ -639,7 +646,9 @@ commandLineToolBroken: "{path} 的連結指向已不存在的 GoVault 副本。"
 commandLineToolOtherCopy: "{path} 的連結指向另一個 GoVault 副本。"
 commandLineToolForeign: "{path} 已存在另一個名為 gv 的程式，GoVault 不會取代它。"
 commandLineToolUnavailable: 此 GoVault 副本不包含 gv 指令。
-commandLineToolShadowed: "在「終端機」中可能會改為執行位於 {path} 的另一個 gv。"
+commandLineToolShadowed: "預設 PATH 中位於 {path} 的另一個 gv 排在前面，「終端機」可能會改為執行它。"
+commandLineToolOtherOnPath: "預設 PATH 後方還有另一個位於 {path} 的 gv；在該 PATH 下，GoVault 的版本會優先執行。"
+commandLineToolUntrusted: 若要為此 Mac 的所有使用者安裝 gv 指令，請使用「應用程式」資料夾中經過簽章的 GoVault 正式版。
 installCommandLineTool: 安裝
 repairCommandLineTool: 修復
 uninstallCommandLineTool: 解除安裝

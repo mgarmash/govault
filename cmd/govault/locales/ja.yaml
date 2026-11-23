@@ -79,6 +79,13 @@ twoFactorEmailFailed: "認証メールを送信できませんでした。{reaso
 twoFactorEmailSentTo: "認証コードを {email} に送信しました。"
 twoFactorEmailSent: 認証コードをメールで送信しました。
 
+# New device verification
+
+newDeviceTitle: 本人確認
+newDeviceEnterCodeTo: "このデバイスはサーバーに認識されていません。{email} に送信されたコードを入力してください。"
+newDeviceCodeInvalid: 認証コードが無効または期限切れです。コードを確認するか、「コードを再送信」で新しいコードを取得してください。
+newDeviceFootnote: 2段階認証が有効でないアカウントでは、新しいデバイスごとに Bitwarden がこのコードを求めます。
+
 # Lock screen
 
 lockedTitle: GoVault はロックされています
@@ -639,7 +646,9 @@ commandLineToolBroken: "{path} のリンク先にある GoVault が見つかり�
 commandLineToolOtherCopy: "{path} のリンクは別の GoVault を指しています。"
 commandLineToolForeign: "{path} に別の gv プログラムが存在します。GoVault は上書きしません。"
 commandLineToolUnavailable: この GoVault には gv コマンドが含まれていません。
-commandLineToolShadowed: "ターミナルでは {path} の別の gv が代わりに実行される場合があります。"
+commandLineToolShadowed: "デフォルトの PATH で {path} の別の gv が先にあるため、ターミナルではそちらが実行される場合があります。"
+commandLineToolOtherOnPath: "デフォルトの PATH の後ろに {path} の別の gv がありますが、この PATH では GoVault のものが先に実行されます。"
+commandLineToolUntrusted: この Mac のすべてのユーザー向けに gv コマンドをインストールするには、「アプリケーション」フォルダにある署名済みの GoVault リリース版を使用してください。
 installCommandLineTool: インストール
 repairCommandLineTool: 修復
 uninstallCommandLineTool: アンインストール

@@ -79,6 +79,13 @@ twoFactorEmailFailed: "Impossible d’envoyer l’e-mail de vérification. {reas
 twoFactorEmailSentTo: "Un code de vérification a été envoyé à {email}."
 twoFactorEmailSent: Un code de vérification a été envoyé à votre adresse e-mail.
 
+# New device verification
+
+newDeviceTitle: Vérifiez votre identité
+newDeviceEnterCodeTo: "Votre serveur ne reconnaît pas cet appareil. Saisissez le code envoyé à {email}."
+newDeviceCodeInvalid: Code de vérification invalide ou expiré. Vérifiez-le ou choisissez « Renvoyer le code ».
+newDeviceFootnote: Bitwarden demande ce code sur chaque nouvel appareil pour les comptes sans authentification à deux facteurs.
+
 # Lock screen
 
 lockedTitle: GoVault est verrouillé
@@ -639,7 +646,9 @@ commandLineToolBroken: "Le lien dans {path} pointe vers une copie de GoVault qui
 commandLineToolOtherCopy: "Le lien dans {path} pointe vers une autre copie de GoVault."
 commandLineToolForeign: "Un autre programme nommé gv se trouve dans {path}. GoVault ne le remplace pas."
 commandLineToolUnavailable: Cette copie de GoVault n’inclut pas la commande gv.
-commandLineToolShadowed: "Un autre gv dans {path} risque d’être exécuté à la place dans Terminal."
+commandLineToolShadowed: "Un autre gv dans {path} apparaît avant dans le PATH par défaut ; Terminal risque de l’exécuter à la place."
+commandLineToolOtherOnPath: "Un autre gv se trouve dans {path}, plus loin dans le PATH par défaut ; avec ce PATH, celui de GoVault s’exécute en premier."
+commandLineToolUntrusted: Pour installer la commande gv pour tous les utilisateurs de ce Mac, utilisez la version signée de GoVault dans le dossier Applications.
 installCommandLineTool: Installer
 repairCommandLineTool: Réparer
 uninstallCommandLineTool: Désinstaller

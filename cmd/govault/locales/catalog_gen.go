@@ -4007,9 +4007,9 @@ var textsDe = i18n.NewTexts(""+
 	"Der Server hat diesen YubiKey-Code nicht akzeptiert. Berühre deinen YubiKey erneut für einen neuen Code."+
 	"Dieser YubiKey ist nicht für dein Konto registriert. Verwende einen YubiKey aus deinen Web-Tresor-Einstellungen."+
 	"Ein Verifizierungscode wurde an deine E-Mail gesendet."+
-	""+
-	""+
-	""+
+	"Verifiziere deine Identität"+
+	"Ungültiger oder abgelaufener Verifizierungscode. Prüfe den Code oder wähle „Code erneut senden“."+
+	"Bei Konten ohne Zwei-Faktor-Authentifizierung fragt Bitwarden auf jedem neuen Gerät nach diesem Code."+
 	"GoVault ist gesperrt"+
 	"Entsperren"+
 	"oder Master-Passwort verwenden"+
@@ -4435,7 +4435,7 @@ var textsDe = i18n.NewTexts(""+
 	"Befehlszeilentool gv"+
 	"Nutze deinen Tresor im Terminal und in Skripten mit Bitwarden-CLI-Befehlen. Die Installation legt einen Link unter /usr/local/bin/gv an."+
 	"Diese Kopie von GoVault enthält den Befehl gv nicht."+
-	""+
+	"Um den Befehl gv für alle Benutzer dieses Mac zu installieren, verwende die signierte GoVault-Version im Ordner „Programme“."+
 	"Installieren"+
 	"Reparieren"+
 	"Deinstallieren"+
@@ -4551,9 +4551,9 @@ var textsDe = i18n.NewTexts(""+
 		106,
 		113,
 		54,
-		0,
-		0,
-		0,
+		28,
+		103,
+		102,
 		20,
 		10,
 		30,
@@ -4979,7 +4979,7 @@ var textsDe = i18n.NewTexts(""+
 		20,
 		136,
 		53,
-		0,
+		129,
 		12,
 		10,
 		14,
@@ -5098,9 +5098,9 @@ var textsEs = i18n.NewTexts(""+
 	"El servidor no aceptó este código de YubiKey. Toca tu YubiKey de nuevo para introducir uno nuevo."+
 	"Esta YubiKey no está registrada en tu cuenta. Usa una YubiKey que hayas añadido en los ajustes web de tu caja fuerte."+
 	"Se envió un código de verificación a tu correo electrónico."+
-	""+
-	""+
-	""+
+	"Verifica tu identidad"+
+	"Código de verificación no válido o caducado. Compruébalo o elige “Reenviar código” para obtener uno nuevo."+
+	"Bitwarden pide este código en cada dispositivo nuevo para cuentas sin autenticación en dos pasos."+
 	"GoVault está bloqueado"+
 	"Desbloquear"+
 	"o usa tu contraseña maestra"+
@@ -5526,7 +5526,7 @@ var textsEs = i18n.NewTexts(""+
 	"Herramienta de línea de comandos gv"+
 	"Usa tu caja fuerte desde Terminal y scripts con comandos de Bitwarden CLI. Al instalar se añade un enlace en /usr/local/bin/gv."+
 	"Esta copia de GoVault no incluye el comando gv."+
-	""+
+	"Para instalar el comando gv para todos los usuarios de este Mac, usa la versión firmada de GoVault en la carpeta Aplicaciones."+
 	"Instalar"+
 	"Reparar"+
 	"Desinstalar"+
@@ -5642,9 +5642,9 @@ var textsEs = i18n.NewTexts(""+
 		99,
 		119,
 		63,
-		0,
-		0,
-		0,
+		21,
+		115,
+		99,
 		23,
 		11,
 		28,
@@ -6070,7 +6070,7 @@ var textsEs = i18n.NewTexts(""+
 		36,
 		128,
 		47,
-		0,
+		127,
 		8,
 		7,
 		11,
@@ -6189,9 +6189,9 @@ var textsFr = i18n.NewTexts(""+
 	"Le serveur n’a pas accepté ce code YubiKey. Touchez à nouveau votre YubiKey pour en saisir un nouveau."+
 	"Cette YubiKey n’est pas enregistrée sur votre compte. Utilisez une YubiKey ajoutée dans les paramètres web de votre coffre."+
 	"Un code de vérification a été envoyé à votre adresse e-mail."+
-	""+
-	""+
-	""+
+	"Vérifiez votre identité"+
+	"Code de vérification invalide ou expiré. Vérifiez-le ou choisissez « Renvoyer le code »."+
+	"Bitwarden demande ce code sur chaque nouvel appareil pour les comptes sans authentification à deux facteurs."+
 	"GoVault est verrouillé"+
 	"Déverrouiller"+
 	"ou utiliser le mot de passe principal"+
@@ -6617,7 +6617,7 @@ var textsFr = i18n.NewTexts(""+
 	"Outil en ligne de commande gv"+
 	"Utilisez votre coffre dans Terminal et vos scripts avec des commandes Bitwarden CLI. L’installation crée un lien dans /usr/local/bin/gv."+
 	"Cette copie de GoVault n’inclut pas la commande gv."+
-	""+
+	"Pour installer la commande gv pour tous les utilisateurs de ce Mac, utilisez la version signée de GoVault dans le dossier Applications."+
 	"Installer"+
 	"Réparer"+
 	"Désinstaller"+
@@ -6733,9 +6733,9 @@ var textsFr = i18n.NewTexts(""+
 		106,
 		128,
 		65,
-		0,
-		0,
-		0,
+		25,
+		93,
+		109,
 		23,
 		14,
 		37,
@@ -7161,7 +7161,7 @@ var textsFr = i18n.NewTexts(""+
 		29,
 		139,
 		53,
-		0,
+		136,
 		9,
 		8,
 		13,
@@ -7280,9 +7280,9 @@ var textsJa = i18n.NewTexts(""+
 	"サーバーがこの YubiKey コードを受け入れませんでした。もう一度 YubiKey にタッチして新しいコードを入力してください。"+
 	"この YubiKey はアカウントに登録されていません。ウェブ保管庫の設定で追加した YubiKey を使用してください。"+
 	"認証コードをメールで送信しました。"+
-	""+
-	""+
-	""+
+	"本人確認"+
+	"認証コードが無効または期限切れです。コードを確認するか、「コードを再送信」で新しいコードを取得してください。"+
+	"2段階認証が有効でないアカウントでは、新しいデバイスごとに Bitwarden がこのコードを求めます。"+
 	"GoVault はロックされています"+
 	"ロック解除"+
 	"またはマスターパスワードを使用"+
@@ -7708,7 +7708,7 @@ var textsJa = i18n.NewTexts(""+
 	"gv コマンドラインツール"+
 	"ターミナルやスクリプトから Bitwarden CLI コマンドで保管庫を利用できます。インストールすると /usr/local/bin/gv にリンクを作成します。"+
 	"この GoVault には gv コマンドが含まれていません。"+
-	""+
+	"この Mac のすべてのユーザー向けに gv コマンドをインストールするには、「アプリケーション」フォルダにある署名済みの GoVault リリース版を使用してください。"+
 	"インストール"+
 	"修復"+
 	"アンインストール"+
@@ -7824,9 +7824,9 @@ var textsJa = i18n.NewTexts(""+
 		162,
 		147,
 		51,
-		0,
-		0,
-		0,
+		12,
+		162,
+		132,
 		38,
 		15,
 		45,
@@ -8252,7 +8252,7 @@ var textsJa = i18n.NewTexts(""+
 		33,
 		181,
 		67,
-		0,
+		219,
 		18,
 		6,
 		24,
@@ -8371,9 +8371,9 @@ var textsKo = i18n.NewTexts(""+
 	"서버가 이 YubiKey 코드를 거부했습니다. YubiKey를 다시 터치하여 새 코드를 입력하세요."+
 	"이 YubiKey는 계정에 등록되어 있지 않습니다. 웹 보관함 설정에서 추가한 YubiKey를 사용하세요."+
 	"이메일로 인증 코드를 보냈습니다."+
-	""+
-	""+
-	""+
+	"신원을 인증하세요"+
+	"인증 코드가 올바르지 않거나 만료되었습니다. 코드를 확인하거나 “코드 재전송”을 선택해 새 코드를 받으세요."+
+	"2단계 인증을 사용하지 않는 계정의 경우 Bitwarden은 새 기기마다 이 코드를 요청합니다."+
 	"GoVault 잠김"+
 	"잠금 해제"+
 	"또는 마스터 비밀번호 사용"+
@@ -8799,7 +8799,7 @@ var textsKo = i18n.NewTexts(""+
 	"gv 명령줄 도구"+
 	"터미널과 스크립트에서 Bitwarden CLI 명령으로 보관함을 사용합니다. 설치하면 /usr/local/bin/gv에 링크가 추가됩니다."+
 	"이 GoVault 사본에는 gv 명령이 포함되어 있지 않습니다."+
-	""+
+	"이 Mac의 모든 사용자를 위해 gv 명령을 설치하려면 응용 프로그램 폴더에 있는 서명된 GoVault 정식 버전을 사용하세요."+
 	"설치"+
 	"복구"+
 	"제거"+
@@ -8915,9 +8915,9 @@ var textsKo = i18n.NewTexts(""+
 		113,
 		123,
 		46,
-		0,
-		0,
-		0,
+		25,
+		152,
+		115,
 		14,
 		13,
 		36,
@@ -9343,7 +9343,7 @@ var textsKo = i18n.NewTexts(""+
 		19,
 		149,
 		71,
-		0,
+		155,
 		6,
 		6,
 		6,
@@ -9462,9 +9462,9 @@ var textsPtBR = i18n.NewTexts(""+
 	"O servidor não aceitou este código da YubiKey. Toque novamente na sua YubiKey para inserir um novo."+
 	"Esta YubiKey não está registrada na sua conta. Use uma YubiKey adicionada nas configurações web do seu cofre."+
 	"Um código de verificação foi enviado para seu e-mail."+
-	""+
-	""+
-	""+
+	"Verifique sua identidade"+
+	"Código de verificação inválido ou expirado. Verifique o código ou escolha “Reenviar código” para obter um novo."+
+	"O Bitwarden solicita este código em cada novo dispositivo para contas sem autenticação em duas etapas."+
 	"O GoVault está bloqueado"+
 	"Desbloquear"+
 	"ou use sua senha principal"+
@@ -9890,7 +9890,7 @@ var textsPtBR = i18n.NewTexts(""+
 	"Ferramenta de linha de comando gv"+
 	"Use seu cofre no Terminal e em scripts com comandos do Bitwarden CLI. A instalação cria um link em /usr/local/bin/gv."+
 	"Esta cópia do GoVault não inclui o comando gv."+
-	""+
+	"Para instalar o comando gv para todos os usuários deste Mac, use a versão assinada do GoVault na pasta Aplicativos."+
 	"Instalar"+
 	"Reparar"+
 	"Desinstalar"+
@@ -10006,9 +10006,9 @@ var textsPtBR = i18n.NewTexts(""+
 		101,
 		113,
 		56,
-		0,
-		0,
-		0,
+		24,
+		121,
+		105,
 		25,
 		11,
 		26,
@@ -10434,7 +10434,7 @@ var textsPtBR = i18n.NewTexts(""+
 		33,
 		119,
 		48,
-		0,
+		117,
 		8,
 		7,
 		11,
@@ -10553,9 +10553,9 @@ var textsRu = i18n.NewTexts(""+
 	"Сервер не принял этот код YubiKey. Прикоснитесь к YubiKey ещё раз, чтобы ввести новый код."+
 	"Этот YubiKey не зарегистрирован в вашем аккаунте. Используйте YubiKey, добавленный в веб-настройках хранилища."+
 	"Код подтверждения отправлен на вашу эл. почту."+
-	""+
-	""+
-	""+
+	"Подтвердите вашу личность"+
+	"Неверный или просроченный код подтверждения. Проверьте код или нажмите «Отправить повторно»."+
+	"Bitwarden запрашивает этот код на каждом новом устройстве для аккаунтов без двухэтапной аутентификации."+
 	"GoVault заблокирован"+
 	"Разблокировать"+
 	"или используйте мастер-пароль"+
@@ -10981,7 +10981,7 @@ var textsRu = i18n.NewTexts(""+
 	"Утилита командной строки gv"+
 	"Работайте с хранилищем из Терминала и скриптов командами Bitwarden CLI. Установка создаст ссылку /usr/local/bin/gv."+
 	"Эта копия GoVault не включает команду gv."+
-	""+
+	"Чтобы установить команду gv для всех пользователей этого Mac, используйте подписанный релиз GoVault в папке «Программы»."+
 	"Установить"+
 	"Исправить"+
 	"Удалить"+
@@ -11097,9 +11097,9 @@ var textsRu = i18n.NewTexts(""+
 		149,
 		190,
 		84,
-		0,
-		0,
-		0,
+		48,
+		172,
+		184,
 		32,
 		28,
 		55,
@@ -11525,7 +11525,7 @@ var textsRu = i18n.NewTexts(""+
 		49,
 		186,
 		66,
-		0,
+		211,
 		20,
 		18,
 		14,
@@ -11644,9 +11644,9 @@ var textsZhHans = i18n.NewTexts(""+
 	"服务器未接受此 YubiKey 验证码。请再次轻触你的 YubiKey 以输入新的验证码。"+
 	"此 YubiKey 未注册到你的账户。请使用你在网页端密码库设置中添加的 YubiKey。"+
 	"验证码已发送至你的电子邮箱。"+
-	""+
-	""+
-	""+
+	"验证你的身份"+
+	"验证码无效或已过期。请检查验证码，或选择“重新发送验证码”获取新的验证码。"+
+	"对于未开启两步登录的账户，Bitwarden 会在每次使用新设备时要求输入此验证码。"+
 	"GoVault 已锁定"+
 	"解锁"+
 	"或使用主密码"+
@@ -12072,7 +12072,7 @@ var textsZhHans = i18n.NewTexts(""+
 	"gv 命令行工具"+
 	"在“终端”和脚本中使用 Bitwarden CLI 命令访问密码库。安装后会在 /usr/local/bin/gv 创建链接。"+
 	"此 GoVault 副本不包含 gv 命令。"+
-	""+
+	"要为此 Mac 的所有用户安装 gv 命令，请使用“应用程序”文件夹中经过签名的 GoVault 正式版。"+
 	"安装"+
 	"修复"+
 	"卸载"+
@@ -12188,9 +12188,9 @@ var textsZhHans = i18n.NewTexts(""+
 		99,
 		101,
 		42,
-		0,
-		0,
-		0,
+		18,
+		111,
+		106,
 		17,
 		6,
 		18,
@@ -12616,7 +12616,7 @@ var textsZhHans = i18n.NewTexts(""+
 		18,
 		121,
 		40,
-		0,
+		123,
 		6,
 		6,
 		6,
@@ -12735,9 +12735,9 @@ var textsZhHant = i18n.NewTexts(""+
 	"伺服器未接受此 YubiKey 驗證碼。請再次輕觸您的 YubiKey 以輸入新的驗證碼。"+
 	"此 YubiKey 未註冊至您的帳戶。請使用您在網頁版密碼庫設定中新增的 YubiKey。"+
 	"驗證碼已傳送至您的電子郵件。"+
-	""+
-	""+
-	""+
+	"驗證您的身分"+
+	"驗證碼無效或已逾期。請檢查驗證碼，或選擇「重新傳送驗證碼」以取得新的驗證碼。"+
+	"對於未啟用兩步驟登入的帳戶，Bitwarden 會在每次使用新裝置時要求輸入此驗證碼。"+
 	"GoVault 已鎖定"+
 	"解鎖"+
 	"或使用主密碼"+
@@ -13163,7 +13163,7 @@ var textsZhHant = i18n.NewTexts(""+
 	"gv 命令列工具"+
 	"在「終端機」與指令碼中使用 Bitwarden CLI 指令存取密碼庫。安裝會在 /usr/local/bin/gv 建立連結。"+
 	"此 GoVault 副本不包含 gv 指令。"+
-	""+
+	"若要為此 Mac 的所有使用者安裝 gv 指令，請使用「應用程式」資料夾中經過簽章的 GoVault 正式版。"+
 	"安裝"+
 	"修復"+
 	"解除安裝"+
@@ -13279,9 +13279,9 @@ var textsZhHant = i18n.NewTexts(""+
 		99,
 		101,
 		42,
-		0,
-		0,
-		0,
+		18,
+		114,
+		109,
 		17,
 		6,
 		18,
@@ -13707,7 +13707,7 @@ var textsZhHant = i18n.NewTexts(""+
 		18,
 		124,
 		40,
-		0,
+		129,
 		6,
 		6,
 		12,
@@ -14898,6 +14898,24 @@ func (msgs Messages) NewDeviceEnterCodeTo(email string) string {
 		switch lang {
 		case "", "en":
 			return "Your server doesn’t recognize this device. Enter the code sent to " + msgs.arg(email) + "."
+		case "de":
+			return "Dein Server erkennt dieses Gerät nicht. Gib den an " + email + " gesendeten Code ein."
+		case "es":
+			return "Tu servidor no reconoce este dispositivo. Introduce el código enviado a " + email + "."
+		case "fr":
+			return "Votre serveur ne reconnaît pas cet appareil. Saisissez le code envoyé à " + email + "."
+		case "ja":
+			return "このデバイスはサーバーに認識されていません。" + email + " に送信されたコードを入力してください。"
+		case "ko":
+			return "서버가 이 기기를 인식할 수 없습니다. " + email + "(으)로 전송된 코드를 입력하세요."
+		case "pt-BR":
+			return "Seu servidor não reconhece este dispositivo. Digite o código enviado para " + email + "."
+		case "ru":
+			return "Сервер не узнаёт это устройство. Введите код, отправленный на " + email + "."
+		case "zh-Hans":
+			return "服务器无法识别此设备。请输入发送至 " + email + " 的验证码。"
+		case "zh-Hant":
+			return "伺服器無法辨識此裝置。請輸入傳送至 " + email + " 的驗證碼。"
 		}
 	}
 }
@@ -25318,23 +25336,23 @@ func (msgs Messages) CommandLineToolShadowed(path string) string {
 		case "", "en":
 			return "Another gv at " + msgs.arg(path) + " comes first on the default PATH, so Terminal may run it instead."
 		case "de":
-			return "Im Terminal wird möglicherweise stattdessen ein anderes gv unter " + path + " ausgeführt."
+			return "Ein anderes gv unter " + path + " steht im Standard-PATH weiter vorn, sodass Terminal es stattdessen ausführen kann."
 		case "es":
-			return "Otro gv en " + path + " podría ejecutarse en su lugar en Terminal."
+			return "Otro gv en " + path + " aparece antes en el PATH predeterminado, por lo que Terminal podría ejecutarlo en su lugar."
 		case "fr":
-			return "Un autre gv dans " + path + " risque d’être exécuté à la place dans Terminal."
+			return "Un autre gv dans " + path + " apparaît avant dans le PATH par défaut ; Terminal risque de l’exécuter à la place."
 		case "ja":
-			return "ターミナルでは " + path + " の別の gv が代わりに実行される場合があります。"
+			return "デフォルトの PATH で " + path + " の別の gv が先にあるため、ターミナルではそちらが実行される場合があります。"
 		case "ko":
-			return "터미널에서는 " + path + "에 있는 다른 gv가 대신 실행될 수 있습니다."
+			return "기본 PATH에서 " + path + "의 다른 gv가 앞에 있어 터미널에서 대신 실행될 수 있습니다."
 		case "pt-BR":
-			return "Outro gv em " + path + " pode ser executado no lugar no Terminal."
+			return "Outro gv em " + path + " aparece antes no PATH padrão, então o Terminal pode executá-lo no lugar."
 		case "ru":
-			return "В Терминале вместо неё может запускаться другой gv из " + path + "."
+			return "Другой gv в " + path + " стоит раньше в стандартном PATH, поэтому в Терминале может запускаться он."
 		case "zh-Hans":
-			return "在“终端”中可能会优先运行位于 " + path + " 的另一个 gv。"
+			return "默认 PATH 中位于 " + path + " 的另一个 gv 排在前面，“终端”可能会优先运行它。"
 		case "zh-Hant":
-			return "在「終端機」中可能會改為執行位於 " + path + " 的另一個 gv。"
+			return "預設 PATH 中位於 " + path + " 的另一個 gv 排在前面，「終端機」可能會改為執行它。"
 		}
 	}
 }
@@ -25359,6 +25377,24 @@ func (msgs Messages) CommandLineToolOtherOnPath(path string) string {
 		switch lang {
 		case "", "en":
 			return "Another gv is at " + msgs.arg(path) + ", later on the default PATH; with that PATH, GoVault's runs first."
+		case "de":
+			return "Ein anderes gv liegt unter " + path + " weiter hinten im Standard-PATH; damit wird GoVaults Version zuerst ausgeführt."
+		case "es":
+			return "Hay otro gv en " + path + ", más adelante en el PATH predeterminado; con ese PATH, el de GoVault se ejecuta primero."
+		case "fr":
+			return "Un autre gv se trouve dans " + path + ", plus loin dans le PATH par défaut ; avec ce PATH, celui de GoVault s’exécute en premier."
+		case "ja":
+			return "デフォルトの PATH の後ろに " + path + " の別の gv がありますが、この PATH では GoVault のものが先に実行されます。"
+		case "ko":
+			return "기본 PATH의 뒤쪽에 " + path + "의 다른 gv가 있습니다. 해당 PATH에서는 GoVault 버전이 먼저 실행됩니다."
+		case "pt-BR":
+			return "Há outro gv em " + path + ", mais adiante no PATH padrão; com esse PATH, o do GoVault é executado primeiro."
+		case "ru":
+			return "Другой gv находится в " + path + ", дальше в стандартном PATH; с этим PATH сначала запускается версия GoVault."
+		case "zh-Hans":
+			return "默认 PATH 后面还存在另一个位于 " + path + " 的 gv；在该 PATH 下，GoVault 的版本会优先运行。"
+		case "zh-Hant":
+			return "預設 PATH 後方還有另一個位於 " + path + " 的 gv；在該 PATH 下，GoVault 的版本會優先執行。"
 		}
 	}
 }
