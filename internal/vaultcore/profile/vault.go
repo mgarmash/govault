@@ -349,6 +349,6 @@ func (p *Profile) syncOnce(ctx context.Context, req SyncRequest) error {
 		if seq != snap.Sequence {
 			return errSnapshotMoved
 		}
-		return p.store.SaveSnapshot(&updated)
+		return p.store.saveAfter(&updated, seq)
 	})
 }

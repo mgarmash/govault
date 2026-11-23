@@ -20,6 +20,13 @@ func (s sequencedStore) SaveSnapshot(snap *store.Snapshot) error {
 	return s.FileStore.SaveSnapshot(snap)
 }
 
+// saveAfter saves snap as the successor of the snapshot numbered seq,
+// which the caller read under the same exclusive lock.
+func (s sequencedStore) saveAfter(snap *store.Snapshot, seq uint64) error {
+	snap.Sequence = seq + 1
+	return s.FileStore.SaveSnapshot(snap)
+}
+
 // sequence is the saved snapshot's number, 0 when there is none.
 func (s sequencedStore) sequence(accountID string) (uint64, error) {
 	cur, err := s.LoadSnapshot(accountID)
