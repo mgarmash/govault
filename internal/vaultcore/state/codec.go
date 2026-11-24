@@ -732,13 +732,14 @@ func cloneCipher(c *Cipher) *Cipher {
 
 func summarizeCipher(c *Cipher) CipherSummary {
 	subtitle := ""
-	hasTOTP := false
+	hasTOTP, hasPasskey := false, false
 	var uris []string
 	switch c.Type {
 	case api.CipherTypeLogin:
 		if c.Login != nil {
 			subtitle = c.Login.Username
 			hasTOTP = strings.TrimSpace(c.Login.TOTP) != ""
+			hasPasskey = len(c.Login.Fido2Credentials) > 0
 			for _, u := range c.Login.URIs {
 				uris = append(uris, u.URI)
 			}
@@ -772,6 +773,8 @@ func summarizeCipher(c *Cipher) CipherSummary {
 		Name:     c.Name,
 		Subtitle: subtitle,
 		HasTOTP:  hasTOTP,
+
+		HasPasskey: hasPasskey,
 
 		RevisionDate: cloneTimePtr(c.RevisionDate),
 		Reprompt:     c.Reprompt,

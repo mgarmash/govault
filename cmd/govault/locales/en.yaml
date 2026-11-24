@@ -1152,3 +1152,6 @@ appearanceLight:
 appearanceDark:
   message: Dark
   description: Appearance choice that always shows GoVault dark.
+hasPasskey:
+  message: Has a passkey
+  description: Accessibility name of the small key icon on a vault list row whose login stores a passkey.

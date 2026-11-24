@@ -2315,6 +2315,7 @@ const (
 	textAppearanceSystem
 	textAppearanceLight
 	textAppearanceDark
+	textHasPasskey
 	numTexts
 )
 
@@ -2878,6 +2879,7 @@ var keyOfText = [numTexts]string{
 	"appearanceSystem",
 	"appearanceLight",
 	"appearanceDark",
+	"hasPasskey",
 }
 
 // textsEn are the messages without arguments in en.
@@ -3438,7 +3440,8 @@ var textsEn = i18n.NewTexts(""+
 	"Show GoVault light or dark, or follow the system."+
 	"System"+
 	"Light"+
-	"Dark",
+	"Dark"+
+	"Has a passkey",
 	[]uint16{
 		6,
 		4,
@@ -3997,6 +4000,7 @@ var textsEn = i18n.NewTexts(""+
 		6,
 		5,
 		4,
+		13,
 	})
 
 // textsDe are the messages without arguments in de.
@@ -4557,6 +4561,7 @@ var textsDe = i18n.NewTexts(""+
 	""+
 	""+
 	""+
+	""+
 	"",
 	[]uint16{
 		9,
@@ -5102,6 +5107,7 @@ var textsDe = i18n.NewTexts(""+
 		47,
 		31,
 		78,
+		0,
 		0,
 		0,
 		0,
@@ -5676,6 +5682,7 @@ var textsEs = i18n.NewTexts(""+
 	""+
 	""+
 	""+
+	""+
 	"",
 	[]uint16{
 		8,
@@ -6221,6 +6228,7 @@ var textsEs = i18n.NewTexts(""+
 		41,
 		54,
 		77,
+		0,
 		0,
 		0,
 		0,
@@ -6795,6 +6803,7 @@ var textsFr = i18n.NewTexts(""+
 	""+
 	""+
 	""+
+	""+
 	"",
 	[]uint16{
 		7,
@@ -7340,6 +7349,7 @@ var textsFr = i18n.NewTexts(""+
 		52,
 		44,
 		85,
+		0,
 		0,
 		0,
 		0,
@@ -7914,6 +7924,7 @@ var textsJa = i18n.NewTexts(""+
 	""+
 	""+
 	""+
+	""+
 	"",
 	[]uint16{
 		15,
@@ -8459,6 +8470,7 @@ var textsJa = i18n.NewTexts(""+
 		48,
 		63,
 		101,
+		0,
 		0,
 		0,
 		0,
@@ -9033,6 +9045,7 @@ var textsKo = i18n.NewTexts(""+
 	""+
 	""+
 	""+
+	""+
 	"",
 	[]uint16{
 		6,
@@ -9578,6 +9591,7 @@ var textsKo = i18n.NewTexts(""+
 		43,
 		49,
 		85,
+		0,
 		0,
 		0,
 		0,
@@ -10152,6 +10166,7 @@ var textsPtBR = i18n.NewTexts(""+
 	""+
 	""+
 	""+
+	""+
 	"",
 	[]uint16{
 		8,
@@ -10697,6 +10712,7 @@ var textsPtBR = i18n.NewTexts(""+
 		55,
 		34,
 		69,
+		0,
 		0,
 		0,
 		0,
@@ -11271,6 +11287,7 @@ var textsRu = i18n.NewTexts(""+
 	""+
 	""+
 	""+
+	""+
 	"",
 	[]uint16{
 		12,
@@ -11816,6 +11833,7 @@ var textsRu = i18n.NewTexts(""+
 		53,
 		60,
 		120,
+		0,
 		0,
 		0,
 		0,
@@ -12390,6 +12408,7 @@ var textsZhHans = i18n.NewTexts(""+
 	""+
 	""+
 	""+
+	""+
 	"",
 	[]uint16{
 		6,
@@ -12935,6 +12954,7 @@ var textsZhHans = i18n.NewTexts(""+
 		27,
 		24,
 		59,
+		0,
 		0,
 		0,
 		0,
@@ -13509,6 +13529,7 @@ var textsZhHant = i18n.NewTexts(""+
 	""+
 	""+
 	""+
+	""+
 	"",
 	[]uint16{
 		6,
@@ -14054,6 +14075,7 @@ var textsZhHant = i18n.NewTexts(""+
 		27,
 		24,
 		59,
+		0,
 		0,
 		0,
 		0,
@@ -26389,6 +26411,15 @@ func AppearanceDark(cx *core.Scope) string { return For(cx).AppearanceDark() }
 
 // AppearanceDark is the package's AppearanceDark in the language of msgs.
 func (msgs Messages) AppearanceDark() string { return msgs.text(textAppearanceDark) }
+
+// HasPasskey says "Has a passkey"
+// in the language the app shows under cx.
+//
+// Accessibility name of the small key icon on a vault list row whose login stores a passkey.
+func HasPasskey(cx *core.Scope) string { return For(cx).HasPasskey() }
+
+// HasPasskey is the package's HasPasskey in the language of msgs.
+func (msgs Messages) HasPasskey() string { return msgs.text(textHasPasskey) }
 
 // dated is lang with the hour cycle the user set, which times take.
 func (msgs Messages) dated(lang string) string {

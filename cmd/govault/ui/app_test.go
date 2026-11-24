@@ -281,23 +281,25 @@ func (m *mockVaultService) Search(query string, filter state.SearchFilter) []sta
 			continue
 		}
 		sub := ""
-		hasTOTP := false
+		hasTOTP, hasPasskey := false, false
 		if c.Login != nil {
 			sub = c.Login.Username
 			hasTOTP = strings.TrimSpace(c.Login.TOTP) != ""
+			hasPasskey = len(c.Login.Fido2Credentials) > 0
 		}
 		out = append(out, state.CipherSummary{
-			ID:       c.ID,
-			Type:     c.Type,
-			FolderID: c.FolderID,
-			Favorite: c.Favorite,
-			Deleted:  deleted,
-			Archived: c.ArchivedDate != nil,
-			Name:     c.Name,
-			Subtitle: sub,
-			HasTOTP:  hasTOTP,
-			Reprompt: c.Reprompt,
-			URIs:     loginURIs(c),
+			HasPasskey: hasPasskey,
+			ID:         c.ID,
+			Type:       c.Type,
+			FolderID:   c.FolderID,
+			Favorite:   c.Favorite,
+			Deleted:    deleted,
+			Archived:   c.ArchivedDate != nil,
+			Name:       c.Name,
+			Subtitle:   sub,
+			HasTOTP:    hasTOTP,
+			Reprompt:   c.Reprompt,
+			URIs:       loginURIs(c),
 
 			OrganizationID: c.OrganizationID,
 			CollectionIDs:  c.CollectionIDs,

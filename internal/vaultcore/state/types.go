@@ -91,6 +91,7 @@ type CipherSummary struct {
 	// RevisionDate is when the item last changed, for sorting.
 	RevisionDate *time.Time
 	HasTOTP      bool
+	HasPasskey   bool
 	Reprompt     int
 	URIs         []string
 

@@ -941,6 +941,22 @@ func itemListPane(cx *core.Scope, m *AppModel) core.Node {
 							},
 						}
 					}
+					passkey := core.Show{
+						When: flag(func(s state.CipherSummary) bool { return s.HasPasskey }),
+						Then: func(cx *core.Scope) core.Node {
+							label := locales.HasPasskey(cx)
+							return core.Dynamic(func(cx *core.Scope) core.Node {
+								class := "text-gv-fg3"
+								if selected() {
+									class = "text-white/90"
+								}
+								return core.Icon{
+									TestID: "vault-row-passkey", SVG: lucide.KeyRound(), Label: label, Class: class,
+									Style: core.Style{Width: core.Pt(12), Height: core.Pt(12)},
+								}
+							})
+						},
+					}
 					return core.View{
 						Class: "px-2",
 						Children: []core.Node{
@@ -1012,6 +1028,7 @@ func itemListPane(cx *core.Scope, m *AppModel) core.Node {
 										Children: []core.Node{
 											indicator(flag(func(s state.CipherSummary) bool { return s.Reprompt == 1 }), lucide.LockKeyhole, 12, "text-gv-fg3"),
 											indicator(flag(func(s state.CipherSummary) bool { return s.HasTOTP }), lucide.Timer, 12.5, "text-gv-fg3"),
+											passkey,
 											indicator(flag(func(s state.CipherSummary) bool { return s.Favorite }), FilledStar, 11.5, "text-gv-star"),
 										},
 									},
