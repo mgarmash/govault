@@ -836,7 +836,7 @@ func (s *Service) Search(query string, filter SearchFilter) []CipherSummary {
 	if s.status != StatusUnlocked {
 		return nil
 	}
-	return searchCiphers(s.ciphers, query, filter)
+	return searchCiphers(s.ciphers, query, filter, s.effectiveHidePasswordLocked)
 }
 
 func (s *Service) GetCipher(id string) (*Cipher, error) {

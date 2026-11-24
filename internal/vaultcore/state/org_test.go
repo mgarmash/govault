@@ -68,11 +68,15 @@ func TestService_OrganizationCollectionsAndOrgCiphers(t *testing.T) {
 	orgID := "org-1"
 	rev := time.Date(2026, 11, 20, 10, 0, 0, 0, time.UTC)
 	var mu sync.Mutex
+	viewable := true
 	orgCipher := api.EncryptedCipher{
 		ID: "c-org", Type: api.CipherTypeLogin, OrganizationID: &orgID, Key: &encCipherKeyStr,
 		Name: *mustEnc(t, "Shared AWS", cipherKey), RevisionDate: &rev,
 		CollectionIDs: []string{"col-eng"},
 		Login:         &api.EncryptedLogin{Username: mustEnc(t, "ops", cipherKey), Password: mustEnc(t, "s3cret", cipherKey)},
+		Fields:        []api.EncryptedField{{Name: mustEnc(t, "zone", cipherKey), Value: mustEnc(t, "hidden-zone-value", cipherKey), Type: 0}},
+		// The item allows viewing; its collection hides passwords.
+		ViewPassword: &viewable,
 	}
 	personal := api.EncryptedCipher{ID: "c-me", Type: api.CipherTypeLogin, Name: *mustEnc(t, "Personal Mail", userKey), RevisionDate: &rev}
 	var lastPayload api.CipherPayload
@@ -147,6 +151,11 @@ func TestService_OrganizationCollectionsAndOrgCiphers(t *testing.T) {
 
 	if all := svc.Search("", SearchFilter{}); len(all) != 2 {
 		t.Fatalf("global search = %+v, want personal + org items", all)
+	}
+	// The item hides passwords through its collection, so its fields are
+	// not searched either.
+	if got := svc.Search("hidden-zone-value", SearchFilter{}); len(got) != 0 {
+		t.Fatalf("search found a field of an item whose collection hides passwords: %+v", got)
 	}
 	inCol := svc.Search("", SearchFilter{CollectionID: "col-eng"})
 	if len(inCol) != 1 || inCol[0].Name != "Shared AWS" || inCol[0].OrganizationID == nil {

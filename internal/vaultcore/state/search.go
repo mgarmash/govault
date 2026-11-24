@@ -10,7 +10,10 @@ type scoredSummary struct {
 	score   int
 }
 
-func searchCiphers(ciphers map[string]*Cipher, query string, filter SearchFilter) []CipherSummary {
+// searchCiphers lists the ciphers filter selects that match query. hidden
+// reports an item whose passwords the user may not see, which search
+// treats as the detail view does: nothing it hides can be found.
+func searchCiphers(ciphers map[string]*Cipher, query string, filter SearchFilter, hidden func(*Cipher) bool) []CipherSummary {
 	q := strings.ToLower(strings.TrimSpace(query))
 	var matches []scoredSummary
 
@@ -23,7 +26,7 @@ func searchCiphers(ciphers map[string]*Cipher, query string, filter SearchFilter
 			matches = append(matches, scoredSummary{summary: summary, score: 0})
 			continue
 		}
-		if score, ok := scoreCipher(c, summary, q); ok {
+		if score, ok := scoreCipher(c, summary, q, hidden(c)); ok {
 			matches = append(matches, scoredSummary{summary: summary, score: score})
 		}
 	}
@@ -81,7 +84,21 @@ func matchesFilter(c *Cipher, filter SearchFilter) bool {
 	}
 }
 
-func scoreCipher(c *Cipher, summary CipherSummary, q string) (int, bool) {
+// Custom field types search may read: text and boolean. Hidden fields are
+// secrets, and linked fields hold no value.
+const (
+	fieldText    = 0
+	fieldBoolean = 2
+)
+
+// scoreCipher matches q against what an item shows without revealing a
+// secret: its name, subtitle, websites and notes; the names and values of
+// its text and boolean fields unless it hides passwords; a card's brand and
+// the last four digits of its number, those also only when it does not
+// hide passwords; an SSH key's fingerprint; an identity's name, company,
+// email and username. Passwords, TOTP secrets, hidden fields, card codes,
+// private keys and identity numbers are never searched.
+func scoreCipher(c *Cipher, summary CipherSummary, q string, hidesPasswords bool) (int, bool) {
 	best := 0
 	matched := false
 
@@ -107,6 +124,30 @@ func scoreCipher(c *Cipher, summary CipherSummary, q string) (int, bool) {
 		}
 	}
 	check(c.Notes, 2)
+	if !hidesPasswords {
+		for _, f := range c.Fields {
+			if f.Type == fieldText || f.Type == fieldBoolean {
+				check(f.Name, 3)
+				check(f.Value, 3)
+			}
+		}
+	}
+	if k := c.Card; k != nil {
+		check(k.Brand, 4)
+		if digits := strings.TrimSpace(k.Number); !hidesPasswords && len(digits) >= 4 {
+			// Only the last four: the whole number is a secret.
+			check(digits[len(digits)-4:], 4)
+		}
+	}
+	if k := c.SSHKey; k != nil {
+		check(k.KeyFingerprint, 4)
+	}
+	if i := c.Identity; i != nil {
+		check(strings.Join(strings.Fields(i.FirstName+" "+i.MiddleName+" "+i.LastName), " "), 5)
+		check(i.Company, 4)
+		check(i.Email, 4)
+		check(i.Username, 4)
+	}
 
 	return best, matched
 }
