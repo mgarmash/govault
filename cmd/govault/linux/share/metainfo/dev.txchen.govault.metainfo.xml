@@ -63,6 +63,11 @@
     <display_length compare="ge">768</display_length>
   </requires>
   <releases>
+    <release version="0.6.1" date="2026-11-24">
+      <description>
+        <p>GoVault is also built for Intel Macs.</p>
+      </description>
+    </release>
     <release version="0.6.0" date="2026-11-23">
       <description>
         <p>Select several items to move, trash, archive, restore or delete them together, find duplicate logins in Vault Health, sort the list, choose the server and appearance, and get real-time sync on bitwarden.com and bitwarden.eu.</p>
