@@ -2,8 +2,7 @@ package cli
 
 import (
 	"encoding/json"
-	"net"
-	"net/url"
+	"github.com/txchen/govault/internal/vaultcore/uri"
 	"regexp"
 	"slices"
 	"strconv"
@@ -11,8 +10,6 @@ import (
 	"sync"
 	"unicode"
 
-	"golang.org/x/net/idna"
-	"golang.org/x/net/publicsuffix"
 	"golang.org/x/text/collate"
 	"golang.org/x/text/language"
 	"golang.org/x/text/unicode/norm"
@@ -123,45 +120,6 @@ func matchesAll(c *state.Cipher, terms []string) bool {
 	return true
 }
 
-// parseURI parses s as a URL, assuming http:// when it has no scheme, the
-// way Bitwarden's URL helpers do.
-func parseURI(s string) *url.URL {
-	s = strings.TrimSpace(s)
-	if s == "" {
-		return nil
-	}
-	if !strings.Contains(s, "://") {
-		if !strings.Contains(s, ".") {
-			return nil
-		}
-		s = "http://" + s
-	}
-	u, err := url.Parse(s)
-	if err != nil || u.Host == "" {
-		return nil
-	}
-	return u
-}
-
-// hostname is a URI's host name in lowercase, or "".
-func hostname(s string) string {
-	s = strings.TrimSpace(s)
-	for _, p := range []string{"data:", "about:", "file:"} {
-		if strings.HasPrefix(s, p) {
-			return ""
-		}
-	}
-	u := parseURI(s)
-	if u == nil {
-		return ""
-	}
-	h := strings.TrimSuffix(strings.ToLower(u.Hostname()), ".")
-	if a, err := idna.ToASCII(h); err == nil {
-		h = a
-	}
-	return h
-}
-
 // host is a URL's host and non-default port, as URL.host gives.
 func host(s string) string {
 	u := parseURI(s)
@@ -185,26 +143,13 @@ func host(s string) string {
 	return h
 }
 
-// domain is the registrable domain of a URI (its public suffix plus one
-// label), the host itself for localhost and IP addresses, or "".
-func domain(s string) string {
-	s = strings.TrimSpace(s)
-	if strings.HasPrefix(s, "data:") || strings.HasPrefix(s, "about:") {
-		return ""
-	}
-	h := hostname(s)
-	if h == "" {
-		return ""
-	}
-	if h == "localhost" || net.ParseIP(strings.Trim(h, "[]")) != nil {
-		return h
-	}
-	d, err := publicsuffix.EffectiveTLDPlusOne(h)
-	if err != nil {
-		return ""
-	}
-	return d
-}
+// parseURI, hostname and domain read login URIs as the URI match rules
+// do, shared with Vault Health.
+var (
+	parseURI = uri.Parse
+	hostname = uri.Hostname
+	domain   = uri.Domain
+)
 
 // domainMatchExclusions are hosts that never match their domain.
 var domainMatchExclusions = map[string][]string{"google.com": {"script.google.com"}}
