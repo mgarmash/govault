@@ -29,7 +29,7 @@
 
 ## Install
 
-### macOS (Apple silicon)
+### macOS (13 or later, Apple silicon and Intel)
 
 With [Homebrew](https://brew.sh) (recommended):
 
@@ -37,7 +37,7 @@ With [Homebrew](https://brew.sh) (recommended):
 brew install --cask txchen/tap/govault
 ```
 
-Or download `govault-<version>-macos-arm64.dmg` from [Releases](https://github.com/txchen/govault/releases/latest). The app is signed with a Developer ID and notarized by Apple. It updates itself; you can also choose **GoVault → Check for Updates…** at any time, even before signing in.
+Or download `govault-<version>-macos-arm64.dmg` (Apple silicon) or `govault-<version>-macos-x64.dmg` (Intel) from [Releases](https://github.com/txchen/govault/releases/latest). The app is signed with a Developer ID and notarized by Apple. It updates itself; you can also choose **GoVault → Check for Updates…** at any time, even before signing in.
 
 ### Linux (x86_64 and arm64)
 
@@ -130,7 +130,7 @@ Bitwarden's mobile apps are native, but its desktop app is an Electron and Angul
 
 <sub>Measured on an Apple silicon Mac running macOS 27.2. Memory is the physical footprint from `footprint`, summed over all of an app's processes. CPU is from seven `top` samples 5 seconds apart and from the CPU time each app used over the same 30 seconds. Both apps were signed in to the same account and vault (about 440 items), showing the main vault list with no item open, idle for at least 30 seconds (CPU time used: GoVault 0.02 s, Bitwarden 0.96 s). Download sizes are the release assets on GitHub.</sub>
 
-GoVault does not replace everything the official app does. It has no Intel Mac build, no Bitwarden Send and no browser-extension integration, and accounts are created on your server's web vault. GoVault keeps the passkeys stored in your vault, shows them on each item, and can remove them, but it cannot create passkeys or sign in with them. Use the Bitwarden browser extension for that.
+GoVault does not replace everything the official app does. It has no Bitwarden Send and no browser-extension integration, and accounts are created on your server's web vault. GoVault keeps the passkeys stored in your vault, shows them on each item, and can remove them, but it cannot create passkeys or sign in with them. Use the Bitwarden browser extension for that.
 
 On a free bitwarden.com account, GoVault shows the verification codes of your logins' TOTP secrets, in the app and with `gv get totp`, and runs Vault Health (reused and weak passwords, expiring cards, unsecured websites). The official apps include these with Premium; GoVault computes both locally on your device. Premium features that rely on Bitwarden's servers still need Premium: attachments, the Archive, YubiKey and Duo two-step login setup, emergency access, and file Sends.
 
