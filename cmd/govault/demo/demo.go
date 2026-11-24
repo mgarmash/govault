@@ -229,7 +229,10 @@ func (s *Service) Search(query string, filter state.SearchFilter) []state.Cipher
 			Subtitle: sub,
 			HasTOTP:  c.Login != nil && strings.TrimSpace(c.Login.TOTP) != "",
 			Reprompt: c.Reprompt,
-			URIs:     loginURIs(c),
+
+			HasPasskey:   c.Login != nil && len(c.Login.Fido2Credentials) > 0,
+			RevisionDate: c.RevisionDate,
+			URIs:         loginURIs(c),
 
 			OrganizationID: c.OrganizationID,
 			CollectionIDs:  c.CollectionIDs,
