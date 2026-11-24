@@ -25,7 +25,7 @@
   </picture>
 </p>
 
-<p align="center"><sub>Follows the system appearance: <a href="docs/screenshots/vault-light.png">light</a> and <a href="docs/screenshots/vault-dark.png">dark</a>.</sub></p>
+<p align="center"><sub>Light, Dark or System appearance, chosen in Settings: <a href="docs/screenshots/vault-light.png">light</a> and <a href="docs/screenshots/vault-dark.png">dark</a>.</sub></p>
 
 ## Install
 
@@ -110,7 +110,7 @@ gv lock
 | `install-linux.sh`, AppImage | Automatic: `~/.local/bin/gv` (`/usr/local/bin/gv` with `--system`), which keeps working without FUSE or a display and follows GoVault's updates | `install-linux.sh --uninstall` |
 | `.deb` or pacman package | Automatic: `/usr/bin/gv` | Removing the package removes it |
 | macOS app | **Settings → Command Line → Install** links `/usr/local/bin/gv` to the app (asks for an administrator password once) and updates with the app. It is offered for the signed GoVault in `/Applications` | **Settings → Command Line → Uninstall** |
-| Homebrew | Automatic with the cask, from the first release whose app carries `gv` | `brew uninstall --cask govault` |
+| Homebrew | Automatic with the cask | `brew uninstall --cask govault` |
 
 It supports `login` (master password with authenticator, email or YubiKey two-step login, or a personal API key), `unlock`, `lock`, `logout`, `status`, `sync`, `config server`, `list`, `get` (items, fields, TOTP codes, attachments, folders, collections, organizations, fingerprints), `create`, `edit`, `delete`, `restore` and `archive` (items, folders, attachments, item collections), `import` and `export` (Bitwarden JSON and CSV, encrypted with the account key or a password, and ZIP with attachments), `generate`, `encode` and `completion`. It does not yet move items to organizations, administer organizations, or use Send. `gv` keeps its own sign-in, separate from the app's, under `GoVault CLI` in your configuration directory (or `$BITWARDENCLI_APPDATA_DIR`), and keeps its credentials in the system keychain when there is one. See [docs/cli-design.md](docs/cli-design.md) for details and the few differences from `bw`.
 
@@ -118,17 +118,17 @@ It supports `login` (master password with authenticator, email or YubiKey two-st
 
 Bitwarden's mobile apps are native, but its desktop app is an Electron and Angular application: it ships a Chromium browser engine and Node.js, runs several processes, and is large to download and keep in memory. GoVault is a desktop client written in Go on native platform views (AppKit on macOS, GTK 4 on Linux, Win32 with Direct2D on Windows), with no CGO and a single process.
 
-| | GoVault 0.2.5 | Bitwarden Desktop 2026.10.4 |
+| | GoVault | Bitwarden Desktop 2026.10.4 |
 |---|---|---|
 | UI stack | Native views via [NSGo](https://nsgo.dev), Go, zero CGO | Electron (Chromium + Node.js) and Angular |
-| macOS download | 6.6 MB DMG (Apple silicon) | 350.7 MB DMG (universal) |
-| macOS app on disk | 21.5 MB | 1,033 MB (universal: x86_64 + arm64) |
-| Linux download (x86_64) | 7.0 MB `.deb`, 8.0 MB AppImage | 163.7 MB `.deb`, 215.8 MB AppImage |
-| Processes while idle | 1 | 4 (main, GPU, network, renderer) |
-| Memory, idle with the vault unlocked | 64 MB | 464 MB in total |
-| CPU, idle with the vault unlocked | under 0.1% | about 3% in total |
+| macOS download | 10.7 MB DMG (0.6.1, Apple silicon) | 350.7 MB DMG (universal) |
+| macOS app on disk | 37.1 MB (0.6.1, Apple silicon) | 1,033 MB (universal: x86_64 + arm64) |
+| Linux download (x86_64) | 14.0 MB `.deb`, 15.1 MB AppImage (0.6.1) | 163.7 MB `.deb`, 215.8 MB AppImage |
+| Processes while idle | 1 (0.2.5) | 4 (main, GPU, network, renderer) |
+| Memory, idle with the vault unlocked | 64 MB (0.2.5) | 464 MB in total |
+| CPU, idle with the vault unlocked | under 0.1% (0.2.5) | about 3% in total |
 
-<sub>Measured on an Apple silicon Mac running macOS 27.2. Memory is the physical footprint from `footprint`, summed over all of an app's processes. CPU is from seven `top` samples 5 seconds apart and from the CPU time each app used over the same 30 seconds. Both apps were signed in to the same account and vault (about 440 items), showing the main vault list with no item open, idle for at least 30 seconds (CPU time used: GoVault 0.02 s, Bitwarden 0.96 s). Download sizes are the release assets on GitHub.</sub>
+<sub>Measured on an Apple silicon Mac running macOS 27.2. Memory is the physical footprint from `footprint`, summed over all of an app's processes. CPU is from seven `top` samples 5 seconds apart and from the CPU time each app used over the same 30 seconds. Both apps were signed in to the same account and vault (about 440 items), showing the main vault list with no item open, idle for at least 30 seconds (CPU time used: GoVault 0.02 s, Bitwarden 0.96 s). The process, memory and CPU rows were measured on GoVault 0.2.5. Download sizes are the release assets on GitHub, and GoVault's sizes are those of 0.6.1, which includes `gv`.</sub>
 
 GoVault does not replace everything the official app does. It has no Bitwarden Send and no browser-extension integration, and accounts are created on your server's web vault. GoVault keeps the passkeys stored in your vault, shows them on each item, and can remove them, but it cannot create passkeys or sign in with them. Use the Bitwarden browser extension for that.
 
@@ -144,7 +144,8 @@ On a free bitwarden.com account, GoVault shows the verification codes of your lo
 
 **Sign-in and security**
 
-- Two-step login with an authenticator app or email, with "remember this device".
+- Sign in to bitwarden.com, bitwarden.eu or your self-hosted server, chosen on the sign-in screen.
+- Two-step login with an authenticator app, email or YubiKey (OTP), with "remember this device", and new-device verification by email.
 - Touch ID unlock on macOS, using a hardware-protected keychain item when the build is entitled to it.
 - Locks after inactivity and, on macOS, when the Mac sleeps or the screen locks.
 - Master password reprompt for sensitive items: revealing, copying, editing and showing verification codes ask again.
@@ -161,13 +162,15 @@ On a free bitwarden.com account, GoVault shows the verification codes of your lo
 - **Vault Health**: reused and weak passwords, expiring cards, unsecured websites and duplicate logins, checked entirely on your device.
 - **Encrypted backup**: export a password-protected, Bitwarden-compatible JSON file.
 - **Reviewed import**: import Bitwarden JSON exports and approve each change. Nothing in your vault is overwritten unless you choose to.
+- **Multi-select and bulk actions**: Move to Folder, Move to Trash, Archive and Unarchive, Restore, and Delete Permanently.
 - Clone items, empty Trash, folders, favorites, password and passphrase generator.
 - Website icons from your own server, with a switch to turn them off.
 
 **Native desktop**
 
-- Light and dark appearance, resizable three-pane layout.
-- Search from the toolbar (⌘F), scoped to the selected category or folder with one click to search everything.
+- Light, Dark or System appearance, resizable three-pane layout.
+- Search from the toolbar (⌘F), scoped to the selected category or folder with one click to search everything. It matches names, usernames, websites, notes, custom fields, card and identity details and SSH key fingerprints, never passwords or other secrets.
+- Sort the list by name or by modification date. A key icon marks the logins that have a passkey.
 - Back and Forward through views and items, including the mouse side buttons on macOS.
 - Optional menu bar icon, launch at login, keyboard shortcuts throughout.
 - Speaks English, 简体中文, 繁體中文, 日本語, 한국어, Deutsch, Français, Español, Português (Brasil) and Русский, following your system language or the one you pick in Settings. Native speakers: please report translation problems in [GitHub issues](https://github.com/txchen/govault/issues) (see [docs/i18n.md](docs/i18n.md)).
