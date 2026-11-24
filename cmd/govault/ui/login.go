@@ -7,6 +7,7 @@ import (
 	"github.com/nsgo-dev/nsgo/ui"
 	"github.com/txchen/govault/cmd/govault/locales"
 	"github.com/txchen/govault/internal/vaultcore/api"
+	"strings"
 )
 
 const authFieldHeight core.Points = 34
@@ -39,14 +40,20 @@ func signInView(cx *core.Scope, m *AppModel) core.Node {
 		core.View{
 			Class: "gap-3.5",
 			Children: []core.Node{
-				formField(locales.ServerURL(cx), authInput(base.Input{
-					TestID:        "login-server",
-					Placeholder:   "https://vault.example.com",
-					NoAutoCorrect: true,
-					Value:         m.LoginServer.Get,
-					OnChange:      m.LoginServer.Set,
-					Disabled:      func() bool { return m.LoginBusy.Get() || (m.CanReturnToUnlock() && m.ReSignInServer.Get() != "") },
-				})),
+				serverPresets(cx, m),
+				core.Show{
+					When: func() bool { return ServerPresetOf(m.LoginServer.Get()) == PresetSelfHosted },
+					Then: func(cx *core.Scope) core.Node {
+						return formField(locales.ServerURL(cx), authInput(base.Input{
+							TestID:        "login-server",
+							Placeholder:   "https://vault.example.com",
+							NoAutoCorrect: true,
+							Value:         m.LoginServer.Get,
+							OnChange:      m.LoginServer.Set,
+							Disabled:      m.serverLocked,
+						}))
+					},
+				},
 				formField(locales.Email(cx), authInput(base.Input{
 					TestID:        "login-email",
 					Placeholder:   locales.EmailPlaceholder(cx),
@@ -103,6 +110,64 @@ func signInView(cx *core.Scope, m *AppModel) core.Node {
 			},
 		},
 	}, locales.SignInFootnote(cx))
+}
+
+// ServerPreset is a server the sign-in screen offers by name.
+type ServerPreset int
+
+const (
+	PresetSelfHosted ServerPreset = iota
+	PresetUS
+	PresetEU
+)
+
+// presetURLs are the cloud servers' web vaults, which resolve to their API
+// and identity hosts as gv's cloud regions do.
+var presetURLs = map[ServerPreset]string{PresetUS: "https://vault.bitwarden.com", PresetEU: "https://vault.bitwarden.eu"}
+
+// ServerPresetOf is the preset a server URL is, or PresetSelfHosted.
+func ServerPresetOf(server string) ServerPreset {
+	e, err := api.ResolveEndpoints(api.FormatServerURL(server))
+	switch {
+	case strings.TrimSpace(server) == "" || err != nil:
+		return PresetSelfHosted
+	case e.Identity == "https://identity.bitwarden.com":
+		return PresetUS
+	case e.Identity == "https://identity.bitwarden.eu":
+		return PresetEU
+	}
+	return PresetSelfHosted
+}
+
+// serverLocked: the server cannot change while signing in, or when signing
+// in again to the account the vault on this device belongs to.
+func (m *AppModel) serverLocked() bool {
+	return m.LoginBusy.Get() || (m.CanReturnToUnlock() && m.ReSignInServer.Get() != "")
+}
+
+func serverPresets(cx *core.Scope, m *AppModel) core.Node {
+	toggle := func(testID, text string, p ServerPreset) core.Node {
+		return ui.ToggleButton{
+			TestID: testID,
+			Text:   text,
+			On:     func() bool { return ServerPresetOf(m.LoginServer.Get()) == p },
+			OnChange: func(bool) {
+				if ServerPresetOf(m.LoginServer.Get()) != p {
+					m.LoginServer.Set(presetURLs[p])
+				}
+			},
+		}
+	}
+	return formField(locales.Server(cx), ui.ToggleGroup{
+		TestID:   "login-server-preset",
+		Label:    locales.Server(cx),
+		Disabled: m.serverLocked,
+		Children: []core.Node{
+			toggle("login-server-us", locales.ServerBitwardenUS(cx), PresetUS),
+			toggle("login-server-eu", locales.ServerBitwardenEU(cx), PresetEU),
+			toggle("login-server-self", locales.SelfHosted(cx), PresetSelfHosted),
+		},
+	})
 }
 
 func authScreen(testID string, body []core.Node, footnote string) core.Node {

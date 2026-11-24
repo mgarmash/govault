@@ -2306,6 +2306,10 @@ const (
 	textSortNameDescending
 	textSortModifiedNewest
 	textSortModifiedOldest
+	textServer
+	textSelfHosted
+	textServerBitwardenUS
+	textServerBitwardenEU
 	numTexts
 )
 
@@ -2860,6 +2864,10 @@ var keyOfText = [numTexts]string{
 	"sortNameDescending",
 	"sortModifiedNewest",
 	"sortModifiedOldest",
+	"server",
+	"selfHosted",
+	"serverBitwardenUS",
+	"serverBitwardenEU",
 }
 
 // textsEn are the messages without arguments in en.
@@ -3411,7 +3419,11 @@ var textsEn = i18n.NewTexts(""+
 	"Name A–Z"+
 	"Name Z–A"+
 	"Modified, newest first"+
-	"Modified, oldest first",
+	"Modified, oldest first"+
+	"Server"+
+	"Self-hosted"+
+	"bitwarden.com"+
+	"bitwarden.eu",
 	[]uint16{
 		6,
 		4,
@@ -3961,6 +3973,10 @@ var textsEn = i18n.NewTexts(""+
 		10,
 		22,
 		22,
+		6,
+		11,
+		13,
+		12,
 	})
 
 // textsDe are the messages without arguments in de.
@@ -4512,6 +4528,10 @@ var textsDe = i18n.NewTexts(""+
 	""+
 	""+
 	""+
+	""+
+	""+
+	""+
+	""+
 	"",
 	[]uint16{
 		9,
@@ -5057,6 +5077,10 @@ var textsDe = i18n.NewTexts(""+
 		47,
 		31,
 		78,
+		0,
+		0,
+		0,
+		0,
 		0,
 		0,
 		0,
@@ -5613,6 +5637,10 @@ var textsEs = i18n.NewTexts(""+
 	""+
 	""+
 	""+
+	""+
+	""+
+	""+
+	""+
 	"",
 	[]uint16{
 		8,
@@ -6158,6 +6186,10 @@ var textsEs = i18n.NewTexts(""+
 		41,
 		54,
 		77,
+		0,
+		0,
+		0,
+		0,
 		0,
 		0,
 		0,
@@ -6714,6 +6746,10 @@ var textsFr = i18n.NewTexts(""+
 	""+
 	""+
 	""+
+	""+
+	""+
+	""+
+	""+
 	"",
 	[]uint16{
 		7,
@@ -7259,6 +7295,10 @@ var textsFr = i18n.NewTexts(""+
 		52,
 		44,
 		85,
+		0,
+		0,
+		0,
+		0,
 		0,
 		0,
 		0,
@@ -7815,6 +7855,10 @@ var textsJa = i18n.NewTexts(""+
 	""+
 	""+
 	""+
+	""+
+	""+
+	""+
+	""+
 	"",
 	[]uint16{
 		15,
@@ -8360,6 +8404,10 @@ var textsJa = i18n.NewTexts(""+
 		48,
 		63,
 		101,
+		0,
+		0,
+		0,
+		0,
 		0,
 		0,
 		0,
@@ -8916,6 +8964,10 @@ var textsKo = i18n.NewTexts(""+
 	""+
 	""+
 	""+
+	""+
+	""+
+	""+
+	""+
 	"",
 	[]uint16{
 		6,
@@ -9461,6 +9513,10 @@ var textsKo = i18n.NewTexts(""+
 		43,
 		49,
 		85,
+		0,
+		0,
+		0,
+		0,
 		0,
 		0,
 		0,
@@ -10017,6 +10073,10 @@ var textsPtBR = i18n.NewTexts(""+
 	""+
 	""+
 	""+
+	""+
+	""+
+	""+
+	""+
 	"",
 	[]uint16{
 		8,
@@ -10562,6 +10622,10 @@ var textsPtBR = i18n.NewTexts(""+
 		55,
 		34,
 		69,
+		0,
+		0,
+		0,
+		0,
 		0,
 		0,
 		0,
@@ -11118,6 +11182,10 @@ var textsRu = i18n.NewTexts(""+
 	""+
 	""+
 	""+
+	""+
+	""+
+	""+
+	""+
 	"",
 	[]uint16{
 		12,
@@ -11663,6 +11731,10 @@ var textsRu = i18n.NewTexts(""+
 		53,
 		60,
 		120,
+		0,
+		0,
+		0,
+		0,
 		0,
 		0,
 		0,
@@ -12219,6 +12291,10 @@ var textsZhHans = i18n.NewTexts(""+
 	""+
 	""+
 	""+
+	""+
+	""+
+	""+
+	""+
 	"",
 	[]uint16{
 		6,
@@ -12764,6 +12840,10 @@ var textsZhHans = i18n.NewTexts(""+
 		27,
 		24,
 		59,
+		0,
+		0,
+		0,
+		0,
 		0,
 		0,
 		0,
@@ -13320,6 +13400,10 @@ var textsZhHant = i18n.NewTexts(""+
 	""+
 	""+
 	""+
+	""+
+	""+
+	""+
+	""+
 	"",
 	[]uint16{
 		6,
@@ -13865,6 +13949,10 @@ var textsZhHant = i18n.NewTexts(""+
 		27,
 		24,
 		59,
+		0,
+		0,
+		0,
+		0,
 		0,
 		0,
 		0,
@@ -26112,6 +26200,42 @@ func SortModifiedOldest(cx *core.Scope) string { return For(cx).SortModifiedOlde
 
 // SortModifiedOldest is the package's SortModifiedOldest in the language of msgs.
 func (msgs Messages) SortModifiedOldest() string { return msgs.text(textSortModifiedOldest) }
+
+// Server says "Server"
+// in the language the app shows under cx.
+//
+// Label above the choice of server on the sign-in screen (bitwarden.com, bitwarden.eu or self-hosted).
+func Server(cx *core.Scope) string { return For(cx).Server() }
+
+// Server is the package's Server in the language of msgs.
+func (msgs Messages) Server() string { return msgs.text(textServer) }
+
+// SelfHosted says "Self-hosted"
+// in the language the app shows under cx.
+//
+// Sign-in server choice for a server you or your organization runs, such as Vaultwarden; shows a server URL field.
+func SelfHosted(cx *core.Scope) string { return For(cx).SelfHosted() }
+
+// SelfHosted is the package's SelfHosted in the language of msgs.
+func (msgs Messages) SelfHosted() string { return msgs.text(textSelfHosted) }
+
+// ServerBitwardenUS says "bitwarden.com"
+// in the language the app shows under cx.
+//
+// Sign-in server choice for Bitwarden's US cloud. Keep the domain name.
+func ServerBitwardenUS(cx *core.Scope) string { return For(cx).ServerBitwardenUS() }
+
+// ServerBitwardenUS is the package's ServerBitwardenUS in the language of msgs.
+func (msgs Messages) ServerBitwardenUS() string { return msgs.text(textServerBitwardenUS) }
+
+// ServerBitwardenEU says "bitwarden.eu"
+// in the language the app shows under cx.
+//
+// Sign-in server choice for Bitwarden's EU cloud. Keep the domain name.
+func ServerBitwardenEU(cx *core.Scope) string { return For(cx).ServerBitwardenEU() }
+
+// ServerBitwardenEU is the package's ServerBitwardenEU in the language of msgs.
+func (msgs Messages) ServerBitwardenEU() string { return msgs.text(textServerBitwardenEU) }
 
 // dated is lang with the hour cycle the user set, which times take.
 func (msgs Messages) dated(lang string) string {
