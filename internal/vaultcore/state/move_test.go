@@ -12,8 +12,8 @@ import (
 type memSecrets map[string]string
 
 func (m memSecrets) Get(a string) (string, bool, error) { v, ok := m[a]; return v, ok, nil }
-func (m memSecrets) Set(a, v string) error             { m[a] = v; return nil }
-func (m memSecrets) Delete(a string) error             { delete(m, a); return nil }
+func (m memSecrets) Set(a, v string) error              { m[a] = v; return nil }
+func (m memSecrets) Delete(a string) error              { delete(m, a); return nil }
 
 // Moving items to a folder is one PUT /api/ciphers/move, after which the
 // synced vault has them there.

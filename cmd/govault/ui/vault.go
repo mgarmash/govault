@@ -906,21 +906,30 @@ func itemListPane(cx *core.Scope, m *AppModel) core.Node {
 			listSortBar(cx, m),
 			searchScope(cx, m),
 			trashBar(cx, m),
-			core.List{
-				TestID:        "vault-item-list",
-				Class:         "flex-1 pt-2 pb-2",
-				EstimatedSize: 52,
-				Gap:           2,
-				Count:         m.FilteredItems.Len,
-				Key:           func(i int) any { return m.FilteredItems.KeyAt(i) },
-				Empty:         listEmptyState(m),
+			base.List{
+				TestID:            "vault-item-list",
+				Label:             locales.VaultItems(cx),
+				Class:             "flex-1",
+				ListClass:         "pt-2 pb-2",
+				EstimatedSize:     52,
+				Gap:               2,
+				Count:             m.FilteredItems.Len,
+				Key:               func(i int) any { return m.FilteredItems.KeyAt(i) },
+				Selection:         m.ListSelection,
+				OnSelectionChange: func(s *base.Selection) { m.listSelectionChanged(cx, s) },
+				RowLabel: func(i int) string {
+					it, _ := m.FilteredItems.At(i)
+					return it.Name
+				},
+				ItemStyle: core.Style{FocusVisible: ui.FocusRing(cx, -2), CornerRadius: 8},
+				Empty:     listEmptyState(m),
 				Row: func(cx *core.Scope, row core.ListRow) core.Node {
 					itemAt := func() (state.CipherSummary, bool) {
 						return m.FilteredItems.At(row.Index())
 					}
 					selected := func() bool {
 						it, ok := itemAt()
-						return ok && m.IsSelected(it.ID)
+						return ok && m.ListSelection.Has(it.ID)
 					}
 					flag := func(pick func(state.CipherSummary) bool) func() bool {
 						return func() bool {
@@ -968,13 +977,13 @@ func itemListPane(cx *core.Scope, m *AppModel) core.Node {
 									}
 									return "flex-row items-center gap-2.5 h-[52px] px-2.5 rounded-[8px]"
 								},
-								OnPress: func(core.PressEvent) {
-									if it, ok := itemAt(); ok {
-										m.SelectCipher(cx, it.ID)
-									}
-								},
 								OnContextMenu: func(ev core.ContextMenuEvent) {
-									if it, ok := itemAt(); ok {
+									it, ok := itemAt()
+									switch {
+									case !ok:
+									case m.MultiSelected() && m.ListSelection.Has(it.ID):
+										selectionMenu(cx, m, ev.PagePosition)
+									default:
 										rowMenu(cx, m, it.ID, ev.PagePosition)
 									}
 								},
@@ -1339,6 +1348,9 @@ func namedSecretRow(cx *core.Scope, m *AppModel, c *state.Cipher, label, name, v
 
 func DetailPaneView(cx *core.Scope, m *AppModel) core.Node {
 	return core.Dynamic(func(cx *core.Scope) core.Node {
+		if m.MultiSelected() {
+			return SelectionPaneView(cx, m)
+		}
 		c := m.ActiveCipher.Get()
 		if c == nil {
 			return detailEmptyState(cx)

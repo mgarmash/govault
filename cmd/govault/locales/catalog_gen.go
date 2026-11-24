@@ -1646,6 +1646,24 @@ var Parameters = map[string][]string{
 	"ErrorWithDetail":            {"detail"},
 	"DuplicateGroup":             {"site", "username", "count"},
 	"DuplicateGroupNoUsername":   {"site", "count"},
+	"ItemsSelected":              {"count"},
+	"RestoreCount":               {"count"},
+	"ArchiveCount":               {"count"},
+	"UnarchiveCount":             {"count"},
+	"BulkTrashTitle":             {"count"},
+	"BulkDeleteTitle":            {"count"},
+	"BulkMoveTitle":              {"count"},
+	"BulkAlreadyInFolder":        {"count"},
+	"BulkSkipped":                {"count"},
+	"BulkItemFailed":             {"name", "reason"},
+	"BulkDeleteKept":             {"count"},
+	"BulkNotDone":                {"count", "details"},
+	"BulkTrashedCount":           {"count"},
+	"BulkRestoredCount":          {"count"},
+	"BulkArchivedCount":          {"count"},
+	"BulkUnarchivedCount":        {"count"},
+	"BulkDeletedCount":           {"count"},
+	"BulkMovedCount":             {"count"},
 }
 
 // Translation is a language's messages another package supplies:
@@ -1756,6 +1774,24 @@ type Translation struct {
 	ErrorWithDetail            func(detail string) string
 	DuplicateGroup             func(site string, username string, count int) string
 	DuplicateGroupNoUsername   func(site string, count int) string
+	ItemsSelected              func(count int) string
+	RestoreCount               func(count int) string
+	ArchiveCount               func(count int) string
+	UnarchiveCount             func(count int) string
+	BulkTrashTitle             func(count int) string
+	BulkDeleteTitle            func(count int) string
+	BulkMoveTitle              func(count int) string
+	BulkAlreadyInFolder        func(count int) string
+	BulkSkipped                func(count int) string
+	BulkItemFailed             func(name string, reason string) string
+	BulkDeleteKept             func(count int) string
+	BulkNotDone                func(count int, details string) string
+	BulkTrashedCount           func(count int) string
+	BulkRestoredCount          func(count int) string
+	BulkArchivedCount          func(count int) string
+	BulkUnarchivedCount        func(count int) string
+	BulkDeletedCount           func(count int) string
+	BulkMovedCount             func(count int) string
 }
 
 var supplied = map[string]Translation{}
@@ -2321,6 +2357,13 @@ const (
 	textAppearanceDark
 	textHasPasskey
 	textDuplicateLogins
+	textMoveToFolderMenu
+	textMoveToTrashMenu
+	textBulkTrashMessage
+	textBulkDeleteMessage
+	textMove
+	textSelectionOffline
+	textVaultItems
 	numTexts
 )
 
@@ -2886,6 +2929,13 @@ var keyOfText = [numTexts]string{
 	"appearanceDark",
 	"hasPasskey",
 	"duplicateLogins",
+	"moveToFolderMenu",
+	"moveToTrashMenu",
+	"bulkTrashMessage",
+	"bulkDeleteMessage",
+	"move",
+	"selectionOffline",
+	"vaultItems",
 }
 
 // textsEn are the messages without arguments in en.
@@ -3448,7 +3498,14 @@ var textsEn = i18n.NewTexts(""+
 	"Light"+
 	"Dark"+
 	"Has a passkey"+
-	"Duplicate logins",
+	"Duplicate logins"+
+	"Move to Folder…"+
+	"Move to Trash…"+
+	"You can restore items from Trash until you delete them permanently."+
+	"This cannot be undone. The items are removed from every device."+
+	"Move"+
+	"Offline. Reconnect to change these items."+
+	"Vault items",
 	[]uint16{
 		6,
 		4,
@@ -4009,6 +4066,13 @@ var textsEn = i18n.NewTexts(""+
 		4,
 		13,
 		16,
+		17,
+		16,
+		67,
+		63,
+		4,
+		41,
+		11,
 	})
 
 // textsDe are the messages without arguments in de.
@@ -4571,6 +4635,13 @@ var textsDe = i18n.NewTexts(""+
 	""+
 	""+
 	""+
+	""+
+	""+
+	""+
+	""+
+	""+
+	""+
+	""+
 	"",
 	[]uint16{
 		9,
@@ -5116,6 +5187,13 @@ var textsDe = i18n.NewTexts(""+
 		47,
 		31,
 		78,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
 		0,
 		0,
 		0,
@@ -5694,6 +5772,13 @@ var textsEs = i18n.NewTexts(""+
 	""+
 	""+
 	""+
+	""+
+	""+
+	""+
+	""+
+	""+
+	""+
+	""+
 	"",
 	[]uint16{
 		8,
@@ -6239,6 +6324,13 @@ var textsEs = i18n.NewTexts(""+
 		41,
 		54,
 		77,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
 		0,
 		0,
 		0,
@@ -6817,6 +6909,13 @@ var textsFr = i18n.NewTexts(""+
 	""+
 	""+
 	""+
+	""+
+	""+
+	""+
+	""+
+	""+
+	""+
+	""+
 	"",
 	[]uint16{
 		7,
@@ -7362,6 +7461,13 @@ var textsFr = i18n.NewTexts(""+
 		52,
 		44,
 		85,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
 		0,
 		0,
 		0,
@@ -7940,6 +8046,13 @@ var textsJa = i18n.NewTexts(""+
 	""+
 	""+
 	""+
+	""+
+	""+
+	""+
+	""+
+	""+
+	""+
+	""+
 	"",
 	[]uint16{
 		15,
@@ -8485,6 +8598,13 @@ var textsJa = i18n.NewTexts(""+
 		48,
 		63,
 		101,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
 		0,
 		0,
 		0,
@@ -9063,6 +9183,13 @@ var textsKo = i18n.NewTexts(""+
 	""+
 	""+
 	""+
+	""+
+	""+
+	""+
+	""+
+	""+
+	""+
+	""+
 	"",
 	[]uint16{
 		6,
@@ -9608,6 +9735,13 @@ var textsKo = i18n.NewTexts(""+
 		43,
 		49,
 		85,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
 		0,
 		0,
 		0,
@@ -10186,6 +10320,13 @@ var textsPtBR = i18n.NewTexts(""+
 	""+
 	""+
 	""+
+	""+
+	""+
+	""+
+	""+
+	""+
+	""+
+	""+
 	"",
 	[]uint16{
 		8,
@@ -10731,6 +10872,13 @@ var textsPtBR = i18n.NewTexts(""+
 		55,
 		34,
 		69,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
 		0,
 		0,
 		0,
@@ -11309,6 +11457,13 @@ var textsRu = i18n.NewTexts(""+
 	""+
 	""+
 	""+
+	""+
+	""+
+	""+
+	""+
+	""+
+	""+
+	""+
 	"",
 	[]uint16{
 		12,
@@ -11854,6 +12009,13 @@ var textsRu = i18n.NewTexts(""+
 		53,
 		60,
 		120,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
 		0,
 		0,
 		0,
@@ -12432,6 +12594,13 @@ var textsZhHans = i18n.NewTexts(""+
 	""+
 	""+
 	""+
+	""+
+	""+
+	""+
+	""+
+	""+
+	""+
+	""+
 	"",
 	[]uint16{
 		6,
@@ -12977,6 +13146,13 @@ var textsZhHans = i18n.NewTexts(""+
 		27,
 		24,
 		59,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
 		0,
 		0,
 		0,
@@ -13555,6 +13731,13 @@ var textsZhHant = i18n.NewTexts(""+
 	""+
 	""+
 	""+
+	""+
+	""+
+	""+
+	""+
+	""+
+	""+
+	""+
 	"",
 	[]uint16{
 		6,
@@ -14116,6 +14299,13 @@ var textsZhHant = i18n.NewTexts(""+
 		0,
 		0,
 		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
 	})
 
 // texts returns the messages without arguments in lang, nil for a
@@ -14493,6 +14683,60 @@ func Supply(lang string, t Translation) {
 	}
 	if t.DuplicateGroupNoUsername != nil {
 		s.DuplicateGroupNoUsername = t.DuplicateGroupNoUsername
+	}
+	if t.ItemsSelected != nil {
+		s.ItemsSelected = t.ItemsSelected
+	}
+	if t.RestoreCount != nil {
+		s.RestoreCount = t.RestoreCount
+	}
+	if t.ArchiveCount != nil {
+		s.ArchiveCount = t.ArchiveCount
+	}
+	if t.UnarchiveCount != nil {
+		s.UnarchiveCount = t.UnarchiveCount
+	}
+	if t.BulkTrashTitle != nil {
+		s.BulkTrashTitle = t.BulkTrashTitle
+	}
+	if t.BulkDeleteTitle != nil {
+		s.BulkDeleteTitle = t.BulkDeleteTitle
+	}
+	if t.BulkMoveTitle != nil {
+		s.BulkMoveTitle = t.BulkMoveTitle
+	}
+	if t.BulkAlreadyInFolder != nil {
+		s.BulkAlreadyInFolder = t.BulkAlreadyInFolder
+	}
+	if t.BulkSkipped != nil {
+		s.BulkSkipped = t.BulkSkipped
+	}
+	if t.BulkItemFailed != nil {
+		s.BulkItemFailed = t.BulkItemFailed
+	}
+	if t.BulkDeleteKept != nil {
+		s.BulkDeleteKept = t.BulkDeleteKept
+	}
+	if t.BulkNotDone != nil {
+		s.BulkNotDone = t.BulkNotDone
+	}
+	if t.BulkTrashedCount != nil {
+		s.BulkTrashedCount = t.BulkTrashedCount
+	}
+	if t.BulkRestoredCount != nil {
+		s.BulkRestoredCount = t.BulkRestoredCount
+	}
+	if t.BulkArchivedCount != nil {
+		s.BulkArchivedCount = t.BulkArchivedCount
+	}
+	if t.BulkUnarchivedCount != nil {
+		s.BulkUnarchivedCount = t.BulkUnarchivedCount
+	}
+	if t.BulkDeletedCount != nil {
+		s.BulkDeletedCount = t.BulkDeletedCount
+	}
+	if t.BulkMovedCount != nil {
+		s.BulkMovedCount = t.BulkMovedCount
 	}
 	supplied[lang] = s
 	Catalog.Add(lang)
@@ -26533,6 +26777,655 @@ func (msgs Messages) DuplicateGroupNoUsername(site string, count int) string {
 		}
 	}
 }
+
+// ItemsSelected says "{count, plural, one {# item selected} other {# items selected}}"
+// in the language the app shows under cx.
+//
+// Shown in the detail pane, and announced, when several vault items are selected.
+func ItemsSelected(cx *core.Scope, count int) string { return For(cx).ItemsSelected(count) }
+
+// ItemsSelected is the package's ItemsSelected in the language of msgs.
+func (msgs Messages) ItemsSelected(count int) string {
+	if i18n.IsPseudo(msgs.lang) {
+		return i18n.Pseudo(msgs.lang, Messages{lang: Source, mark: true}.ItemsSelected(count))
+	}
+	for lang := msgs.lang; ; lang = i18n.Parent(lang) {
+		if f := supplied[lang].ItemsSelected; f != nil {
+			return f(count)
+		}
+		switch lang {
+		case "", "en":
+			var b strings.Builder
+			switch i18n.Cardinal("en", float64(count)) {
+			case i18n.One:
+				b.WriteString(msgs.arg(i18n.FormatNumber("en", float64(count))))
+				b.WriteString(" item selected")
+			default:
+				b.WriteString(msgs.arg(i18n.FormatNumber("en", float64(count))))
+				b.WriteString(" items selected")
+			}
+			return b.String()
+		}
+	}
+}
+
+// RestoreCount says "Restore {count, plural, one {# item} other {# items}}"
+// in the language the app shows under cx.
+//
+// Button and menu item that restores the selected items from Trash; count is how many it applies to.
+func RestoreCount(cx *core.Scope, count int) string { return For(cx).RestoreCount(count) }
+
+// RestoreCount is the package's RestoreCount in the language of msgs.
+func (msgs Messages) RestoreCount(count int) string {
+	if i18n.IsPseudo(msgs.lang) {
+		return i18n.Pseudo(msgs.lang, Messages{lang: Source, mark: true}.RestoreCount(count))
+	}
+	for lang := msgs.lang; ; lang = i18n.Parent(lang) {
+		if f := supplied[lang].RestoreCount; f != nil {
+			return f(count)
+		}
+		switch lang {
+		case "", "en":
+			var b strings.Builder
+			b.WriteString("Restore ")
+			switch i18n.Cardinal("en", float64(count)) {
+			case i18n.One:
+				b.WriteString(msgs.arg(i18n.FormatNumber("en", float64(count))))
+				b.WriteString(" item")
+			default:
+				b.WriteString(msgs.arg(i18n.FormatNumber("en", float64(count))))
+				b.WriteString(" items")
+			}
+			return b.String()
+		}
+	}
+}
+
+// ArchiveCount says "Archive {count, plural, one {# item} other {# items}}"
+// in the language the app shows under cx.
+//
+// Button and menu item that moves the selected items to the Archive; count is how many it applies to.
+func ArchiveCount(cx *core.Scope, count int) string { return For(cx).ArchiveCount(count) }
+
+// ArchiveCount is the package's ArchiveCount in the language of msgs.
+func (msgs Messages) ArchiveCount(count int) string {
+	if i18n.IsPseudo(msgs.lang) {
+		return i18n.Pseudo(msgs.lang, Messages{lang: Source, mark: true}.ArchiveCount(count))
+	}
+	for lang := msgs.lang; ; lang = i18n.Parent(lang) {
+		if f := supplied[lang].ArchiveCount; f != nil {
+			return f(count)
+		}
+		switch lang {
+		case "", "en":
+			var b strings.Builder
+			b.WriteString("Archive ")
+			switch i18n.Cardinal("en", float64(count)) {
+			case i18n.One:
+				b.WriteString(msgs.arg(i18n.FormatNumber("en", float64(count))))
+				b.WriteString(" item")
+			default:
+				b.WriteString(msgs.arg(i18n.FormatNumber("en", float64(count))))
+				b.WriteString(" items")
+			}
+			return b.String()
+		}
+	}
+}
+
+// UnarchiveCount says "Unarchive {count, plural, one {# item} other {# items}}"
+// in the language the app shows under cx.
+//
+// Button and menu item that moves the selected items out of the Archive; count is how many it applies to.
+func UnarchiveCount(cx *core.Scope, count int) string { return For(cx).UnarchiveCount(count) }
+
+// UnarchiveCount is the package's UnarchiveCount in the language of msgs.
+func (msgs Messages) UnarchiveCount(count int) string {
+	if i18n.IsPseudo(msgs.lang) {
+		return i18n.Pseudo(msgs.lang, Messages{lang: Source, mark: true}.UnarchiveCount(count))
+	}
+	for lang := msgs.lang; ; lang = i18n.Parent(lang) {
+		if f := supplied[lang].UnarchiveCount; f != nil {
+			return f(count)
+		}
+		switch lang {
+		case "", "en":
+			var b strings.Builder
+			b.WriteString("Unarchive ")
+			switch i18n.Cardinal("en", float64(count)) {
+			case i18n.One:
+				b.WriteString(msgs.arg(i18n.FormatNumber("en", float64(count))))
+				b.WriteString(" item")
+			default:
+				b.WriteString(msgs.arg(i18n.FormatNumber("en", float64(count))))
+				b.WriteString(" items")
+			}
+			return b.String()
+		}
+	}
+}
+
+// MoveToFolderMenu says "Move to Folder…"
+// in the language the app shows under cx.
+func MoveToFolderMenu(cx *core.Scope) string { return For(cx).MoveToFolderMenu() }
+
+// MoveToFolderMenu is the package's MoveToFolderMenu in the language of msgs.
+func (msgs Messages) MoveToFolderMenu() string { return msgs.text(textMoveToFolderMenu) }
+
+// MoveToTrashMenu says "Move to Trash…"
+// in the language the app shows under cx.
+func MoveToTrashMenu(cx *core.Scope) string { return For(cx).MoveToTrashMenu() }
+
+// MoveToTrashMenu is the package's MoveToTrashMenu in the language of msgs.
+func (msgs Messages) MoveToTrashMenu() string { return msgs.text(textMoveToTrashMenu) }
+
+// BulkTrashTitle says "Move {count, plural, one {# item} other {# items}} to Trash?"
+// in the language the app shows under cx.
+//
+// Title of the confirmation before moving several selected items to Trash.
+func BulkTrashTitle(cx *core.Scope, count int) string { return For(cx).BulkTrashTitle(count) }
+
+// BulkTrashTitle is the package's BulkTrashTitle in the language of msgs.
+func (msgs Messages) BulkTrashTitle(count int) string {
+	if i18n.IsPseudo(msgs.lang) {
+		return i18n.Pseudo(msgs.lang, Messages{lang: Source, mark: true}.BulkTrashTitle(count))
+	}
+	for lang := msgs.lang; ; lang = i18n.Parent(lang) {
+		if f := supplied[lang].BulkTrashTitle; f != nil {
+			return f(count)
+		}
+		switch lang {
+		case "", "en":
+			var b strings.Builder
+			b.WriteString("Move ")
+			switch i18n.Cardinal("en", float64(count)) {
+			case i18n.One:
+				b.WriteString(msgs.arg(i18n.FormatNumber("en", float64(count))))
+				b.WriteString(" item")
+			default:
+				b.WriteString(msgs.arg(i18n.FormatNumber("en", float64(count))))
+				b.WriteString(" items")
+			}
+			b.WriteString(" to Trash?")
+			return b.String()
+		}
+	}
+}
+
+// BulkTrashMessage says "You can restore items from Trash until you delete them permanently."
+// in the language the app shows under cx.
+func BulkTrashMessage(cx *core.Scope) string { return For(cx).BulkTrashMessage() }
+
+// BulkTrashMessage is the package's BulkTrashMessage in the language of msgs.
+func (msgs Messages) BulkTrashMessage() string { return msgs.text(textBulkTrashMessage) }
+
+// BulkDeleteTitle says "Delete {count, plural, one {# item} other {# items}} permanently?"
+// in the language the app shows under cx.
+//
+// Title of the confirmation before permanently deleting several selected items in Trash.
+func BulkDeleteTitle(cx *core.Scope, count int) string { return For(cx).BulkDeleteTitle(count) }
+
+// BulkDeleteTitle is the package's BulkDeleteTitle in the language of msgs.
+func (msgs Messages) BulkDeleteTitle(count int) string {
+	if i18n.IsPseudo(msgs.lang) {
+		return i18n.Pseudo(msgs.lang, Messages{lang: Source, mark: true}.BulkDeleteTitle(count))
+	}
+	for lang := msgs.lang; ; lang = i18n.Parent(lang) {
+		if f := supplied[lang].BulkDeleteTitle; f != nil {
+			return f(count)
+		}
+		switch lang {
+		case "", "en":
+			var b strings.Builder
+			b.WriteString("Delete ")
+			switch i18n.Cardinal("en", float64(count)) {
+			case i18n.One:
+				b.WriteString(msgs.arg(i18n.FormatNumber("en", float64(count))))
+				b.WriteString(" item")
+			default:
+				b.WriteString(msgs.arg(i18n.FormatNumber("en", float64(count))))
+				b.WriteString(" items")
+			}
+			b.WriteString(" permanently?")
+			return b.String()
+		}
+	}
+}
+
+// BulkDeleteMessage says "This cannot be undone. The items are removed from every device."
+// in the language the app shows under cx.
+func BulkDeleteMessage(cx *core.Scope) string { return For(cx).BulkDeleteMessage() }
+
+// BulkDeleteMessage is the package's BulkDeleteMessage in the language of msgs.
+func (msgs Messages) BulkDeleteMessage() string { return msgs.text(textBulkDeleteMessage) }
+
+// BulkMoveTitle says "Move {count, plural, one {# item} other {# items}} to a folder"
+// in the language the app shows under cx.
+//
+// Title of the dialog that picks the folder for several selected items.
+func BulkMoveTitle(cx *core.Scope, count int) string { return For(cx).BulkMoveTitle(count) }
+
+// BulkMoveTitle is the package's BulkMoveTitle in the language of msgs.
+func (msgs Messages) BulkMoveTitle(count int) string {
+	if i18n.IsPseudo(msgs.lang) {
+		return i18n.Pseudo(msgs.lang, Messages{lang: Source, mark: true}.BulkMoveTitle(count))
+	}
+	for lang := msgs.lang; ; lang = i18n.Parent(lang) {
+		if f := supplied[lang].BulkMoveTitle; f != nil {
+			return f(count)
+		}
+		switch lang {
+		case "", "en":
+			var b strings.Builder
+			b.WriteString("Move ")
+			switch i18n.Cardinal("en", float64(count)) {
+			case i18n.One:
+				b.WriteString(msgs.arg(i18n.FormatNumber("en", float64(count))))
+				b.WriteString(" item")
+			default:
+				b.WriteString(msgs.arg(i18n.FormatNumber("en", float64(count))))
+				b.WriteString(" items")
+			}
+			b.WriteString(" to a folder")
+			return b.String()
+		}
+	}
+}
+
+// Move says "Move"
+// in the language the app shows under cx.
+//
+// Button that moves the selected items to the chosen folder.
+func Move(cx *core.Scope) string { return For(cx).Move() }
+
+// Move is the package's Move in the language of msgs.
+func (msgs Messages) Move() string { return msgs.text(textMove) }
+
+// BulkAlreadyInFolder says "{count, plural, one {# item is already in this folder and stays as it is.} other {# items are already in this folder and stay as they are.}}"
+// in the language the app shows under cx.
+//
+// Shown in the folder picker when some selected items are already in the chosen folder.
+func BulkAlreadyInFolder(cx *core.Scope, count int) string { return For(cx).BulkAlreadyInFolder(count) }
+
+// BulkAlreadyInFolder is the package's BulkAlreadyInFolder in the language of msgs.
+func (msgs Messages) BulkAlreadyInFolder(count int) string {
+	if i18n.IsPseudo(msgs.lang) {
+		return i18n.Pseudo(msgs.lang, Messages{lang: Source, mark: true}.BulkAlreadyInFolder(count))
+	}
+	for lang := msgs.lang; ; lang = i18n.Parent(lang) {
+		if f := supplied[lang].BulkAlreadyInFolder; f != nil {
+			return f(count)
+		}
+		switch lang {
+		case "", "en":
+			var b strings.Builder
+			switch i18n.Cardinal("en", float64(count)) {
+			case i18n.One:
+				b.WriteString(msgs.arg(i18n.FormatNumber("en", float64(count))))
+				b.WriteString(" item is already in this folder and stays as it is.")
+			default:
+				b.WriteString(msgs.arg(i18n.FormatNumber("en", float64(count))))
+				b.WriteString(" items are already in this folder and stay as they are.")
+			}
+			return b.String()
+		}
+	}
+}
+
+// BulkSkipped says "{count, plural, one {# selected item will be skipped: you cannot change it.} other {# selected items will be skipped: you cannot change them.}}"
+// in the language the app shows under cx.
+//
+// Shown before a bulk action for selected items it cannot apply to, such as read-only shared items.
+func BulkSkipped(cx *core.Scope, count int) string { return For(cx).BulkSkipped(count) }
+
+// BulkSkipped is the package's BulkSkipped in the language of msgs.
+func (msgs Messages) BulkSkipped(count int) string {
+	if i18n.IsPseudo(msgs.lang) {
+		return i18n.Pseudo(msgs.lang, Messages{lang: Source, mark: true}.BulkSkipped(count))
+	}
+	for lang := msgs.lang; ; lang = i18n.Parent(lang) {
+		if f := supplied[lang].BulkSkipped; f != nil {
+			return f(count)
+		}
+		switch lang {
+		case "", "en":
+			var b strings.Builder
+			switch i18n.Cardinal("en", float64(count)) {
+			case i18n.One:
+				b.WriteString(msgs.arg(i18n.FormatNumber("en", float64(count))))
+				b.WriteString(" selected item will be skipped: you cannot change it.")
+			default:
+				b.WriteString(msgs.arg(i18n.FormatNumber("en", float64(count))))
+				b.WriteString(" selected items will be skipped: you cannot change them.")
+			}
+			return b.String()
+		}
+	}
+}
+
+// SelectionOffline says "Offline. Reconnect to change these items."
+// in the language the app shows under cx.
+func SelectionOffline(cx *core.Scope) string { return For(cx).SelectionOffline() }
+
+// SelectionOffline is the package's SelectionOffline in the language of msgs.
+func (msgs Messages) SelectionOffline() string { return msgs.text(textSelectionOffline) }
+
+// BulkItemFailed says "{name} ({reason})"
+// in the language the app shows under cx.
+//
+// One item a bulk action could not change, with why, in a list of them. name is the item's name.
+func BulkItemFailed(cx *core.Scope, name string, reason string) string {
+	return For(cx).BulkItemFailed(name, reason)
+}
+
+// BulkItemFailed is the package's BulkItemFailed in the language of msgs.
+func (msgs Messages) BulkItemFailed(name string, reason string) string {
+	if i18n.IsPseudo(msgs.lang) {
+		return i18n.Pseudo(msgs.lang, Messages{lang: Source, mark: true}.BulkItemFailed(name, reason))
+	}
+	for lang := msgs.lang; ; lang = i18n.Parent(lang) {
+		if f := supplied[lang].BulkItemFailed; f != nil {
+			return f(name, reason)
+		}
+		switch lang {
+		case "", "en":
+			return msgs.arg(name) + " (" + msgs.arg(reason) + ")"
+		}
+	}
+}
+
+// BulkDeleteKept says "{count, plural, one {# item changed elsewhere and was kept} other {# items changed elsewhere and were kept}}"
+// in the language the app shows under cx.
+//
+// Part of the result of deleting selected items permanently, for items restored or changed on another device meanwhile.
+func BulkDeleteKept(cx *core.Scope, count int) string { return For(cx).BulkDeleteKept(count) }
+
+// BulkDeleteKept is the package's BulkDeleteKept in the language of msgs.
+func (msgs Messages) BulkDeleteKept(count int) string {
+	if i18n.IsPseudo(msgs.lang) {
+		return i18n.Pseudo(msgs.lang, Messages{lang: Source, mark: true}.BulkDeleteKept(count))
+	}
+	for lang := msgs.lang; ; lang = i18n.Parent(lang) {
+		if f := supplied[lang].BulkDeleteKept; f != nil {
+			return f(count)
+		}
+		switch lang {
+		case "", "en":
+			var b strings.Builder
+			switch i18n.Cardinal("en", float64(count)) {
+			case i18n.One:
+				b.WriteString(msgs.arg(i18n.FormatNumber("en", float64(count))))
+				b.WriteString(" item changed elsewhere and was kept")
+			default:
+				b.WriteString(msgs.arg(i18n.FormatNumber("en", float64(count))))
+				b.WriteString(" items changed elsewhere and were kept")
+			}
+			return b.String()
+		}
+	}
+}
+
+// BulkNotDone says "{count, plural, one {# could not be changed: {details}.} other {# could not be changed: {details}.}}"
+// in the language the app shows under cx.
+//
+// Detail of a bulk action's result listing what it could not change. details is a list such as "Payroll (access changed)".
+func BulkNotDone(cx *core.Scope, count int, details string) string {
+	return For(cx).BulkNotDone(count, details)
+}
+
+// BulkNotDone is the package's BulkNotDone in the language of msgs.
+func (msgs Messages) BulkNotDone(count int, details string) string {
+	if i18n.IsPseudo(msgs.lang) {
+		return i18n.Pseudo(msgs.lang, Messages{lang: Source, mark: true}.BulkNotDone(count, details))
+	}
+	for lang := msgs.lang; ; lang = i18n.Parent(lang) {
+		if f := supplied[lang].BulkNotDone; f != nil {
+			return f(count, details)
+		}
+		switch lang {
+		case "", "en":
+			var b strings.Builder
+			switch i18n.Cardinal("en", float64(count)) {
+			case i18n.One:
+				b.WriteString(msgs.arg(i18n.FormatNumber("en", float64(count))))
+				b.WriteString(" could not be changed: ")
+				b.WriteString(msgs.arg(details))
+				b.WriteString(".")
+			default:
+				b.WriteString(msgs.arg(i18n.FormatNumber("en", float64(count))))
+				b.WriteString(" could not be changed: ")
+				b.WriteString(msgs.arg(details))
+				b.WriteString(".")
+			}
+			return b.String()
+		}
+	}
+}
+
+// BulkTrashedCount says "{count, plural, =0 {Nothing moved to Trash} one {# item moved to Trash} other {# items moved to Trash}}"
+// in the language the app shows under cx.
+//
+// Result of moving selected items to Trash.
+func BulkTrashedCount(cx *core.Scope, count int) string { return For(cx).BulkTrashedCount(count) }
+
+// BulkTrashedCount is the package's BulkTrashedCount in the language of msgs.
+func (msgs Messages) BulkTrashedCount(count int) string {
+	if i18n.IsPseudo(msgs.lang) {
+		return i18n.Pseudo(msgs.lang, Messages{lang: Source, mark: true}.BulkTrashedCount(count))
+	}
+	for lang := msgs.lang; ; lang = i18n.Parent(lang) {
+		if f := supplied[lang].BulkTrashedCount; f != nil {
+			return f(count)
+		}
+		switch lang {
+		case "", "en":
+			var b strings.Builder
+			switch {
+			case count == 0:
+				b.WriteString("Nothing moved to Trash")
+			default:
+				switch i18n.Cardinal("en", float64(count)) {
+				case i18n.One:
+					b.WriteString(msgs.arg(i18n.FormatNumber("en", float64(count))))
+					b.WriteString(" item moved to Trash")
+				default:
+					b.WriteString(msgs.arg(i18n.FormatNumber("en", float64(count))))
+					b.WriteString(" items moved to Trash")
+				}
+			}
+			return b.String()
+		}
+	}
+}
+
+// BulkRestoredCount says "{count, plural, =0 {Nothing restored} one {# item restored} other {# items restored}}"
+// in the language the app shows under cx.
+//
+// Result of restoring selected items from Trash.
+func BulkRestoredCount(cx *core.Scope, count int) string { return For(cx).BulkRestoredCount(count) }
+
+// BulkRestoredCount is the package's BulkRestoredCount in the language of msgs.
+func (msgs Messages) BulkRestoredCount(count int) string {
+	if i18n.IsPseudo(msgs.lang) {
+		return i18n.Pseudo(msgs.lang, Messages{lang: Source, mark: true}.BulkRestoredCount(count))
+	}
+	for lang := msgs.lang; ; lang = i18n.Parent(lang) {
+		if f := supplied[lang].BulkRestoredCount; f != nil {
+			return f(count)
+		}
+		switch lang {
+		case "", "en":
+			var b strings.Builder
+			switch {
+			case count == 0:
+				b.WriteString("Nothing restored")
+			default:
+				switch i18n.Cardinal("en", float64(count)) {
+				case i18n.One:
+					b.WriteString(msgs.arg(i18n.FormatNumber("en", float64(count))))
+					b.WriteString(" item restored")
+				default:
+					b.WriteString(msgs.arg(i18n.FormatNumber("en", float64(count))))
+					b.WriteString(" items restored")
+				}
+			}
+			return b.String()
+		}
+	}
+}
+
+// BulkArchivedCount says "{count, plural, =0 {Nothing archived} one {# item archived} other {# items archived}}"
+// in the language the app shows under cx.
+//
+// Result of archiving selected items.
+func BulkArchivedCount(cx *core.Scope, count int) string { return For(cx).BulkArchivedCount(count) }
+
+// BulkArchivedCount is the package's BulkArchivedCount in the language of msgs.
+func (msgs Messages) BulkArchivedCount(count int) string {
+	if i18n.IsPseudo(msgs.lang) {
+		return i18n.Pseudo(msgs.lang, Messages{lang: Source, mark: true}.BulkArchivedCount(count))
+	}
+	for lang := msgs.lang; ; lang = i18n.Parent(lang) {
+		if f := supplied[lang].BulkArchivedCount; f != nil {
+			return f(count)
+		}
+		switch lang {
+		case "", "en":
+			var b strings.Builder
+			switch {
+			case count == 0:
+				b.WriteString("Nothing archived")
+			default:
+				switch i18n.Cardinal("en", float64(count)) {
+				case i18n.One:
+					b.WriteString(msgs.arg(i18n.FormatNumber("en", float64(count))))
+					b.WriteString(" item archived")
+				default:
+					b.WriteString(msgs.arg(i18n.FormatNumber("en", float64(count))))
+					b.WriteString(" items archived")
+				}
+			}
+			return b.String()
+		}
+	}
+}
+
+// BulkUnarchivedCount says "{count, plural, =0 {Nothing unarchived} one {# item unarchived} other {# items unarchived}}"
+// in the language the app shows under cx.
+//
+// Result of moving selected items out of the Archive.
+func BulkUnarchivedCount(cx *core.Scope, count int) string { return For(cx).BulkUnarchivedCount(count) }
+
+// BulkUnarchivedCount is the package's BulkUnarchivedCount in the language of msgs.
+func (msgs Messages) BulkUnarchivedCount(count int) string {
+	if i18n.IsPseudo(msgs.lang) {
+		return i18n.Pseudo(msgs.lang, Messages{lang: Source, mark: true}.BulkUnarchivedCount(count))
+	}
+	for lang := msgs.lang; ; lang = i18n.Parent(lang) {
+		if f := supplied[lang].BulkUnarchivedCount; f != nil {
+			return f(count)
+		}
+		switch lang {
+		case "", "en":
+			var b strings.Builder
+			switch {
+			case count == 0:
+				b.WriteString("Nothing unarchived")
+			default:
+				switch i18n.Cardinal("en", float64(count)) {
+				case i18n.One:
+					b.WriteString(msgs.arg(i18n.FormatNumber("en", float64(count))))
+					b.WriteString(" item unarchived")
+				default:
+					b.WriteString(msgs.arg(i18n.FormatNumber("en", float64(count))))
+					b.WriteString(" items unarchived")
+				}
+			}
+			return b.String()
+		}
+	}
+}
+
+// BulkDeletedCount says "{count, plural, =0 {Nothing deleted} one {# item deleted permanently} other {# items deleted permanently}}"
+// in the language the app shows under cx.
+//
+// Result of permanently deleting selected items in Trash.
+func BulkDeletedCount(cx *core.Scope, count int) string { return For(cx).BulkDeletedCount(count) }
+
+// BulkDeletedCount is the package's BulkDeletedCount in the language of msgs.
+func (msgs Messages) BulkDeletedCount(count int) string {
+	if i18n.IsPseudo(msgs.lang) {
+		return i18n.Pseudo(msgs.lang, Messages{lang: Source, mark: true}.BulkDeletedCount(count))
+	}
+	for lang := msgs.lang; ; lang = i18n.Parent(lang) {
+		if f := supplied[lang].BulkDeletedCount; f != nil {
+			return f(count)
+		}
+		switch lang {
+		case "", "en":
+			var b strings.Builder
+			switch {
+			case count == 0:
+				b.WriteString("Nothing deleted")
+			default:
+				switch i18n.Cardinal("en", float64(count)) {
+				case i18n.One:
+					b.WriteString(msgs.arg(i18n.FormatNumber("en", float64(count))))
+					b.WriteString(" item deleted permanently")
+				default:
+					b.WriteString(msgs.arg(i18n.FormatNumber("en", float64(count))))
+					b.WriteString(" items deleted permanently")
+				}
+			}
+			return b.String()
+		}
+	}
+}
+
+// BulkMovedCount says "{count, plural, =0 {Nothing moved} one {# item moved} other {# items moved}}"
+// in the language the app shows under cx.
+//
+// Result of moving selected items to a folder.
+func BulkMovedCount(cx *core.Scope, count int) string { return For(cx).BulkMovedCount(count) }
+
+// BulkMovedCount is the package's BulkMovedCount in the language of msgs.
+func (msgs Messages) BulkMovedCount(count int) string {
+	if i18n.IsPseudo(msgs.lang) {
+		return i18n.Pseudo(msgs.lang, Messages{lang: Source, mark: true}.BulkMovedCount(count))
+	}
+	for lang := msgs.lang; ; lang = i18n.Parent(lang) {
+		if f := supplied[lang].BulkMovedCount; f != nil {
+			return f(count)
+		}
+		switch lang {
+		case "", "en":
+			var b strings.Builder
+			switch {
+			case count == 0:
+				b.WriteString("Nothing moved")
+			default:
+				switch i18n.Cardinal("en", float64(count)) {
+				case i18n.One:
+					b.WriteString(msgs.arg(i18n.FormatNumber("en", float64(count))))
+					b.WriteString(" item moved")
+				default:
+					b.WriteString(msgs.arg(i18n.FormatNumber("en", float64(count))))
+					b.WriteString(" items moved")
+				}
+			}
+			return b.String()
+		}
+	}
+}
+
+// VaultItems says "Vault items"
+// in the language the app shows under cx.
+//
+// Accessibility name of the list of vault items in the middle pane.
+func VaultItems(cx *core.Scope) string { return For(cx).VaultItems() }
+
+// VaultItems is the package's VaultItems in the language of msgs.
+func (msgs Messages) VaultItems() string { return msgs.text(textVaultItems) }
 
 // dated is lang with the hour cycle the user set, which times take.
 func (msgs Messages) dated(lang string) string {

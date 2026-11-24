@@ -15,6 +15,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/nsgo-dev/nsgo/base"
 	"github.com/nsgo-dev/nsgo/core"
 	"github.com/nsgo-dev/nsgo/ui"
 	"github.com/txchen/govault/cmd/govault/clitool"
@@ -442,6 +443,12 @@ type AppModel struct {
 	FilteredItems *core.Collection[string, state.CipherSummary]
 	SelectedID    *core.Signal[string]
 	IsSelected    func(id string) bool
+	// ListSelection is the items chosen in the list (selection.go).
+	ListSelection *base.Selection
+	shownIDs      []string
+	BulkBusy      *core.Signal[bool]
+	BulkDialog    *core.Signal[*BulkDialog]
+	BulkFolder    *core.Signal[string]
 	ActiveCipher  *core.Signal[*state.Cipher]
 	RevealPW      *core.Signal[bool]
 	RevealCard    *core.Signal[bool]
@@ -673,6 +680,31 @@ func NewAppModel(app *core.Scope, coreSvc state.VaultService, hooks PlatformHook
 		Toaster:             ui.NewToaster(app),
 	}
 	m.IsSelected = core.NewSelector(app, m.SelectedID.Get)
+	m.ListSelection = base.NewSelection(app, true)
+	m.BulkBusy = core.NewSignal(app, false)
+	m.BulkDialog = core.NewSignal[*BulkDialog](app, nil)
+	m.BulkFolder = core.NewSignal(app, "")
+	// The list shows the item SelectedID opens, however it was opened; a
+	// selection of several leaves SelectedID empty and stays.
+	app.Effect(func() {
+		id := m.SelectedID.Get()
+		app.Untrack(func() {
+			switch {
+			case id != "" && !(m.ListSelection.Len() == 1 && m.ListSelection.Has(id)):
+				m.shownIDs = []string{id}
+				m.ListSelection.Set(id)
+			case id == "" && m.ListSelection.Len() == 1:
+				m.shownIDs = nil
+				m.ListSelection.Clear()
+			}
+		})
+	})
+	// Leaving the vault drops a selection of several.
+	app.Effect(func() {
+		if m.Route.Get() != RouteVault {
+			app.Untrack(m.clearMultiSelection)
+		}
+	})
 	m.clearHistory()
 	m.setupNavigation()
 	m.setupFavicons()
@@ -1565,6 +1597,8 @@ func (m *AppModel) clearUnlockedUI() {
 	// Locking stays quiet: Touch ID is offered again only once the window is
 	// reopened or the app starts.
 	m.LockAutoFired = true
+	m.ClearSelection()
+	m.BulkDialog.Set(nil)
 	m.ActiveCipher.Set(nil)
 	m.SelectedID.Set("")
 	m.EditMode.Set(false)
@@ -1806,6 +1840,7 @@ func (m *AppModel) RefreshFilteredList() {
 		return
 	}
 	m.FilteredItems.Replace(SortItems(m.Core.Search(m.SearchQuery.Get(), m.EffectiveSearchFilter()), m.Prefs.Get().ListSort))
+	m.pruneSelection()
 }
 
 // SearchIsGlobal reports whether a non-empty query searches the whole vault rather than the selected sidebar section.
@@ -1931,6 +1966,7 @@ func (m *AppModel) EffectiveSearchFilter() state.SearchFilter {
 }
 
 func (m *AppModel) SetSearchAll(on bool) {
+	m.clearMultiSelection()
 	m.SearchAll.Set(on)
 	m.RefreshFilteredList()
 }
@@ -1944,6 +1980,9 @@ func (m *AppModel) SetSearchQuery(q string) {
 		if strings.TrimSpace(q) == "" {
 			m.SearchAll.Set(false)
 		}
+		if q != m.SearchQuery.Get() {
+			m.clearMultiSelection()
+		}
 		m.SearchQuery.Set(q)
 		m.RefreshFilteredList()
 	})
@@ -1952,6 +1991,7 @@ func (m *AppModel) SetSearchQuery(q string) {
 func (m *AppModel) SetSidebarFilter(f state.SearchFilter) {
 	m.ResetIdleTimer()
 	m.Route.Set(RouteVault)
+	m.clearMultiSelection()
 	m.SidebarFilter.Set(f)
 	m.SearchAll.Set(false)
 	m.RefreshFilteredList()
@@ -2002,36 +2042,6 @@ func (m *AppModel) SelectCipher(cx *core.Scope, id string) {
 		}
 		m.ActiveCipher.Set(c)
 	})
-}
-
-func (m *AppModel) MoveListSelection(cx *core.Scope, delta int) {
-	n := m.FilteredItems.Len()
-	if n == 0 {
-		return
-	}
-	cur := m.SelectedID.Get()
-	idx := -1
-	for i := range n {
-		if m.FilteredItems.KeyAt(i) == cur {
-			idx = i
-			break
-		}
-	}
-	next := idx + delta
-	if idx == -1 {
-		if delta > 0 {
-			next = 0
-		} else {
-			next = n - 1
-		}
-	}
-	if next < 0 {
-		next = 0
-	}
-	if next >= n {
-		next = n - 1
-	}
-	m.SelectCipher(cx, m.FilteredItems.KeyAt(next))
 }
 
 func (m *AppModel) StartCreateCipher(cx *core.Scope) {

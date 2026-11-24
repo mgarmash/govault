@@ -1164,3 +1164,68 @@ duplicateGroup:
 duplicateGroupNoUsername:
   message: "{site} · No username · {count, plural, one {# item} other {# items}}"
   description: Header of a group of duplicate logins in Vault Health whose logins have no username. site is a website domain such as github.com.
+itemsSelected:
+  message: "{count, plural, one {# item selected} other {# items selected}}"
+  description: Shown in the detail pane, and announced, when several vault items are selected.
+restoreCount:
+  message: "Restore {count, plural, one {# item} other {# items}}"
+  description: Button and menu item that restores the selected items from Trash; count is how many it applies to.
+archiveCount:
+  message: "Archive {count, plural, one {# item} other {# items}}"
+  description: Button and menu item that moves the selected items to the Archive; count is how many it applies to.
+unarchiveCount:
+  message: "Unarchive {count, plural, one {# item} other {# items}}"
+  description: Button and menu item that moves the selected items out of the Archive; count is how many it applies to.
+moveToFolderMenu: Move to Folder…
+moveToTrashMenu: Move to Trash…
+bulkTrashTitle:
+  message: "Move {count, plural, one {# item} other {# items}} to Trash?"
+  description: Title of the confirmation before moving several selected items to Trash.
+bulkTrashMessage: You can restore items from Trash until you delete them permanently.
+bulkDeleteTitle:
+  message: "Delete {count, plural, one {# item} other {# items}} permanently?"
+  description: Title of the confirmation before permanently deleting several selected items in Trash.
+bulkDeleteMessage: This cannot be undone. The items are removed from every device.
+bulkMoveTitle:
+  message: "Move {count, plural, one {# item} other {# items}} to a folder"
+  description: Title of the dialog that picks the folder for several selected items.
+move:
+  message: Move
+  description: Button that moves the selected items to the chosen folder.
+bulkAlreadyInFolder:
+  message: "{count, plural, one {# item is already in this folder and stays as it is.} other {# items are already in this folder and stay as they are.}}"
+  description: Shown in the folder picker when some selected items are already in the chosen folder.
+bulkSkipped:
+  message: "{count, plural, one {# selected item will be skipped: you cannot change it.} other {# selected items will be skipped: you cannot change them.}}"
+  description: Shown before a bulk action for selected items it cannot apply to, such as read-only shared items.
+selectionOffline: Offline. Reconnect to change these items.
+bulkItemFailed:
+  message: "{name} ({reason})"
+  description: One item a bulk action could not change, with why, in a list of them. name is the item's name.
+bulkDeleteKept:
+  message: "{count, plural, one {# item changed elsewhere and was kept} other {# items changed elsewhere and were kept}}"
+  description: Part of the result of deleting selected items permanently, for items restored or changed on another device meanwhile.
+bulkNotDone:
+  message: "{count, plural, one {# could not be changed: {details}.} other {# could not be changed: {details}.}}"
+  description: Detail of a bulk action's result listing what it could not change. details is a list such as "Payroll (access changed)".
+bulkTrashedCount:
+  message: "{count, plural, =0 {Nothing moved to Trash} one {# item moved to Trash} other {# items moved to Trash}}"
+  description: Result of moving selected items to Trash.
+bulkRestoredCount:
+  message: "{count, plural, =0 {Nothing restored} one {# item restored} other {# items restored}}"
+  description: Result of restoring selected items from Trash.
+bulkArchivedCount:
+  message: "{count, plural, =0 {Nothing archived} one {# item archived} other {# items archived}}"
+  description: Result of archiving selected items.
+bulkUnarchivedCount:
+  message: "{count, plural, =0 {Nothing unarchived} one {# item unarchived} other {# items unarchived}}"
+  description: Result of moving selected items out of the Archive.
+bulkDeletedCount:
+  message: "{count, plural, =0 {Nothing deleted} one {# item deleted permanently} other {# items deleted permanently}}"
+  description: Result of permanently deleting selected items in Trash.
+bulkMovedCount:
+  message: "{count, plural, =0 {Nothing moved} one {# item moved} other {# items moved}}"
+  description: Result of moving selected items to a folder.
+vaultItems:
+  message: Vault items
+  description: Accessibility name of the list of vault items in the middle pane.

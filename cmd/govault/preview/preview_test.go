@@ -163,4 +163,26 @@ func TestPreviewMainWindow(t *testing.T) {
 		m.HealthFilter.Set(HealthDuplicates)
 		m.Route.Set(RouteHealth)
 	})
+	selectThree := func() {
+		m.SetSidebarFilter(state.SearchFilter{Category: state.FilterAll})
+		ids := []string{"c-github", "c-cloudflare", "c-figma"}
+		keys := make([]any, len(ids))
+		for i, id := range ids {
+			keys[i] = id
+		}
+		m.ListSelection.Set(keys...)
+		m.SelectedID.Set("")
+		m.ActiveCipher.Set(nil)
+	}
+	scene("18-selection-light", core.AppearanceLight, selectThree)
+	scene("19-selection-dark", core.AppearanceDark, selectThree)
+	scene("20-folder-picker-light", core.AppearanceLight, func() {
+		selectThree()
+		m.ChooseFolderForSelection()
+	})
+	scene("21-trash-confirm-dark", core.AppearanceDark, func() {
+		m.BulkDialog.Set(nil)
+		selectThree()
+		m.ConfirmTrashSelection()
+	})
 }

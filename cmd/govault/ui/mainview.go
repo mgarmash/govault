@@ -53,6 +53,7 @@ func mainWindowContent(m *AppModel) core.Node {
 			}),
 			whenUnlocked(m, func(*core.Scope) core.Node { return repromptDialog(m) }),
 			whenUnlocked(m, func(cx *core.Scope) core.Node { return backupDialog(cx, m) }),
+			whenUnlocked(m, func(cx *core.Scope) core.Node { return bulkDialog(cx, m) }),
 			whenUnlocked(m, func(*core.Scope) core.Node { return folderDialog(m) }),
 			ui.Toasts{
 				Toaster:   m.Toaster,
@@ -143,16 +144,23 @@ func bindMainWindowShortcuts(cx *core.Scope, m *AppModel) {
 			m.GuardDirty(cx, func() { m.Route.Set(RouteSettings) })
 		}
 	})
-	cx.OnKeyWith("down", core.KeyOptions{When: core.KeyNotEditing}, func() {
-		if m.LockState.Get() == state.StatusUnlocked && m.Route.Get() == RouteVault && !m.EditMode.Get() {
-			m.MoveListSelection(cx, 1)
+	// The list moves its selection with the arrows, Shift and Cmd/Ctrl-A
+	// itself; Esc and Delete act on what it holds.
+	listKeys := func() bool {
+		return m.LockState.Get() == state.StatusUnlocked && m.Route.Get() == RouteVault && !m.EditMode.Get()
+	}
+	cx.OnKeyWith("escape", core.KeyOptions{When: core.KeyNotEditing}, func() {
+		if listKeys() && m.MultiSelected() {
+			m.ClearSelection()
 		}
 	})
-	cx.OnKeyWith("up", core.KeyOptions{When: core.KeyNotEditing}, func() {
-		if m.LockState.Get() == state.StatusUnlocked && m.Route.Get() == RouteVault && !m.EditMode.Get() {
-			m.MoveListSelection(cx, -1)
-		}
-	})
+	for _, key := range []string{"backspace", "delete"} {
+		cx.OnKeyWith(key, core.KeyOptions{When: core.KeyNotEditing}, func() {
+			if listKeys() && m.ListSelection.Len() > 0 {
+				m.ConfirmTrashSelection()
+			}
+		})
+	}
 }
 
 func repromptDialog(m *AppModel) core.Node {
