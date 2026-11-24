@@ -63,6 +63,11 @@
     <display_length compare="ge">768</display_length>
   </requires>
   <releases>
+    <release version="0.6.0" date="2026-11-23">
+      <description>
+        <p>Select several items to move, trash, archive, restore or delete them together, find duplicate logins in Vault Health, sort the list, choose the server and appearance, and get real-time sync on bitwarden.com and bitwarden.eu.</p>
+      </description>
+    </release>
     <release version="0.5.0" date="2026-11-23">
       <description>
         <p>Built on the official NSGo 0.3.0 release, with safer handling of the Windows Path and a fixed data race in the gv command-line client.</p>
