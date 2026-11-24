@@ -46,6 +46,21 @@ func FormatServiceURL(raw string) string {
 	return s
 }
 
+// NotificationsURL is where a server's notifications hub lives: Bitwarden's
+// US and EU clouds have hosts of their own (bitwarden/clients
+// DefaultEnvironmentService), any other server serves it under
+// base/notifications.
+func NotificationsURL(base string) string {
+	e, err := ResolveEndpoints(base)
+	switch {
+	case err == nil && e.Identity == usCloud.Identity:
+		return "https://notifications.bitwarden.com"
+	case err == nil && e.Identity == euCloud.Identity:
+		return "https://notifications.bitwarden.eu"
+	}
+	return strings.TrimRight(base, "/") + "/notifications"
+}
+
 // ResolveEndpoints maps a base URL from FormatServerURL to its services.
 // Bitwarden's US and EU clouds have fixed API and identity hosts; any
 // other server serves them under its base path.

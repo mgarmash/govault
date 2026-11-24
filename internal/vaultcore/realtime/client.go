@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/txchen/govault/internal/vaultcore/api"
 	"math/rand/v2"
 	"net/http"
 	"net/url"
@@ -51,6 +52,7 @@ func NewClient(cfg Config) (*WSClient, error) {
 	if raw == "" {
 		return nil, errors.New("realtime: ServerURL is required")
 	}
+	raw = api.NotificationsURL(raw)
 	u, err := url.Parse(raw)
 	if err != nil || u.Host == "" {
 		return nil, fmt.Errorf("realtime: invalid ServerURL %q", cfg.ServerURL)
@@ -64,7 +66,7 @@ func NewClient(cfg Config) (*WSClient, error) {
 	default:
 		return nil, fmt.Errorf("realtime: unsupported URL scheme %q", u.Scheme)
 	}
-	u.Path = strings.TrimRight(u.Path, "/") + "/notifications/hub"
+	u.Path = strings.TrimRight(u.Path, "/") + "/hub"
 
 	initial := cfg.InitialBackoff
 	if initial <= 0 {
