@@ -2364,6 +2364,7 @@ const (
 	textMove
 	textSelectionOffline
 	textVaultItems
+	textHealthDuplicates
 	numTexts
 )
 
@@ -2936,6 +2937,7 @@ var keyOfText = [numTexts]string{
 	"move",
 	"selectionOffline",
 	"vaultItems",
+	"healthDuplicates",
 }
 
 // textsEn are the messages without arguments in en.
@@ -3498,14 +3500,15 @@ var textsEn = i18n.NewTexts(""+
 	"Light"+
 	"Dark"+
 	"Has a passkey"+
-	"Duplicate logins"+
+	"Duplicate Logins"+
 	"Move to Folder…"+
 	"Move to Trash…"+
 	"You can restore items from Trash until you delete them permanently."+
 	"This cannot be undone. The items are removed from every device."+
 	"Move"+
 	"Offline. Reconnect to change these items."+
-	"Vault items",
+	"Vault items"+
+	"Duplicates",
 	[]uint16{
 		6,
 		4,
@@ -4073,6 +4076,7 @@ var textsEn = i18n.NewTexts(""+
 		4,
 		41,
 		11,
+		10,
 	})
 
 // textsDe are the messages without arguments in de.
@@ -4642,6 +4646,7 @@ var textsDe = i18n.NewTexts(""+
 	""+
 	""+
 	""+
+	""+
 	"",
 	[]uint16{
 		9,
@@ -5187,6 +5192,7 @@ var textsDe = i18n.NewTexts(""+
 		47,
 		31,
 		78,
+		0,
 		0,
 		0,
 		0,
@@ -5779,6 +5785,7 @@ var textsEs = i18n.NewTexts(""+
 	""+
 	""+
 	""+
+	""+
 	"",
 	[]uint16{
 		8,
@@ -6324,6 +6331,7 @@ var textsEs = i18n.NewTexts(""+
 		41,
 		54,
 		77,
+		0,
 		0,
 		0,
 		0,
@@ -6916,6 +6924,7 @@ var textsFr = i18n.NewTexts(""+
 	""+
 	""+
 	""+
+	""+
 	"",
 	[]uint16{
 		7,
@@ -7461,6 +7470,7 @@ var textsFr = i18n.NewTexts(""+
 		52,
 		44,
 		85,
+		0,
 		0,
 		0,
 		0,
@@ -8053,6 +8063,7 @@ var textsJa = i18n.NewTexts(""+
 	""+
 	""+
 	""+
+	""+
 	"",
 	[]uint16{
 		15,
@@ -8598,6 +8609,7 @@ var textsJa = i18n.NewTexts(""+
 		48,
 		63,
 		101,
+		0,
 		0,
 		0,
 		0,
@@ -9190,6 +9202,7 @@ var textsKo = i18n.NewTexts(""+
 	""+
 	""+
 	""+
+	""+
 	"",
 	[]uint16{
 		6,
@@ -9735,6 +9748,7 @@ var textsKo = i18n.NewTexts(""+
 		43,
 		49,
 		85,
+		0,
 		0,
 		0,
 		0,
@@ -10327,6 +10341,7 @@ var textsPtBR = i18n.NewTexts(""+
 	""+
 	""+
 	""+
+	""+
 	"",
 	[]uint16{
 		8,
@@ -10872,6 +10887,7 @@ var textsPtBR = i18n.NewTexts(""+
 		55,
 		34,
 		69,
+		0,
 		0,
 		0,
 		0,
@@ -11464,6 +11480,7 @@ var textsRu = i18n.NewTexts(""+
 	""+
 	""+
 	""+
+	""+
 	"",
 	[]uint16{
 		12,
@@ -12009,6 +12026,7 @@ var textsRu = i18n.NewTexts(""+
 		53,
 		60,
 		120,
+		0,
 		0,
 		0,
 		0,
@@ -12601,6 +12619,7 @@ var textsZhHans = i18n.NewTexts(""+
 	""+
 	""+
 	""+
+	""+
 	"",
 	[]uint16{
 		6,
@@ -13146,6 +13165,7 @@ var textsZhHans = i18n.NewTexts(""+
 		27,
 		24,
 		59,
+		0,
 		0,
 		0,
 		0,
@@ -13738,6 +13758,7 @@ var textsZhHant = i18n.NewTexts(""+
 	""+
 	""+
 	""+
+	""+
 	"",
 	[]uint16{
 		6,
@@ -14283,6 +14304,7 @@ var textsZhHant = i18n.NewTexts(""+
 		27,
 		24,
 		59,
+		0,
 		0,
 		0,
 		0,
@@ -26697,7 +26719,7 @@ func HasPasskey(cx *core.Scope) string { return For(cx).HasPasskey() }
 // HasPasskey is the package's HasPasskey in the language of msgs.
 func (msgs Messages) HasPasskey() string { return msgs.text(textHasPasskey) }
 
-// DuplicateLogins says "Duplicate logins"
+// DuplicateLogins says "Duplicate Logins"
 // in the language the app shows under cx.
 //
 // Vault Health check and section listing logins that have the same website and username.
@@ -27426,6 +27448,15 @@ func VaultItems(cx *core.Scope) string { return For(cx).VaultItems() }
 
 // VaultItems is the package's VaultItems in the language of msgs.
 func (msgs Messages) VaultItems() string { return msgs.text(textVaultItems) }
+
+// HealthDuplicates says "Duplicates"
+// in the language the app shows under cx.
+//
+// Vault Health tile counting groups of duplicate logins; keep it short like the other tiles.
+func HealthDuplicates(cx *core.Scope) string { return For(cx).HealthDuplicates() }
+
+// HealthDuplicates is the package's HealthDuplicates in the language of msgs.
+func (msgs Messages) HealthDuplicates() string { return msgs.text(textHealthDuplicates) }
 
 // dated is lang with the hour cycle the user set, which times take.
 func (msgs Messages) dated(lang string) string {

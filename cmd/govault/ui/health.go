@@ -29,7 +29,7 @@ func HealthView(cx *core.Scope, m *AppModel) core.Node {
 							tile(HealthWeak, lucide.ShieldAlert, 0xe5484d, len(r.Weak), locales.HealthWeak(cx)),
 							tile(HealthCards, lucide.CalendarClock, 0xa25ddc, len(r.Cards), locales.HealthExpiringCards(cx)),
 							tile(HealthUnsecured, lucide.LockOpen, 0x0a84ff, len(r.Unsecured), locales.HealthUnsecured(cx)),
-							tile(HealthDuplicates, lucide.Files, 0x12a594, len(r.Duplicates), locales.DuplicateLogins(cx)),
+							tile(HealthDuplicates, lucide.Files, 0x12a594, len(r.Duplicates), locales.HealthDuplicates(cx)),
 						},
 					},
 				}
@@ -107,7 +107,7 @@ func HealthView(cx *core.Scope, m *AppModel) core.Node {
 					Content: locales.HealthLocalOnly(cx),
 				})
 				return core.View{
-					Class:    "w-full max-w-[680px] self-center px-7 pt-6 pb-10 gap-5",
+					Class:    "w-full max-w-[760px] self-center px-7 pt-6 pb-10 gap-5",
 					Children: blocks,
 				}
 			}),
@@ -146,9 +146,11 @@ func healthTile(m *AppModel, c HealthCategory, glyph func() *core.SVG, tint uint
 	if count == 0 {
 		countClass = "text-[22px] font-semibold text-gv-fg3 tabular-nums"
 	}
-	frame := "gap-1.5 px-3.5 py-3 rounded-[10px] bg-gv-card border border-gv-line"
+	// Every tile grows to the row's tallest, whose label may wrap in
+	// another language; their contents stay top-aligned alike.
+	frame := "flex-1 gap-1.5 px-3 py-3 rounded-[10px] bg-gv-card border border-gv-line"
 	if selected {
-		frame = "gap-1.5 px-3.5 py-3 rounded-[10px] bg-gv-accent-soft border border-gv-accent"
+		frame = "flex-1 gap-1.5 px-3 py-3 rounded-[10px] bg-gv-accent-soft border border-gv-accent"
 	}
 	return core.View{
 		TestID:   "health-count-" + string(c),

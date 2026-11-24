@@ -1156,7 +1156,7 @@ hasPasskey:
   message: Has a passkey
   description: Accessibility name of the small key icon on a vault list row whose login stores a passkey.
 duplicateLogins:
-  message: Duplicate logins
+  message: Duplicate Logins
   description: Vault Health check and section listing logins that have the same website and username.
 duplicateGroup:
   message: "{site} · {username} · {count, plural, one {# item} other {# items}}"
@@ -1229,3 +1229,6 @@ bulkMovedCount:
 vaultItems:
   message: Vault items
   description: Accessibility name of the list of vault items in the middle pane.
+healthDuplicates:
+  message: Duplicates
+  description: Vault Health tile counting groups of duplicate logins; keep it short like the other tiles.

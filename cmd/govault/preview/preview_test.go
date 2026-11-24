@@ -185,4 +185,17 @@ func TestPreviewMainWindow(t *testing.T) {
 		selectThree()
 		m.ConfirmTrashSelection()
 	})
+	// Vault Health's tiles in the languages with the longest labels.
+	health := func(lang string) func() {
+		return func() {
+			m.BulkDialog.Set(nil)
+			m.ClearSelection()
+			m.Scope.SetLocale(lang)
+			m.HealthFilter.Set(HealthAll)
+			m.Route.Set(RouteHealth)
+		}
+	}
+	scene("22-health-en-light", core.AppearanceLight, health("en"))
+	scene("23-health-de-light", core.AppearanceLight, health("de"))
+	scene("24-health-ru-dark", core.AppearanceDark, health("ru"))
 }
