@@ -332,6 +332,17 @@ func (s *Service) RestoreCipher(_ context.Context, id string) error {
 	return nil
 }
 
+func (s *Service) MoveCiphers(_ context.Context, ids []string, folderID *string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	for _, id := range ids {
+		if c, ok := s.ciphers[id]; ok {
+			c.FolderID = folderID
+		}
+	}
+	return nil
+}
+
 func (s *Service) HardDeleteCipher(_ context.Context, id string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()

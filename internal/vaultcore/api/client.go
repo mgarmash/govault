@@ -329,6 +329,20 @@ func (c *Client) SoftDeleteCipher(ctx context.Context, accessToken, cipherID str
 	return err
 }
 
+// MoveCiphers puts the items of ids in folderID, or in no folder for nil.
+// Folders are per user, so this changes nothing else of them.
+func (c *Client) MoveCiphers(ctx context.Context, accessToken string, ids []string, folderID *string) error {
+	body, err := json.Marshal(struct {
+		IDs      []string `json:"ids"`
+		FolderID *string  `json:"folderId"`
+	}{ids, folderID})
+	if err != nil {
+		return err
+	}
+	_, err = c.do(ctx, http.MethodPut, "/api/ciphers/move", "application/json", accessToken, nil, body)
+	return err
+}
+
 func (c *Client) RestoreCipher(ctx context.Context, accessToken, cipherID string) (*EncryptedCipher, error) {
 	raw, err := c.do(ctx, http.MethodPut, "/api/ciphers/"+url.PathEscape(cipherID)+"/restore", "", accessToken, nil, nil)
 	if err != nil {

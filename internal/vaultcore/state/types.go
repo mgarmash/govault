@@ -353,6 +353,7 @@ type VaultService interface {
 	SaveCipher(ctx context.Context, c *Cipher) (*Cipher, error)
 	SoftDeleteCipher(ctx context.Context, id string) error
 	RestoreCipher(ctx context.Context, id string) error
+	MoveCiphers(ctx context.Context, ids []string, folderID *string) error
 	HardDeleteCipher(ctx context.Context, id string) error
 	TrashSelection() TrashSelection
 	ArchiveCipher(ctx context.Context, id string) error

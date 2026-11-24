@@ -374,6 +374,17 @@ func (m *mockVaultService) RestoreCipher(_ context.Context, id string) error {
 	return nil
 }
 
+func (m *mockVaultService) MoveCiphers(_ context.Context, ids []string, folderID *string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	for _, id := range ids {
+		if c, ok := m.ciphers[id]; ok {
+			c.FolderID = folderID
+		}
+	}
+	return nil
+}
+
 func (m *mockVaultService) HardDeleteCipher(_ context.Context, id string) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()

@@ -205,6 +205,18 @@ func (s *Server) write(w http.ResponseWriter, r *http.Request, parts []string) b
 		}
 		s.bump()
 		writeJSON(w, 200, obj{"data": done, "object": "list", "continuationToken": nil})
+	case m == http.MethodPut && n == 3 && parts[1] == "ciphers" && parts[2] == "move":
+		body := readBody(r)
+		ids, _ := body["ids"].([]any)
+		for _, id := range ids {
+			if _, it := s.findItem(fmt.Sprint(id)); it != nil {
+				it["folderId"] = body["folderId"]
+				it["revisionDate"] = now()
+			}
+		}
+		s.moves++
+		s.bump()
+		w.WriteHeader(200)
 	case parts[1] == "ciphers" && n >= 3:
 		return s.writeCipher(w, r, parts)
 	case parts[1] == "folders":
@@ -497,4 +509,11 @@ func (s *Server) Renewals() int {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	return s.renewals
+}
+
+// Moves counts PUT /api/ciphers/move requests.
+func (s *Server) Moves() int {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.moves
 }

@@ -91,6 +91,7 @@ type Server struct {
 	userKeyID     string
 	items         []obj
 	blobPuts      []http.Header
+	moves         int
 	renewals      int
 	folders       []obj
 	blobs         map[string][]byte
