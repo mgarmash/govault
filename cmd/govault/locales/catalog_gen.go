@@ -4648,7 +4648,7 @@ var textsDe = i18n.NewTexts(""+
 	"Offline. Verbinde dich erneut, um diese Einträge zu ändern."+
 	"Tresoreinträge"+
 	"Duplikate"+
-	"",
+	"Verschieben nicht abgeschlossen",
 	[]uint16{
 		9,
 		9,
@@ -5217,7 +5217,7 @@ var textsDe = i18n.NewTexts(""+
 		61,
 		15,
 		9,
-		0,
+		31,
 	})
 
 // textsEs are the messages without arguments in es.
@@ -5789,7 +5789,7 @@ var textsEs = i18n.NewTexts(""+
 	"Sin conexión. Vuelve a conectarte para cambiar estos elementos."+
 	"Elementos de la caja fuerte"+
 	"Duplicados"+
-	"",
+	"El traslado no finalizó",
 	[]uint16{
 		8,
 		7,
@@ -6358,7 +6358,7 @@ var textsEs = i18n.NewTexts(""+
 		64,
 		27,
 		10,
-		0,
+		24,
 	})
 
 // textsFr are the messages without arguments in fr.
@@ -6930,7 +6930,7 @@ var textsFr = i18n.NewTexts(""+
 	"Hors ligne. Reconnectez-vous pour modifier ces éléments."+
 	"Éléments du coffre"+
 	"Doublons"+
-	"",
+	"Le déplacement ne s’est pas terminé",
 	[]uint16{
 		7,
 		11,
@@ -7499,7 +7499,7 @@ var textsFr = i18n.NewTexts(""+
 		58,
 		20,
 		8,
-		0,
+		39,
 	})
 
 // textsJa are the messages without arguments in ja.
@@ -8071,7 +8071,7 @@ var textsJa = i18n.NewTexts(""+
 	"オフラインです。アイテムを変更するには再接続してください。"+
 	"保管庫のアイテム"+
 	"重複"+
-	"",
+	"移動が完了しませんでした",
 	[]uint16{
 		15,
 		6,
@@ -8640,7 +8640,7 @@ var textsJa = i18n.NewTexts(""+
 		87,
 		24,
 		6,
-		0,
+		36,
 	})
 
 // textsKo are the messages without arguments in ko.
@@ -9212,7 +9212,7 @@ var textsKo = i18n.NewTexts(""+
 	"오프라인 상태입니다. 항목을 변경하려면 다시 연결하세요."+
 	"보관함 항목"+
 	"중복"+
-	"",
+	"이동이 완료되지 않음",
 	[]uint16{
 		6,
 		6,
@@ -9781,7 +9781,7 @@ var textsKo = i18n.NewTexts(""+
 		79,
 		16,
 		6,
-		0,
+		29,
 	})
 
 // textsPtBR are the messages without arguments in pt-BR.
@@ -10353,7 +10353,7 @@ var textsPtBR = i18n.NewTexts(""+
 	"Offline. Reconecte-se para alterar estes itens."+
 	"Itens do cofre"+
 	"Duplicados"+
-	"",
+	"A movimentação não terminou",
 	[]uint16{
 		8,
 		6,
@@ -10922,7 +10922,7 @@ var textsPtBR = i18n.NewTexts(""+
 		47,
 		14,
 		10,
-		0,
+		30,
 	})
 
 // textsRu are the messages without arguments in ru.
@@ -11494,7 +11494,7 @@ var textsRu = i18n.NewTexts(""+
 	"Офлайн. Подключитесь снова, чтобы изменить эти элементы."+
 	"Элементы хранилища"+
 	"Дубликаты"+
-	"",
+	"Перемещение не завершено",
 	[]uint16{
 		12,
 		18,
@@ -12063,7 +12063,7 @@ var textsRu = i18n.NewTexts(""+
 		103,
 		35,
 		18,
-		0,
+		46,
 	})
 
 // textsZhHans are the messages without arguments in zh-Hans.
@@ -12635,7 +12635,7 @@ var textsZhHans = i18n.NewTexts(""+
 	"离线。请重新连接以更改这些项目。"+
 	"密码库项目"+
 	"重复项"+
-	"",
+	"移动未完成",
 	[]uint16{
 		6,
 		6,
@@ -13204,7 +13204,7 @@ var textsZhHans = i18n.NewTexts(""+
 		48,
 		15,
 		9,
-		0,
+		15,
 	})
 
 // textsZhHant are the messages without arguments in zh-Hant.
@@ -13776,7 +13776,7 @@ var textsZhHant = i18n.NewTexts(""+
 	"離線。請重新連線以變更這些項目。"+
 	"密碼庫項目"+
 	"重複項目"+
-	"",
+	"移動未完成",
 	[]uint16{
 		6,
 		6,
@@ -14345,7 +14345,7 @@ var textsZhHant = i18n.NewTexts(""+
 		48,
 		15,
 		12,
-		0,
+		15,
 	})
 
 // texts returns the messages without arguments in lang, nil for a
@@ -29331,6 +29331,24 @@ func (msgs Messages) BulkMoveMaybePartial(reason string) string {
 		switch lang {
 		case "", "en":
 			return msgs.arg(reason) + " Some items may already be in the folder."
+		case "de":
+			return reason + " Einige Einträge befinden sich möglicherweise bereits im Ordner."
+		case "es":
+			return reason + " Algunos elementos pueden estar ya en la carpeta."
+		case "fr":
+			return reason + " Certains éléments se trouvent peut-être déjà dans le dossier."
+		case "ja":
+			return reason + " 一部のアイテムはすでにフォルダーに移動されている可能性があります。"
+		case "ko":
+			return reason + " 일부 항목은 이미 폴더에 있을 수 있습니다."
+		case "pt-BR":
+			return reason + " Alguns itens podem já estar na pasta."
+		case "ru":
+			return reason + " Часть элементов уже может находиться в папке."
+		case "zh-Hans":
+			return reason + " 部分项目可能已在文件夹中。"
+		case "zh-Hant":
+			return reason + " 部分項目可能已在資料夾中。"
 		}
 	}
 }

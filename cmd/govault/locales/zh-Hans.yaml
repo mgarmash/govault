@@ -752,3 +752,5 @@ bulkDeletedCount: "{count, plural, =0 {未删除任何项目} other {已永久�
 bulkMovedCount: "{count, plural, =0 {未移动任何项目} other {已移动 # 个项目}}"
 vaultItems: 密码库项目
 healthDuplicates: 重复项
+bulkMoveStopped: 移动未完成
+bulkMoveMaybePartial: "{reason} 部分项目可能已在文件夹中。"

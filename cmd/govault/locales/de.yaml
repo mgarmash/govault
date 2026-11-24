@@ -752,6 +752,8 @@ bulkDeletedCount: "{count, plural, =0 {Nichts gelöscht} one {# Eintrag dauerhaf
 bulkMovedCount: "{count, plural, =0 {Nichts verschoben} one {# Eintrag verschoben} other {# Einträge verschoben}}"
 vaultItems: Tresoreinträge
 healthDuplicates: Duplikate
+bulkMoveStopped: Verschieben nicht abgeschlossen
+bulkMoveMaybePartial: "{reason} Einige Einträge befinden sich möglicherweise bereits im Ordner."
 
 # NSGo catalogs
 

@@ -752,6 +752,8 @@ bulkDeletedCount: "{count, plural, =0 {Nada excluído} one {# item excluído per
 bulkMovedCount: "{count, plural, =0 {Nada movido} one {# item movido} other {# itens movidos}}"
 vaultItems: Itens do cofre
 healthDuplicates: Duplicados
+bulkMoveStopped: A movimentação não terminou
+bulkMoveMaybePartial: "{reason} Alguns itens podem já estar na pasta."
 
 # NSGo catalogs
 

@@ -752,6 +752,8 @@ bulkDeletedCount: "{count, plural, =0 {削除したアイテムはありませ�
 bulkMovedCount: "{count, plural, =0 {移動したアイテムはありません} other {# 件を移動しました}}"
 vaultItems: 保管庫のアイテム
 healthDuplicates: 重複
+bulkMoveStopped: 移動が完了しませんでした
+bulkMoveMaybePartial: "{reason} 一部のアイテムはすでにフォルダーに移動されている可能性があります。"
 
 # NSGo catalogs
 

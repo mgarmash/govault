@@ -752,6 +752,8 @@ bulkDeletedCount: "{count, plural, =0 {未刪除任何項目} other {已永久�
 bulkMovedCount: "{count, plural, =0 {未移動任何項目} other {已移動 # 個項目}}"
 vaultItems: 密碼庫項目
 healthDuplicates: 重複項目
+bulkMoveStopped: 移動未完成
+bulkMoveMaybePartial: "{reason} 部分項目可能已在資料夾中。"
 
 # NSGo catalogs
 

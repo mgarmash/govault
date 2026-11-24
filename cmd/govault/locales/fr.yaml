@@ -752,6 +752,8 @@ bulkDeletedCount: "{count, plural, =0 {Aucun élément supprimé} one {# éléme
 bulkMovedCount: "{count, plural, =0 {Aucun élément déplacé} one {# élément déplacé} other {# éléments déplacés}}"
 vaultItems: Éléments du coffre
 healthDuplicates: Doublons
+bulkMoveStopped: Le déplacement ne s’est pas terminé
+bulkMoveMaybePartial: "{reason} Certains éléments se trouvent peut-être déjà dans le dossier."
 
 # NSGo catalogs
 
