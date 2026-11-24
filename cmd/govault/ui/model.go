@@ -61,7 +61,10 @@ type UserPrefs struct {
 	Email     string            `json:"email"`
 	KDF       *crypto.KDFConfig `json:"kdf,omitempty"`
 	// Language is the language chosen in Settings, "" the system's.
-	Language              string                `json:"language,omitempty"`
+	Language string `json:"language,omitempty"`
+	// Appearance is "light" or "dark" as chosen in Settings, "" the
+	// system's.
+	Appearance            string                `json:"appearance,omitempty"`
 	BiometricEnabled      bool                  `json:"biometricEnabled"`
 	AutoPromptBiometric   bool                  `json:"autoPromptBiometric"`
 	AutoLockMinutes       int                   `json:"autoLockMinutes"`
@@ -579,6 +582,9 @@ func NewAppModel(app *core.Scope, coreSvc state.VaultService, hooks PlatformHook
 	p := EnsureDeviceID(prefs)
 	if p.Language != "" {
 		app.SetLocale(p.Language)
+	}
+	if p.Appearance != "" {
+		app.SetAppearance(appearanceOf(p.Appearance))
 	}
 
 	m := &AppModel{

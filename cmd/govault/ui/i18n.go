@@ -46,6 +46,28 @@ func (m *AppModel) SetLanguage(lang string) {
 	m.Scope.SetLocale(lang)
 }
 
+// appearanceOf is the appearance a preference names: light, dark, or the
+// system's for anything else.
+func appearanceOf(pref string) core.Appearance {
+	switch pref {
+	case "light":
+		return core.AppearanceLight
+	case "dark":
+		return core.AppearanceDark
+	}
+	return core.AppearanceSystem
+}
+
+// SetAppearance shows GoVault light, dark, or as the system does for "",
+// and keeps the choice for later launches.
+func (m *AppModel) SetAppearance(pref string) {
+	m.UpdatePrefs(func(p UserPrefs) UserPrefs {
+		p.Appearance = pref
+		return p
+	})
+	m.Scope.SetAppearance(appearanceOf(pref))
+}
+
 // RepromptAction is what the master password reprompt protects, which its
 // dialog and biometric prompt name.
 type RepromptAction string

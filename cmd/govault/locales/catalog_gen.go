@@ -2310,6 +2310,11 @@ const (
 	textSelfHosted
 	textServerBitwardenUS
 	textServerBitwardenEU
+	textAppearance
+	textAppearanceDetail
+	textAppearanceSystem
+	textAppearanceLight
+	textAppearanceDark
 	numTexts
 )
 
@@ -2868,6 +2873,11 @@ var keyOfText = [numTexts]string{
 	"selfHosted",
 	"serverBitwardenUS",
 	"serverBitwardenEU",
+	"appearance",
+	"appearanceDetail",
+	"appearanceSystem",
+	"appearanceLight",
+	"appearanceDark",
 }
 
 // textsEn are the messages without arguments in en.
@@ -3423,7 +3433,12 @@ var textsEn = i18n.NewTexts(""+
 	"Server"+
 	"Self-hosted"+
 	"bitwarden.com"+
-	"bitwarden.eu",
+	"bitwarden.eu"+
+	"Appearance"+
+	"Show GoVault light or dark, or follow the system."+
+	"System"+
+	"Light"+
+	"Dark",
 	[]uint16{
 		6,
 		4,
@@ -3977,6 +3992,11 @@ var textsEn = i18n.NewTexts(""+
 		11,
 		13,
 		12,
+		10,
+		49,
+		6,
+		5,
+		4,
 	})
 
 // textsDe are the messages without arguments in de.
@@ -4532,6 +4552,11 @@ var textsDe = i18n.NewTexts(""+
 	""+
 	""+
 	""+
+	""+
+	""+
+	""+
+	""+
+	""+
 	"",
 	[]uint16{
 		9,
@@ -5077,6 +5102,11 @@ var textsDe = i18n.NewTexts(""+
 		47,
 		31,
 		78,
+		0,
+		0,
+		0,
+		0,
+		0,
 		0,
 		0,
 		0,
@@ -5641,6 +5671,11 @@ var textsEs = i18n.NewTexts(""+
 	""+
 	""+
 	""+
+	""+
+	""+
+	""+
+	""+
+	""+
 	"",
 	[]uint16{
 		8,
@@ -6186,6 +6221,11 @@ var textsEs = i18n.NewTexts(""+
 		41,
 		54,
 		77,
+		0,
+		0,
+		0,
+		0,
+		0,
 		0,
 		0,
 		0,
@@ -6750,6 +6790,11 @@ var textsFr = i18n.NewTexts(""+
 	""+
 	""+
 	""+
+	""+
+	""+
+	""+
+	""+
+	""+
 	"",
 	[]uint16{
 		7,
@@ -7295,6 +7340,11 @@ var textsFr = i18n.NewTexts(""+
 		52,
 		44,
 		85,
+		0,
+		0,
+		0,
+		0,
+		0,
 		0,
 		0,
 		0,
@@ -7859,6 +7909,11 @@ var textsJa = i18n.NewTexts(""+
 	""+
 	""+
 	""+
+	""+
+	""+
+	""+
+	""+
+	""+
 	"",
 	[]uint16{
 		15,
@@ -8404,6 +8459,11 @@ var textsJa = i18n.NewTexts(""+
 		48,
 		63,
 		101,
+		0,
+		0,
+		0,
+		0,
+		0,
 		0,
 		0,
 		0,
@@ -8968,6 +9028,11 @@ var textsKo = i18n.NewTexts(""+
 	""+
 	""+
 	""+
+	""+
+	""+
+	""+
+	""+
+	""+
 	"",
 	[]uint16{
 		6,
@@ -9513,6 +9578,11 @@ var textsKo = i18n.NewTexts(""+
 		43,
 		49,
 		85,
+		0,
+		0,
+		0,
+		0,
+		0,
 		0,
 		0,
 		0,
@@ -10077,6 +10147,11 @@ var textsPtBR = i18n.NewTexts(""+
 	""+
 	""+
 	""+
+	""+
+	""+
+	""+
+	""+
+	""+
 	"",
 	[]uint16{
 		8,
@@ -10622,6 +10697,11 @@ var textsPtBR = i18n.NewTexts(""+
 		55,
 		34,
 		69,
+		0,
+		0,
+		0,
+		0,
+		0,
 		0,
 		0,
 		0,
@@ -11186,6 +11266,11 @@ var textsRu = i18n.NewTexts(""+
 	""+
 	""+
 	""+
+	""+
+	""+
+	""+
+	""+
+	""+
 	"",
 	[]uint16{
 		12,
@@ -11731,6 +11816,11 @@ var textsRu = i18n.NewTexts(""+
 		53,
 		60,
 		120,
+		0,
+		0,
+		0,
+		0,
+		0,
 		0,
 		0,
 		0,
@@ -12295,6 +12385,11 @@ var textsZhHans = i18n.NewTexts(""+
 	""+
 	""+
 	""+
+	""+
+	""+
+	""+
+	""+
+	""+
 	"",
 	[]uint16{
 		6,
@@ -12840,6 +12935,11 @@ var textsZhHans = i18n.NewTexts(""+
 		27,
 		24,
 		59,
+		0,
+		0,
+		0,
+		0,
+		0,
 		0,
 		0,
 		0,
@@ -13404,6 +13504,11 @@ var textsZhHant = i18n.NewTexts(""+
 	""+
 	""+
 	""+
+	""+
+	""+
+	""+
+	""+
+	""+
 	"",
 	[]uint16{
 		6,
@@ -13949,6 +14054,11 @@ var textsZhHant = i18n.NewTexts(""+
 		27,
 		24,
 		59,
+		0,
+		0,
+		0,
+		0,
+		0,
 		0,
 		0,
 		0,
@@ -26236,6 +26346,49 @@ func ServerBitwardenEU(cx *core.Scope) string { return For(cx).ServerBitwardenEU
 
 // ServerBitwardenEU is the package's ServerBitwardenEU in the language of msgs.
 func (msgs Messages) ServerBitwardenEU() string { return msgs.text(textServerBitwardenEU) }
+
+// Appearance says "Appearance"
+// in the language the app shows under cx.
+//
+// Settings row that chooses a light or dark look for GoVault.
+func Appearance(cx *core.Scope) string { return For(cx).Appearance() }
+
+// Appearance is the package's Appearance in the language of msgs.
+func (msgs Messages) Appearance() string { return msgs.text(textAppearance) }
+
+// AppearanceDetail says "Show GoVault light or dark, or follow the system."
+// in the language the app shows under cx.
+func AppearanceDetail(cx *core.Scope) string { return For(cx).AppearanceDetail() }
+
+// AppearanceDetail is the package's AppearanceDetail in the language of msgs.
+func (msgs Messages) AppearanceDetail() string { return msgs.text(textAppearanceDetail) }
+
+// AppearanceSystem says "System"
+// in the language the app shows under cx.
+//
+// Appearance choice that follows the system's light or dark setting.
+func AppearanceSystem(cx *core.Scope) string { return For(cx).AppearanceSystem() }
+
+// AppearanceSystem is the package's AppearanceSystem in the language of msgs.
+func (msgs Messages) AppearanceSystem() string { return msgs.text(textAppearanceSystem) }
+
+// AppearanceLight says "Light"
+// in the language the app shows under cx.
+//
+// Appearance choice that always shows GoVault light.
+func AppearanceLight(cx *core.Scope) string { return For(cx).AppearanceLight() }
+
+// AppearanceLight is the package's AppearanceLight in the language of msgs.
+func (msgs Messages) AppearanceLight() string { return msgs.text(textAppearanceLight) }
+
+// AppearanceDark says "Dark"
+// in the language the app shows under cx.
+//
+// Appearance choice that always shows GoVault dark.
+func AppearanceDark(cx *core.Scope) string { return For(cx).AppearanceDark() }
+
+// AppearanceDark is the package's AppearanceDark in the language of msgs.
+func (msgs Messages) AppearanceDark() string { return msgs.text(textAppearanceDark) }
 
 // dated is lang with the hour cycle the user set, which times take.
 func (msgs Messages) dated(lang string) string {

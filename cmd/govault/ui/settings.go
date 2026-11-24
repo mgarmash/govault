@@ -25,7 +25,7 @@ func SettingsView(cx *core.Scope, m *AppModel) core.Node {
 			core.View{
 				Class: "w-full max-w-[620px] self-center px-7 pt-6 pb-10 gap-6",
 				Children: []core.Node{
-					section(locales.General(cx), card(languageRow(cx, m))),
+					section(locales.General(cx), card(languageRow(cx, m), appearanceRow(cx, m))),
 					section(locales.Account(cx), card(
 						core.View{
 							Class: "flex-row items-center gap-3 px-4 py-3.5",
@@ -389,6 +389,26 @@ func languageRow(cx *core.Scope, m *AppModel) core.Node {
 			Options:  opts,
 			Value:    func() string { return m.Prefs.Get().Language },
 			OnChange: m.SetLanguage,
+		},
+	)
+}
+
+// appearanceRow shows GoVault light, dark, or as the system does.
+func appearanceRow(cx *core.Scope, m *AppModel) core.Node {
+	return settingsRow(
+		locales.Appearance(cx),
+		locales.AppearanceDetail(cx),
+		ui.Select[string]{
+			TestID: "settings-appearance",
+			Label:  locales.Appearance(cx),
+			Style:  core.Style{Width: core.Pt(172)},
+			Options: []ui.Option[string]{
+				{Value: "", Label: locales.AppearanceSystem(cx)},
+				{Value: "light", Label: locales.AppearanceLight(cx)},
+				{Value: "dark", Label: locales.AppearanceDark(cx)},
+			},
+			Value:    func() string { return m.Prefs.Get().Appearance },
+			OnChange: m.SetAppearance,
 		},
 	)
 }

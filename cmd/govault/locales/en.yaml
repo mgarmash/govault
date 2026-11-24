@@ -1139,3 +1139,16 @@ serverBitwardenUS:
 serverBitwardenEU:
   message: bitwarden.eu
   description: Sign-in server choice for Bitwarden's EU cloud. Keep the domain name.
+appearance:
+  message: Appearance
+  description: Settings row that chooses a light or dark look for GoVault.
+appearanceDetail: Show GoVault light or dark, or follow the system.
+appearanceSystem:
+  message: System
+  description: Appearance choice that follows the system's light or dark setting.
+appearanceLight:
+  message: Light
+  description: Appearance choice that always shows GoVault light.
+appearanceDark:
+  message: Dark
+  description: Appearance choice that always shows GoVault dark.
