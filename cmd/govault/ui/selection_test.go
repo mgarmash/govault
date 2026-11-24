@@ -24,7 +24,14 @@ func selectionApp(t *testing.T) (*nsgotest.App, *AppModel, *mockVaultService) {
 		svc.ciphers[c.ID] = c
 		svc.order = append(svc.order, c.ID)
 	}
-	app, m, _ := startSecurityApp(t, svc, PlatformHooks{})
+	var m *AppModel
+	// A desktop, where the list is a keyboard focus stop.
+	app := nsgotest.Start(t, func(cx *core.Scope) core.Node {
+		m = NewAppModel(cx, svc, PlatformHooks{VerifyMasterPassword: func(string, []byte) error { return nil }})
+		m.MainWinVisible.Set(true)
+		m.RefreshVaultData()
+		return MainWindowView(cx, m)
+	}, nsgotest.Size(1100, 900), nsgotest.Environment(core.Environment{OS: core.OSMacOS, Idiom: core.IdiomDesktop, Locale: "en-US"}))
 	app.Post(func() { m.SetListSort(SortDefault) })
 	app.WaitFor("id:vault-item-list >> text:Delta", 2*time.Second)
 	return app, m, svc
@@ -83,7 +90,7 @@ func TestDeleteKeyTrashesTheSelection(t *testing.T) {
 	app.Press(row("Alpha"))
 	app.PressWith(row("Bravo"), core.Modifiers{Platform: true})
 	app.PressWith(row("Charlie"), core.Modifiers{Platform: true})
-
+	app.Focus("id:vault-item-list")
 	app.Key("backspace")
 	app.WaitFor("id:bulk-dialog", 2*time.Second)
 	app.Find("text:Move 2 items to Trash?")
@@ -114,6 +121,7 @@ func TestDeleteKeyTrashesTheSelection(t *testing.T) {
 	app.Post(func() { m.SetSidebarFilter(state.SearchFilter{Category: state.FilterTrash}) })
 	app.WaitFor(row("Alpha"), 2*time.Second)
 	app.Press(row("Alpha"))
+	app.Focus("id:vault-item-list")
 	app.Key("delete")
 	if m.BulkDialog.Get() != nil {
 		t.Fatal("Delete in Trash asked to move to Trash")
@@ -162,4 +170,71 @@ func TestSelectionPrunedAfterRefresh(t *testing.T) {
 	if got := m.SelectedIDs(); !slices.Equal(got, []string{"c-alpha"}) {
 		t.Fatalf("after the sync: %v", got)
 	}
+}
+
+// A permanent deletion covers the revisions the user saw when the
+// confirmation opened: an item changed while it is open is kept. Return
+// cancels it; only the named button deletes.
+func TestDeleteConfirmationKeepsItemsChangedMeanwhile(t *testing.T) {
+	app, m, svc := selectionApp(t)
+	seen := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
+	svc.mu.Lock()
+	for _, id := range []string{"c-alpha", "c-charlie"} {
+		deleted := time.Now()
+		svc.ciphers[id].DeletedDate, svc.ciphers[id].RevisionDate = &deleted, &seen
+	}
+	svc.mu.Unlock()
+	app.Post(func() { m.SetSidebarFilter(state.SearchFilter{Category: state.FilterTrash}) })
+	app.WaitFor(row("Charlie"), 2*time.Second)
+	app.Press(row("Alpha"))
+	app.PressWith(row("Charlie"), core.Modifiers{Platform: true})
+	app.Press("id:selection-delete")
+	app.WaitFor("id:bulk-dialog", 2*time.Second)
+	app.Key("enter")
+	app.WaitUntil(2*time.Second, func() bool { return m.BulkDialog.Get() == nil })
+	svc.mu.RLock()
+	n := len(svc.ciphers)
+	svc.mu.RUnlock()
+
+	app.Press("id:selection-delete")
+	app.WaitFor("id:bulk-dialog", 2*time.Second)
+	changed := seen.Add(time.Hour)
+	svc.mu.Lock()
+	svc.ciphers["c-charlie"].RevisionDate = &changed
+	svc.mu.Unlock()
+	app.Press("id:bulk-confirm")
+	app.WaitUntil(2*time.Second, func() bool {
+		svc.mu.RLock()
+		defer svc.mu.RUnlock()
+		_, alpha := svc.ciphers["c-alpha"]
+		return !alpha
+	})
+	svc.mu.RLock()
+	_, charlie := svc.ciphers["c-charlie"]
+	after := len(svc.ciphers)
+	svc.mu.RUnlock()
+	if !charlie || after != n-1 {
+		t.Fatalf("Return deleted, or the changed item went: charlie kept %v, %d items from %d", charlie, after, n)
+	}
+}
+
+// A bulk action whose item fails reports it once the UI has it, and the
+// rest still happen; -race checks the report is worded on the UI thread.
+func TestBulkFailureIsReported(t *testing.T) {
+	app, m, svc := selectionApp(t)
+	app.Press(row("Alpha"))
+	app.PressWith(row("Charlie"), core.Modifiers{Platform: true})
+	app.Press("id:selection-trash")
+	app.WaitFor("id:bulk-dialog", 2*time.Second)
+	svc.mu.Lock()
+	delete(svc.ciphers, "c-charlie")
+	svc.mu.Unlock()
+	app.Press("id:bulk-confirm")
+	app.WaitUntil(2*time.Second, func() bool {
+		svc.mu.RLock()
+		defer svc.mu.RUnlock()
+		return svc.ciphers["c-alpha"].DeletedDate != nil
+	})
+	app.WaitFor("text:1 item moved to Trash", 2*time.Second)
+	app.WaitUntil(2*time.Second, func() bool { return m.ListSelection.Len() == 0 })
 }

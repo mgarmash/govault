@@ -487,7 +487,11 @@ func (m *mockVaultService) EmptyTrash(_ context.Context, sel state.TrashSelectio
 	defer m.mu.Unlock()
 	res := state.TrashResult{ReadOnly: sel.ReadOnly}
 	for _, it := range sel.Items {
-		if c, ok := m.ciphers[it.ID]; !ok || c.DeletedDate == nil {
+		c, ok := m.ciphers[it.ID]
+		// As the service, an item no longer in Trash at the confirmed
+		// revision is kept.
+		if !ok || c.DeletedDate == nil || (c.RevisionDate == nil) != (it.RevisionDate == nil) ||
+			c.RevisionDate != nil && !c.RevisionDate.Equal(*it.RevisionDate) {
 			res.Skipped++
 			continue
 		}

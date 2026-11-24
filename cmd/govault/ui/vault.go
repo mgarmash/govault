@@ -906,7 +906,7 @@ func itemListPane(cx *core.Scope, m *AppModel) core.Node {
 			listSortBar(cx, m),
 			searchScope(cx, m),
 			trashBar(cx, m),
-			base.List{
+			core.View{Ref: &m.listRef, Class: "flex-1", Children: []core.Node{base.List{
 				TestID:            "vault-item-list",
 				Label:             locales.VaultItems(cx),
 				Class:             "flex-1",
@@ -1046,7 +1046,7 @@ func itemListPane(cx *core.Scope, m *AppModel) core.Node {
 						},
 					}
 				},
-			},
+			}}},
 		},
 	}
 }

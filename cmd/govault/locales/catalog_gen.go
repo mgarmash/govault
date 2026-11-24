@@ -1661,6 +1661,7 @@ var Parameters = map[string][]string{
 	"BulkUnarchivedCount":        {"count"},
 	"BulkDeletedCount":           {"count"},
 	"BulkMovedCount":             {"count"},
+	"BulkMoveMaybePartial":       {"reason"},
 }
 
 // Translation is a language's messages another package supplies:
@@ -1786,6 +1787,7 @@ type Translation struct {
 	BulkUnarchivedCount        func(count int) string
 	BulkDeletedCount           func(count int) string
 	BulkMovedCount             func(count int) string
+	BulkMoveMaybePartial       func(reason string) string
 }
 
 var supplied = map[string]Translation{}
@@ -2359,6 +2361,7 @@ const (
 	textSelectionOffline
 	textVaultItems
 	textHealthDuplicates
+	textBulkMoveStopped
 	numTexts
 )
 
@@ -2932,6 +2935,7 @@ var keyOfText = [numTexts]string{
 	"selectionOffline",
 	"vaultItems",
 	"healthDuplicates",
+	"bulkMoveStopped",
 }
 
 // textsEn are the messages without arguments in en.
@@ -3502,7 +3506,8 @@ var textsEn = i18n.NewTexts(""+
 	"Move"+
 	"Offline. Reconnect to change these items."+
 	"Vault items"+
-	"Duplicates",
+	"Duplicates"+
+	"The move did not finish",
 	[]uint16{
 		6,
 		4,
@@ -4071,6 +4076,7 @@ var textsEn = i18n.NewTexts(""+
 		41,
 		11,
 		10,
+		23,
 	})
 
 // textsDe are the messages without arguments in de.
@@ -4641,7 +4647,8 @@ var textsDe = i18n.NewTexts(""+
 	"Verschieben"+
 	"Offline. Verbinde dich erneut, um diese Einträge zu ändern."+
 	"Tresoreinträge"+
-	"Duplikate",
+	"Duplikate"+
+	"",
 	[]uint16{
 		9,
 		9,
@@ -5210,6 +5217,7 @@ var textsDe = i18n.NewTexts(""+
 		61,
 		15,
 		9,
+		0,
 	})
 
 // textsEs are the messages without arguments in es.
@@ -5780,7 +5788,8 @@ var textsEs = i18n.NewTexts(""+
 	"Mover"+
 	"Sin conexión. Vuelve a conectarte para cambiar estos elementos."+
 	"Elementos de la caja fuerte"+
-	"Duplicados",
+	"Duplicados"+
+	"",
 	[]uint16{
 		8,
 		7,
@@ -6349,6 +6358,7 @@ var textsEs = i18n.NewTexts(""+
 		64,
 		27,
 		10,
+		0,
 	})
 
 // textsFr are the messages without arguments in fr.
@@ -6919,7 +6929,8 @@ var textsFr = i18n.NewTexts(""+
 	"Déplacer"+
 	"Hors ligne. Reconnectez-vous pour modifier ces éléments."+
 	"Éléments du coffre"+
-	"Doublons",
+	"Doublons"+
+	"",
 	[]uint16{
 		7,
 		11,
@@ -7488,6 +7499,7 @@ var textsFr = i18n.NewTexts(""+
 		58,
 		20,
 		8,
+		0,
 	})
 
 // textsJa are the messages without arguments in ja.
@@ -8058,7 +8070,8 @@ var textsJa = i18n.NewTexts(""+
 	"移動"+
 	"オフラインです。アイテムを変更するには再接続してください。"+
 	"保管庫のアイテム"+
-	"重複",
+	"重複"+
+	"",
 	[]uint16{
 		15,
 		6,
@@ -8627,6 +8640,7 @@ var textsJa = i18n.NewTexts(""+
 		87,
 		24,
 		6,
+		0,
 	})
 
 // textsKo are the messages without arguments in ko.
@@ -9197,7 +9211,8 @@ var textsKo = i18n.NewTexts(""+
 	"이동"+
 	"오프라인 상태입니다. 항목을 변경하려면 다시 연결하세요."+
 	"보관함 항목"+
-	"중복",
+	"중복"+
+	"",
 	[]uint16{
 		6,
 		6,
@@ -9766,6 +9781,7 @@ var textsKo = i18n.NewTexts(""+
 		79,
 		16,
 		6,
+		0,
 	})
 
 // textsPtBR are the messages without arguments in pt-BR.
@@ -10336,7 +10352,8 @@ var textsPtBR = i18n.NewTexts(""+
 	"Mover"+
 	"Offline. Reconecte-se para alterar estes itens."+
 	"Itens do cofre"+
-	"Duplicados",
+	"Duplicados"+
+	"",
 	[]uint16{
 		8,
 		6,
@@ -10905,6 +10922,7 @@ var textsPtBR = i18n.NewTexts(""+
 		47,
 		14,
 		10,
+		0,
 	})
 
 // textsRu are the messages without arguments in ru.
@@ -11475,7 +11493,8 @@ var textsRu = i18n.NewTexts(""+
 	"Переместить"+
 	"Офлайн. Подключитесь снова, чтобы изменить эти элементы."+
 	"Элементы хранилища"+
-	"Дубликаты",
+	"Дубликаты"+
+	"",
 	[]uint16{
 		12,
 		18,
@@ -12044,6 +12063,7 @@ var textsRu = i18n.NewTexts(""+
 		103,
 		35,
 		18,
+		0,
 	})
 
 // textsZhHans are the messages without arguments in zh-Hans.
@@ -12614,7 +12634,8 @@ var textsZhHans = i18n.NewTexts(""+
 	"移动"+
 	"离线。请重新连接以更改这些项目。"+
 	"密码库项目"+
-	"重复项",
+	"重复项"+
+	"",
 	[]uint16{
 		6,
 		6,
@@ -13183,6 +13204,7 @@ var textsZhHans = i18n.NewTexts(""+
 		48,
 		15,
 		9,
+		0,
 	})
 
 // textsZhHant are the messages without arguments in zh-Hant.
@@ -13753,7 +13775,8 @@ var textsZhHant = i18n.NewTexts(""+
 	"移動"+
 	"離線。請重新連線以變更這些項目。"+
 	"密碼庫項目"+
-	"重複項目",
+	"重複項目"+
+	"",
 	[]uint16{
 		6,
 		6,
@@ -14322,6 +14345,7 @@ var textsZhHant = i18n.NewTexts(""+
 		48,
 		15,
 		12,
+		0,
 	})
 
 // texts returns the messages without arguments in lang, nil for a
@@ -14744,6 +14768,9 @@ func Supply(lang string, t Translation) {
 	}
 	if t.BulkMovedCount != nil {
 		s.BulkMovedCount = t.BulkMovedCount
+	}
+	if t.BulkMoveMaybePartial != nil {
+		s.BulkMoveMaybePartial = t.BulkMoveMaybePartial
 	}
 	supplied[lang] = s
 	Catalog.Add(lang)
@@ -29274,6 +29301,39 @@ func HealthDuplicates(cx *core.Scope) string { return For(cx).HealthDuplicates()
 
 // HealthDuplicates is the package's HealthDuplicates in the language of msgs.
 func (msgs Messages) HealthDuplicates() string { return msgs.text(textHealthDuplicates) }
+
+// BulkMoveStopped says "The move did not finish"
+// in the language the app shows under cx.
+//
+// Title of the result when moving selected items to a folder failed partway.
+func BulkMoveStopped(cx *core.Scope) string { return For(cx).BulkMoveStopped() }
+
+// BulkMoveStopped is the package's BulkMoveStopped in the language of msgs.
+func (msgs Messages) BulkMoveStopped() string { return msgs.text(textBulkMoveStopped) }
+
+// BulkMoveMaybePartial says "{reason} Some items may already be in the folder."
+// in the language the app shows under cx.
+//
+// Detail of a move of selected items that failed partway; reason is the error.
+func BulkMoveMaybePartial(cx *core.Scope, reason string) string {
+	return For(cx).BulkMoveMaybePartial(reason)
+}
+
+// BulkMoveMaybePartial is the package's BulkMoveMaybePartial in the language of msgs.
+func (msgs Messages) BulkMoveMaybePartial(reason string) string {
+	if i18n.IsPseudo(msgs.lang) {
+		return i18n.Pseudo(msgs.lang, Messages{lang: Source, mark: true}.BulkMoveMaybePartial(reason))
+	}
+	for lang := msgs.lang; ; lang = i18n.Parent(lang) {
+		if f := supplied[lang].BulkMoveMaybePartial; f != nil {
+			return f(reason)
+		}
+		switch lang {
+		case "", "en":
+			return msgs.arg(reason) + " Some items may already be in the folder."
+		}
+	}
+}
 
 // dated is lang with the hour cycle the user set, which times take.
 func (msgs Messages) dated(lang string) string {

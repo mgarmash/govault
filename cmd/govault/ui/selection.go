@@ -97,9 +97,10 @@ func (m *AppModel) clearMultiSelection() {
 }
 
 // pruneSelection keeps the selected items the list still shows, as after a
-// sync or a new order, opening the item that remains alone.
+// sync, a new order or another view, opening the item that remains alone.
+// An item being edited stays.
 func (m *AppModel) pruneSelection() {
-	if !m.MultiSelected() {
+	if m.ListSelection.Len() == 0 || m.EditMode.Get() {
 		return
 	}
 	shown := map[string]bool{}
@@ -114,6 +115,10 @@ func (m *AppModel) pruneSelection() {
 		}
 	}
 	if len(keep) == len(ids) {
+		return
+	}
+	if len(keep) == 0 {
+		m.ClearSelection()
 		return
 	}
 	m.ListSelection.Set(anyKeys(keep)...)
@@ -162,9 +167,11 @@ func (m *AppModel) bulkSelection() bulkSet {
 	return b
 }
 
-// writesAllowed: offline the selection can be looked at, not changed.
+// writesAllowed: offline, signed out of the server or with only the local
+// copy, the selection can be looked at, not changed.
 func (m *AppModel) writesAllowed() bool {
-	return m.SyncState.Get() != SyncOffline && !m.BulkBusy.Get()
+	st := m.SyncState.Get()
+	return st != SyncOffline && st != SyncAuthExpired && !m.LocalOnly.Get() && !m.BulkBusy.Get()
 }
 
 // BulkKind is an action a bulk dialog confirms.
@@ -181,6 +188,9 @@ type BulkDialog struct {
 	Kind    BulkKind
 	Items   []*state.Cipher
 	Skipped int
+	// Trash is what a permanent deletion covers, with the revisions the
+	// user saw when the confirmation opened.
+	Trash state.TrashSelection
 }
 
 // ConfirmTrashSelection asks before moving the selection to Trash; in
@@ -200,7 +210,20 @@ func (m *AppModel) ConfirmDeleteSelection() {
 	if len(b.deletable) == 0 || !m.writesAllowed() {
 		return
 	}
-	m.BulkDialog.Set(&BulkDialog{Kind: BulkDelete, Items: b.deletable, Skipped: len(b.all) - len(b.deletable)})
+	want := map[string]bool{}
+	for _, c := range b.deletable {
+		want[c.ID] = true
+	}
+	sel := m.Core.TrashSelection()
+	sel.ReadOnly = 0
+	var confirmed []state.TrashItem
+	for _, it := range sel.Items {
+		if want[it.ID] {
+			confirmed = append(confirmed, it)
+		}
+	}
+	sel.Items = confirmed
+	m.BulkDialog.Set(&BulkDialog{Kind: BulkDelete, Items: b.deletable, Skipped: len(b.all) - len(b.deletable), Trash: sel})
 }
 
 // ChooseFolderForSelection opens the folder picker for the selection.
@@ -224,7 +247,7 @@ func (m *AppModel) ConfirmBulkDialog() {
 	case BulkTrash:
 		m.runBulk(d.Items, bulkTrashed, func(ctx context.Context, c *state.Cipher) error { return m.Core.SoftDeleteCipher(ctx, c.ID) })
 	case BulkDelete:
-		m.deleteSelection(d.Items)
+		m.deleteSelection(d.Trash)
 	case BulkMove:
 		m.moveSelection(d.Items, m.BulkFolder.Get())
 	}
@@ -266,11 +289,27 @@ func (m *AppModel) ArchiveSelection(cx *core.Scope, archive bool) {
 	run()
 }
 
-// bulkOutcome is what runBulk did, for its one result message.
+// bulkOutcome is what an action did, for its one result message, which
+// the UI thread words.
 type bulkOutcome struct {
 	done   int
-	failed []string
-	local  bool
+	failed []bulkFailure
+	// kept counts items Empty Trash kept as they changed meanwhile.
+	kept int
+	// err stopped the action, a move perhaps partway.
+	err   error
+	local bool
+}
+
+type bulkFailure struct {
+	name string
+	err  error
+}
+
+// stopsBulk reports a failure that every further item would meet too.
+func stopsBulk(ctx context.Context, err error) bool {
+	return ctx.Err() != nil || errors.Is(err, state.ErrLocked) || errors.Is(err, api.ErrNetworkOffline) ||
+		errors.Is(err, state.ErrSignInRequired) || errors.Is(err, api.ErrUnauthorized) || errors.Is(err, state.ErrArchiveUnsupported)
 }
 
 // runBulk applies do to each item in turn, in the session, and reports
@@ -288,8 +327,8 @@ func (m *AppModel) runBulk(items []*state.Cipher, kind bulkResult, do func(conte
 				out.done++
 				out.local = true
 			default:
-				out.failed = append(out.failed, locales.BulkItemFailed(m.Scope, c.Name, m.errorText(err)))
-				if ctx.Err() != nil || errors.Is(err, state.ErrLocked) || errors.Is(err, api.ErrNetworkOffline) {
+				out.failed = append(out.failed, bulkFailure{c.Name, err})
+				if stopsBulk(ctx, err) {
 					return out
 				}
 			}
@@ -299,32 +338,12 @@ func (m *AppModel) runBulk(items []*state.Cipher, kind bulkResult, do func(conte
 }
 
 // deleteSelection deletes the confirmed items in Trash for good through
-// Empty Trash, which checks each is still in Trash at the revision the user
-// saw.
-func (m *AppModel) deleteSelection(items []*state.Cipher) {
-	want := map[string]bool{}
-	for _, c := range items {
-		want[c.ID] = true
-	}
-	sel := m.Core.TrashSelection()
-	sel.ReadOnly = 0
-	var confirmed []state.TrashItem
-	for _, it := range sel.Items {
-		if want[it.ID] {
-			confirmed = append(confirmed, it)
-		}
-	}
-	sel.Items = confirmed
+// Empty Trash, which keeps each that is no longer in Trash at the revision
+// the user saw.
+func (m *AppModel) deleteSelection(sel state.TrashSelection) {
 	m.dispatch(func(ctx context.Context) bulkOutcome {
 		res, err := m.Core.EmptyTrash(ctx, sel)
-		out := bulkOutcome{done: res.Deleted}
-		if res.Skipped > 0 {
-			out.failed = append(out.failed, locales.BulkDeleteKept(m.Scope, res.Skipped))
-		}
-		if err != nil {
-			out.failed = append(out.failed, m.errorText(err))
-		}
-		return out
+		return bulkOutcome{done: res.Deleted, kept: res.Skipped, err: err}
 	}, bulkDeleted)
 }
 
@@ -346,7 +365,7 @@ func (m *AppModel) moveSelection(items []*state.Cipher, folderID string) {
 			return bulkOutcome{}
 		}
 		if err := m.Core.MoveCiphers(ctx, ids, dest); err != nil {
-			return bulkOutcome{failed: []string{m.errorText(err)}}
+			return bulkOutcome{err: err}
 		}
 		return bulkOutcome{done: len(ids)}
 	}, bulkMoved)
@@ -412,9 +431,20 @@ func (m *AppModel) showBulkResult(kind bulkResult, out bulkOutcome) {
 	case bulkMoved:
 		done = locales.BulkMovedCount(cx, out.done)
 	}
+	var notDone []string
+	for _, f := range out.failed {
+		notDone = append(notDone, locales.BulkItemFailed(cx, f.name, m.errorText(f.err)))
+	}
+	if out.kept > 0 {
+		notDone = append(notDone, locales.BulkDeleteKept(cx, out.kept))
+	}
 	switch {
-	case len(out.failed) > 0:
-		m.ShowToast(ui.ToastError, done, locales.BulkNotDone(cx, len(out.failed), strings.Join(out.failed, "; ")))
+	case out.err != nil && kind == bulkMoved:
+		m.ShowToast(ui.ToastError, locales.BulkMoveStopped(cx), locales.BulkMoveMaybePartial(cx, m.errorText(out.err)))
+	case out.err != nil:
+		m.ShowToast(ui.ToastError, done, m.errorText(out.err))
+	case len(notDone) > 0:
+		m.ShowToast(ui.ToastError, done, locales.BulkNotDone(cx, len(notDone), strings.Join(notDone, "; ")))
 	case out.local:
 		m.ShowLocalCopyWarning(done)
 	default:
@@ -516,7 +546,15 @@ func bulkDialog(cx *core.Scope, m *AppModel) core.Node {
 				m.BulkDialog.Set(nil)
 			}
 		},
-		OnConfirm: m.ConfirmBulkDialog,
+		// Return confirms, except a permanent deletion, which only its
+		// named button does.
+		OnConfirm: func() {
+			if d := m.BulkDialog.Get(); d != nil && d.Kind == BulkDelete {
+				m.BulkDialog.Set(nil)
+				return
+			}
+			m.ConfirmBulkDialog()
+		},
 		TitleFunc: func() string {
 			return text(BulkTrash, func(n int) string { return locales.BulkTrashTitle(cx, n) }) +
 				text(BulkDelete, func(n int) string { return locales.BulkDeleteTitle(cx, n) }) +

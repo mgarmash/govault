@@ -156,7 +156,7 @@ func bindMainWindowShortcuts(cx *core.Scope, m *AppModel) {
 	})
 	for _, key := range []string{"backspace", "delete"} {
 		cx.OnKeyWith(key, core.KeyOptions{When: core.KeyNotEditing}, func() {
-			if listKeys() && m.ListSelection.Len() > 0 {
+			if listKeys() && m.ListSelection.Len() > 0 && m.listRef.HoldsFocus() {
 				m.ConfirmTrashSelection()
 			}
 		})

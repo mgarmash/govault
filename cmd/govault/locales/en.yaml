@@ -1223,3 +1223,9 @@ vaultItems:
 healthDuplicates:
   message: Duplicates
   description: Vault Health tile counting groups of duplicate logins; keep it short like the other tiles.
+bulkMoveStopped:
+  message: The move did not finish
+  description: Title of the result when moving selected items to a folder failed partway.
+bulkMoveMaybePartial:
+  message: "{reason} Some items may already be in the folder."
+  description: Detail of a move of selected items that failed partway; reason is the error.

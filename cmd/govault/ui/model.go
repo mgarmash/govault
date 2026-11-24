@@ -442,16 +442,17 @@ type AppModel struct {
 	Health        *core.Signal[health.Report]
 	FilteredItems *core.Collection[string, state.CipherSummary]
 	SelectedID    *core.Signal[string]
-	IsSelected    func(id string) bool
 	// ListSelection is the items chosen in the list (selection.go).
 	ListSelection *base.Selection
-	shownIDs      []string
-	BulkBusy      *core.Signal[bool]
-	BulkDialog    *core.Signal[*BulkDialog]
-	BulkFolder    *core.Signal[string]
-	ActiveCipher  *core.Signal[*state.Cipher]
-	RevealPW      *core.Signal[bool]
-	RevealCard    *core.Signal[bool]
+	// listRef is the list pane, whose keyboard focus Delete needs.
+	listRef      core.Ref
+	shownIDs     []string
+	BulkBusy     *core.Signal[bool]
+	BulkDialog   *core.Signal[*BulkDialog]
+	BulkFolder   *core.Signal[string]
+	ActiveCipher *core.Signal[*state.Cipher]
+	RevealPW     *core.Signal[bool]
+	RevealCard   *core.Signal[bool]
 	// TOTPRevealedID is the item whose protected TOTP code was revealed.
 	TOTPRevealedID *core.Signal[string]
 
@@ -679,7 +680,6 @@ func NewAppModel(app *core.Scope, coreSvc state.VaultService, hooks PlatformHook
 		vaultRev:            core.NewSignal(app, 0),
 		Toaster:             ui.NewToaster(app),
 	}
-	m.IsSelected = core.NewSelector(app, m.SelectedID.Get)
 	m.ListSelection = base.NewSelection(app, true)
 	m.BulkBusy = core.NewSignal(app, false)
 	m.BulkDialog = core.NewSignal[*BulkDialog](app, nil)
