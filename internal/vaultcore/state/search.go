@@ -84,20 +84,15 @@ func matchesFilter(c *Cipher, filter SearchFilter) bool {
 	}
 }
 
-// Custom field types search may read: text and boolean. Hidden fields are
-// secrets, and linked fields hold no value.
-const (
-	fieldText    = 0
-	fieldBoolean = 2
-)
+// fieldHidden is the custom field type whose value an item that hides
+// passwords does not show.
+const fieldHidden = 1
 
-// scoreCipher matches q against what an item shows without revealing a
-// secret: its name, subtitle, websites and notes; the names and values of
-// its text and boolean fields unless it hides passwords; a card's brand and
-// the last four digits of its number, those also only when it does not
-// hide passwords; an SSH key's fingerprint; an identity's name, company,
-// email and username. Passwords, TOTP secrets, hidden fields, card codes,
-// private keys and identity numbers are never searched.
+// scoreCipher matches q against an item's name, subtitle, websites, notes,
+// custom fields, card, identity and SSH key fingerprint. An item whose
+// passwords the user may not view, by itself or through its collections,
+// does not match the values of its hidden fields. Passwords, TOTP secrets,
+// SSH private keys and passkeys are never searched.
 func scoreCipher(c *Cipher, summary CipherSummary, q string, hidesPasswords bool) (int, bool) {
 	best := 0
 	matched := false
@@ -124,19 +119,15 @@ func scoreCipher(c *Cipher, summary CipherSummary, q string, hidesPasswords bool
 		}
 	}
 	check(c.Notes, 2)
-	if !hidesPasswords {
-		for _, f := range c.Fields {
-			if f.Type == fieldText || f.Type == fieldBoolean {
-				check(f.Name, 3)
-				check(f.Value, 3)
-			}
+	for _, f := range c.Fields {
+		check(f.Name, 3)
+		if f.Type != fieldHidden || !hidesPasswords {
+			check(f.Value, 3)
 		}
 	}
 	if k := c.Card; k != nil {
-		check(k.Brand, 4)
-		if digits := strings.TrimSpace(k.Number); !hidesPasswords && len(digits) >= 4 {
-			// Only the last four: the whole number is a secret.
-			check(digits[len(digits)-4:], 4)
+		for _, v := range []string{k.Brand, k.CardholderName, k.Number, k.Code} {
+			check(v, 4)
 		}
 	}
 	if k := c.SSHKey; k != nil {
@@ -144,9 +135,10 @@ func scoreCipher(c *Cipher, summary CipherSummary, q string, hidesPasswords bool
 	}
 	if i := c.Identity; i != nil {
 		check(strings.Join(strings.Fields(i.FirstName+" "+i.MiddleName+" "+i.LastName), " "), 5)
-		check(i.Company, 4)
-		check(i.Email, 4)
-		check(i.Username, 4)
+		for _, v := range []string{i.Title, i.Address1, i.Address2, i.Address3, i.City, i.State, i.PostalCode, i.Country,
+			i.Company, i.Email, i.Phone, i.SSN, i.Username, i.PassportNumber, i.LicenseNumber} {
+			check(v, 4)
+		}
 	}
 
 	return best, matched

@@ -1350,9 +1350,7 @@ func (s *Service) newAPIClient(serverURL string) (*api.Client, error) {
 	// Bitwarden's US and EU clouds serve the API and identity on hosts of
 	// their own, as gv resolves them; other servers under their base URL.
 	var apiURL, identityURL string
-	if base := strings.TrimRight(strings.TrimSpace(serverURL), "/"); base == "" {
-		// No server is no server, not the default cloud.
-	} else if e, err := api.ResolveEndpoints(base); err == nil {
+	if e, err := api.ResolveEndpoints(strings.TrimRight(strings.TrimSpace(serverURL), "/")); err == nil {
 		apiURL, identityURL = e.API, e.Identity
 	}
 	return api.NewClient(api.ClientConfig{
