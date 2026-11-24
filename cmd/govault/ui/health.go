@@ -29,6 +29,7 @@ func HealthView(cx *core.Scope, m *AppModel) core.Node {
 							tile(HealthWeak, lucide.ShieldAlert, 0xe5484d, len(r.Weak), locales.HealthWeak(cx)),
 							tile(HealthCards, lucide.CalendarClock, 0xa25ddc, len(r.Cards), locales.HealthExpiringCards(cx)),
 							tile(HealthUnsecured, lucide.LockOpen, 0x0a84ff, len(r.Unsecured), locales.HealthUnsecured(cx)),
+							tile(HealthDuplicates, lucide.Files, 0x12a594, len(r.Duplicates), locales.DuplicateLogins(cx)),
 						},
 					},
 				}
@@ -80,6 +81,27 @@ func HealthView(cx *core.Scope, m *AppModel) core.Node {
 				if len(r.Unsecured) > 0 && show(HealthUnsecured) {
 					blocks = append(blocks, section(locales.UnsecuredWebsites(cx), healthList(cx, m, r.Unsecured, func(_ int, it health.Issue) string { return it.URI })))
 				}
+				for i, g := range r.Duplicates {
+					if !show(HealthDuplicates) {
+						break
+					}
+					title := ""
+					if i == 0 {
+						title = locales.DuplicateLogins(cx)
+					}
+					header := locales.DuplicateGroup(cx, g.Site, g.Username, len(g.Items))
+					if g.Username == "" {
+						header = locales.DuplicateGroupNoUsername(cx, g.Site, len(g.Items))
+					}
+					blocks = append(blocks, section(title, core.View{
+						TestID: "health-duplicate-group",
+						Class:  "gap-1.5",
+						Children: []core.Node{
+							core.Text{MaxLines: 1, Class: "px-1 text-[12px] text-gv-fg2", Content: header},
+							healthList(cx, m, g.Items, func(int, health.Issue) string { return "" }),
+						},
+					}))
+				}
 				blocks = append(blocks, core.Text{
 					Class:   "px-1 text-[11.5px] text-gv-fg3",
 					Content: locales.HealthLocalOnly(cx),
@@ -103,6 +125,8 @@ func healthCount(r health.Report, c HealthCategory) int {
 		return len(r.Cards)
 	case HealthUnsecured:
 		return len(r.Unsecured)
+	case HealthDuplicates:
+		return len(r.Duplicates)
 	}
 	return r.TotalIssues()
 }

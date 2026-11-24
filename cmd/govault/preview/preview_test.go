@@ -149,4 +149,18 @@ func TestPreviewMainWindow(t *testing.T) {
 	scene("16-newdevice-resent-dark", core.AppearanceDark, func() {
 		m.TwoFactorNotice.Set("A verification code was sent to alex@northwind.dev.")
 	})
+	scene("17-health-duplicates-light", core.AppearanceLight, func() {
+		m.NewDevice.Set(nil)
+		_ = m.Core.UnlockWithUserKey(context.Background(), nil)
+		m.LockState.Set(state.StatusUnlocked)
+		// A second GitHub login with the same username, as an import can
+		// leave.
+		_, _ = m.Core.SaveCipher(context.Background(), &state.Cipher{
+			Type: api.CipherTypeLogin, Name: "GitHub (old)",
+			Login: &state.Login{Username: "alex-morgan", Password: "x7#Kq9!vLm2@Pz4w&Rt8", URIs: []state.LoginURI{{URI: "https://github.com"}}},
+		})
+		m.RefreshVaultData()
+		m.HealthFilter.Set(HealthDuplicates)
+		m.Route.Set(RouteHealth)
+	})
 }

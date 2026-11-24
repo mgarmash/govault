@@ -158,7 +158,7 @@ On a free bitwarden.com account, GoVault shows the verification codes of your lo
 - **Password history** for logins.
 - **Passkeys**: each login shows its passkey (website and creation date) read-only, and you can remove it. GoVault keeps passkeys and every other field it does not display intact when you edit an item.
 - **Organizations and shared collections**, honoring read-only and hidden-password permissions.
-- **Vault Health**: reused and weak passwords, expiring cards and unsecured websites, checked entirely on your device.
+- **Vault Health**: reused and weak passwords, expiring cards, unsecured websites and duplicate logins, checked entirely on your device.
 - **Encrypted backup**: export a password-protected, Bitwarden-compatible JSON file.
 - **Reviewed import**: import Bitwarden JSON exports and approve each change. Nothing in your vault is overwritten unless you choose to.
 - Clone items, empty Trash, folders, favorites, password and passphrase generator.

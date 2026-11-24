@@ -1644,6 +1644,8 @@ var Parameters = map[string][]string{
 	"PromptAutomaticallyDetail":  {"method"},
 	"ErrorServer":                {"status", "detail"},
 	"ErrorWithDetail":            {"detail"},
+	"DuplicateGroup":             {"site", "username", "count"},
+	"DuplicateGroupNoUsername":   {"site", "count"},
 }
 
 // Translation is a language's messages another package supplies:
@@ -1752,6 +1754,8 @@ type Translation struct {
 	PromptAutomaticallyDetail  func(method string) string
 	ErrorServer                func(status string, detail string) string
 	ErrorWithDetail            func(detail string) string
+	DuplicateGroup             func(site string, username string, count int) string
+	DuplicateGroupNoUsername   func(site string, count int) string
 }
 
 var supplied = map[string]Translation{}
@@ -2316,6 +2320,7 @@ const (
 	textAppearanceLight
 	textAppearanceDark
 	textHasPasskey
+	textDuplicateLogins
 	numTexts
 )
 
@@ -2880,6 +2885,7 @@ var keyOfText = [numTexts]string{
 	"appearanceLight",
 	"appearanceDark",
 	"hasPasskey",
+	"duplicateLogins",
 }
 
 // textsEn are the messages without arguments in en.
@@ -3441,7 +3447,8 @@ var textsEn = i18n.NewTexts(""+
 	"System"+
 	"Light"+
 	"Dark"+
-	"Has a passkey",
+	"Has a passkey"+
+	"Duplicate logins",
 	[]uint16{
 		6,
 		4,
@@ -4001,6 +4008,7 @@ var textsEn = i18n.NewTexts(""+
 		5,
 		4,
 		13,
+		16,
 	})
 
 // textsDe are the messages without arguments in de.
@@ -4562,6 +4570,7 @@ var textsDe = i18n.NewTexts(""+
 	""+
 	""+
 	""+
+	""+
 	"",
 	[]uint16{
 		9,
@@ -5107,6 +5116,7 @@ var textsDe = i18n.NewTexts(""+
 		47,
 		31,
 		78,
+		0,
 		0,
 		0,
 		0,
@@ -5683,6 +5693,7 @@ var textsEs = i18n.NewTexts(""+
 	""+
 	""+
 	""+
+	""+
 	"",
 	[]uint16{
 		8,
@@ -6228,6 +6239,7 @@ var textsEs = i18n.NewTexts(""+
 		41,
 		54,
 		77,
+		0,
 		0,
 		0,
 		0,
@@ -6804,6 +6816,7 @@ var textsFr = i18n.NewTexts(""+
 	""+
 	""+
 	""+
+	""+
 	"",
 	[]uint16{
 		7,
@@ -7349,6 +7362,7 @@ var textsFr = i18n.NewTexts(""+
 		52,
 		44,
 		85,
+		0,
 		0,
 		0,
 		0,
@@ -7925,6 +7939,7 @@ var textsJa = i18n.NewTexts(""+
 	""+
 	""+
 	""+
+	""+
 	"",
 	[]uint16{
 		15,
@@ -8470,6 +8485,7 @@ var textsJa = i18n.NewTexts(""+
 		48,
 		63,
 		101,
+		0,
 		0,
 		0,
 		0,
@@ -9046,6 +9062,7 @@ var textsKo = i18n.NewTexts(""+
 	""+
 	""+
 	""+
+	""+
 	"",
 	[]uint16{
 		6,
@@ -9591,6 +9608,7 @@ var textsKo = i18n.NewTexts(""+
 		43,
 		49,
 		85,
+		0,
 		0,
 		0,
 		0,
@@ -10167,6 +10185,7 @@ var textsPtBR = i18n.NewTexts(""+
 	""+
 	""+
 	""+
+	""+
 	"",
 	[]uint16{
 		8,
@@ -10712,6 +10731,7 @@ var textsPtBR = i18n.NewTexts(""+
 		55,
 		34,
 		69,
+		0,
 		0,
 		0,
 		0,
@@ -11288,6 +11308,7 @@ var textsRu = i18n.NewTexts(""+
 	""+
 	""+
 	""+
+	""+
 	"",
 	[]uint16{
 		12,
@@ -11833,6 +11854,7 @@ var textsRu = i18n.NewTexts(""+
 		53,
 		60,
 		120,
+		0,
 		0,
 		0,
 		0,
@@ -12409,6 +12431,7 @@ var textsZhHans = i18n.NewTexts(""+
 	""+
 	""+
 	""+
+	""+
 	"",
 	[]uint16{
 		6,
@@ -12954,6 +12977,7 @@ var textsZhHans = i18n.NewTexts(""+
 		27,
 		24,
 		59,
+		0,
 		0,
 		0,
 		0,
@@ -13530,6 +13554,7 @@ var textsZhHant = i18n.NewTexts(""+
 	""+
 	""+
 	""+
+	""+
 	"",
 	[]uint16{
 		6,
@@ -14090,6 +14115,7 @@ var textsZhHant = i18n.NewTexts(""+
 		0,
 		0,
 		0,
+		0,
 	})
 
 // texts returns the messages without arguments in lang, nil for a
@@ -14461,6 +14487,12 @@ func Supply(lang string, t Translation) {
 	}
 	if t.ErrorWithDetail != nil {
 		s.ErrorWithDetail = t.ErrorWithDetail
+	}
+	if t.DuplicateGroup != nil {
+		s.DuplicateGroup = t.DuplicateGroup
+	}
+	if t.DuplicateGroupNoUsername != nil {
+		s.DuplicateGroupNoUsername = t.DuplicateGroupNoUsername
 	}
 	supplied[lang] = s
 	Catalog.Add(lang)
@@ -26420,6 +26452,87 @@ func HasPasskey(cx *core.Scope) string { return For(cx).HasPasskey() }
 
 // HasPasskey is the package's HasPasskey in the language of msgs.
 func (msgs Messages) HasPasskey() string { return msgs.text(textHasPasskey) }
+
+// DuplicateLogins says "Duplicate logins"
+// in the language the app shows under cx.
+//
+// Vault Health check and section listing logins that have the same website and username.
+func DuplicateLogins(cx *core.Scope) string { return For(cx).DuplicateLogins() }
+
+// DuplicateLogins is the package's DuplicateLogins in the language of msgs.
+func (msgs Messages) DuplicateLogins() string { return msgs.text(textDuplicateLogins) }
+
+// DuplicateGroup says "{site} · {username} · {count, plural, one {# item} other {# items}}"
+// in the language the app shows under cx.
+//
+// Header of a group of duplicate logins in Vault Health. site is a website domain such as github.com, username the login's username.
+func DuplicateGroup(cx *core.Scope, site string, username string, count int) string {
+	return For(cx).DuplicateGroup(site, username, count)
+}
+
+// DuplicateGroup is the package's DuplicateGroup in the language of msgs.
+func (msgs Messages) DuplicateGroup(site string, username string, count int) string {
+	if i18n.IsPseudo(msgs.lang) {
+		return i18n.Pseudo(msgs.lang, Messages{lang: Source, mark: true}.DuplicateGroup(site, username, count))
+	}
+	for lang := msgs.lang; ; lang = i18n.Parent(lang) {
+		if f := supplied[lang].DuplicateGroup; f != nil {
+			return f(site, username, count)
+		}
+		switch lang {
+		case "", "en":
+			var b strings.Builder
+			b.WriteString(msgs.arg(site))
+			b.WriteString(" · ")
+			b.WriteString(msgs.arg(username))
+			b.WriteString(" · ")
+			switch i18n.Cardinal("en", float64(count)) {
+			case i18n.One:
+				b.WriteString(msgs.arg(i18n.FormatNumber("en", float64(count))))
+				b.WriteString(" item")
+			default:
+				b.WriteString(msgs.arg(i18n.FormatNumber("en", float64(count))))
+				b.WriteString(" items")
+			}
+			return b.String()
+		}
+	}
+}
+
+// DuplicateGroupNoUsername says "{site} · No username · {count, plural, one {# item} other {# items}}"
+// in the language the app shows under cx.
+//
+// Header of a group of duplicate logins in Vault Health whose logins have no username. site is a website domain such as github.com.
+func DuplicateGroupNoUsername(cx *core.Scope, site string, count int) string {
+	return For(cx).DuplicateGroupNoUsername(site, count)
+}
+
+// DuplicateGroupNoUsername is the package's DuplicateGroupNoUsername in the language of msgs.
+func (msgs Messages) DuplicateGroupNoUsername(site string, count int) string {
+	if i18n.IsPseudo(msgs.lang) {
+		return i18n.Pseudo(msgs.lang, Messages{lang: Source, mark: true}.DuplicateGroupNoUsername(site, count))
+	}
+	for lang := msgs.lang; ; lang = i18n.Parent(lang) {
+		if f := supplied[lang].DuplicateGroupNoUsername; f != nil {
+			return f(site, count)
+		}
+		switch lang {
+		case "", "en":
+			var b strings.Builder
+			b.WriteString(msgs.arg(site))
+			b.WriteString(" · No username · ")
+			switch i18n.Cardinal("en", float64(count)) {
+			case i18n.One:
+				b.WriteString(msgs.arg(i18n.FormatNumber("en", float64(count))))
+				b.WriteString(" item")
+			default:
+				b.WriteString(msgs.arg(i18n.FormatNumber("en", float64(count))))
+				b.WriteString(" items")
+			}
+			return b.String()
+		}
+	}
+}
 
 // dated is lang with the hour cycle the user set, which times take.
 func (msgs Messages) dated(lang string) string {

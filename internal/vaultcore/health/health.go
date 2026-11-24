@@ -4,6 +4,7 @@ package health
 
 import (
 	"cmp"
+	"github.com/txchen/govault/internal/vaultcore/uri"
 	"math"
 	"net"
 	"net/url"
@@ -56,6 +57,14 @@ type ReusedGroup struct {
 	Items []Issue
 }
 
+// DuplicateGroup is logins for the same site, by registrable domain, with
+// the same username, compared without case; an empty username is one too.
+type DuplicateGroup struct {
+	Site     string
+	Username string
+	Items    []Issue
+}
+
 type CardIssue struct {
 	Issue
 	Expired bool
@@ -66,6 +75,8 @@ type Report struct {
 	Weak      []Issue
 	Cards     []CardIssue
 	Unsecured []Issue
+	// Duplicates counts in TotalIssues by group.
+	Duplicates []DuplicateGroup
 }
 
 func (r Report) ReusedItems() int {
@@ -77,7 +88,7 @@ func (r Report) ReusedItems() int {
 }
 
 func (r Report) TotalIssues() int {
-	return r.ReusedItems() + len(r.Weak) + len(r.Cards) + len(r.Unsecured)
+	return r.ReusedItems() + len(r.Weak) + len(r.Cards) + len(r.Unsecured) + len(r.Duplicates)
 }
 
 // Analyze inspects active items. Items in Trash are skipped, and logins whose
@@ -85,15 +96,26 @@ func (r Report) TotalIssues() int {
 func Analyze(ciphers []*state.Cipher, now time.Time) Report {
 	var r Report
 	byPassword := map[string][]*state.Cipher{}
+	type siteUser struct{ site, user string }
+	bySiteUser := map[siteUser][]*state.Cipher{}
 	for _, c := range ciphers {
 		if c == nil || c.DeletedDate != nil {
 			continue
 		}
 		switch {
 		case c.Login != nil && c.Type == api.CipherTypeLogin:
-			if uri, ok := insecureURI(c.Login.URIs); ok {
+			user := strings.ToLower(strings.TrimSpace(c.Login.Username))
+			seen := map[string]bool{}
+			for _, u := range c.Login.URIs {
+				if site := uri.Domain(u.URI); site != "" && !seen[site] {
+					seen[site] = true
+					k := siteUser{site, user}
+					bySiteUser[k] = append(bySiteUser[k], c)
+				}
+			}
+			if insecure, ok := insecureURI(c.Login.URIs); ok {
 				it := issue(c)
-				it.URI = uri
+				it.URI = insecure
 				r.Unsecured = append(r.Unsecured, it)
 			}
 			if c.HidePassword || c.Login.Password == "" {
@@ -124,6 +146,22 @@ func Analyze(ciphers []*state.Cipher, now time.Time) Report {
 		sortIssues(g.Items)
 		r.Reused = append(r.Reused, g)
 	}
+	for k, group := range bySiteUser {
+		if len(group) < 2 {
+			continue
+		}
+		g := DuplicateGroup{Site: k.site}
+		for _, c := range group {
+			g.Items = append(g.Items, issue(c))
+		}
+		sortIssues(g.Items)
+		// The username as the first item, in list order, spells it.
+		g.Username = g.Items[0].Subtitle
+		r.Duplicates = append(r.Duplicates, g)
+	}
+	slices.SortFunc(r.Duplicates, func(a, b DuplicateGroup) int {
+		return cmp.Or(strings.Compare(a.Site, b.Site), strings.Compare(strings.ToLower(a.Username), strings.ToLower(b.Username)))
+	})
 	slices.SortFunc(r.Reused, func(a, b ReusedGroup) int {
 		if a.Count != b.Count {
 			return b.Count - a.Count

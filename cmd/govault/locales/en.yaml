@@ -1155,3 +1155,12 @@ appearanceDark:
 hasPasskey:
   message: Has a passkey
   description: Accessibility name of the small key icon on a vault list row whose login stores a passkey.
+duplicateLogins:
+  message: Duplicate logins
+  description: Vault Health check and section listing logins that have the same website and username.
+duplicateGroup:
+  message: "{site} · {username} · {count, plural, one {# item} other {# items}}"
+  description: Header of a group of duplicate logins in Vault Health. site is a website domain such as github.com, username the login's username.
+duplicateGroupNoUsername:
+  message: "{site} · No username · {count, plural, one {# item} other {# items}}"
+  description: Header of a group of duplicate logins in Vault Health whose logins have no username. site is a website domain such as github.com.
