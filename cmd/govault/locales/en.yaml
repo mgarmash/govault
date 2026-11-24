@@ -1112,3 +1112,18 @@ errorServer:
 errorWithDetail:
   message: "Something went wrong: {detail}"
   description: A fallback for an error GoVault has no message for; detail is its technical description, untranslated.
+sortItems:
+  message: Sort items
+  description: Accessibility name of the control that orders the vault list.
+sortNameAscending:
+  message: Name A–Z
+  description: Orders the vault list by item name, from A to Z.
+sortNameDescending:
+  message: Name Z–A
+  description: Orders the vault list by item name, from Z to A.
+sortModifiedNewest:
+  message: Modified, newest first
+  description: Orders the vault list by when each item last changed, the most recent first.
+sortModifiedOldest:
+  message: Modified, oldest first
+  description: Orders the vault list by when each item last changed, the oldest first.

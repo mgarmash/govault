@@ -903,6 +903,7 @@ func itemListPane(cx *core.Scope, m *AppModel) core.Node {
 			return core.Style{Width: core.Pt(core.Points(m.ListW.Get())), FlexShrink: 0}
 		},
 		Children: []core.Node{
+			listSortBar(cx, m),
 			searchScope(cx, m),
 			trashBar(cx, m),
 			core.List{
@@ -1019,6 +1020,29 @@ func itemListPane(cx *core.Scope, m *AppModel) core.Node {
 						},
 					}
 				},
+			},
+		},
+	}
+}
+
+// listSortBar chooses the order of the vault list, which every view and
+// search keeps.
+func listSortBar(cx *core.Scope, m *AppModel) core.Node {
+	return core.View{
+		Class: "flex-row items-center justify-end px-3 pt-2",
+		Children: []core.Node{
+			ui.Select[ListSort]{
+				TestID: "vault-sort",
+				Label:  locales.SortItems(cx),
+				Style:  core.Style{Width: core.Pt(168), Height: core.Pt(24), FontSize: 12},
+				Options: []ui.Option[ListSort]{
+					{Value: SortDefault, Label: locales.SortNameAscending(cx)},
+					{Value: SortNameDesc, Label: locales.SortNameDescending(cx)},
+					{Value: SortModifiedNewest, Label: locales.SortModifiedNewest(cx)},
+					{Value: SortModifiedOldest, Label: locales.SortModifiedOldest(cx)},
+				},
+				Value:    func() ListSort { return m.Prefs.Get().ListSort },
+				OnChange: m.SetListSort,
 			},
 		},
 	}

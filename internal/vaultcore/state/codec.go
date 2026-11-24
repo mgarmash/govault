@@ -772,8 +772,10 @@ func summarizeCipher(c *Cipher) CipherSummary {
 		Name:     c.Name,
 		Subtitle: subtitle,
 		HasTOTP:  hasTOTP,
-		Reprompt: c.Reprompt,
-		URIs:     uris,
+
+		RevisionDate: cloneTimePtr(c.RevisionDate),
+		Reprompt:     c.Reprompt,
+		URIs:         uris,
 
 		OrganizationID: cloneStringPtr(c.OrganizationID),
 		CollectionIDs:  append([]string(nil), c.CollectionIDs...),

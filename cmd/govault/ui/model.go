@@ -80,6 +80,8 @@ type UserPrefs struct {
 	PasswordOpts          gen.PasswordOptions   `json:"passwordOpts"`
 	PassphraseOpts        gen.PassphraseOptions `json:"passphraseOpts"`
 	MainWindow            *WindowState          `json:"mainWindow,omitempty"`
+	// ListSort orders the vault list; "" keeps the default order.
+	ListSort ListSort `json:"listSort,omitempty"`
 }
 
 func DefaultUserPrefs() UserPrefs {
@@ -1797,7 +1799,7 @@ func (m *AppModel) RefreshFilteredList() {
 		m.FilteredItems.Replace(nil)
 		return
 	}
-	m.FilteredItems.Replace(m.Core.Search(m.SearchQuery.Get(), m.EffectiveSearchFilter()))
+	m.FilteredItems.Replace(SortItems(m.Core.Search(m.SearchQuery.Get(), m.EffectiveSearchFilter()), m.Prefs.Get().ListSort))
 }
 
 // SearchIsGlobal reports whether a non-empty query searches the whole vault rather than the selected sidebar section.

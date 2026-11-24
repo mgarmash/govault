@@ -88,9 +88,11 @@ type CipherSummary struct {
 	Archived bool
 	Name     string
 	Subtitle string
-	HasTOTP  bool
-	Reprompt int
-	URIs     []string
+	// RevisionDate is when the item last changed, for sorting.
+	RevisionDate *time.Time
+	HasTOTP      bool
+	Reprompt     int
+	URIs         []string
 
 	OrganizationID *string
 	CollectionIDs  []string

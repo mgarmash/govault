@@ -2301,6 +2301,11 @@ const (
 	textErrorUnreadablePasskey
 	textErrorWrongBackupPassword
 	textErrorBackupTooLarge
+	textSortItems
+	textSortNameAscending
+	textSortNameDescending
+	textSortModifiedNewest
+	textSortModifiedOldest
 	numTexts
 )
 
@@ -2850,6 +2855,11 @@ var keyOfText = [numTexts]string{
 	"errorUnreadablePasskey",
 	"errorWrongBackupPassword",
 	"errorBackupTooLarge",
+	"sortItems",
+	"sortNameAscending",
+	"sortNameDescending",
+	"sortModifiedNewest",
+	"sortModifiedOldest",
 }
 
 // textsEn are the messages without arguments in en.
@@ -3396,7 +3406,12 @@ var textsEn = i18n.NewTexts(""+
 	"GoVault cannot tell which existing items the backup items are."+
 	"A passkey could not be decrypted."+
 	"The backup password is incorrect."+
-	"The encrypted backup would be too large for GoVault to import back.",
+	"The encrypted backup would be too large for GoVault to import back."+
+	"Sort items"+
+	"Name A–Z"+
+	"Name Z–A"+
+	"Modified, newest first"+
+	"Modified, oldest first",
 	[]uint16{
 		6,
 		4,
@@ -3941,6 +3956,11 @@ var textsEn = i18n.NewTexts(""+
 		33,
 		33,
 		67,
+		10,
+		10,
+		10,
+		22,
+		22,
 	})
 
 // textsDe are the messages without arguments in de.
@@ -4487,7 +4507,12 @@ var textsDe = i18n.NewTexts(""+
 	"GoVault kann nicht erkennen, welchen vorhandenen Einträgen die Backup-Einträge entsprechen."+
 	"Ein Passkey konnte nicht entschlüsselt werden."+
 	"Das Backup-Passwort ist falsch."+
-	"Das verschlüsselte Backup wäre zu groß für den erneuten Import in GoVault.",
+	"Das verschlüsselte Backup wäre zu groß für den erneuten Import in GoVault."+
+	""+
+	""+
+	""+
+	""+
+	"",
 	[]uint16{
 		9,
 		9,
@@ -5032,6 +5057,11 @@ var textsDe = i18n.NewTexts(""+
 		47,
 		31,
 		78,
+		0,
+		0,
+		0,
+		0,
+		0,
 	})
 
 // textsEs are the messages without arguments in es.
@@ -5578,7 +5608,12 @@ var textsEs = i18n.NewTexts(""+
 	"GoVault no puede determinar a qué elementos existentes corresponden los de la copia."+
 	"No se pudo descifrar una clave de acceso."+
 	"La contraseña de la copia de seguridad es incorrecta."+
-	"La copia cifrada sería demasiado grande para volver a importarla en GoVault.",
+	"La copia cifrada sería demasiado grande para volver a importarla en GoVault."+
+	""+
+	""+
+	""+
+	""+
+	"",
 	[]uint16{
 		8,
 		7,
@@ -6123,6 +6158,11 @@ var textsEs = i18n.NewTexts(""+
 		41,
 		54,
 		77,
+		0,
+		0,
+		0,
+		0,
+		0,
 	})
 
 // textsFr are the messages without arguments in fr.
@@ -6669,7 +6709,12 @@ var textsFr = i18n.NewTexts(""+
 	"GoVault ne parvient pas à associer les éléments de la sauvegarde aux éléments existants."+
 	"Une clé d’accès n’a pas pu être déchiffrée."+
 	"Le mot de passe de sauvegarde est incorrect."+
-	"La sauvegarde chiffrée serait trop volumineuse pour être réimportée dans GoVault.",
+	"La sauvegarde chiffrée serait trop volumineuse pour être réimportée dans GoVault."+
+	""+
+	""+
+	""+
+	""+
+	"",
 	[]uint16{
 		7,
 		11,
@@ -7214,6 +7259,11 @@ var textsFr = i18n.NewTexts(""+
 		52,
 		44,
 		85,
+		0,
+		0,
+		0,
+		0,
+		0,
 	})
 
 // textsJa are the messages without arguments in ja.
@@ -7760,7 +7810,12 @@ var textsJa = i18n.NewTexts(""+
 	"バックアップアイテムがどの既存アイテムに対応するか判別できません。"+
 	"パスキーを復号できませんでした。"+
 	"バックアップパスワードが正しくありません。"+
-	"暗号化バックアップが大きすぎるため、GoVault で再インポートできません。",
+	"暗号化バックアップが大きすぎるため、GoVault で再インポートできません。"+
+	""+
+	""+
+	""+
+	""+
+	"",
 	[]uint16{
 		15,
 		6,
@@ -8305,6 +8360,11 @@ var textsJa = i18n.NewTexts(""+
 		48,
 		63,
 		101,
+		0,
+		0,
+		0,
+		0,
+		0,
 	})
 
 // textsKo are the messages without arguments in ko.
@@ -8851,7 +8911,12 @@ var textsKo = i18n.NewTexts(""+
 	"백업 항목이 어떤 기존 항목에 해당하는지 판단할 수 없습니다."+
 	"패스키를 복호화할 수 없습니다."+
 	"백업 비밀번호가 올바르지 않습니다."+
-	"암호화된 백업이 너무 커서 GoVault에서 다시 가져올 수 없습니다.",
+	"암호화된 백업이 너무 커서 GoVault에서 다시 가져올 수 없습니다."+
+	""+
+	""+
+	""+
+	""+
+	"",
 	[]uint16{
 		6,
 		6,
@@ -9396,6 +9461,11 @@ var textsKo = i18n.NewTexts(""+
 		43,
 		49,
 		85,
+		0,
+		0,
+		0,
+		0,
+		0,
 	})
 
 // textsPtBR are the messages without arguments in pt-BR.
@@ -9942,7 +10012,12 @@ var textsPtBR = i18n.NewTexts(""+
 	"O GoVault não consegue identificar a quais itens existentes correspondem os itens do backup."+
 	"Não foi possível descriptografar uma chave de acesso."+
 	"A senha do backup está incorreta."+
-	"O backup criptografado seria grande demais para o GoVault reimportar.",
+	"O backup criptografado seria grande demais para o GoVault reimportar."+
+	""+
+	""+
+	""+
+	""+
+	"",
 	[]uint16{
 		8,
 		6,
@@ -10487,6 +10562,11 @@ var textsPtBR = i18n.NewTexts(""+
 		55,
 		34,
 		69,
+		0,
+		0,
+		0,
+		0,
+		0,
 	})
 
 // textsRu are the messages without arguments in ru.
@@ -11033,7 +11113,12 @@ var textsRu = i18n.NewTexts(""+
 	"GoVault не может определить, каким существующим элементам соответствуют элементы копии."+
 	"Не удалось расшифровать Passkey."+
 	"Неверный пароль резервной копии."+
-	"Зашифрованная копия слишком велика для повторного импорта в GoVault.",
+	"Зашифрованная копия слишком велика для повторного импорта в GoVault."+
+	""+
+	""+
+	""+
+	""+
+	"",
 	[]uint16{
 		12,
 		18,
@@ -11578,6 +11663,11 @@ var textsRu = i18n.NewTexts(""+
 		53,
 		60,
 		120,
+		0,
+		0,
+		0,
+		0,
+		0,
 	})
 
 // textsZhHans are the messages without arguments in zh-Hans.
@@ -12124,7 +12214,12 @@ var textsZhHans = i18n.NewTexts(""+
 	"GoVault 无法确定备份项目对应哪些现有项目。"+
 	"无法解密通行密钥。"+
 	"备份密码不正确。"+
-	"加密备份体积过大，GoVault 将无法重新导入。",
+	"加密备份体积过大，GoVault 将无法重新导入。"+
+	""+
+	""+
+	""+
+	""+
+	"",
 	[]uint16{
 		6,
 		6,
@@ -12669,6 +12764,11 @@ var textsZhHans = i18n.NewTexts(""+
 		27,
 		24,
 		59,
+		0,
+		0,
+		0,
+		0,
+		0,
 	})
 
 // textsZhHant are the messages without arguments in zh-Hant.
@@ -13215,7 +13315,12 @@ var textsZhHant = i18n.NewTexts(""+
 	"GoVault 無法判斷備份項目對應哪些現有項目。"+
 	"無法解密密碼金鑰。"+
 	"備份密碼不正確。"+
-	"加密備份體積過大，GoVault 將無法重新匯入。",
+	"加密備份體積過大，GoVault 將無法重新匯入。"+
+	""+
+	""+
+	""+
+	""+
+	"",
 	[]uint16{
 		6,
 		6,
@@ -13760,6 +13865,11 @@ var textsZhHant = i18n.NewTexts(""+
 		27,
 		24,
 		59,
+		0,
+		0,
+		0,
+		0,
+		0,
 	})
 
 // texts returns the messages without arguments in lang, nil for a
@@ -25957,6 +26067,51 @@ func (msgs Messages) ErrorWithDetail(detail string) string {
 		}
 	}
 }
+
+// SortItems says "Sort items"
+// in the language the app shows under cx.
+//
+// Accessibility name of the control that orders the vault list.
+func SortItems(cx *core.Scope) string { return For(cx).SortItems() }
+
+// SortItems is the package's SortItems in the language of msgs.
+func (msgs Messages) SortItems() string { return msgs.text(textSortItems) }
+
+// SortNameAscending says "Name A–Z"
+// in the language the app shows under cx.
+//
+// Orders the vault list by item name, from A to Z.
+func SortNameAscending(cx *core.Scope) string { return For(cx).SortNameAscending() }
+
+// SortNameAscending is the package's SortNameAscending in the language of msgs.
+func (msgs Messages) SortNameAscending() string { return msgs.text(textSortNameAscending) }
+
+// SortNameDescending says "Name Z–A"
+// in the language the app shows under cx.
+//
+// Orders the vault list by item name, from Z to A.
+func SortNameDescending(cx *core.Scope) string { return For(cx).SortNameDescending() }
+
+// SortNameDescending is the package's SortNameDescending in the language of msgs.
+func (msgs Messages) SortNameDescending() string { return msgs.text(textSortNameDescending) }
+
+// SortModifiedNewest says "Modified, newest first"
+// in the language the app shows under cx.
+//
+// Orders the vault list by when each item last changed, the most recent first.
+func SortModifiedNewest(cx *core.Scope) string { return For(cx).SortModifiedNewest() }
+
+// SortModifiedNewest is the package's SortModifiedNewest in the language of msgs.
+func (msgs Messages) SortModifiedNewest() string { return msgs.text(textSortModifiedNewest) }
+
+// SortModifiedOldest says "Modified, oldest first"
+// in the language the app shows under cx.
+//
+// Orders the vault list by when each item last changed, the oldest first.
+func SortModifiedOldest(cx *core.Scope) string { return For(cx).SortModifiedOldest() }
+
+// SortModifiedOldest is the package's SortModifiedOldest in the language of msgs.
+func (msgs Messages) SortModifiedOldest() string { return msgs.text(textSortModifiedOldest) }
 
 // dated is lang with the hour cycle the user set, which times take.
 func (msgs Messages) dated(lang string) string {
