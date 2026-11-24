@@ -1087,25 +1087,27 @@ func (s *Service) SoftDeleteCipher(ctx context.Context, id string) error {
 const moveBatch = 500
 
 // MoveCiphers puts the items of ids in folderID, or in no folder for nil,
-// then syncs.
+// then syncs, also after a failed batch, as the batches before it moved.
 func (s *Service) MoveCiphers(ctx context.Context, ids []string, folderID *string) error {
 	o, err := s.beginOp(ctx)
 	if err != nil {
 		return err
 	}
 	defer o.end()
-	for start := 0; start < len(ids); start += moveBatch {
+	var moveErr error
+	for start := 0; start < len(ids) && moveErr == nil; start += moveBatch {
 		batch := ids[start:min(start+moveBatch, len(ids))]
-		if _, err := withAuth(o, func(ctx context.Context, tok string) (struct{}, error) {
+		_, moveErr = withAuth(o, func(ctx context.Context, tok string) (struct{}, error) {
 			return struct{}{}, o.client.MoveCiphers(ctx, tok, batch, folderID)
-		}); err != nil {
-			return err
-		}
+		})
 	}
 	err = s.sync(ctx, true)
 	s.notifyUpdated()
 	if errors.Is(err, ErrSyncDeferred) {
-		return nil
+		err = nil
+	}
+	if moveErr != nil {
+		return moveErr
 	}
 	return err
 }

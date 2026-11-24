@@ -2,6 +2,7 @@ package state_test
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/txchen/govault/internal/fakeserver"
@@ -47,5 +48,33 @@ func TestMoveCiphersToAFolder(t *testing.T) {
 	}
 	if c, _ := svc.GetCipher(fakeserver.ItemCard); c.FolderID != nil {
 		t.Fatalf("moved to No Folder, the item has folder %v", *c.FolderID)
+	}
+}
+
+// When a later batch fails, the batches before it moved: the local copy
+// shows them after the sync the move still runs.
+func TestMoveSyncsAfterAFailedBatch(t *testing.T) {
+	srv := fakeserver.New()
+	defer srv.Close()
+	srv.Configure(func(c *fakeserver.Config) { c.MovesBeforeFailure = 1 })
+	svc, err := state.NewService(state.ServiceConfig{Store: store.NewFileStore(t.TempDir()), Secrets: memSecrets{}, DeviceID: "dev", HTTPClient: srv.Client()})
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx := context.Background()
+	if err := svc.Login(ctx, state.LoginRequest{ServerURL: srv.URL(), Email: fakeserver.Email, MasterPassword: []byte(fakeserver.Password)}); err != nil {
+		t.Fatal(err)
+	}
+	// 501 IDs: the first batch of 500 holds the card, the second fails.
+	ids := []string{fakeserver.ItemCard}
+	for i := len(ids); i < 501; i++ {
+		ids = append(ids, fmt.Sprintf("00000000-0000-4000-8000-%012d", i))
+	}
+	folder := fakeserver.FolderWork
+	if err := svc.MoveCiphers(ctx, ids, &folder); err == nil {
+		t.Fatal("the failed batch was not reported")
+	}
+	if c, _ := svc.GetCipher(fakeserver.ItemCard); c == nil || c.FolderID == nil || *c.FolderID != folder {
+		t.Fatalf("the first batch's item after the failed move: %+v", c)
 	}
 }

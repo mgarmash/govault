@@ -205,6 +205,9 @@ func (s *Server) write(w http.ResponseWriter, r *http.Request, parts []string) b
 		}
 		s.bump()
 		writeJSON(w, 200, obj{"data": done, "object": "list", "continuationToken": nil})
+	case m == http.MethodPut && n == 3 && parts[1] == "ciphers" && parts[2] == "move" &&
+		s.cfg.MovesBeforeFailure > 0 && s.moves >= s.cfg.MovesBeforeFailure:
+		errMessage(w, 500, "move failed")
 	case m == http.MethodPut && n == 3 && parts[1] == "ciphers" && parts[2] == "move":
 		body := readBody(r)
 		ids, _ := body["ids"].([]any)
