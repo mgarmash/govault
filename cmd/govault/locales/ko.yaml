@@ -711,6 +711,47 @@ errorWrongBackupPassword: 백업 비밀번호가 올바르지 않습니다.
 errorBackupTooLarge: 암호화된 백업이 너무 커서 GoVault에서 다시 가져올 수 없습니다.
 errorServer: "서버 오류 ({status}): {detail}"
 errorWithDetail: "오류가 발생했습니다: {detail}"
+sortItems: 항목 정렬
+sortNameAscending: 이름 A–Z
+sortNameDescending: 이름 Z–A
+sortModifiedNewest: 수정일(최신순)
+sortModifiedOldest: 수정일(오래된순)
+server: 서버
+selfHosted: 자체 호스팅
+serverBitwardenUS: bitwarden.com (US)
+serverBitwardenEU: bitwarden.eu (EU)
+appearance: 화면 모드
+appearanceDetail: GoVault를 라이트 또는 다크 모드로 표시하거나 시스템 설정을 따릅니다.
+appearanceSystem: 시스템
+appearanceLight: 라이트
+appearanceDark: 다크
+hasPasskey: 패스키 있음
+duplicateLogins: 중복 로그인
+duplicateGroup: "{site} · {username} · {count, plural, other {#개 항목}}"
+duplicateGroupNoUsername: "{site} · 사용자 이름 없음 · {count, plural, other {#개 항목}}"
+itemsSelected: "{count, plural, other {#개 항목 선택됨}}"
+moveToFolderMenu: 폴더로 이동…
+moveToTrashMenu: 휴지통으로 이동…
+bulkTrashTitle: "{count, plural, other {#개 항목을 휴지통으로 이동할까요?}}"
+bulkTrashMessage: 영구 삭제하기 전까지 휴지통에서 항목을 복원할 수 있습니다.
+bulkDeleteTitle: "{count, plural, other {#개 항목을 영구 삭제할까요?}}"
+bulkDeleteMessage: 이 작업은 되돌릴 수 없으며 모든 기기에서 항목이 삭제됩니다.
+bulkMoveTitle: "{count, plural, other {#개 항목을 폴더로 이동}}"
+move: 이동
+bulkAlreadyInFolder: "{count, plural, other {#개 항목은 이미 이 폴더에 있어 그대로 유지됩니다.}}"
+bulkSkipped: "{count, plural, other {선택한 #개 항목은 변경할 수 없어 건너뜁니다.}}"
+selectionOffline: 오프라인 상태입니다. 항목을 변경하려면 다시 연결하세요.
+bulkItemFailed: "{name} ({reason})"
+bulkDeleteKept: "{count, plural, other {다른 곳에서 변경된 #개 항목 유지됨}}"
+bulkNotDone: "{count, plural, other {#개 변경 불가: {details}.}}"
+bulkTrashedCount: "{count, plural, =0 {휴지통으로 이동된 항목 없음} other {#개 항목을 휴지통으로 이동함}}"
+bulkRestoredCount: "{count, plural, =0 {복원된 항목 없음} other {#개 항목 복원됨}}"
+bulkArchivedCount: "{count, plural, =0 {보관된 항목 없음} other {#개 항목 보관됨}}"
+bulkUnarchivedCount: "{count, plural, =0 {보관 해제된 항목 없음} other {#개 항목 보관 해제됨}}"
+bulkDeletedCount: "{count, plural, =0 {삭제된 항목 없음} other {#개 항목 영구 삭제됨}}"
+bulkMovedCount: "{count, plural, =0 {이동된 항목 없음} other {#개 항목 이동됨}}"
+vaultItems: 보관함 항목
+healthDuplicates: 중복
 
 # NSGo catalogs
 

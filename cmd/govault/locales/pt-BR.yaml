@@ -711,6 +711,47 @@ errorWrongBackupPassword: A senha do backup está incorreta.
 errorBackupTooLarge: O backup criptografado seria grande demais para o GoVault reimportar.
 errorServer: "O servidor retornou um erro ({status}): {detail}"
 errorWithDetail: "Algo deu errado: {detail}"
+sortItems: Ordenar itens
+sortNameAscending: Nome A–Z
+sortNameDescending: Nome Z–A
+sortModifiedNewest: Modificado, mais recentes
+sortModifiedOldest: Modificado, mais antigos
+server: Servidor
+selfHosted: Auto-hospedado
+serverBitwardenUS: bitwarden.com (US)
+serverBitwardenEU: bitwarden.eu (EU)
+appearance: Aparência
+appearanceDetail: Mostra o GoVault em modo claro ou escuro, ou segue o sistema.
+appearanceSystem: Sistema
+appearanceLight: Claro
+appearanceDark: Escuro
+hasPasskey: Tem chave de acesso
+duplicateLogins: Credenciais duplicadas
+duplicateGroup: "{site} · {username} · {count, plural, one {# item} other {# itens}}"
+duplicateGroupNoUsername: "{site} · Sem usuário · {count, plural, one {# item} other {# itens}}"
+itemsSelected: "{count, plural, one {# item selecionado} other {# itens selecionados}}"
+moveToFolderMenu: Mover para pasta…
+moveToTrashMenu: Mover para a lixeira…
+bulkTrashTitle: "{count, plural, one {Mover # item para a lixeira?} other {Mover # itens para a lixeira?}}"
+bulkTrashMessage: Você pode restaurar itens da lixeira até excluí-los permanentemente.
+bulkDeleteTitle: "{count, plural, one {Excluir # item permanentemente?} other {Excluir # itens permanentemente?}}"
+bulkDeleteMessage: Isso não pode ser desfeito. Os itens serão removidos de todos os dispositivos.
+bulkMoveTitle: "{count, plural, one {Mover # item para uma pasta} other {Mover # itens para uma pasta}}"
+move: Mover
+bulkAlreadyInFolder: "{count, plural, one {# item já está nesta pasta e permanece como está.} other {# itens já estão nesta pasta e permanecem como estão.}}"
+bulkSkipped: "{count, plural, one {# item selecionado será ignorado: você não pode alterá-lo.} other {# itens selecionados serão ignorados: você não pode alterá-los.}}"
+selectionOffline: Offline. Reconecte-se para alterar estes itens.
+bulkItemFailed: "{name} ({reason})"
+bulkDeleteKept: "{count, plural, one {# item foi alterado em outro lugar e mantido} other {# itens foram alterados em outro lugar e mantidos}}"
+bulkNotDone: "{count, plural, one {# não pôde ser alterado: {details}.} other {# não puderam ser alterados: {details}.}}"
+bulkTrashedCount: "{count, plural, =0 {Nada movido para a lixeira} one {# item movido para a lixeira} other {# itens movidos para a lixeira}}"
+bulkRestoredCount: "{count, plural, =0 {Nada restaurado} one {# item restaurado} other {# itens restaurados}}"
+bulkArchivedCount: "{count, plural, =0 {Nada arquivado} one {# item arquivado} other {# itens arquivados}}"
+bulkUnarchivedCount: "{count, plural, =0 {Nada desarquivado} one {# item desarquivado} other {# itens desarquivados}}"
+bulkDeletedCount: "{count, plural, =0 {Nada excluído} one {# item excluído permanentemente} other {# itens excluídos permanentemente}}"
+bulkMovedCount: "{count, plural, =0 {Nada movido} one {# item movido} other {# itens movidos}}"
+vaultItems: Itens do cofre
+healthDuplicates: Duplicados
 
 # NSGo catalogs
 

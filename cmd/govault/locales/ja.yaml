@@ -711,6 +711,47 @@ errorWrongBackupPassword: バックアップパスワードが正しくありま
 errorBackupTooLarge: 暗号化バックアップが大きすぎるため、GoVault で再インポートできません。
 errorServer: "サーバーエラー（{status}）：{detail}"
 errorWithDetail: "エラーが発生しました：{detail}"
+sortItems: アイテムを並べ替え
+sortNameAscending: 名前 A–Z
+sortNameDescending: 名前 Z–A
+sortModifiedNewest: 更新日（新しい順）
+sortModifiedOldest: 更新日（古い順）
+server: サーバー
+selfHosted: セルフホスト
+serverBitwardenUS: bitwarden.com (US)
+serverBitwardenEU: bitwarden.eu (EU)
+appearance: 外観
+appearanceDetail: GoVault をライトまたはダークで表示するか、システム設定に従います。
+appearanceSystem: システム
+appearanceLight: ライト
+appearanceDark: ダーク
+hasPasskey: パスキーあり
+duplicateLogins: 重複したログイン
+duplicateGroup: "{site} · {username} · {count, plural, other {# 件}}"
+duplicateGroupNoUsername: "{site} · ユーザー名なし · {count, plural, other {# 件}}"
+itemsSelected: "{count, plural, other {# 件を選択中}}"
+moveToFolderMenu: フォルダーに移動…
+moveToTrashMenu: ごみ箱に移動…
+bulkTrashTitle: "{count, plural, other {# 件のアイテムをごみ箱に移動しますか？}}"
+bulkTrashMessage: 完全に削除するまで、ごみ箱からアイテムを復元できます。
+bulkDeleteTitle: "{count, plural, other {# 件のアイテムを完全に削除しますか？}}"
+bulkDeleteMessage: この操作は取り消せません。すべてのデバイスからアイテムが削除されます。
+bulkMoveTitle: "{count, plural, other {# 件のアイテムをフォルダーに移動}}"
+move: 移動
+bulkAlreadyInFolder: "{count, plural, other {# 件はすでにこのフォルダーにあるため変更されません。}}"
+bulkSkipped: "{count, plural, other {選択中の # 件は変更できないためスキップされます。}}"
+selectionOffline: オフラインです。アイテムを変更するには再接続してください。
+bulkItemFailed: "{name}（{reason}）"
+bulkDeleteKept: "{count, plural, other {別の場所で変更された # 件を保持しました}}"
+bulkNotDone: "{count, plural, other {# 件を変更できませんでした：{details}。}}"
+bulkTrashedCount: "{count, plural, =0 {ごみ箱に移動したアイテムはありません} other {# 件をごみ箱に移動しました}}"
+bulkRestoredCount: "{count, plural, =0 {復元したアイテムはありません} other {# 件を復元しました}}"
+bulkArchivedCount: "{count, plural, =0 {アーカイブしたアイテムはありません} other {# 件をアーカイブしました}}"
+bulkUnarchivedCount: "{count, plural, =0 {アーカイブ解除したアイテムはありません} other {# 件のアーカイブを解除しました}}"
+bulkDeletedCount: "{count, plural, =0 {削除したアイテムはありません} other {# 件を完全に削除しました}}"
+bulkMovedCount: "{count, plural, =0 {移動したアイテムはありません} other {# 件を移動しました}}"
+vaultItems: 保管庫のアイテム
+healthDuplicates: 重複
 
 # NSGo catalogs
 

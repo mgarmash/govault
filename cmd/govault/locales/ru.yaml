@@ -711,6 +711,47 @@ errorWrongBackupPassword: Неверный пароль резервной ко�
 errorBackupTooLarge: Зашифрованная копия слишком велика для повторного импорта в GoVault.
 errorServer: "Ошибка сервера ({status}): {detail}"
 errorWithDetail: "Произошла ошибка: {detail}"
+sortItems: Сортировать элементы
+sortNameAscending: Название А–Я
+sortNameDescending: Название Я–А
+sortModifiedNewest: Изменено, сначала новые
+sortModifiedOldest: Изменено, сначала старые
+server: Сервер
+selfHosted: Свой сервер
+serverBitwardenUS: bitwarden.com (US)
+serverBitwardenEU: bitwarden.eu (EU)
+appearance: Оформление
+appearanceDetail: Светлое или тёмное оформление GoVault, либо как в системе.
+appearanceSystem: Системная
+appearanceLight: Светлая
+appearanceDark: Тёмная
+hasPasskey: Есть Passkey
+duplicateLogins: Дубликаты логинов
+duplicateGroup: "{site} · {username} · {count, plural, one {# элемент} few {# элемента} many {# элементов} other {# элемента}}"
+duplicateGroupNoUsername: "{site} · Без имени пользователя · {count, plural, one {# элемент} few {# элемента} many {# элементов} other {# элемента}}"
+itemsSelected: "{count, plural, one {Выбран # элемент} few {Выбрано # элемента} many {Выбрано # элементов} other {Выбрано # элемента}}"
+moveToFolderMenu: В папку…
+moveToTrashMenu: В корзину…
+bulkTrashTitle: "{count, plural, one {Переместить # элемент в корзину?} few {Переместить # элемента в корзину?} many {Переместить # элементов в корзину?} other {Переместить # элемента в корзину?}}"
+bulkTrashMessage: Элементы можно восстановить из корзины, пока они не удалены окончательно.
+bulkDeleteTitle: "{count, plural, one {Удалить # элемент окончательно?} few {Удалить # элемента окончательно?} many {Удалить # элементов окончательно?} other {Удалить # элемента окончательно?}}"
+bulkDeleteMessage: Это действие нельзя отменить. Элементы будут удалены со всех устройств.
+bulkMoveTitle: "{count, plural, one {Переместить # элемент в папку} few {Переместить # элемента в папку} many {Переместить # элементов в папку} other {Переместить # элемента в папку}}"
+move: Переместить
+bulkAlreadyInFolder: "{count, plural, one {# элемент уже находится в этой папке и не изменится.} few {# элемента уже находятся в этой папке и не изменятся.} many {# элементов уже находятся в этой папке и не изменятся.} other {# элемента уже находятся в этой папке и не изменятся.}}"
+bulkSkipped: "{count, plural, one {# выбранный элемент будет пропущен: его нельзя изменить.} few {# выбранных элемента будут пропущены: их нельзя изменить.} many {# выбранных элементов будут пропущены: их нельзя изменить.} other {# выбранного элемента будут пропущены: их нельзя изменить.}}"
+selectionOffline: Офлайн. Подключитесь снова, чтобы изменить эти элементы.
+bulkItemFailed: "{name} ({reason})"
+bulkDeleteKept: "{count, plural, one {# элемент изменён в другом месте и сохранён} few {# элемента изменены в другом месте и сохранены} many {# элементов изменены в другом месте и сохранены} other {# элемента изменены в другом месте и сохранены}}"
+bulkNotDone: "{count, plural, one {Не удалось изменить #: {details}.} few {Не удалось изменить #: {details}.} many {Не удалось изменить #: {details}.} other {Не удалось изменить #: {details}.}}"
+bulkTrashedCount: "{count, plural, =0 {Ничего не перемещено в корзину} one {# элемент перемещён в корзину} few {# элемента перемещены в корзину} many {# элементов перемещены в корзину} other {# элемента перемещены в корзину}}"
+bulkRestoredCount: "{count, plural, =0 {Ничего не восстановлено} one {# элемент восстановлен} few {# элемента восстановлены} many {# элементов восстановлены} other {# элемента восстановлены}}"
+bulkArchivedCount: "{count, plural, =0 {Ничего не архивировано} one {# элемент архивирован} few {# элемента архивированы} many {# элементов архивированы} other {# элемента архивированы}}"
+bulkUnarchivedCount: "{count, plural, =0 {Ничего не разархивировано} one {# элемент разархивирован} few {# элемента разархивированы} many {# элементов разархивированы} other {# элемента разархивированы}}"
+bulkDeletedCount: "{count, plural, =0 {Ничего не удалено} one {# элемент удалён окончательно} few {# элемента удалены окончательно} many {# элементов удалены окончательно} other {# элемента удалены окончательно}}"
+bulkMovedCount: "{count, plural, =0 {Ничего не перемещено} one {# элемент перемещён} few {# элемента перемещены} many {# элементов перемещены} other {# элемента перемещены}}"
+vaultItems: Элементы хранилища
+healthDuplicates: Дубликаты
 
 # NSGo catalogs
 

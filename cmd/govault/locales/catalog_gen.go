@@ -4618,30 +4618,30 @@ var textsDe = i18n.NewTexts(""+
 	"Ein Passkey konnte nicht entschlüsselt werden."+
 	"Das Backup-Passwort ist falsch."+
 	"Das verschlüsselte Backup wäre zu groß für den erneuten Import in GoVault."+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	"",
+	"Einträge sortieren"+
+	"Name A–Z"+
+	"Name Z–A"+
+	"Geändert, neueste zuerst"+
+	"Geändert, älteste zuerst"+
+	"Server"+
+	"Selbst gehostet"+
+	"bitwarden.com (US)"+
+	"bitwarden.eu (EU)"+
+	"Erscheinungsbild"+
+	"GoVault hell oder dunkel anzeigen oder dem System folgen."+
+	"System"+
+	"Hell"+
+	"Dunkel"+
+	"Hat einen Passkey"+
+	"Doppelte Zugangsdaten"+
+	"In Ordner…"+
+	"In Papierkorb…"+
+	"Du kannst Einträge aus dem Papierkorb wiederherstellen, bis sie dauerhaft gelöscht werden."+
+	"Dies kann nicht rückgängig gemacht werden. Die Einträge werden von allen Geräten entfernt."+
+	"Verschieben"+
+	"Offline. Verbinde dich erneut, um diese Einträge zu ändern."+
+	"Tresoreinträge"+
+	"Duplikate",
 	[]uint16{
 		9,
 		9,
@@ -5186,30 +5186,30 @@ var textsDe = i18n.NewTexts(""+
 		47,
 		31,
 		78,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
+		19,
+		10,
+		10,
+		25,
+		26,
+		6,
+		15,
+		18,
+		17,
+		16,
+		57,
+		6,
+		4,
+		6,
+		17,
+		21,
+		12,
+		16,
+		92,
+		94,
+		11,
+		61,
+		15,
+		9,
 	})
 
 // textsEs are the messages without arguments in es.
@@ -5757,30 +5757,30 @@ var textsEs = i18n.NewTexts(""+
 	"No se pudo descifrar una clave de acceso."+
 	"La contraseña de la copia de seguridad es incorrecta."+
 	"La copia cifrada sería demasiado grande para volver a importarla en GoVault."+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	"",
+	"Ordenar elementos"+
+	"Nombre A–Z"+
+	"Nombre Z–A"+
+	"Modificado, más recientes"+
+	"Modificado, más antiguos"+
+	"Servidor"+
+	"Autoalojado"+
+	"bitwarden.com (US)"+
+	"bitwarden.eu (EU)"+
+	"Aspecto"+
+	"Muestra GoVault en modo claro u oscuro, o sigue el sistema."+
+	"Sistema"+
+	"Claro"+
+	"Oscuro"+
+	"Tiene clave de acceso"+
+	"Entradas duplicadas"+
+	"Mover a carpeta…"+
+	"Mover a la papelera…"+
+	"Puedes restaurar los elementos de la papelera hasta que los elimines permanentemente."+
+	"Esto no se puede deshacer. Los elementos se eliminan de todos los dispositivos."+
+	"Mover"+
+	"Sin conexión. Vuelve a conectarte para cambiar estos elementos."+
+	"Elementos de la caja fuerte"+
+	"Duplicados",
 	[]uint16{
 		8,
 		7,
@@ -6325,30 +6325,30 @@ var textsEs = i18n.NewTexts(""+
 		41,
 		54,
 		77,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
+		17,
+		12,
+		12,
+		26,
+		25,
+		8,
+		11,
+		18,
+		17,
+		7,
+		59,
+		7,
+		5,
+		6,
+		21,
+		19,
+		18,
+		22,
+		85,
+		79,
+		5,
+		64,
+		27,
+		10,
 	})
 
 // textsFr are the messages without arguments in fr.
@@ -6896,30 +6896,30 @@ var textsFr = i18n.NewTexts(""+
 	"Une clé d’accès n’a pas pu être déchiffrée."+
 	"Le mot de passe de sauvegarde est incorrect."+
 	"La sauvegarde chiffrée serait trop volumineuse pour être réimportée dans GoVault."+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	"",
+	"Trier les éléments"+
+	"Nom A–Z"+
+	"Nom Z–A"+
+	"Modifié, plus récents"+
+	"Modifié, plus anciens"+
+	"Serveur"+
+	"Auto-hébergé"+
+	"bitwarden.com (US)"+
+	"bitwarden.eu (EU)"+
+	"Apparence"+
+	"Afficher GoVault en clair ou en sombre, ou suivre le système."+
+	"Système"+
+	"Clair"+
+	"Sombre"+
+	"Contient une clé d’accès"+
+	"Identifiants en double"+
+	"Vers un dossier…"+
+	"Mettre à la corbeille…"+
+	"Vous pouvez restaurer les éléments de la corbeille tant qu’ils ne sont pas supprimés définitivement."+
+	"Cette action est irréversible. Les éléments sont supprimés de tous vos appareils."+
+	"Déplacer"+
+	"Hors ligne. Reconnectez-vous pour modifier ces éléments."+
+	"Éléments du coffre"+
+	"Doublons",
 	[]uint16{
 		7,
 		11,
@@ -7464,30 +7464,30 @@ var textsFr = i18n.NewTexts(""+
 		52,
 		44,
 		85,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
+		20,
+		9,
+		9,
+		23,
+		22,
+		7,
+		14,
+		18,
+		17,
+		9,
+		62,
+		8,
+		5,
+		6,
+		28,
+		22,
+		18,
+		25,
+		106,
+		85,
+		9,
+		58,
+		20,
+		8,
 	})
 
 // textsJa are the messages without arguments in ja.
@@ -8035,30 +8035,30 @@ var textsJa = i18n.NewTexts(""+
 	"パスキーを復号できませんでした。"+
 	"バックアップパスワードが正しくありません。"+
 	"暗号化バックアップが大きすぎるため、GoVault で再インポートできません。"+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	"",
+	"アイテムを並べ替え"+
+	"名前 A–Z"+
+	"名前 Z–A"+
+	"更新日（新しい順）"+
+	"更新日（古い順）"+
+	"サーバー"+
+	"セルフホスト"+
+	"bitwarden.com (US)"+
+	"bitwarden.eu (EU)"+
+	"外観"+
+	"GoVault をライトまたはダークで表示するか、システム設定に従います。"+
+	"システム"+
+	"ライト"+
+	"ダーク"+
+	"パスキーあり"+
+	"重複したログイン"+
+	"フォルダーに移動…"+
+	"ごみ箱に移動…"+
+	"完全に削除するまで、ごみ箱からアイテムを復元できます。"+
+	"この操作は取り消せません。すべてのデバイスからアイテムが削除されます。"+
+	"移動"+
+	"オフラインです。アイテムを変更するには再接続してください。"+
+	"保管庫のアイテム"+
+	"重複",
 	[]uint16{
 		15,
 		6,
@@ -8603,30 +8603,30 @@ var textsJa = i18n.NewTexts(""+
 		48,
 		63,
 		101,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
+		27,
+		12,
+		12,
+		27,
+		24,
+		12,
+		18,
+		18,
+		17,
+		6,
+		95,
+		12,
+		9,
+		9,
+		18,
+		24,
+		27,
+		21,
+		81,
+		105,
+		6,
+		87,
+		24,
+		6,
 	})
 
 // textsKo are the messages without arguments in ko.
@@ -9174,30 +9174,30 @@ var textsKo = i18n.NewTexts(""+
 	"패스키를 복호화할 수 없습니다."+
 	"백업 비밀번호가 올바르지 않습니다."+
 	"암호화된 백업이 너무 커서 GoVault에서 다시 가져올 수 없습니다."+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	"",
+	"항목 정렬"+
+	"이름 A–Z"+
+	"이름 Z–A"+
+	"수정일(최신순)"+
+	"수정일(오래된순)"+
+	"서버"+
+	"자체 호스팅"+
+	"bitwarden.com (US)"+
+	"bitwarden.eu (EU)"+
+	"화면 모드"+
+	"GoVault를 라이트 또는 다크 모드로 표시하거나 시스템 설정을 따릅니다."+
+	"시스템"+
+	"라이트"+
+	"다크"+
+	"패스키 있음"+
+	"중복 로그인"+
+	"폴더로 이동…"+
+	"휴지통으로 이동…"+
+	"영구 삭제하기 전까지 휴지통에서 항목을 복원할 수 있습니다."+
+	"이 작업은 되돌릴 수 없으며 모든 기기에서 항목이 삭제됩니다."+
+	"이동"+
+	"오프라인 상태입니다. 항목을 변경하려면 다시 연결하세요."+
+	"보관함 항목"+
+	"중복",
 	[]uint16{
 		6,
 		6,
@@ -9742,30 +9742,30 @@ var textsKo = i18n.NewTexts(""+
 		43,
 		49,
 		85,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
+		13,
+		12,
+		12,
+		20,
+		23,
+		6,
+		16,
+		18,
+		17,
+		13,
+		94,
+		9,
+		9,
+		6,
+		16,
+		16,
+		19,
+		25,
+		83,
+		84,
+		6,
+		79,
+		16,
+		6,
 	})
 
 // textsPtBR are the messages without arguments in pt-BR.
@@ -10313,30 +10313,30 @@ var textsPtBR = i18n.NewTexts(""+
 	"Não foi possível descriptografar uma chave de acesso."+
 	"A senha do backup está incorreta."+
 	"O backup criptografado seria grande demais para o GoVault reimportar."+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	"",
+	"Ordenar itens"+
+	"Nome A–Z"+
+	"Nome Z–A"+
+	"Modificado, mais recentes"+
+	"Modificado, mais antigos"+
+	"Servidor"+
+	"Auto-hospedado"+
+	"bitwarden.com (US)"+
+	"bitwarden.eu (EU)"+
+	"Aparência"+
+	"Mostra o GoVault em modo claro ou escuro, ou segue o sistema."+
+	"Sistema"+
+	"Claro"+
+	"Escuro"+
+	"Tem chave de acesso"+
+	"Credenciais duplicadas"+
+	"Mover para pasta…"+
+	"Mover para a lixeira…"+
+	"Você pode restaurar itens da lixeira até excluí-los permanentemente."+
+	"Isso não pode ser desfeito. Os itens serão removidos de todos os dispositivos."+
+	"Mover"+
+	"Offline. Reconecte-se para alterar estes itens."+
+	"Itens do cofre"+
+	"Duplicados",
 	[]uint16{
 		8,
 		6,
@@ -10881,30 +10881,30 @@ var textsPtBR = i18n.NewTexts(""+
 		55,
 		34,
 		69,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
+		13,
+		10,
+		10,
+		25,
+		24,
+		8,
+		14,
+		18,
+		17,
+		10,
+		61,
+		7,
+		5,
+		6,
+		19,
+		22,
+		19,
+		23,
+		71,
+		80,
+		5,
+		47,
+		14,
+		10,
 	})
 
 // textsRu are the messages without arguments in ru.
@@ -11452,30 +11452,30 @@ var textsRu = i18n.NewTexts(""+
 	"Не удалось расшифровать Passkey."+
 	"Неверный пароль резервной копии."+
 	"Зашифрованная копия слишком велика для повторного импорта в GoVault."+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	"",
+	"Сортировать элементы"+
+	"Название А–Я"+
+	"Название Я–А"+
+	"Изменено, сначала новые"+
+	"Изменено, сначала старые"+
+	"Сервер"+
+	"Свой сервер"+
+	"bitwarden.com (US)"+
+	"bitwarden.eu (EU)"+
+	"Оформление"+
+	"Светлое или тёмное оформление GoVault, либо как в системе."+
+	"Системная"+
+	"Светлая"+
+	"Тёмная"+
+	"Есть Passkey"+
+	"Дубликаты логинов"+
+	"В папку…"+
+	"В корзину…"+
+	"Элементы можно восстановить из корзины, пока они не удалены окончательно."+
+	"Это действие нельзя отменить. Элементы будут удалены со всех устройств."+
+	"Переместить"+
+	"Офлайн. Подключитесь снова, чтобы изменить эти элементы."+
+	"Элементы хранилища"+
+	"Дубликаты",
 	[]uint16{
 		12,
 		18,
@@ -12020,30 +12020,30 @@ var textsRu = i18n.NewTexts(""+
 		53,
 		60,
 		120,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
+		39,
+		24,
+		24,
+		43,
+		45,
+		12,
+		21,
+		18,
+		17,
+		20,
+		99,
+		18,
+		14,
+		12,
+		16,
+		33,
+		16,
+		20,
+		135,
+		131,
+		22,
+		103,
+		35,
+		18,
 	})
 
 // textsZhHans are the messages without arguments in zh-Hans.
@@ -12591,30 +12591,30 @@ var textsZhHans = i18n.NewTexts(""+
 	"无法解密通行密钥。"+
 	"备份密码不正确。"+
 	"加密备份体积过大，GoVault 将无法重新导入。"+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	"",
+	"排序项目"+
+	"名称 A–Z"+
+	"名称 Z–A"+
+	"修改时间，最新优先"+
+	"修改时间，最早优先"+
+	"服务器"+
+	"自托管"+
+	"bitwarden.com (US)"+
+	"bitwarden.eu (EU)"+
+	"外观"+
+	"以浅色或深色显示 GoVault，或跟随系统。"+
+	"跟随系统"+
+	"浅色"+
+	"深色"+
+	"包含通行密钥"+
+	"重复登录"+
+	"移到文件夹…"+
+	"移到回收站…"+
+	"在永久删除前，你可以随时从回收站恢复项目。"+
+	"此操作无法撤销，这些项目将从所有设备上移除。"+
+	"移动"+
+	"离线。请重新连接以更改这些项目。"+
+	"密码库项目"+
+	"重复项",
 	[]uint16{
 		6,
 		6,
@@ -13159,30 +13159,30 @@ var textsZhHans = i18n.NewTexts(""+
 		27,
 		24,
 		59,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
+		12,
+		12,
+		12,
+		27,
+		27,
+		9,
+		9,
+		18,
+		17,
+		6,
+		53,
+		12,
+		6,
+		6,
+		18,
+		12,
+		18,
+		18,
+		63,
+		66,
+		6,
+		48,
+		15,
+		9,
 	})
 
 // textsZhHant are the messages without arguments in zh-Hant.
@@ -13730,30 +13730,30 @@ var textsZhHant = i18n.NewTexts(""+
 	"無法解密密碼金鑰。"+
 	"備份密碼不正確。"+
 	"加密備份體積過大，GoVault 將無法重新匯入。"+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	""+
-	"",
+	"排序項目"+
+	"名稱 A–Z"+
+	"名稱 Z–A"+
+	"修改時間，最新優先"+
+	"修改時間，最舊優先"+
+	"伺服器"+
+	"自架伺服器"+
+	"bitwarden.com (US)"+
+	"bitwarden.eu (EU)"+
+	"外觀"+
+	"以淺色或深色顯示 GoVault，或跟隨系統設定。"+
+	"系統"+
+	"淺色"+
+	"深色"+
+	"包含密碼金鑰"+
+	"重複登入"+
+	"移至資料夾…"+
+	"移到垃圾桶…"+
+	"在永久刪除前，您可以隨時從垃圾桶還原項目。"+
+	"此動作無法復原，這些項目將從所有裝置上移除。"+
+	"移動"+
+	"離線。請重新連線以變更這些項目。"+
+	"密碼庫項目"+
+	"重複項目",
 	[]uint16{
 		6,
 		6,
@@ -14298,30 +14298,30 @@ var textsZhHant = i18n.NewTexts(""+
 		27,
 		24,
 		59,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
-		0,
+		12,
+		12,
+		12,
+		27,
+		27,
+		9,
+		15,
+		18,
+		17,
+		6,
+		59,
+		6,
+		6,
+		6,
+		18,
+		12,
+		18,
+		18,
+		63,
+		66,
+		6,
+		48,
+		15,
+		12,
 	})
 
 // texts returns the messages without arguments in lang, nil for a
@@ -26746,6 +26746,135 @@ func (msgs Messages) DuplicateGroup(site string, username string, count int) str
 				b.WriteString(" items")
 			}
 			return b.String()
+		case "de":
+			var b strings.Builder
+			b.WriteString(site)
+			b.WriteString(" · ")
+			b.WriteString(username)
+			b.WriteString(" · ")
+			switch i18n.Cardinal("de", float64(count)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("de", float64(count)))
+				b.WriteString(" Eintrag")
+			default:
+				b.WriteString(i18n.FormatNumber("de", float64(count)))
+				b.WriteString(" Einträge")
+			}
+			return b.String()
+		case "es":
+			var b strings.Builder
+			b.WriteString(site)
+			b.WriteString(" · ")
+			b.WriteString(username)
+			b.WriteString(" · ")
+			switch i18n.Cardinal("es", float64(count)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("es", float64(count)))
+				b.WriteString(" elemento")
+			default:
+				b.WriteString(i18n.FormatNumber("es", float64(count)))
+				b.WriteString(" elementos")
+			}
+			return b.String()
+		case "fr":
+			var b strings.Builder
+			b.WriteString(site)
+			b.WriteString(" · ")
+			b.WriteString(username)
+			b.WriteString(" · ")
+			switch i18n.Cardinal("fr", float64(count)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("fr", float64(count)))
+				b.WriteString(" élément")
+			default:
+				b.WriteString(i18n.FormatNumber("fr", float64(count)))
+				b.WriteString(" éléments")
+			}
+			return b.String()
+		case "ja":
+			var b strings.Builder
+			b.WriteString(site)
+			b.WriteString(" · ")
+			b.WriteString(username)
+			b.WriteString(" · ")
+			switch i18n.Cardinal("ja", float64(count)) {
+			default:
+				b.WriteString(i18n.FormatNumber("ja", float64(count)))
+				b.WriteString(" 件")
+			}
+			return b.String()
+		case "ko":
+			var b strings.Builder
+			b.WriteString(site)
+			b.WriteString(" · ")
+			b.WriteString(username)
+			b.WriteString(" · ")
+			switch i18n.Cardinal("ko", float64(count)) {
+			default:
+				b.WriteString(i18n.FormatNumber("ko", float64(count)))
+				b.WriteString("개 항목")
+			}
+			return b.String()
+		case "pt-BR":
+			var b strings.Builder
+			b.WriteString(site)
+			b.WriteString(" · ")
+			b.WriteString(username)
+			b.WriteString(" · ")
+			switch i18n.Cardinal("pt-BR", float64(count)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("pt-BR", float64(count)))
+				b.WriteString(" item")
+			default:
+				b.WriteString(i18n.FormatNumber("pt-BR", float64(count)))
+				b.WriteString(" itens")
+			}
+			return b.String()
+		case "ru":
+			var b strings.Builder
+			b.WriteString(site)
+			b.WriteString(" · ")
+			b.WriteString(username)
+			b.WriteString(" · ")
+			switch i18n.Cardinal("ru", float64(count)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" элемент")
+			case i18n.Few:
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" элемента")
+			case i18n.Many:
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" элементов")
+			default:
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" элемента")
+			}
+			return b.String()
+		case "zh-Hans":
+			var b strings.Builder
+			b.WriteString(site)
+			b.WriteString(" · ")
+			b.WriteString(username)
+			b.WriteString(" · ")
+			switch i18n.Cardinal("zh-Hans", float64(count)) {
+			default:
+				b.WriteString(i18n.FormatNumber("zh-Hans", float64(count)))
+				b.WriteString(" 个项目")
+			}
+			return b.String()
+		case "zh-Hant":
+			var b strings.Builder
+			b.WriteString(site)
+			b.WriteString(" · ")
+			b.WriteString(username)
+			b.WriteString(" · ")
+			switch i18n.Cardinal("zh-Hant", float64(count)) {
+			default:
+				b.WriteString(i18n.FormatNumber("zh-Hant", float64(count)))
+				b.WriteString(" 個項目")
+			}
+			return b.String()
 		}
 	}
 }
@@ -26781,6 +26910,117 @@ func (msgs Messages) DuplicateGroupNoUsername(site string, count int) string {
 				b.WriteString(" items")
 			}
 			return b.String()
+		case "de":
+			var b strings.Builder
+			b.WriteString(site)
+			b.WriteString(" · Kein Nutzername · ")
+			switch i18n.Cardinal("de", float64(count)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("de", float64(count)))
+				b.WriteString(" Eintrag")
+			default:
+				b.WriteString(i18n.FormatNumber("de", float64(count)))
+				b.WriteString(" Einträge")
+			}
+			return b.String()
+		case "es":
+			var b strings.Builder
+			b.WriteString(site)
+			b.WriteString(" · Sin usuario · ")
+			switch i18n.Cardinal("es", float64(count)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("es", float64(count)))
+				b.WriteString(" elemento")
+			default:
+				b.WriteString(i18n.FormatNumber("es", float64(count)))
+				b.WriteString(" elementos")
+			}
+			return b.String()
+		case "fr":
+			var b strings.Builder
+			b.WriteString(site)
+			b.WriteString(" · Sans nom d’utilisateur · ")
+			switch i18n.Cardinal("fr", float64(count)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("fr", float64(count)))
+				b.WriteString(" élément")
+			default:
+				b.WriteString(i18n.FormatNumber("fr", float64(count)))
+				b.WriteString(" éléments")
+			}
+			return b.String()
+		case "ja":
+			var b strings.Builder
+			b.WriteString(site)
+			b.WriteString(" · ユーザー名なし · ")
+			switch i18n.Cardinal("ja", float64(count)) {
+			default:
+				b.WriteString(i18n.FormatNumber("ja", float64(count)))
+				b.WriteString(" 件")
+			}
+			return b.String()
+		case "ko":
+			var b strings.Builder
+			b.WriteString(site)
+			b.WriteString(" · 사용자 이름 없음 · ")
+			switch i18n.Cardinal("ko", float64(count)) {
+			default:
+				b.WriteString(i18n.FormatNumber("ko", float64(count)))
+				b.WriteString("개 항목")
+			}
+			return b.String()
+		case "pt-BR":
+			var b strings.Builder
+			b.WriteString(site)
+			b.WriteString(" · Sem usuário · ")
+			switch i18n.Cardinal("pt-BR", float64(count)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("pt-BR", float64(count)))
+				b.WriteString(" item")
+			default:
+				b.WriteString(i18n.FormatNumber("pt-BR", float64(count)))
+				b.WriteString(" itens")
+			}
+			return b.String()
+		case "ru":
+			var b strings.Builder
+			b.WriteString(site)
+			b.WriteString(" · Без имени пользователя · ")
+			switch i18n.Cardinal("ru", float64(count)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" элемент")
+			case i18n.Few:
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" элемента")
+			case i18n.Many:
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" элементов")
+			default:
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" элемента")
+			}
+			return b.String()
+		case "zh-Hans":
+			var b strings.Builder
+			b.WriteString(site)
+			b.WriteString(" · 无用户名 · ")
+			switch i18n.Cardinal("zh-Hans", float64(count)) {
+			default:
+				b.WriteString(i18n.FormatNumber("zh-Hans", float64(count)))
+				b.WriteString(" 个项目")
+			}
+			return b.String()
+		case "zh-Hant":
+			var b strings.Builder
+			b.WriteString(site)
+			b.WriteString(" · 無使用者名稱 · ")
+			switch i18n.Cardinal("zh-Hant", float64(count)) {
+			default:
+				b.WriteString(i18n.FormatNumber("zh-Hant", float64(count)))
+				b.WriteString(" 個項目")
+			}
+			return b.String()
 		}
 	}
 }
@@ -26810,6 +27050,105 @@ func (msgs Messages) ItemsSelected(count int) string {
 			default:
 				b.WriteString(msgs.arg(i18n.FormatNumber("en", float64(count))))
 				b.WriteString(" items selected")
+			}
+			return b.String()
+		case "de":
+			var b strings.Builder
+			switch i18n.Cardinal("de", float64(count)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("de", float64(count)))
+				b.WriteString(" Eintrag ausgewählt")
+			default:
+				b.WriteString(i18n.FormatNumber("de", float64(count)))
+				b.WriteString(" Einträge ausgewählt")
+			}
+			return b.String()
+		case "es":
+			var b strings.Builder
+			switch i18n.Cardinal("es", float64(count)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("es", float64(count)))
+				b.WriteString(" elemento seleccionado")
+			default:
+				b.WriteString(i18n.FormatNumber("es", float64(count)))
+				b.WriteString(" elementos seleccionados")
+			}
+			return b.String()
+		case "fr":
+			var b strings.Builder
+			switch i18n.Cardinal("fr", float64(count)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("fr", float64(count)))
+				b.WriteString(" élément sélectionné")
+			default:
+				b.WriteString(i18n.FormatNumber("fr", float64(count)))
+				b.WriteString(" éléments sélectionnés")
+			}
+			return b.String()
+		case "ja":
+			var b strings.Builder
+			switch i18n.Cardinal("ja", float64(count)) {
+			default:
+				b.WriteString(i18n.FormatNumber("ja", float64(count)))
+				b.WriteString(" 件を選択中")
+			}
+			return b.String()
+		case "ko":
+			var b strings.Builder
+			switch i18n.Cardinal("ko", float64(count)) {
+			default:
+				b.WriteString(i18n.FormatNumber("ko", float64(count)))
+				b.WriteString("개 항목 선택됨")
+			}
+			return b.String()
+		case "pt-BR":
+			var b strings.Builder
+			switch i18n.Cardinal("pt-BR", float64(count)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("pt-BR", float64(count)))
+				b.WriteString(" item selecionado")
+			default:
+				b.WriteString(i18n.FormatNumber("pt-BR", float64(count)))
+				b.WriteString(" itens selecionados")
+			}
+			return b.String()
+		case "ru":
+			var b strings.Builder
+			switch i18n.Cardinal("ru", float64(count)) {
+			case i18n.One:
+				b.WriteString("Выбран ")
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" элемент")
+			case i18n.Few:
+				b.WriteString("Выбрано ")
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" элемента")
+			case i18n.Many:
+				b.WriteString("Выбрано ")
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" элементов")
+			default:
+				b.WriteString("Выбрано ")
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" элемента")
+			}
+			return b.String()
+		case "zh-Hans":
+			var b strings.Builder
+			switch i18n.Cardinal("zh-Hans", float64(count)) {
+			default:
+				b.WriteString("已选择 ")
+				b.WriteString(i18n.FormatNumber("zh-Hans", float64(count)))
+				b.WriteString(" 个项目")
+			}
+			return b.String()
+		case "zh-Hant":
+			var b strings.Builder
+			switch i18n.Cardinal("zh-Hant", float64(count)) {
+			default:
+				b.WriteString("已選取 ")
+				b.WriteString(i18n.FormatNumber("zh-Hant", float64(count)))
+				b.WriteString(" 個項目")
 			}
 			return b.String()
 		}
@@ -26859,6 +27198,111 @@ func (msgs Messages) BulkTrashTitle(count int) string {
 			}
 			b.WriteString(" to Trash?")
 			return b.String()
+		case "de":
+			var b strings.Builder
+			switch i18n.Cardinal("de", float64(count)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("de", float64(count)))
+				b.WriteString(" Eintrag in den Papierkorb verschieben?")
+			default:
+				b.WriteString(i18n.FormatNumber("de", float64(count)))
+				b.WriteString(" Einträge in den Papierkorb verschieben?")
+			}
+			return b.String()
+		case "es":
+			var b strings.Builder
+			switch i18n.Cardinal("es", float64(count)) {
+			case i18n.One:
+				b.WriteString("¿Mover ")
+				b.WriteString(i18n.FormatNumber("es", float64(count)))
+				b.WriteString(" elemento a la papelera?")
+			default:
+				b.WriteString("¿Mover ")
+				b.WriteString(i18n.FormatNumber("es", float64(count)))
+				b.WriteString(" elementos a la papelera?")
+			}
+			return b.String()
+		case "fr":
+			var b strings.Builder
+			switch i18n.Cardinal("fr", float64(count)) {
+			case i18n.One:
+				b.WriteString("Mettre ")
+				b.WriteString(i18n.FormatNumber("fr", float64(count)))
+				b.WriteString(" élément à la corbeille ?")
+			default:
+				b.WriteString("Mettre ")
+				b.WriteString(i18n.FormatNumber("fr", float64(count)))
+				b.WriteString(" éléments à la corbeille ?")
+			}
+			return b.String()
+		case "ja":
+			var b strings.Builder
+			switch i18n.Cardinal("ja", float64(count)) {
+			default:
+				b.WriteString(i18n.FormatNumber("ja", float64(count)))
+				b.WriteString(" 件のアイテムをごみ箱に移動しますか？")
+			}
+			return b.String()
+		case "ko":
+			var b strings.Builder
+			switch i18n.Cardinal("ko", float64(count)) {
+			default:
+				b.WriteString(i18n.FormatNumber("ko", float64(count)))
+				b.WriteString("개 항목을 휴지통으로 이동할까요?")
+			}
+			return b.String()
+		case "pt-BR":
+			var b strings.Builder
+			switch i18n.Cardinal("pt-BR", float64(count)) {
+			case i18n.One:
+				b.WriteString("Mover ")
+				b.WriteString(i18n.FormatNumber("pt-BR", float64(count)))
+				b.WriteString(" item para a lixeira?")
+			default:
+				b.WriteString("Mover ")
+				b.WriteString(i18n.FormatNumber("pt-BR", float64(count)))
+				b.WriteString(" itens para a lixeira?")
+			}
+			return b.String()
+		case "ru":
+			var b strings.Builder
+			switch i18n.Cardinal("ru", float64(count)) {
+			case i18n.One:
+				b.WriteString("Переместить ")
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" элемент в корзину?")
+			case i18n.Few:
+				b.WriteString("Переместить ")
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" элемента в корзину?")
+			case i18n.Many:
+				b.WriteString("Переместить ")
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" элементов в корзину?")
+			default:
+				b.WriteString("Переместить ")
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" элемента в корзину?")
+			}
+			return b.String()
+		case "zh-Hans":
+			var b strings.Builder
+			switch i18n.Cardinal("zh-Hans", float64(count)) {
+			default:
+				b.WriteString("要将 ")
+				b.WriteString(i18n.FormatNumber("zh-Hans", float64(count)))
+				b.WriteString(" 个项目移到回收站吗？")
+			}
+			return b.String()
+		case "zh-Hant":
+			var b strings.Builder
+			switch i18n.Cardinal("zh-Hant", float64(count)) {
+			default:
+				b.WriteString("要將 ")
+				b.WriteString(i18n.FormatNumber("zh-Hant", float64(count)))
+				b.WriteString(" 個項目移到垃圾桶嗎？")
+			}
+			return b.String()
 		}
 	}
 }
@@ -26898,6 +27342,111 @@ func (msgs Messages) BulkDeleteTitle(count int) string {
 				b.WriteString(" items")
 			}
 			b.WriteString(" permanently?")
+			return b.String()
+		case "de":
+			var b strings.Builder
+			switch i18n.Cardinal("de", float64(count)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("de", float64(count)))
+				b.WriteString(" Eintrag dauerhaft löschen?")
+			default:
+				b.WriteString(i18n.FormatNumber("de", float64(count)))
+				b.WriteString(" Einträge dauerhaft löschen?")
+			}
+			return b.String()
+		case "es":
+			var b strings.Builder
+			switch i18n.Cardinal("es", float64(count)) {
+			case i18n.One:
+				b.WriteString("¿Eliminar ")
+				b.WriteString(i18n.FormatNumber("es", float64(count)))
+				b.WriteString(" elemento permanentemente?")
+			default:
+				b.WriteString("¿Eliminar ")
+				b.WriteString(i18n.FormatNumber("es", float64(count)))
+				b.WriteString(" elementos permanentemente?")
+			}
+			return b.String()
+		case "fr":
+			var b strings.Builder
+			switch i18n.Cardinal("fr", float64(count)) {
+			case i18n.One:
+				b.WriteString("Supprimer définitivement ")
+				b.WriteString(i18n.FormatNumber("fr", float64(count)))
+				b.WriteString(" élément ?")
+			default:
+				b.WriteString("Supprimer définitivement ")
+				b.WriteString(i18n.FormatNumber("fr", float64(count)))
+				b.WriteString(" éléments ?")
+			}
+			return b.String()
+		case "ja":
+			var b strings.Builder
+			switch i18n.Cardinal("ja", float64(count)) {
+			default:
+				b.WriteString(i18n.FormatNumber("ja", float64(count)))
+				b.WriteString(" 件のアイテムを完全に削除しますか？")
+			}
+			return b.String()
+		case "ko":
+			var b strings.Builder
+			switch i18n.Cardinal("ko", float64(count)) {
+			default:
+				b.WriteString(i18n.FormatNumber("ko", float64(count)))
+				b.WriteString("개 항목을 영구 삭제할까요?")
+			}
+			return b.String()
+		case "pt-BR":
+			var b strings.Builder
+			switch i18n.Cardinal("pt-BR", float64(count)) {
+			case i18n.One:
+				b.WriteString("Excluir ")
+				b.WriteString(i18n.FormatNumber("pt-BR", float64(count)))
+				b.WriteString(" item permanentemente?")
+			default:
+				b.WriteString("Excluir ")
+				b.WriteString(i18n.FormatNumber("pt-BR", float64(count)))
+				b.WriteString(" itens permanentemente?")
+			}
+			return b.String()
+		case "ru":
+			var b strings.Builder
+			switch i18n.Cardinal("ru", float64(count)) {
+			case i18n.One:
+				b.WriteString("Удалить ")
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" элемент окончательно?")
+			case i18n.Few:
+				b.WriteString("Удалить ")
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" элемента окончательно?")
+			case i18n.Many:
+				b.WriteString("Удалить ")
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" элементов окончательно?")
+			default:
+				b.WriteString("Удалить ")
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" элемента окончательно?")
+			}
+			return b.String()
+		case "zh-Hans":
+			var b strings.Builder
+			switch i18n.Cardinal("zh-Hans", float64(count)) {
+			default:
+				b.WriteString("要永久删除 ")
+				b.WriteString(i18n.FormatNumber("zh-Hans", float64(count)))
+				b.WriteString(" 个项目吗？")
+			}
+			return b.String()
+		case "zh-Hant":
+			var b strings.Builder
+			switch i18n.Cardinal("zh-Hant", float64(count)) {
+			default:
+				b.WriteString("要永久刪除 ")
+				b.WriteString(i18n.FormatNumber("zh-Hant", float64(count)))
+				b.WriteString(" 個項目嗎？")
+			}
 			return b.String()
 		}
 	}
@@ -26939,6 +27488,111 @@ func (msgs Messages) BulkMoveTitle(count int) string {
 			}
 			b.WriteString(" to a folder")
 			return b.String()
+		case "de":
+			var b strings.Builder
+			switch i18n.Cardinal("de", float64(count)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("de", float64(count)))
+				b.WriteString(" Eintrag in einen Ordner verschieben")
+			default:
+				b.WriteString(i18n.FormatNumber("de", float64(count)))
+				b.WriteString(" Einträge in einen Ordner verschieben")
+			}
+			return b.String()
+		case "es":
+			var b strings.Builder
+			switch i18n.Cardinal("es", float64(count)) {
+			case i18n.One:
+				b.WriteString("Mover ")
+				b.WriteString(i18n.FormatNumber("es", float64(count)))
+				b.WriteString(" elemento a una carpeta")
+			default:
+				b.WriteString("Mover ")
+				b.WriteString(i18n.FormatNumber("es", float64(count)))
+				b.WriteString(" elementos a una carpeta")
+			}
+			return b.String()
+		case "fr":
+			var b strings.Builder
+			switch i18n.Cardinal("fr", float64(count)) {
+			case i18n.One:
+				b.WriteString("Déplacer ")
+				b.WriteString(i18n.FormatNumber("fr", float64(count)))
+				b.WriteString(" élément vers un dossier")
+			default:
+				b.WriteString("Déplacer ")
+				b.WriteString(i18n.FormatNumber("fr", float64(count)))
+				b.WriteString(" éléments vers un dossier")
+			}
+			return b.String()
+		case "ja":
+			var b strings.Builder
+			switch i18n.Cardinal("ja", float64(count)) {
+			default:
+				b.WriteString(i18n.FormatNumber("ja", float64(count)))
+				b.WriteString(" 件のアイテムをフォルダーに移動")
+			}
+			return b.String()
+		case "ko":
+			var b strings.Builder
+			switch i18n.Cardinal("ko", float64(count)) {
+			default:
+				b.WriteString(i18n.FormatNumber("ko", float64(count)))
+				b.WriteString("개 항목을 폴더로 이동")
+			}
+			return b.String()
+		case "pt-BR":
+			var b strings.Builder
+			switch i18n.Cardinal("pt-BR", float64(count)) {
+			case i18n.One:
+				b.WriteString("Mover ")
+				b.WriteString(i18n.FormatNumber("pt-BR", float64(count)))
+				b.WriteString(" item para uma pasta")
+			default:
+				b.WriteString("Mover ")
+				b.WriteString(i18n.FormatNumber("pt-BR", float64(count)))
+				b.WriteString(" itens para uma pasta")
+			}
+			return b.String()
+		case "ru":
+			var b strings.Builder
+			switch i18n.Cardinal("ru", float64(count)) {
+			case i18n.One:
+				b.WriteString("Переместить ")
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" элемент в папку")
+			case i18n.Few:
+				b.WriteString("Переместить ")
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" элемента в папку")
+			case i18n.Many:
+				b.WriteString("Переместить ")
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" элементов в папку")
+			default:
+				b.WriteString("Переместить ")
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" элемента в папку")
+			}
+			return b.String()
+		case "zh-Hans":
+			var b strings.Builder
+			switch i18n.Cardinal("zh-Hans", float64(count)) {
+			default:
+				b.WriteString("将 ")
+				b.WriteString(i18n.FormatNumber("zh-Hans", float64(count)))
+				b.WriteString(" 个项目移到文件夹")
+			}
+			return b.String()
+		case "zh-Hant":
+			var b strings.Builder
+			switch i18n.Cardinal("zh-Hant", float64(count)) {
+			default:
+				b.WriteString("將 ")
+				b.WriteString(i18n.FormatNumber("zh-Hant", float64(count)))
+				b.WriteString(" 個項目移至資料夾")
+			}
+			return b.String()
 		}
 	}
 }
@@ -26979,6 +27633,99 @@ func (msgs Messages) BulkAlreadyInFolder(count int) string {
 				b.WriteString(" items are already in this folder and stay as they are.")
 			}
 			return b.String()
+		case "de":
+			var b strings.Builder
+			switch i18n.Cardinal("de", float64(count)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("de", float64(count)))
+				b.WriteString(" Eintrag ist bereits in diesem Ordner und bleibt unverändert.")
+			default:
+				b.WriteString(i18n.FormatNumber("de", float64(count)))
+				b.WriteString(" Einträge sind bereits in diesem Ordner und bleiben unverändert.")
+			}
+			return b.String()
+		case "es":
+			var b strings.Builder
+			switch i18n.Cardinal("es", float64(count)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("es", float64(count)))
+				b.WriteString(" elemento ya está en esta carpeta y no cambia.")
+			default:
+				b.WriteString(i18n.FormatNumber("es", float64(count)))
+				b.WriteString(" elementos ya están en esta carpeta y no cambian.")
+			}
+			return b.String()
+		case "fr":
+			var b strings.Builder
+			switch i18n.Cardinal("fr", float64(count)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("fr", float64(count)))
+				b.WriteString(" élément est déjà dans ce dossier et reste inchangé.")
+			default:
+				b.WriteString(i18n.FormatNumber("fr", float64(count)))
+				b.WriteString(" éléments sont déjà dans ce dossier et restent inchangés.")
+			}
+			return b.String()
+		case "ja":
+			var b strings.Builder
+			switch i18n.Cardinal("ja", float64(count)) {
+			default:
+				b.WriteString(i18n.FormatNumber("ja", float64(count)))
+				b.WriteString(" 件はすでにこのフォルダーにあるため変更されません。")
+			}
+			return b.String()
+		case "ko":
+			var b strings.Builder
+			switch i18n.Cardinal("ko", float64(count)) {
+			default:
+				b.WriteString(i18n.FormatNumber("ko", float64(count)))
+				b.WriteString("개 항목은 이미 이 폴더에 있어 그대로 유지됩니다.")
+			}
+			return b.String()
+		case "pt-BR":
+			var b strings.Builder
+			switch i18n.Cardinal("pt-BR", float64(count)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("pt-BR", float64(count)))
+				b.WriteString(" item já está nesta pasta e permanece como está.")
+			default:
+				b.WriteString(i18n.FormatNumber("pt-BR", float64(count)))
+				b.WriteString(" itens já estão nesta pasta e permanecem como estão.")
+			}
+			return b.String()
+		case "ru":
+			var b strings.Builder
+			switch i18n.Cardinal("ru", float64(count)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" элемент уже находится в этой папке и не изменится.")
+			case i18n.Few:
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" элемента уже находятся в этой папке и не изменятся.")
+			case i18n.Many:
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" элементов уже находятся в этой папке и не изменятся.")
+			default:
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" элемента уже находятся в этой папке и не изменятся.")
+			}
+			return b.String()
+		case "zh-Hans":
+			var b strings.Builder
+			switch i18n.Cardinal("zh-Hans", float64(count)) {
+			default:
+				b.WriteString(i18n.FormatNumber("zh-Hans", float64(count)))
+				b.WriteString(" 个项目已在此文件夹中，将保持不变。")
+			}
+			return b.String()
+		case "zh-Hant":
+			var b strings.Builder
+			switch i18n.Cardinal("zh-Hant", float64(count)) {
+			default:
+				b.WriteString(i18n.FormatNumber("zh-Hant", float64(count)))
+				b.WriteString(" 個項目已在此資料夾中，將保持不變。")
+			}
+			return b.String()
 		}
 	}
 }
@@ -27008,6 +27755,105 @@ func (msgs Messages) BulkSkipped(count int) string {
 			default:
 				b.WriteString(msgs.arg(i18n.FormatNumber("en", float64(count))))
 				b.WriteString(" selected items will be skipped: you cannot change them.")
+			}
+			return b.String()
+		case "de":
+			var b strings.Builder
+			switch i18n.Cardinal("de", float64(count)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("de", float64(count)))
+				b.WriteString(" ausgewählter Eintrag wird übersprungen: Du kannst ihn nicht ändern.")
+			default:
+				b.WriteString(i18n.FormatNumber("de", float64(count)))
+				b.WriteString(" ausgewählte Einträge werden übersprungen: Du kannst sie nicht ändern.")
+			}
+			return b.String()
+		case "es":
+			var b strings.Builder
+			switch i18n.Cardinal("es", float64(count)) {
+			case i18n.One:
+				b.WriteString("Se omitirá ")
+				b.WriteString(i18n.FormatNumber("es", float64(count)))
+				b.WriteString(" elemento seleccionado: no puedes cambiarlo.")
+			default:
+				b.WriteString("Se omitirán ")
+				b.WriteString(i18n.FormatNumber("es", float64(count)))
+				b.WriteString(" elementos seleccionados: no puedes cambiarlos.")
+			}
+			return b.String()
+		case "fr":
+			var b strings.Builder
+			switch i18n.Cardinal("fr", float64(count)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("fr", float64(count)))
+				b.WriteString(" élément sélectionné sera ignoré : vous ne pouvez pas le modifier.")
+			default:
+				b.WriteString(i18n.FormatNumber("fr", float64(count)))
+				b.WriteString(" éléments sélectionnés seront ignorés : vous ne pouvez pas les modifier.")
+			}
+			return b.String()
+		case "ja":
+			var b strings.Builder
+			switch i18n.Cardinal("ja", float64(count)) {
+			default:
+				b.WriteString("選択中の ")
+				b.WriteString(i18n.FormatNumber("ja", float64(count)))
+				b.WriteString(" 件は変更できないためスキップされます。")
+			}
+			return b.String()
+		case "ko":
+			var b strings.Builder
+			switch i18n.Cardinal("ko", float64(count)) {
+			default:
+				b.WriteString("선택한 ")
+				b.WriteString(i18n.FormatNumber("ko", float64(count)))
+				b.WriteString("개 항목은 변경할 수 없어 건너뜁니다.")
+			}
+			return b.String()
+		case "pt-BR":
+			var b strings.Builder
+			switch i18n.Cardinal("pt-BR", float64(count)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("pt-BR", float64(count)))
+				b.WriteString(" item selecionado será ignorado: você não pode alterá-lo.")
+			default:
+				b.WriteString(i18n.FormatNumber("pt-BR", float64(count)))
+				b.WriteString(" itens selecionados serão ignorados: você não pode alterá-los.")
+			}
+			return b.String()
+		case "ru":
+			var b strings.Builder
+			switch i18n.Cardinal("ru", float64(count)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" выбранный элемент будет пропущен: его нельзя изменить.")
+			case i18n.Few:
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" выбранных элемента будут пропущены: их нельзя изменить.")
+			case i18n.Many:
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" выбранных элементов будут пропущены: их нельзя изменить.")
+			default:
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" выбранного элемента будут пропущены: их нельзя изменить.")
+			}
+			return b.String()
+		case "zh-Hans":
+			var b strings.Builder
+			switch i18n.Cardinal("zh-Hans", float64(count)) {
+			default:
+				b.WriteString("将跳过 ")
+				b.WriteString(i18n.FormatNumber("zh-Hans", float64(count)))
+				b.WriteString(" 个所选项目：你无法更改它们。")
+			}
+			return b.String()
+		case "zh-Hant":
+			var b strings.Builder
+			switch i18n.Cardinal("zh-Hant", float64(count)) {
+			default:
+				b.WriteString("將略過 ")
+				b.WriteString(i18n.FormatNumber("zh-Hant", float64(count)))
+				b.WriteString(" 個所選項目：您無法變更它們。")
 			}
 			return b.String()
 		}
@@ -27041,6 +27887,24 @@ func (msgs Messages) BulkItemFailed(name string, reason string) string {
 		switch lang {
 		case "", "en":
 			return msgs.arg(name) + " (" + msgs.arg(reason) + ")"
+		case "de":
+			return name + " (" + reason + ")"
+		case "es":
+			return name + " (" + reason + ")"
+		case "fr":
+			return name + " (" + reason + ")"
+		case "ja":
+			return name + "（" + reason + "）"
+		case "ko":
+			return name + " (" + reason + ")"
+		case "pt-BR":
+			return name + " (" + reason + ")"
+		case "ru":
+			return name + " (" + reason + ")"
+		case "zh-Hans":
+			return name + "（" + reason + "）"
+		case "zh-Hant":
+			return name + "（" + reason + "）"
 		}
 	}
 }
@@ -27070,6 +27934,101 @@ func (msgs Messages) BulkDeleteKept(count int) string {
 			default:
 				b.WriteString(msgs.arg(i18n.FormatNumber("en", float64(count))))
 				b.WriteString(" items changed elsewhere and were kept")
+			}
+			return b.String()
+		case "de":
+			var b strings.Builder
+			switch i18n.Cardinal("de", float64(count)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("de", float64(count)))
+				b.WriteString(" Eintrag wurde anderswo geändert und behalten")
+			default:
+				b.WriteString(i18n.FormatNumber("de", float64(count)))
+				b.WriteString(" Einträge wurden anderswo geändert und behalten")
+			}
+			return b.String()
+		case "es":
+			var b strings.Builder
+			switch i18n.Cardinal("es", float64(count)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("es", float64(count)))
+				b.WriteString(" elemento cambió en otro lugar y se conservó")
+			default:
+				b.WriteString(i18n.FormatNumber("es", float64(count)))
+				b.WriteString(" elementos cambiaron en otro lugar y se conservaron")
+			}
+			return b.String()
+		case "fr":
+			var b strings.Builder
+			switch i18n.Cardinal("fr", float64(count)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("fr", float64(count)))
+				b.WriteString(" élément modifié ailleurs a été conservé")
+			default:
+				b.WriteString(i18n.FormatNumber("fr", float64(count)))
+				b.WriteString(" éléments modifiés ailleurs ont été conservés")
+			}
+			return b.String()
+		case "ja":
+			var b strings.Builder
+			switch i18n.Cardinal("ja", float64(count)) {
+			default:
+				b.WriteString("別の場所で変更された ")
+				b.WriteString(i18n.FormatNumber("ja", float64(count)))
+				b.WriteString(" 件を保持しました")
+			}
+			return b.String()
+		case "ko":
+			var b strings.Builder
+			switch i18n.Cardinal("ko", float64(count)) {
+			default:
+				b.WriteString("다른 곳에서 변경된 ")
+				b.WriteString(i18n.FormatNumber("ko", float64(count)))
+				b.WriteString("개 항목 유지됨")
+			}
+			return b.String()
+		case "pt-BR":
+			var b strings.Builder
+			switch i18n.Cardinal("pt-BR", float64(count)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("pt-BR", float64(count)))
+				b.WriteString(" item foi alterado em outro lugar e mantido")
+			default:
+				b.WriteString(i18n.FormatNumber("pt-BR", float64(count)))
+				b.WriteString(" itens foram alterados em outro lugar e mantidos")
+			}
+			return b.String()
+		case "ru":
+			var b strings.Builder
+			switch i18n.Cardinal("ru", float64(count)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" элемент изменён в другом месте и сохранён")
+			case i18n.Few:
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" элемента изменены в другом месте и сохранены")
+			case i18n.Many:
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" элементов изменены в другом месте и сохранены")
+			default:
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(" элемента изменены в другом месте и сохранены")
+			}
+			return b.String()
+		case "zh-Hans":
+			var b strings.Builder
+			switch i18n.Cardinal("zh-Hans", float64(count)) {
+			default:
+				b.WriteString(i18n.FormatNumber("zh-Hans", float64(count)))
+				b.WriteString(" 个项目已在其他位置更改并保留")
+			}
+			return b.String()
+		case "zh-Hant":
+			var b strings.Builder
+			switch i18n.Cardinal("zh-Hant", float64(count)) {
+			default:
+				b.WriteString(i18n.FormatNumber("zh-Hant", float64(count)))
+				b.WriteString(" 個項目已在其他位置變更並予以保留")
 			}
 			return b.String()
 		}
@@ -27109,6 +28068,135 @@ func (msgs Messages) BulkNotDone(count int, details string) string {
 				b.WriteString(".")
 			}
 			return b.String()
+		case "de":
+			var b strings.Builder
+			switch i18n.Cardinal("de", float64(count)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("de", float64(count)))
+				b.WriteString(" konnte nicht geändert werden: ")
+				b.WriteString(details)
+				b.WriteString(".")
+			default:
+				b.WriteString(i18n.FormatNumber("de", float64(count)))
+				b.WriteString(" konnten nicht geändert werden: ")
+				b.WriteString(details)
+				b.WriteString(".")
+			}
+			return b.String()
+		case "es":
+			var b strings.Builder
+			switch i18n.Cardinal("es", float64(count)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("es", float64(count)))
+				b.WriteString(" no se pudo cambiar: ")
+				b.WriteString(details)
+				b.WriteString(".")
+			default:
+				b.WriteString(i18n.FormatNumber("es", float64(count)))
+				b.WriteString(" no se pudieron cambiar: ")
+				b.WriteString(details)
+				b.WriteString(".")
+			}
+			return b.String()
+		case "fr":
+			var b strings.Builder
+			switch i18n.Cardinal("fr", float64(count)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("fr", float64(count)))
+				b.WriteString(" n’a pas pu être modifié : ")
+				b.WriteString(details)
+				b.WriteString(".")
+			default:
+				b.WriteString(i18n.FormatNumber("fr", float64(count)))
+				b.WriteString(" n’ont pas pu être modifiés : ")
+				b.WriteString(details)
+				b.WriteString(".")
+			}
+			return b.String()
+		case "ja":
+			var b strings.Builder
+			switch i18n.Cardinal("ja", float64(count)) {
+			default:
+				b.WriteString(i18n.FormatNumber("ja", float64(count)))
+				b.WriteString(" 件を変更できませんでした：")
+				b.WriteString(details)
+				b.WriteString("。")
+			}
+			return b.String()
+		case "ko":
+			var b strings.Builder
+			switch i18n.Cardinal("ko", float64(count)) {
+			default:
+				b.WriteString(i18n.FormatNumber("ko", float64(count)))
+				b.WriteString("개 변경 불가: ")
+				b.WriteString(details)
+				b.WriteString(".")
+			}
+			return b.String()
+		case "pt-BR":
+			var b strings.Builder
+			switch i18n.Cardinal("pt-BR", float64(count)) {
+			case i18n.One:
+				b.WriteString(i18n.FormatNumber("pt-BR", float64(count)))
+				b.WriteString(" não pôde ser alterado: ")
+				b.WriteString(details)
+				b.WriteString(".")
+			default:
+				b.WriteString(i18n.FormatNumber("pt-BR", float64(count)))
+				b.WriteString(" não puderam ser alterados: ")
+				b.WriteString(details)
+				b.WriteString(".")
+			}
+			return b.String()
+		case "ru":
+			var b strings.Builder
+			switch i18n.Cardinal("ru", float64(count)) {
+			case i18n.One:
+				b.WriteString("Не удалось изменить ")
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(": ")
+				b.WriteString(details)
+				b.WriteString(".")
+			case i18n.Few:
+				b.WriteString("Не удалось изменить ")
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(": ")
+				b.WriteString(details)
+				b.WriteString(".")
+			case i18n.Many:
+				b.WriteString("Не удалось изменить ")
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(": ")
+				b.WriteString(details)
+				b.WriteString(".")
+			default:
+				b.WriteString("Не удалось изменить ")
+				b.WriteString(i18n.FormatNumber("ru", float64(count)))
+				b.WriteString(": ")
+				b.WriteString(details)
+				b.WriteString(".")
+			}
+			return b.String()
+		case "zh-Hans":
+			var b strings.Builder
+			switch i18n.Cardinal("zh-Hans", float64(count)) {
+			default:
+				b.WriteString(i18n.FormatNumber("zh-Hans", float64(count)))
+				b.WriteString(" 个未能更改：")
+				b.WriteString(details)
+				b.WriteString("。")
+			}
+			return b.String()
+		case "zh-Hant":
+			var b strings.Builder
+			switch i18n.Cardinal("zh-Hant", float64(count)) {
+			default:
+				b.WriteString(i18n.FormatNumber("zh-Hant", float64(count)))
+				b.WriteString(" 個無法變更：")
+				b.WriteString(details)
+				b.WriteString("。")
+			}
+			return b.String()
 		}
 	}
 }
@@ -27142,6 +28230,146 @@ func (msgs Messages) BulkTrashedCount(count int) string {
 				default:
 					b.WriteString(msgs.arg(i18n.FormatNumber("en", float64(count))))
 					b.WriteString(" items moved to Trash")
+				}
+			}
+			return b.String()
+		case "de":
+			var b strings.Builder
+			switch {
+			case count == 0:
+				b.WriteString("Nichts in den Papierkorb verschoben")
+			default:
+				switch i18n.Cardinal("de", float64(count)) {
+				case i18n.One:
+					b.WriteString(i18n.FormatNumber("de", float64(count)))
+					b.WriteString(" Eintrag in den Papierkorb verschoben")
+				default:
+					b.WriteString(i18n.FormatNumber("de", float64(count)))
+					b.WriteString(" Einträge in den Papierkorb verschoben")
+				}
+			}
+			return b.String()
+		case "es":
+			var b strings.Builder
+			switch {
+			case count == 0:
+				b.WriteString("No se movió nada a la papelera")
+			default:
+				switch i18n.Cardinal("es", float64(count)) {
+				case i18n.One:
+					b.WriteString(i18n.FormatNumber("es", float64(count)))
+					b.WriteString(" elemento movido a la papelera")
+				default:
+					b.WriteString(i18n.FormatNumber("es", float64(count)))
+					b.WriteString(" elementos movidos a la papelera")
+				}
+			}
+			return b.String()
+		case "fr":
+			var b strings.Builder
+			switch {
+			case count == 0:
+				b.WriteString("Aucun élément mis à la corbeille")
+			default:
+				switch i18n.Cardinal("fr", float64(count)) {
+				case i18n.One:
+					b.WriteString(i18n.FormatNumber("fr", float64(count)))
+					b.WriteString(" élément mis à la corbeille")
+				default:
+					b.WriteString(i18n.FormatNumber("fr", float64(count)))
+					b.WriteString(" éléments mis à la corbeille")
+				}
+			}
+			return b.String()
+		case "ja":
+			var b strings.Builder
+			switch {
+			case count == 0:
+				b.WriteString("ごみ箱に移動したアイテムはありません")
+			default:
+				switch i18n.Cardinal("ja", float64(count)) {
+				default:
+					b.WriteString(i18n.FormatNumber("ja", float64(count)))
+					b.WriteString(" 件をごみ箱に移動しました")
+				}
+			}
+			return b.String()
+		case "ko":
+			var b strings.Builder
+			switch {
+			case count == 0:
+				b.WriteString("휴지통으로 이동된 항목 없음")
+			default:
+				switch i18n.Cardinal("ko", float64(count)) {
+				default:
+					b.WriteString(i18n.FormatNumber("ko", float64(count)))
+					b.WriteString("개 항목을 휴지통으로 이동함")
+				}
+			}
+			return b.String()
+		case "pt-BR":
+			var b strings.Builder
+			switch {
+			case count == 0:
+				b.WriteString("Nada movido para a lixeira")
+			default:
+				switch i18n.Cardinal("pt-BR", float64(count)) {
+				case i18n.One:
+					b.WriteString(i18n.FormatNumber("pt-BR", float64(count)))
+					b.WriteString(" item movido para a lixeira")
+				default:
+					b.WriteString(i18n.FormatNumber("pt-BR", float64(count)))
+					b.WriteString(" itens movidos para a lixeira")
+				}
+			}
+			return b.String()
+		case "ru":
+			var b strings.Builder
+			switch {
+			case count == 0:
+				b.WriteString("Ничего не перемещено в корзину")
+			default:
+				switch i18n.Cardinal("ru", float64(count)) {
+				case i18n.One:
+					b.WriteString(i18n.FormatNumber("ru", float64(count)))
+					b.WriteString(" элемент перемещён в корзину")
+				case i18n.Few:
+					b.WriteString(i18n.FormatNumber("ru", float64(count)))
+					b.WriteString(" элемента перемещены в корзину")
+				case i18n.Many:
+					b.WriteString(i18n.FormatNumber("ru", float64(count)))
+					b.WriteString(" элементов перемещены в корзину")
+				default:
+					b.WriteString(i18n.FormatNumber("ru", float64(count)))
+					b.WriteString(" элемента перемещены в корзину")
+				}
+			}
+			return b.String()
+		case "zh-Hans":
+			var b strings.Builder
+			switch {
+			case count == 0:
+				b.WriteString("未将任何项目移到回收站")
+			default:
+				switch i18n.Cardinal("zh-Hans", float64(count)) {
+				default:
+					b.WriteString("已将 ")
+					b.WriteString(i18n.FormatNumber("zh-Hans", float64(count)))
+					b.WriteString(" 个项目移到回收站")
+				}
+			}
+			return b.String()
+		case "zh-Hant":
+			var b strings.Builder
+			switch {
+			case count == 0:
+				b.WriteString("未將任何項目移到垃圾桶")
+			default:
+				switch i18n.Cardinal("zh-Hant", float64(count)) {
+				default:
+					b.WriteString("已將 ")
+					b.WriteString(i18n.FormatNumber("zh-Hant", float64(count)))
+					b.WriteString(" 個項目移到垃圾桶")
 				}
 			}
 			return b.String()
@@ -27181,6 +28409,146 @@ func (msgs Messages) BulkRestoredCount(count int) string {
 				}
 			}
 			return b.String()
+		case "de":
+			var b strings.Builder
+			switch {
+			case count == 0:
+				b.WriteString("Nichts wiederhergestellt")
+			default:
+				switch i18n.Cardinal("de", float64(count)) {
+				case i18n.One:
+					b.WriteString(i18n.FormatNumber("de", float64(count)))
+					b.WriteString(" Eintrag wiederhergestellt")
+				default:
+					b.WriteString(i18n.FormatNumber("de", float64(count)))
+					b.WriteString(" Einträge wiederhergestellt")
+				}
+			}
+			return b.String()
+		case "es":
+			var b strings.Builder
+			switch {
+			case count == 0:
+				b.WriteString("No se restauró nada")
+			default:
+				switch i18n.Cardinal("es", float64(count)) {
+				case i18n.One:
+					b.WriteString(i18n.FormatNumber("es", float64(count)))
+					b.WriteString(" elemento restaurado")
+				default:
+					b.WriteString(i18n.FormatNumber("es", float64(count)))
+					b.WriteString(" elementos restaurados")
+				}
+			}
+			return b.String()
+		case "fr":
+			var b strings.Builder
+			switch {
+			case count == 0:
+				b.WriteString("Aucun élément restauré")
+			default:
+				switch i18n.Cardinal("fr", float64(count)) {
+				case i18n.One:
+					b.WriteString(i18n.FormatNumber("fr", float64(count)))
+					b.WriteString(" élément restauré")
+				default:
+					b.WriteString(i18n.FormatNumber("fr", float64(count)))
+					b.WriteString(" éléments restaurés")
+				}
+			}
+			return b.String()
+		case "ja":
+			var b strings.Builder
+			switch {
+			case count == 0:
+				b.WriteString("復元したアイテムはありません")
+			default:
+				switch i18n.Cardinal("ja", float64(count)) {
+				default:
+					b.WriteString(i18n.FormatNumber("ja", float64(count)))
+					b.WriteString(" 件を復元しました")
+				}
+			}
+			return b.String()
+		case "ko":
+			var b strings.Builder
+			switch {
+			case count == 0:
+				b.WriteString("복원된 항목 없음")
+			default:
+				switch i18n.Cardinal("ko", float64(count)) {
+				default:
+					b.WriteString(i18n.FormatNumber("ko", float64(count)))
+					b.WriteString("개 항목 복원됨")
+				}
+			}
+			return b.String()
+		case "pt-BR":
+			var b strings.Builder
+			switch {
+			case count == 0:
+				b.WriteString("Nada restaurado")
+			default:
+				switch i18n.Cardinal("pt-BR", float64(count)) {
+				case i18n.One:
+					b.WriteString(i18n.FormatNumber("pt-BR", float64(count)))
+					b.WriteString(" item restaurado")
+				default:
+					b.WriteString(i18n.FormatNumber("pt-BR", float64(count)))
+					b.WriteString(" itens restaurados")
+				}
+			}
+			return b.String()
+		case "ru":
+			var b strings.Builder
+			switch {
+			case count == 0:
+				b.WriteString("Ничего не восстановлено")
+			default:
+				switch i18n.Cardinal("ru", float64(count)) {
+				case i18n.One:
+					b.WriteString(i18n.FormatNumber("ru", float64(count)))
+					b.WriteString(" элемент восстановлен")
+				case i18n.Few:
+					b.WriteString(i18n.FormatNumber("ru", float64(count)))
+					b.WriteString(" элемента восстановлены")
+				case i18n.Many:
+					b.WriteString(i18n.FormatNumber("ru", float64(count)))
+					b.WriteString(" элементов восстановлены")
+				default:
+					b.WriteString(i18n.FormatNumber("ru", float64(count)))
+					b.WriteString(" элемента восстановлены")
+				}
+			}
+			return b.String()
+		case "zh-Hans":
+			var b strings.Builder
+			switch {
+			case count == 0:
+				b.WriteString("未恢复任何项目")
+			default:
+				switch i18n.Cardinal("zh-Hans", float64(count)) {
+				default:
+					b.WriteString("已恢复 ")
+					b.WriteString(i18n.FormatNumber("zh-Hans", float64(count)))
+					b.WriteString(" 个项目")
+				}
+			}
+			return b.String()
+		case "zh-Hant":
+			var b strings.Builder
+			switch {
+			case count == 0:
+				b.WriteString("未還原任何項目")
+			default:
+				switch i18n.Cardinal("zh-Hant", float64(count)) {
+				default:
+					b.WriteString("已還原 ")
+					b.WriteString(i18n.FormatNumber("zh-Hant", float64(count)))
+					b.WriteString(" 個項目")
+				}
+			}
+			return b.String()
 		}
 	}
 }
@@ -27214,6 +28582,146 @@ func (msgs Messages) BulkArchivedCount(count int) string {
 				default:
 					b.WriteString(msgs.arg(i18n.FormatNumber("en", float64(count))))
 					b.WriteString(" items archived")
+				}
+			}
+			return b.String()
+		case "de":
+			var b strings.Builder
+			switch {
+			case count == 0:
+				b.WriteString("Nichts archiviert")
+			default:
+				switch i18n.Cardinal("de", float64(count)) {
+				case i18n.One:
+					b.WriteString(i18n.FormatNumber("de", float64(count)))
+					b.WriteString(" Eintrag archiviert")
+				default:
+					b.WriteString(i18n.FormatNumber("de", float64(count)))
+					b.WriteString(" Einträge archiviert")
+				}
+			}
+			return b.String()
+		case "es":
+			var b strings.Builder
+			switch {
+			case count == 0:
+				b.WriteString("No se archivó nada")
+			default:
+				switch i18n.Cardinal("es", float64(count)) {
+				case i18n.One:
+					b.WriteString(i18n.FormatNumber("es", float64(count)))
+					b.WriteString(" elemento archivado")
+				default:
+					b.WriteString(i18n.FormatNumber("es", float64(count)))
+					b.WriteString(" elementos archivados")
+				}
+			}
+			return b.String()
+		case "fr":
+			var b strings.Builder
+			switch {
+			case count == 0:
+				b.WriteString("Aucun élément archivé")
+			default:
+				switch i18n.Cardinal("fr", float64(count)) {
+				case i18n.One:
+					b.WriteString(i18n.FormatNumber("fr", float64(count)))
+					b.WriteString(" élément archivé")
+				default:
+					b.WriteString(i18n.FormatNumber("fr", float64(count)))
+					b.WriteString(" éléments archivés")
+				}
+			}
+			return b.String()
+		case "ja":
+			var b strings.Builder
+			switch {
+			case count == 0:
+				b.WriteString("アーカイブしたアイテムはありません")
+			default:
+				switch i18n.Cardinal("ja", float64(count)) {
+				default:
+					b.WriteString(i18n.FormatNumber("ja", float64(count)))
+					b.WriteString(" 件をアーカイブしました")
+				}
+			}
+			return b.String()
+		case "ko":
+			var b strings.Builder
+			switch {
+			case count == 0:
+				b.WriteString("보관된 항목 없음")
+			default:
+				switch i18n.Cardinal("ko", float64(count)) {
+				default:
+					b.WriteString(i18n.FormatNumber("ko", float64(count)))
+					b.WriteString("개 항목 보관됨")
+				}
+			}
+			return b.String()
+		case "pt-BR":
+			var b strings.Builder
+			switch {
+			case count == 0:
+				b.WriteString("Nada arquivado")
+			default:
+				switch i18n.Cardinal("pt-BR", float64(count)) {
+				case i18n.One:
+					b.WriteString(i18n.FormatNumber("pt-BR", float64(count)))
+					b.WriteString(" item arquivado")
+				default:
+					b.WriteString(i18n.FormatNumber("pt-BR", float64(count)))
+					b.WriteString(" itens arquivados")
+				}
+			}
+			return b.String()
+		case "ru":
+			var b strings.Builder
+			switch {
+			case count == 0:
+				b.WriteString("Ничего не архивировано")
+			default:
+				switch i18n.Cardinal("ru", float64(count)) {
+				case i18n.One:
+					b.WriteString(i18n.FormatNumber("ru", float64(count)))
+					b.WriteString(" элемент архивирован")
+				case i18n.Few:
+					b.WriteString(i18n.FormatNumber("ru", float64(count)))
+					b.WriteString(" элемента архивированы")
+				case i18n.Many:
+					b.WriteString(i18n.FormatNumber("ru", float64(count)))
+					b.WriteString(" элементов архивированы")
+				default:
+					b.WriteString(i18n.FormatNumber("ru", float64(count)))
+					b.WriteString(" элемента архивированы")
+				}
+			}
+			return b.String()
+		case "zh-Hans":
+			var b strings.Builder
+			switch {
+			case count == 0:
+				b.WriteString("未归档任何项目")
+			default:
+				switch i18n.Cardinal("zh-Hans", float64(count)) {
+				default:
+					b.WriteString("已归档 ")
+					b.WriteString(i18n.FormatNumber("zh-Hans", float64(count)))
+					b.WriteString(" 个项目")
+				}
+			}
+			return b.String()
+		case "zh-Hant":
+			var b strings.Builder
+			switch {
+			case count == 0:
+				b.WriteString("未封存任何項目")
+			default:
+				switch i18n.Cardinal("zh-Hant", float64(count)) {
+				default:
+					b.WriteString("已封存 ")
+					b.WriteString(i18n.FormatNumber("zh-Hant", float64(count)))
+					b.WriteString(" 個項目")
 				}
 			}
 			return b.String()
@@ -27253,6 +28761,146 @@ func (msgs Messages) BulkUnarchivedCount(count int) string {
 				}
 			}
 			return b.String()
+		case "de":
+			var b strings.Builder
+			switch {
+			case count == 0:
+				b.WriteString("Nichts dearchiviert")
+			default:
+				switch i18n.Cardinal("de", float64(count)) {
+				case i18n.One:
+					b.WriteString(i18n.FormatNumber("de", float64(count)))
+					b.WriteString(" Eintrag dearchiviert")
+				default:
+					b.WriteString(i18n.FormatNumber("de", float64(count)))
+					b.WriteString(" Einträge dearchiviert")
+				}
+			}
+			return b.String()
+		case "es":
+			var b strings.Builder
+			switch {
+			case count == 0:
+				b.WriteString("No se desarchivó nada")
+			default:
+				switch i18n.Cardinal("es", float64(count)) {
+				case i18n.One:
+					b.WriteString(i18n.FormatNumber("es", float64(count)))
+					b.WriteString(" elemento desarchivado")
+				default:
+					b.WriteString(i18n.FormatNumber("es", float64(count)))
+					b.WriteString(" elementos desarchivados")
+				}
+			}
+			return b.String()
+		case "fr":
+			var b strings.Builder
+			switch {
+			case count == 0:
+				b.WriteString("Aucun élément désarchivé")
+			default:
+				switch i18n.Cardinal("fr", float64(count)) {
+				case i18n.One:
+					b.WriteString(i18n.FormatNumber("fr", float64(count)))
+					b.WriteString(" élément désarchivé")
+				default:
+					b.WriteString(i18n.FormatNumber("fr", float64(count)))
+					b.WriteString(" éléments désarchivés")
+				}
+			}
+			return b.String()
+		case "ja":
+			var b strings.Builder
+			switch {
+			case count == 0:
+				b.WriteString("アーカイブ解除したアイテムはありません")
+			default:
+				switch i18n.Cardinal("ja", float64(count)) {
+				default:
+					b.WriteString(i18n.FormatNumber("ja", float64(count)))
+					b.WriteString(" 件のアーカイブを解除しました")
+				}
+			}
+			return b.String()
+		case "ko":
+			var b strings.Builder
+			switch {
+			case count == 0:
+				b.WriteString("보관 해제된 항목 없음")
+			default:
+				switch i18n.Cardinal("ko", float64(count)) {
+				default:
+					b.WriteString(i18n.FormatNumber("ko", float64(count)))
+					b.WriteString("개 항목 보관 해제됨")
+				}
+			}
+			return b.String()
+		case "pt-BR":
+			var b strings.Builder
+			switch {
+			case count == 0:
+				b.WriteString("Nada desarquivado")
+			default:
+				switch i18n.Cardinal("pt-BR", float64(count)) {
+				case i18n.One:
+					b.WriteString(i18n.FormatNumber("pt-BR", float64(count)))
+					b.WriteString(" item desarquivado")
+				default:
+					b.WriteString(i18n.FormatNumber("pt-BR", float64(count)))
+					b.WriteString(" itens desarquivados")
+				}
+			}
+			return b.String()
+		case "ru":
+			var b strings.Builder
+			switch {
+			case count == 0:
+				b.WriteString("Ничего не разархивировано")
+			default:
+				switch i18n.Cardinal("ru", float64(count)) {
+				case i18n.One:
+					b.WriteString(i18n.FormatNumber("ru", float64(count)))
+					b.WriteString(" элемент разархивирован")
+				case i18n.Few:
+					b.WriteString(i18n.FormatNumber("ru", float64(count)))
+					b.WriteString(" элемента разархивированы")
+				case i18n.Many:
+					b.WriteString(i18n.FormatNumber("ru", float64(count)))
+					b.WriteString(" элементов разархивированы")
+				default:
+					b.WriteString(i18n.FormatNumber("ru", float64(count)))
+					b.WriteString(" элемента разархивированы")
+				}
+			}
+			return b.String()
+		case "zh-Hans":
+			var b strings.Builder
+			switch {
+			case count == 0:
+				b.WriteString("未取消归档任何项目")
+			default:
+				switch i18n.Cardinal("zh-Hans", float64(count)) {
+				default:
+					b.WriteString("已取消归档 ")
+					b.WriteString(i18n.FormatNumber("zh-Hans", float64(count)))
+					b.WriteString(" 个项目")
+				}
+			}
+			return b.String()
+		case "zh-Hant":
+			var b strings.Builder
+			switch {
+			case count == 0:
+				b.WriteString("未取消封存任何項目")
+			default:
+				switch i18n.Cardinal("zh-Hant", float64(count)) {
+				default:
+					b.WriteString("已取消封存 ")
+					b.WriteString(i18n.FormatNumber("zh-Hant", float64(count)))
+					b.WriteString(" 個項目")
+				}
+			}
+			return b.String()
 		}
 	}
 }
@@ -27289,6 +28937,146 @@ func (msgs Messages) BulkDeletedCount(count int) string {
 				}
 			}
 			return b.String()
+		case "de":
+			var b strings.Builder
+			switch {
+			case count == 0:
+				b.WriteString("Nichts gelöscht")
+			default:
+				switch i18n.Cardinal("de", float64(count)) {
+				case i18n.One:
+					b.WriteString(i18n.FormatNumber("de", float64(count)))
+					b.WriteString(" Eintrag dauerhaft gelöscht")
+				default:
+					b.WriteString(i18n.FormatNumber("de", float64(count)))
+					b.WriteString(" Einträge dauerhaft gelöscht")
+				}
+			}
+			return b.String()
+		case "es":
+			var b strings.Builder
+			switch {
+			case count == 0:
+				b.WriteString("No se eliminó nada")
+			default:
+				switch i18n.Cardinal("es", float64(count)) {
+				case i18n.One:
+					b.WriteString(i18n.FormatNumber("es", float64(count)))
+					b.WriteString(" elemento eliminado permanentemente")
+				default:
+					b.WriteString(i18n.FormatNumber("es", float64(count)))
+					b.WriteString(" elementos eliminados permanentemente")
+				}
+			}
+			return b.String()
+		case "fr":
+			var b strings.Builder
+			switch {
+			case count == 0:
+				b.WriteString("Aucun élément supprimé")
+			default:
+				switch i18n.Cardinal("fr", float64(count)) {
+				case i18n.One:
+					b.WriteString(i18n.FormatNumber("fr", float64(count)))
+					b.WriteString(" élément supprimé définitivement")
+				default:
+					b.WriteString(i18n.FormatNumber("fr", float64(count)))
+					b.WriteString(" éléments supprimés définitivement")
+				}
+			}
+			return b.String()
+		case "ja":
+			var b strings.Builder
+			switch {
+			case count == 0:
+				b.WriteString("削除したアイテムはありません")
+			default:
+				switch i18n.Cardinal("ja", float64(count)) {
+				default:
+					b.WriteString(i18n.FormatNumber("ja", float64(count)))
+					b.WriteString(" 件を完全に削除しました")
+				}
+			}
+			return b.String()
+		case "ko":
+			var b strings.Builder
+			switch {
+			case count == 0:
+				b.WriteString("삭제된 항목 없음")
+			default:
+				switch i18n.Cardinal("ko", float64(count)) {
+				default:
+					b.WriteString(i18n.FormatNumber("ko", float64(count)))
+					b.WriteString("개 항목 영구 삭제됨")
+				}
+			}
+			return b.String()
+		case "pt-BR":
+			var b strings.Builder
+			switch {
+			case count == 0:
+				b.WriteString("Nada excluído")
+			default:
+				switch i18n.Cardinal("pt-BR", float64(count)) {
+				case i18n.One:
+					b.WriteString(i18n.FormatNumber("pt-BR", float64(count)))
+					b.WriteString(" item excluído permanentemente")
+				default:
+					b.WriteString(i18n.FormatNumber("pt-BR", float64(count)))
+					b.WriteString(" itens excluídos permanentemente")
+				}
+			}
+			return b.String()
+		case "ru":
+			var b strings.Builder
+			switch {
+			case count == 0:
+				b.WriteString("Ничего не удалено")
+			default:
+				switch i18n.Cardinal("ru", float64(count)) {
+				case i18n.One:
+					b.WriteString(i18n.FormatNumber("ru", float64(count)))
+					b.WriteString(" элемент удалён окончательно")
+				case i18n.Few:
+					b.WriteString(i18n.FormatNumber("ru", float64(count)))
+					b.WriteString(" элемента удалены окончательно")
+				case i18n.Many:
+					b.WriteString(i18n.FormatNumber("ru", float64(count)))
+					b.WriteString(" элементов удалены окончательно")
+				default:
+					b.WriteString(i18n.FormatNumber("ru", float64(count)))
+					b.WriteString(" элемента удалены окончательно")
+				}
+			}
+			return b.String()
+		case "zh-Hans":
+			var b strings.Builder
+			switch {
+			case count == 0:
+				b.WriteString("未删除任何项目")
+			default:
+				switch i18n.Cardinal("zh-Hans", float64(count)) {
+				default:
+					b.WriteString("已永久删除 ")
+					b.WriteString(i18n.FormatNumber("zh-Hans", float64(count)))
+					b.WriteString(" 个项目")
+				}
+			}
+			return b.String()
+		case "zh-Hant":
+			var b strings.Builder
+			switch {
+			case count == 0:
+				b.WriteString("未刪除任何項目")
+			default:
+				switch i18n.Cardinal("zh-Hant", float64(count)) {
+				default:
+					b.WriteString("已永久刪除 ")
+					b.WriteString(i18n.FormatNumber("zh-Hant", float64(count)))
+					b.WriteString(" 個項目")
+				}
+			}
+			return b.String()
 		}
 	}
 }
@@ -27322,6 +29110,146 @@ func (msgs Messages) BulkMovedCount(count int) string {
 				default:
 					b.WriteString(msgs.arg(i18n.FormatNumber("en", float64(count))))
 					b.WriteString(" items moved")
+				}
+			}
+			return b.String()
+		case "de":
+			var b strings.Builder
+			switch {
+			case count == 0:
+				b.WriteString("Nichts verschoben")
+			default:
+				switch i18n.Cardinal("de", float64(count)) {
+				case i18n.One:
+					b.WriteString(i18n.FormatNumber("de", float64(count)))
+					b.WriteString(" Eintrag verschoben")
+				default:
+					b.WriteString(i18n.FormatNumber("de", float64(count)))
+					b.WriteString(" Einträge verschoben")
+				}
+			}
+			return b.String()
+		case "es":
+			var b strings.Builder
+			switch {
+			case count == 0:
+				b.WriteString("No se movió nada")
+			default:
+				switch i18n.Cardinal("es", float64(count)) {
+				case i18n.One:
+					b.WriteString(i18n.FormatNumber("es", float64(count)))
+					b.WriteString(" elemento movido")
+				default:
+					b.WriteString(i18n.FormatNumber("es", float64(count)))
+					b.WriteString(" elementos movidos")
+				}
+			}
+			return b.String()
+		case "fr":
+			var b strings.Builder
+			switch {
+			case count == 0:
+				b.WriteString("Aucun élément déplacé")
+			default:
+				switch i18n.Cardinal("fr", float64(count)) {
+				case i18n.One:
+					b.WriteString(i18n.FormatNumber("fr", float64(count)))
+					b.WriteString(" élément déplacé")
+				default:
+					b.WriteString(i18n.FormatNumber("fr", float64(count)))
+					b.WriteString(" éléments déplacés")
+				}
+			}
+			return b.String()
+		case "ja":
+			var b strings.Builder
+			switch {
+			case count == 0:
+				b.WriteString("移動したアイテムはありません")
+			default:
+				switch i18n.Cardinal("ja", float64(count)) {
+				default:
+					b.WriteString(i18n.FormatNumber("ja", float64(count)))
+					b.WriteString(" 件を移動しました")
+				}
+			}
+			return b.String()
+		case "ko":
+			var b strings.Builder
+			switch {
+			case count == 0:
+				b.WriteString("이동된 항목 없음")
+			default:
+				switch i18n.Cardinal("ko", float64(count)) {
+				default:
+					b.WriteString(i18n.FormatNumber("ko", float64(count)))
+					b.WriteString("개 항목 이동됨")
+				}
+			}
+			return b.String()
+		case "pt-BR":
+			var b strings.Builder
+			switch {
+			case count == 0:
+				b.WriteString("Nada movido")
+			default:
+				switch i18n.Cardinal("pt-BR", float64(count)) {
+				case i18n.One:
+					b.WriteString(i18n.FormatNumber("pt-BR", float64(count)))
+					b.WriteString(" item movido")
+				default:
+					b.WriteString(i18n.FormatNumber("pt-BR", float64(count)))
+					b.WriteString(" itens movidos")
+				}
+			}
+			return b.String()
+		case "ru":
+			var b strings.Builder
+			switch {
+			case count == 0:
+				b.WriteString("Ничего не перемещено")
+			default:
+				switch i18n.Cardinal("ru", float64(count)) {
+				case i18n.One:
+					b.WriteString(i18n.FormatNumber("ru", float64(count)))
+					b.WriteString(" элемент перемещён")
+				case i18n.Few:
+					b.WriteString(i18n.FormatNumber("ru", float64(count)))
+					b.WriteString(" элемента перемещены")
+				case i18n.Many:
+					b.WriteString(i18n.FormatNumber("ru", float64(count)))
+					b.WriteString(" элементов перемещены")
+				default:
+					b.WriteString(i18n.FormatNumber("ru", float64(count)))
+					b.WriteString(" элемента перемещены")
+				}
+			}
+			return b.String()
+		case "zh-Hans":
+			var b strings.Builder
+			switch {
+			case count == 0:
+				b.WriteString("未移动任何项目")
+			default:
+				switch i18n.Cardinal("zh-Hans", float64(count)) {
+				default:
+					b.WriteString("已移动 ")
+					b.WriteString(i18n.FormatNumber("zh-Hans", float64(count)))
+					b.WriteString(" 个项目")
+				}
+			}
+			return b.String()
+		case "zh-Hant":
+			var b strings.Builder
+			switch {
+			case count == 0:
+				b.WriteString("未移動任何項目")
+			default:
+				switch i18n.Cardinal("zh-Hant", float64(count)) {
+				default:
+					b.WriteString("已移動 ")
+					b.WriteString(i18n.FormatNumber("zh-Hant", float64(count)))
+					b.WriteString(" 個項目")
 				}
 			}
 			return b.String()

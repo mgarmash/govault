@@ -711,6 +711,47 @@ errorWrongBackupPassword: 備份密碼不正確。
 errorBackupTooLarge: 加密備份體積過大，GoVault 將無法重新匯入。
 errorServer: "伺服器回傳錯誤（{status}）：{detail}"
 errorWithDetail: "發生錯誤：{detail}"
+sortItems: 排序項目
+sortNameAscending: 名稱 A–Z
+sortNameDescending: 名稱 Z–A
+sortModifiedNewest: 修改時間，最新優先
+sortModifiedOldest: 修改時間，最舊優先
+server: 伺服器
+selfHosted: 自架伺服器
+serverBitwardenUS: bitwarden.com (US)
+serverBitwardenEU: bitwarden.eu (EU)
+appearance: 外觀
+appearanceDetail: 以淺色或深色顯示 GoVault，或跟隨系統設定。
+appearanceSystem: 系統
+appearanceLight: 淺色
+appearanceDark: 深色
+hasPasskey: 包含密碼金鑰
+duplicateLogins: 重複登入
+duplicateGroup: "{site} · {username} · {count, plural, other {# 個項目}}"
+duplicateGroupNoUsername: "{site} · 無使用者名稱 · {count, plural, other {# 個項目}}"
+itemsSelected: "{count, plural, other {已選取 # 個項目}}"
+moveToFolderMenu: 移至資料夾…
+moveToTrashMenu: 移到垃圾桶…
+bulkTrashTitle: "{count, plural, other {要將 # 個項目移到垃圾桶嗎？}}"
+bulkTrashMessage: 在永久刪除前，您可以隨時從垃圾桶還原項目。
+bulkDeleteTitle: "{count, plural, other {要永久刪除 # 個項目嗎？}}"
+bulkDeleteMessage: 此動作無法復原，這些項目將從所有裝置上移除。
+bulkMoveTitle: "{count, plural, other {將 # 個項目移至資料夾}}"
+move: 移動
+bulkAlreadyInFolder: "{count, plural, other {# 個項目已在此資料夾中，將保持不變。}}"
+bulkSkipped: "{count, plural, other {將略過 # 個所選項目：您無法變更它們。}}"
+selectionOffline: 離線。請重新連線以變更這些項目。
+bulkItemFailed: "{name}（{reason}）"
+bulkDeleteKept: "{count, plural, other {# 個項目已在其他位置變更並予以保留}}"
+bulkNotDone: "{count, plural, other {# 個無法變更：{details}。}}"
+bulkTrashedCount: "{count, plural, =0 {未將任何項目移到垃圾桶} other {已將 # 個項目移到垃圾桶}}"
+bulkRestoredCount: "{count, plural, =0 {未還原任何項目} other {已還原 # 個項目}}"
+bulkArchivedCount: "{count, plural, =0 {未封存任何項目} other {已封存 # 個項目}}"
+bulkUnarchivedCount: "{count, plural, =0 {未取消封存任何項目} other {已取消封存 # 個項目}}"
+bulkDeletedCount: "{count, plural, =0 {未刪除任何項目} other {已永久刪除 # 個項目}}"
+bulkMovedCount: "{count, plural, =0 {未移動任何項目} other {已移動 # 個項目}}"
+vaultItems: 密碼庫項目
+healthDuplicates: 重複項目
 
 # NSGo catalogs
 

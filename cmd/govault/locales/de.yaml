@@ -711,6 +711,47 @@ errorWrongBackupPassword: Das Backup-Passwort ist falsch.
 errorBackupTooLarge: Das verschlüsselte Backup wäre zu groß für den erneuten Import in GoVault.
 errorServer: "Der Server meldete einen Fehler ({status}): {detail}"
 errorWithDetail: "Etwas ist schiefgelaufen: {detail}"
+sortItems: Einträge sortieren
+sortNameAscending: Name A–Z
+sortNameDescending: Name Z–A
+sortModifiedNewest: Geändert, neueste zuerst
+sortModifiedOldest: Geändert, älteste zuerst
+server: Server
+selfHosted: Selbst gehostet
+serverBitwardenUS: bitwarden.com (US)
+serverBitwardenEU: bitwarden.eu (EU)
+appearance: Erscheinungsbild
+appearanceDetail: GoVault hell oder dunkel anzeigen oder dem System folgen.
+appearanceSystem: System
+appearanceLight: Hell
+appearanceDark: Dunkel
+hasPasskey: Hat einen Passkey
+duplicateLogins: Doppelte Zugangsdaten
+duplicateGroup: "{site} · {username} · {count, plural, one {# Eintrag} other {# Einträge}}"
+duplicateGroupNoUsername: "{site} · Kein Nutzername · {count, plural, one {# Eintrag} other {# Einträge}}"
+itemsSelected: "{count, plural, one {# Eintrag ausgewählt} other {# Einträge ausgewählt}}"
+moveToFolderMenu: In Ordner…
+moveToTrashMenu: In Papierkorb…
+bulkTrashTitle: "{count, plural, one {# Eintrag in den Papierkorb verschieben?} other {# Einträge in den Papierkorb verschieben?}}"
+bulkTrashMessage: Du kannst Einträge aus dem Papierkorb wiederherstellen, bis sie dauerhaft gelöscht werden.
+bulkDeleteTitle: "{count, plural, one {# Eintrag dauerhaft löschen?} other {# Einträge dauerhaft löschen?}}"
+bulkDeleteMessage: Dies kann nicht rückgängig gemacht werden. Die Einträge werden von allen Geräten entfernt.
+bulkMoveTitle: "{count, plural, one {# Eintrag in einen Ordner verschieben} other {# Einträge in einen Ordner verschieben}}"
+move: Verschieben
+bulkAlreadyInFolder: "{count, plural, one {# Eintrag ist bereits in diesem Ordner und bleibt unverändert.} other {# Einträge sind bereits in diesem Ordner und bleiben unverändert.}}"
+bulkSkipped: "{count, plural, one {# ausgewählter Eintrag wird übersprungen: Du kannst ihn nicht ändern.} other {# ausgewählte Einträge werden übersprungen: Du kannst sie nicht ändern.}}"
+selectionOffline: Offline. Verbinde dich erneut, um diese Einträge zu ändern.
+bulkItemFailed: "{name} ({reason})"
+bulkDeleteKept: "{count, plural, one {# Eintrag wurde anderswo geändert und behalten} other {# Einträge wurden anderswo geändert und behalten}}"
+bulkNotDone: "{count, plural, one {# konnte nicht geändert werden: {details}.} other {# konnten nicht geändert werden: {details}.}}"
+bulkTrashedCount: "{count, plural, =0 {Nichts in den Papierkorb verschoben} one {# Eintrag in den Papierkorb verschoben} other {# Einträge in den Papierkorb verschoben}}"
+bulkRestoredCount: "{count, plural, =0 {Nichts wiederhergestellt} one {# Eintrag wiederhergestellt} other {# Einträge wiederhergestellt}}"
+bulkArchivedCount: "{count, plural, =0 {Nichts archiviert} one {# Eintrag archiviert} other {# Einträge archiviert}}"
+bulkUnarchivedCount: "{count, plural, =0 {Nichts dearchiviert} one {# Eintrag dearchiviert} other {# Einträge dearchiviert}}"
+bulkDeletedCount: "{count, plural, =0 {Nichts gelöscht} one {# Eintrag dauerhaft gelöscht} other {# Einträge dauerhaft gelöscht}}"
+bulkMovedCount: "{count, plural, =0 {Nichts verschoben} one {# Eintrag verschoben} other {# Einträge verschoben}}"
+vaultItems: Tresoreinträge
+healthDuplicates: Duplikate
 
 # NSGo catalogs
 

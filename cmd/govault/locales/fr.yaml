@@ -711,6 +711,47 @@ errorWrongBackupPassword: Le mot de passe de sauvegarde est incorrect.
 errorBackupTooLarge: La sauvegarde chiffrée serait trop volumineuse pour être réimportée dans GoVault.
 errorServer: "Le serveur a renvoyé une erreur ({status}) : {detail}"
 errorWithDetail: "Une erreur est survenue : {detail}"
+sortItems: Trier les éléments
+sortNameAscending: Nom A–Z
+sortNameDescending: Nom Z–A
+sortModifiedNewest: Modifié, plus récents
+sortModifiedOldest: Modifié, plus anciens
+server: Serveur
+selfHosted: Auto-hébergé
+serverBitwardenUS: bitwarden.com (US)
+serverBitwardenEU: bitwarden.eu (EU)
+appearance: Apparence
+appearanceDetail: Afficher GoVault en clair ou en sombre, ou suivre le système.
+appearanceSystem: Système
+appearanceLight: Clair
+appearanceDark: Sombre
+hasPasskey: Contient une clé d’accès
+duplicateLogins: Identifiants en double
+duplicateGroup: "{site} · {username} · {count, plural, one {# élément} other {# éléments}}"
+duplicateGroupNoUsername: "{site} · Sans nom d’utilisateur · {count, plural, one {# élément} other {# éléments}}"
+itemsSelected: "{count, plural, one {# élément sélectionné} other {# éléments sélectionnés}}"
+moveToFolderMenu: Vers un dossier…
+moveToTrashMenu: Mettre à la corbeille…
+bulkTrashTitle: "{count, plural, one {Mettre # élément à la corbeille ?} other {Mettre # éléments à la corbeille ?}}"
+bulkTrashMessage: Vous pouvez restaurer les éléments de la corbeille tant qu’ils ne sont pas supprimés définitivement.
+bulkDeleteTitle: "{count, plural, one {Supprimer définitivement # élément ?} other {Supprimer définitivement # éléments ?}}"
+bulkDeleteMessage: Cette action est irréversible. Les éléments sont supprimés de tous vos appareils.
+bulkMoveTitle: "{count, plural, one {Déplacer # élément vers un dossier} other {Déplacer # éléments vers un dossier}}"
+move: Déplacer
+bulkAlreadyInFolder: "{count, plural, one {# élément est déjà dans ce dossier et reste inchangé.} other {# éléments sont déjà dans ce dossier et restent inchangés.}}"
+bulkSkipped: "{count, plural, one {# élément sélectionné sera ignoré : vous ne pouvez pas le modifier.} other {# éléments sélectionnés seront ignorés : vous ne pouvez pas les modifier.}}"
+selectionOffline: Hors ligne. Reconnectez-vous pour modifier ces éléments.
+bulkItemFailed: "{name} ({reason})"
+bulkDeleteKept: "{count, plural, one {# élément modifié ailleurs a été conservé} other {# éléments modifiés ailleurs ont été conservés}}"
+bulkNotDone: "{count, plural, one {# n’a pas pu être modifié : {details}.} other {# n’ont pas pu être modifiés : {details}.}}"
+bulkTrashedCount: "{count, plural, =0 {Aucun élément mis à la corbeille} one {# élément mis à la corbeille} other {# éléments mis à la corbeille}}"
+bulkRestoredCount: "{count, plural, =0 {Aucun élément restauré} one {# élément restauré} other {# éléments restaurés}}"
+bulkArchivedCount: "{count, plural, =0 {Aucun élément archivé} one {# élément archivé} other {# éléments archivés}}"
+bulkUnarchivedCount: "{count, plural, =0 {Aucun élément désarchivé} one {# élément désarchivé} other {# éléments désarchivés}}"
+bulkDeletedCount: "{count, plural, =0 {Aucun élément supprimé} one {# élément supprimé définitivement} other {# éléments supprimés définitivement}}"
+bulkMovedCount: "{count, plural, =0 {Aucun élément déplacé} one {# élément déplacé} other {# éléments déplacés}}"
+vaultItems: Éléments du coffre
+healthDuplicates: Doublons
 
 # NSGo catalogs
 

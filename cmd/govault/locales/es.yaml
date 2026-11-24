@@ -711,6 +711,47 @@ errorWrongBackupPassword: La contraseña de la copia de seguridad es incorrecta.
 errorBackupTooLarge: La copia cifrada sería demasiado grande para volver a importarla en GoVault.
 errorServer: "El servidor devolvió un error ({status}): {detail}"
 errorWithDetail: "Algo salió mal: {detail}"
+sortItems: Ordenar elementos
+sortNameAscending: Nombre A–Z
+sortNameDescending: Nombre Z–A
+sortModifiedNewest: Modificado, más recientes
+sortModifiedOldest: Modificado, más antiguos
+server: Servidor
+selfHosted: Autoalojado
+serverBitwardenUS: bitwarden.com (US)
+serverBitwardenEU: bitwarden.eu (EU)
+appearance: Aspecto
+appearanceDetail: Muestra GoVault en modo claro u oscuro, o sigue el sistema.
+appearanceSystem: Sistema
+appearanceLight: Claro
+appearanceDark: Oscuro
+hasPasskey: Tiene clave de acceso
+duplicateLogins: Entradas duplicadas
+duplicateGroup: "{site} · {username} · {count, plural, one {# elemento} other {# elementos}}"
+duplicateGroupNoUsername: "{site} · Sin usuario · {count, plural, one {# elemento} other {# elementos}}"
+itemsSelected: "{count, plural, one {# elemento seleccionado} other {# elementos seleccionados}}"
+moveToFolderMenu: Mover a carpeta…
+moveToTrashMenu: Mover a la papelera…
+bulkTrashTitle: "{count, plural, one {¿Mover # elemento a la papelera?} other {¿Mover # elementos a la papelera?}}"
+bulkTrashMessage: Puedes restaurar los elementos de la papelera hasta que los elimines permanentemente.
+bulkDeleteTitle: "{count, plural, one {¿Eliminar # elemento permanentemente?} other {¿Eliminar # elementos permanentemente?}}"
+bulkDeleteMessage: Esto no se puede deshacer. Los elementos se eliminan de todos los dispositivos.
+bulkMoveTitle: "{count, plural, one {Mover # elemento a una carpeta} other {Mover # elementos a una carpeta}}"
+move: Mover
+bulkAlreadyInFolder: "{count, plural, one {# elemento ya está en esta carpeta y no cambia.} other {# elementos ya están en esta carpeta y no cambian.}}"
+bulkSkipped: "{count, plural, one {Se omitirá # elemento seleccionado: no puedes cambiarlo.} other {Se omitirán # elementos seleccionados: no puedes cambiarlos.}}"
+selectionOffline: Sin conexión. Vuelve a conectarte para cambiar estos elementos.
+bulkItemFailed: "{name} ({reason})"
+bulkDeleteKept: "{count, plural, one {# elemento cambió en otro lugar y se conservó} other {# elementos cambiaron en otro lugar y se conservaron}}"
+bulkNotDone: "{count, plural, one {# no se pudo cambiar: {details}.} other {# no se pudieron cambiar: {details}.}}"
+bulkTrashedCount: "{count, plural, =0 {No se movió nada a la papelera} one {# elemento movido a la papelera} other {# elementos movidos a la papelera}}"
+bulkRestoredCount: "{count, plural, =0 {No se restauró nada} one {# elemento restaurado} other {# elementos restaurados}}"
+bulkArchivedCount: "{count, plural, =0 {No se archivó nada} one {# elemento archivado} other {# elementos archivados}}"
+bulkUnarchivedCount: "{count, plural, =0 {No se desarchivó nada} one {# elemento desarchivado} other {# elementos desarchivados}}"
+bulkDeletedCount: "{count, plural, =0 {No se eliminó nada} one {# elemento eliminado permanentemente} other {# elementos eliminados permanentemente}}"
+bulkMovedCount: "{count, plural, =0 {No se movió nada} one {# elemento movido} other {# elementos movidos}}"
+vaultItems: Elementos de la caja fuerte
+healthDuplicates: Duplicados
 
 # NSGo catalogs
 

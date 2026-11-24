@@ -711,3 +711,44 @@ errorWrongBackupPassword: 备份密码不正确。
 errorBackupTooLarge: 加密备份体积过大，GoVault 将无法重新导入。
 errorServer: "服务器返回错误（{status}）：{detail}"
 errorWithDetail: "出现错误：{detail}"
+sortItems: 排序项目
+sortNameAscending: 名称 A–Z
+sortNameDescending: 名称 Z–A
+sortModifiedNewest: 修改时间，最新优先
+sortModifiedOldest: 修改时间，最早优先
+server: 服务器
+selfHosted: 自托管
+serverBitwardenUS: bitwarden.com (US)
+serverBitwardenEU: bitwarden.eu (EU)
+appearance: 外观
+appearanceDetail: 以浅色或深色显示 GoVault，或跟随系统。
+appearanceSystem: 跟随系统
+appearanceLight: 浅色
+appearanceDark: 深色
+hasPasskey: 包含通行密钥
+duplicateLogins: 重复登录
+duplicateGroup: "{site} · {username} · {count, plural, other {# 个项目}}"
+duplicateGroupNoUsername: "{site} · 无用户名 · {count, plural, other {# 个项目}}"
+itemsSelected: "{count, plural, other {已选择 # 个项目}}"
+moveToFolderMenu: 移到文件夹…
+moveToTrashMenu: 移到回收站…
+bulkTrashTitle: "{count, plural, other {要将 # 个项目移到回收站吗？}}"
+bulkTrashMessage: 在永久删除前，你可以随时从回收站恢复项目。
+bulkDeleteTitle: "{count, plural, other {要永久删除 # 个项目吗？}}"
+bulkDeleteMessage: 此操作无法撤销，这些项目将从所有设备上移除。
+bulkMoveTitle: "{count, plural, other {将 # 个项目移到文件夹}}"
+move: 移动
+bulkAlreadyInFolder: "{count, plural, other {# 个项目已在此文件夹中，将保持不变。}}"
+bulkSkipped: "{count, plural, other {将跳过 # 个所选项目：你无法更改它们。}}"
+selectionOffline: 离线。请重新连接以更改这些项目。
+bulkItemFailed: "{name}（{reason}）"
+bulkDeleteKept: "{count, plural, other {# 个项目已在其他位置更改并保留}}"
+bulkNotDone: "{count, plural, other {# 个未能更改：{details}。}}"
+bulkTrashedCount: "{count, plural, =0 {未将任何项目移到回收站} other {已将 # 个项目移到回收站}}"
+bulkRestoredCount: "{count, plural, =0 {未恢复任何项目} other {已恢复 # 个项目}}"
+bulkArchivedCount: "{count, plural, =0 {未归档任何项目} other {已归档 # 个项目}}"
+bulkUnarchivedCount: "{count, plural, =0 {未取消归档任何项目} other {已取消归档 # 个项目}}"
+bulkDeletedCount: "{count, plural, =0 {未删除任何项目} other {已永久删除 # 个项目}}"
+bulkMovedCount: "{count, plural, =0 {未移动任何项目} other {已移动 # 个项目}}"
+vaultItems: 密码库项目
+healthDuplicates: 重复项
