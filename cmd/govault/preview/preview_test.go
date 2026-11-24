@@ -165,7 +165,7 @@ func TestPreviewMainWindow(t *testing.T) {
 	})
 	selectThree := func() {
 		m.SetSidebarFilter(state.SearchFilter{Category: state.FilterAll})
-		ids := []string{"c-github", "c-cloudflare", "c-figma"}
+		ids := []string{"c-github", "c-cloudflare", "c-apple"}
 		keys := make([]any, len(ids))
 		for i, id := range ids {
 			keys[i] = id
@@ -198,4 +198,36 @@ func TestPreviewMainWindow(t *testing.T) {
 	scene("22-health-en-light", core.AppearanceLight, health("en"))
 	scene("23-health-de-light", core.AppearanceLight, health("de"))
 	scene("24-health-ru-dark", core.AppearanceDark, health("ru"))
+	inLocale := func(lang string, then func()) func() {
+		return func() {
+			m.BulkDialog.Set(nil)
+			m.Scope.SetLocale(lang)
+			then()
+		}
+	}
+	scene("25-folder-picker-dark", core.AppearanceDark, inLocale("en", func() {
+		selectThree()
+		m.ChooseFolderForSelection()
+	}))
+	scene("26-trash-confirm-light", core.AppearanceLight, inLocale("en", func() {
+		selectThree()
+		m.ConfirmTrashSelection()
+	}))
+	selectTrash := func() {
+		m.BulkDialog.Set(nil)
+		for _, id := range []string{"c-linear", "c-figma"} {
+			_ = m.Core.SoftDeleteCipher(context.Background(), id)
+		}
+		m.RefreshVaultData()
+		m.SetSidebarFilter(state.SearchFilter{Category: state.FilterTrash})
+		var keys []any
+		for _, it := range m.FilteredItems.Items() {
+			keys = append(keys, it.ID)
+		}
+		m.ListSelection.Set(keys...)
+	}
+	scene("27-trash-selection-light", core.AppearanceLight, inLocale("en", selectTrash))
+	scene("28-trash-selection-dark", core.AppearanceDark, inLocale("en", selectTrash))
+	scene("29-selection-de-light", core.AppearanceLight, inLocale("de", selectThree))
+	scene("30-selection-ru-dark", core.AppearanceDark, inLocale("ru", selectThree))
 }

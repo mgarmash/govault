@@ -1647,9 +1647,6 @@ var Parameters = map[string][]string{
 	"DuplicateGroup":             {"site", "username", "count"},
 	"DuplicateGroupNoUsername":   {"site", "count"},
 	"ItemsSelected":              {"count"},
-	"RestoreCount":               {"count"},
-	"ArchiveCount":               {"count"},
-	"UnarchiveCount":             {"count"},
 	"BulkTrashTitle":             {"count"},
 	"BulkDeleteTitle":            {"count"},
 	"BulkMoveTitle":              {"count"},
@@ -1775,9 +1772,6 @@ type Translation struct {
 	DuplicateGroup             func(site string, username string, count int) string
 	DuplicateGroupNoUsername   func(site string, count int) string
 	ItemsSelected              func(count int) string
-	RestoreCount               func(count int) string
-	ArchiveCount               func(count int) string
-	UnarchiveCount             func(count int) string
 	BulkTrashTitle             func(count int) string
 	BulkDeleteTitle            func(count int) string
 	BulkMoveTitle              func(count int) string
@@ -14709,15 +14703,6 @@ func Supply(lang string, t Translation) {
 	if t.ItemsSelected != nil {
 		s.ItemsSelected = t.ItemsSelected
 	}
-	if t.RestoreCount != nil {
-		s.RestoreCount = t.RestoreCount
-	}
-	if t.ArchiveCount != nil {
-		s.ArchiveCount = t.ArchiveCount
-	}
-	if t.UnarchiveCount != nil {
-		s.UnarchiveCount = t.UnarchiveCount
-	}
 	if t.BulkTrashTitle != nil {
 		s.BulkTrashTitle = t.BulkTrashTitle
 	}
@@ -26825,102 +26810,6 @@ func (msgs Messages) ItemsSelected(count int) string {
 			default:
 				b.WriteString(msgs.arg(i18n.FormatNumber("en", float64(count))))
 				b.WriteString(" items selected")
-			}
-			return b.String()
-		}
-	}
-}
-
-// RestoreCount says "Restore {count, plural, one {# item} other {# items}}"
-// in the language the app shows under cx.
-//
-// Button and menu item that restores the selected items from Trash; count is how many it applies to.
-func RestoreCount(cx *core.Scope, count int) string { return For(cx).RestoreCount(count) }
-
-// RestoreCount is the package's RestoreCount in the language of msgs.
-func (msgs Messages) RestoreCount(count int) string {
-	if i18n.IsPseudo(msgs.lang) {
-		return i18n.Pseudo(msgs.lang, Messages{lang: Source, mark: true}.RestoreCount(count))
-	}
-	for lang := msgs.lang; ; lang = i18n.Parent(lang) {
-		if f := supplied[lang].RestoreCount; f != nil {
-			return f(count)
-		}
-		switch lang {
-		case "", "en":
-			var b strings.Builder
-			b.WriteString("Restore ")
-			switch i18n.Cardinal("en", float64(count)) {
-			case i18n.One:
-				b.WriteString(msgs.arg(i18n.FormatNumber("en", float64(count))))
-				b.WriteString(" item")
-			default:
-				b.WriteString(msgs.arg(i18n.FormatNumber("en", float64(count))))
-				b.WriteString(" items")
-			}
-			return b.String()
-		}
-	}
-}
-
-// ArchiveCount says "Archive {count, plural, one {# item} other {# items}}"
-// in the language the app shows under cx.
-//
-// Button and menu item that moves the selected items to the Archive; count is how many it applies to.
-func ArchiveCount(cx *core.Scope, count int) string { return For(cx).ArchiveCount(count) }
-
-// ArchiveCount is the package's ArchiveCount in the language of msgs.
-func (msgs Messages) ArchiveCount(count int) string {
-	if i18n.IsPseudo(msgs.lang) {
-		return i18n.Pseudo(msgs.lang, Messages{lang: Source, mark: true}.ArchiveCount(count))
-	}
-	for lang := msgs.lang; ; lang = i18n.Parent(lang) {
-		if f := supplied[lang].ArchiveCount; f != nil {
-			return f(count)
-		}
-		switch lang {
-		case "", "en":
-			var b strings.Builder
-			b.WriteString("Archive ")
-			switch i18n.Cardinal("en", float64(count)) {
-			case i18n.One:
-				b.WriteString(msgs.arg(i18n.FormatNumber("en", float64(count))))
-				b.WriteString(" item")
-			default:
-				b.WriteString(msgs.arg(i18n.FormatNumber("en", float64(count))))
-				b.WriteString(" items")
-			}
-			return b.String()
-		}
-	}
-}
-
-// UnarchiveCount says "Unarchive {count, plural, one {# item} other {# items}}"
-// in the language the app shows under cx.
-//
-// Button and menu item that moves the selected items out of the Archive; count is how many it applies to.
-func UnarchiveCount(cx *core.Scope, count int) string { return For(cx).UnarchiveCount(count) }
-
-// UnarchiveCount is the package's UnarchiveCount in the language of msgs.
-func (msgs Messages) UnarchiveCount(count int) string {
-	if i18n.IsPseudo(msgs.lang) {
-		return i18n.Pseudo(msgs.lang, Messages{lang: Source, mark: true}.UnarchiveCount(count))
-	}
-	for lang := msgs.lang; ; lang = i18n.Parent(lang) {
-		if f := supplied[lang].UnarchiveCount; f != nil {
-			return f(count)
-		}
-		switch lang {
-		case "", "en":
-			var b strings.Builder
-			b.WriteString("Unarchive ")
-			switch i18n.Cardinal("en", float64(count)) {
-			case i18n.One:
-				b.WriteString(msgs.arg(i18n.FormatNumber("en", float64(count))))
-				b.WriteString(" item")
-			default:
-				b.WriteString(msgs.arg(i18n.FormatNumber("en", float64(count))))
-				b.WriteString(" items")
 			}
 			return b.String()
 		}

@@ -1167,15 +1167,6 @@ duplicateGroupNoUsername:
 itemsSelected:
   message: "{count, plural, one {# item selected} other {# items selected}}"
   description: Shown in the detail pane, and announced, when several vault items are selected.
-restoreCount:
-  message: "Restore {count, plural, one {# item} other {# items}}"
-  description: Button and menu item that restores the selected items from Trash; count is how many it applies to.
-archiveCount:
-  message: "Archive {count, plural, one {# item} other {# items}}"
-  description: Button and menu item that moves the selected items to the Archive; count is how many it applies to.
-unarchiveCount:
-  message: "Unarchive {count, plural, one {# item} other {# items}}"
-  description: Button and menu item that moves the selected items out of the Archive; count is how many it applies to.
 moveToFolderMenu: Move to Folder…
 moveToTrashMenu: Move to Trash…
 bulkTrashTitle:

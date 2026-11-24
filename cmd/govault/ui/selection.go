@@ -429,14 +429,14 @@ func selectionMenu(cx *core.Scope, m *AppModel, at core.Point) {
 	var items []desktop.MenuItem
 	if b.inTrash {
 		items = append(items,
-			desktop.MenuItem{Label: locales.RestoreCount(cx, len(b.restorable)), Disabled: off || len(b.restorable) == 0, OnSelect: m.RestoreSelection},
+			desktop.MenuItem{Label: locales.Restore(cx), Disabled: off || len(b.restorable) == 0, OnSelect: m.RestoreSelection},
 			desktop.MenuItem{Label: locales.DeletePermanentlyMenu(cx), Disabled: off || len(b.deletable) == 0, OnSelect: m.ConfirmDeleteSelection},
 		)
 	} else {
 		items = append(items,
 			desktop.MenuItem{Label: locales.MoveToFolderMenu(cx), Disabled: off || len(b.movable) == 0, OnSelect: m.ChooseFolderForSelection},
-			desktop.MenuItem{Label: locales.ArchiveCount(cx, len(b.archivable)), Disabled: off || len(b.archivable) == 0, OnSelect: func() { m.ArchiveSelection(cx, true) }},
-			desktop.MenuItem{Label: locales.UnarchiveCount(cx, len(b.unarchivable)), Disabled: off || len(b.unarchivable) == 0, OnSelect: func() { m.ArchiveSelection(cx, false) }},
+			desktop.MenuItem{Label: locales.ArchiveAction(cx), Disabled: off || len(b.archivable) == 0, OnSelect: func() { m.ArchiveSelection(cx, true) }},
+			desktop.MenuItem{Label: locales.UnarchiveAction(cx), Disabled: off || len(b.unarchivable) == 0, OnSelect: func() { m.ArchiveSelection(cx, false) }},
 			desktop.MenuItem{Separator: true},
 			desktop.MenuItem{Label: locales.MoveToTrashMenu(cx), Disabled: off || len(b.trashable) == 0, OnSelect: m.ConfirmTrashSelection},
 		)
@@ -445,7 +445,8 @@ func selectionMenu(cx *core.Scope, m *AppModel, at core.Point) {
 }
 
 // SelectionPaneView replaces the detail with the count of selected items
-// and what can be done to them.
+// and what can be done to them: one column of equal buttons, the
+// destructive action last.
 func SelectionPaneView(cx *core.Scope, m *AppModel) core.Node {
 	return core.Dynamic(func(cx *core.Scope) core.Node {
 		b := m.bulkSelection()
@@ -453,6 +454,7 @@ func SelectionPaneView(cx *core.Scope, m *AppModel) core.Node {
 		button := func(testID, text string, icon func() *core.SVG, variant ui.ButtonVariant, n int, press func()) core.Node {
 			return ui.Button{
 				TestID: testID, Text: text, Icon: icon, Variant: variant,
+				Style:    core.Style{Width: core.Pt(220)},
 				Disabled: func() bool { return off() || n == 0 },
 				OnPress:  press,
 			}
@@ -460,7 +462,7 @@ func SelectionPaneView(cx *core.Scope, m *AppModel) core.Node {
 		var actions []core.Node
 		if b.inTrash {
 			actions = []core.Node{
-				button("selection-restore", locales.RestoreCount(cx, len(b.restorable)), lucide.Undo2, ui.ButtonSecondary, len(b.restorable), m.RestoreSelection),
+				button("selection-restore", locales.Restore(cx), lucide.Undo2, ui.ButtonSecondary, len(b.restorable), m.RestoreSelection),
 				button("selection-delete", locales.DeletePermanentlyMenu(cx), lucide.Trash, ui.ButtonDanger, len(b.deletable), m.ConfirmDeleteSelection),
 			}
 		} else {
@@ -468,10 +470,10 @@ func SelectionPaneView(cx *core.Scope, m *AppModel) core.Node {
 				button("selection-move", locales.MoveToFolderMenu(cx), lucide.FolderInput, ui.ButtonSecondary, len(b.movable), m.ChooseFolderForSelection),
 			}
 			if len(b.unarchivable) > 0 {
-				actions = append(actions, button("selection-unarchive", locales.UnarchiveCount(cx, len(b.unarchivable)), lucide.ArchiveRestore, ui.ButtonSecondary, len(b.unarchivable), func() { m.ArchiveSelection(cx, false) }))
+				actions = append(actions, button("selection-unarchive", locales.UnarchiveAction(cx), lucide.ArchiveRestore, ui.ButtonSecondary, len(b.unarchivable), func() { m.ArchiveSelection(cx, false) }))
 			}
 			if len(b.unarchivable) < len(b.all) {
-				actions = append(actions, button("selection-archive", locales.ArchiveCount(cx, len(b.archivable)), lucide.Archive, ui.ButtonSecondary, len(b.archivable), func() { m.ArchiveSelection(cx, true) }))
+				actions = append(actions, button("selection-archive", locales.ArchiveAction(cx), lucide.Archive, ui.ButtonSecondary, len(b.archivable), func() { m.ArchiveSelection(cx, true) }))
 			}
 			actions = append(actions, button("selection-trash", locales.MoveToTrashMenu(cx), lucide.Trash, ui.ButtonSecondary, len(b.trashable), m.ConfirmTrashSelection))
 		}
@@ -484,10 +486,7 @@ func SelectionPaneView(cx *core.Scope, m *AppModel) core.Node {
 					Children: []core.Node{icon(lucide.ListChecks(), 26, "text-gv-accent")},
 				},
 				core.Text{TestID: "selection-count", Class: "text-[17px] font-semibold text-gv-fg", Content: locales.ItemsSelected(cx, len(b.all))},
-				core.View{
-					Class:    "flex-row flex-wrap justify-center gap-2 max-w-[440px]",
-					Children: actions,
-				},
+				core.View{Class: "items-center gap-2 pt-1", Children: actions},
 				core.Show{
 					When: func() bool { return m.SyncState.Get() == SyncOffline },
 					Then: func(cx *core.Scope) core.Node {
@@ -500,68 +499,83 @@ func SelectionPaneView(cx *core.Scope, m *AppModel) core.Node {
 }
 
 // bulkDialog confirms moving the selection to Trash or deleting it for
-// good, or chooses the folder to move it to.
+// good, or chooses the folder to move it to. Like the other dialogs it is
+// always mounted and opens while BulkDialog is set.
 func bulkDialog(cx *core.Scope, m *AppModel) core.Node {
-	return core.Dynamic(func(cx *core.Scope) core.Node {
-		d := m.BulkDialog.Get()
-		if d == nil {
-			return nil
+	text := func(kind BulkKind, pick func(n int) string) string {
+		if d := m.BulkDialog.Get(); d != nil && d.Kind == kind {
+			return pick(len(d.Items))
 		}
-		n := len(d.Items)
-		var title, description, confirm string
-		variant := ui.ButtonPrimary
-		var body []core.Node
-		switch d.Kind {
-		case BulkTrash:
-			title, description, confirm = locales.BulkTrashTitle(cx, n), locales.BulkTrashMessage(cx), locales.MoveToTrash(cx)
-		case BulkDelete:
-			title, description, confirm = locales.BulkDeleteTitle(cx, n), locales.BulkDeleteMessage(cx), locales.DeletePermanently(cx)
-			variant = ui.ButtonDanger
-		case BulkMove:
-			title, confirm = locales.BulkMoveTitle(cx, n), locales.Move(cx)
-			opts := []ui.Option[string]{{Value: "", Label: locales.NoFolder(cx)}}
-			for _, f := range m.Folders.Get() {
-				opts = append(opts, ui.Option[string]{Value: f.ID, Label: f.Name})
+		return ""
+	}
+	return ui.Dialog{
+		TestID: "bulk-dialog",
+		Open:   func() bool { return m.BulkDialog.Get() != nil },
+		OnOpenChange: func(open bool, _ base.Reason) {
+			if !open {
+				m.BulkDialog.Set(nil)
 			}
-			body = append(body, ui.Select[string]{
-				TestID:   "bulk-folder",
-				Label:    locales.Folder(cx),
-				Style:    core.Style{Width: core.Pct(100)},
-				Options:  opts,
-				Value:    m.BulkFolder.Get,
-				OnChange: m.BulkFolder.Set,
-			}, core.Dynamic(func(cx *core.Scope) core.Node {
-				already := 0
-				for _, c := range d.Items {
-					if inFolder(c, m.BulkFolder.Get()) {
-						already++
+		},
+		OnConfirm: m.ConfirmBulkDialog,
+		TitleFunc: func() string {
+			return text(BulkTrash, func(n int) string { return locales.BulkTrashTitle(cx, n) }) +
+				text(BulkDelete, func(n int) string { return locales.BulkDeleteTitle(cx, n) }) +
+				text(BulkMove, func(n int) string { return locales.BulkMoveTitle(cx, n) })
+		},
+		DescriptionFunc: func() string {
+			return text(BulkTrash, func(int) string { return locales.BulkTrashMessage(cx) }) +
+				text(BulkDelete, func(int) string { return locales.BulkDeleteMessage(cx) })
+		},
+		Children: []core.Node{core.Dynamic(func(cx *core.Scope) core.Node {
+			d := m.BulkDialog.Get()
+			if d == nil {
+				return nil
+			}
+			var body []core.Node
+			if d.Kind == BulkMove {
+				opts := []ui.Option[string]{{Value: "", Label: locales.NoFolder(cx)}}
+				for _, f := range m.Folders.Get() {
+					opts = append(opts, ui.Option[string]{Value: f.ID, Label: f.Name})
+				}
+				body = append(body, ui.Select[string]{
+					TestID:   "bulk-folder",
+					Label:    locales.Folder(cx),
+					Style:    core.Style{Width: core.Pct(100)},
+					Options:  opts,
+					Value:    m.BulkFolder.Get,
+					OnChange: m.BulkFolder.Set,
+				}, core.Dynamic(func(cx *core.Scope) core.Node {
+					already := 0
+					for _, c := range d.Items {
+						if inFolder(c, m.BulkFolder.Get()) {
+							already++
+						}
 					}
+					if already == 0 {
+						return nil
+					}
+					return core.Text{TestID: "bulk-unchanged", Class: "text-[12px] text-gv-fg2", Content: locales.BulkAlreadyInFolder(cx, already)}
+				}))
+			}
+			if d.Skipped > 0 {
+				body = append(body, core.Text{TestID: "bulk-skipped", Class: "text-[12px] text-gv-fg2", Content: locales.BulkSkipped(cx, d.Skipped)})
+			}
+			return core.View{Class: "gap-2", Children: body}
+		})},
+		Footer: []core.Node{
+			ui.Button{TestID: "bulk-cancel", Text: locales.Cancel(cx), Variant: ui.ButtonSecondary, OnPress: func() { m.BulkDialog.Set(nil) }},
+			core.Dynamic(func(cx *core.Scope) core.Node {
+				d := m.BulkDialog.Get()
+				confirm, variant := locales.Move(cx), ui.ButtonPrimary
+				switch {
+				case d == nil:
+				case d.Kind == BulkTrash:
+					confirm = locales.MoveToTrash(cx)
+				case d.Kind == BulkDelete:
+					confirm, variant = locales.DeletePermanently(cx), ui.ButtonDanger
 				}
-				if already == 0 {
-					return nil
-				}
-				return core.Text{TestID: "bulk-unchanged", Class: "text-[12px] text-gv-fg2", Content: locales.BulkAlreadyInFolder(cx, already)}
-			}))
-		}
-		if d.Skipped > 0 {
-			body = append(body, core.Text{TestID: "bulk-skipped", Class: "text-[12px] text-gv-fg2", Content: locales.BulkSkipped(cx, d.Skipped)})
-		}
-		return ui.Dialog{
-			TestID: "bulk-dialog",
-			Open:   func() bool { return m.BulkDialog.Get() != nil },
-			OnOpenChange: func(open bool, _ base.Reason) {
-				if !open {
-					m.BulkDialog.Set(nil)
-				}
-			},
-			OnConfirm:   m.ConfirmBulkDialog,
-			Title:       title,
-			Description: description,
-			Children:    body,
-			Footer: []core.Node{
-				ui.Button{TestID: "bulk-cancel", Text: locales.Cancel(cx), Variant: ui.ButtonSecondary, OnPress: func() { m.BulkDialog.Set(nil) }},
-				ui.Button{TestID: "bulk-confirm", Text: confirm, Variant: variant, OnPress: m.ConfirmBulkDialog},
-			},
-		}
-	})
+				return ui.Button{TestID: "bulk-confirm", Text: confirm, Variant: variant, OnPress: m.ConfirmBulkDialog}
+			}),
+		},
+	}
 }
