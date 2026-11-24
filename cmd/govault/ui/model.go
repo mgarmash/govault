@@ -443,6 +443,8 @@ type AppModel struct {
 	FilteredItems *core.Collection[string, state.CipherSummary]
 	SelectedID    *core.Signal[string]
 	// ListSelection is the items chosen in the list (selection.go).
+	// LoginPreset is the server choice on the sign-in screen (login.go).
+	LoginPreset   *core.Signal[ServerPreset]
 	ListSelection *base.Selection
 	// listRef is the list pane, whose keyboard focus Delete needs.
 	listRef      core.Ref
@@ -680,6 +682,7 @@ func NewAppModel(app *core.Scope, coreSvc state.VaultService, hooks PlatformHook
 		vaultRev:            core.NewSignal(app, 0),
 		Toaster:             ui.NewToaster(app),
 	}
+	m.LoginPreset = core.NewSignal(app, PresetSelfHosted)
 	m.ListSelection = base.NewSelection(app, true)
 	m.BulkBusy = core.NewSignal(app, false)
 	m.BulkDialog = core.NewSignal[*BulkDialog](app, nil)

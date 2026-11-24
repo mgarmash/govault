@@ -25,6 +25,10 @@ func LoginView(cx *core.Scope, m *AppModel) core.Node {
 }
 
 func signInView(cx *core.Scope, m *AppModel) core.Node {
+	// The server choice starts from the saved server and then changes only
+	// when the user picks one: typing a URL that happens to read as a
+	// cloud server stays self-hosted.
+	m.LoginPreset.Set(ServerPresetOf(m.LoginServer.GetUntracked()))
 	return authScreen("login-screen", []core.Node{
 		core.View{
 			Class: "items-center gap-2.5 pb-1",
@@ -42,7 +46,7 @@ func signInView(cx *core.Scope, m *AppModel) core.Node {
 			Children: []core.Node{
 				serverPresets(cx, m),
 				core.Show{
-					When: func() bool { return ServerPresetOf(m.LoginServer.Get()) == PresetSelfHosted },
+					When: func() bool { return m.LoginPreset.Get() == PresetSelfHosted },
 					Then: func(cx *core.Scope) core.Node {
 						return formField(locales.ServerURL(cx), authInput(base.Input{
 							TestID:        "login-server",
@@ -148,6 +152,7 @@ func (m *AppModel) serverLocked() bool {
 // SetServerPreset signs in to a cloud preset's server, or clears the
 // server for a self-hosted one, unless the server is that preset already.
 func (m *AppModel) SetServerPreset(p ServerPreset) {
+	m.LoginPreset.Set(p)
 	if ServerPresetOf(m.LoginServer.Get()) != p {
 		m.LoginServer.Set(presetURLs[p])
 	}
@@ -165,7 +170,7 @@ func serverPresets(cx *core.Scope, m *AppModel) core.Node {
 			{Value: PresetEU, Label: locales.ServerBitwardenEU(cx)},
 			{Value: PresetSelfHosted, Label: locales.SelfHosted(cx)},
 		},
-		Value:    func() ServerPreset { return ServerPresetOf(m.LoginServer.Get()) },
+		Value:    m.LoginPreset.Get,
 		OnChange: m.SetServerPreset,
 		Disabled: m.serverLocked,
 	})

@@ -48,3 +48,24 @@ func TestSignInServerPresets(t *testing.T) {
 		t.Fatalf("self-hosted server = %q", got)
 	}
 }
+
+// Typing a self-hosted URL that passes through a cloud address keeps the
+// URL field: only choosing a preset changes it.
+func TestTypingASelfHostedURLStaysSelfHosted(t *testing.T) {
+	svc := newMockVaultService(state.StatusLoggedOut)
+	var m *AppModel
+	app := nsgotest.Start(t, func(cx *core.Scope) core.Node {
+		m = NewAppModel(cx, svc, PlatformHooks{})
+		m.MainWinVisible.Set(true)
+		return MainWindowView(cx, m)
+	}, nsgotest.Size(1100, 900))
+	app.Post(func() { m.SetServerPreset(PresetSelfHosted) })
+	app.WaitFor("id:login-server", 2*time.Second)
+	for _, typed := range []string{"https://bitwarden.co", "https://bitwarden.com", "https://bitwarden.company.test"} {
+		app.Post(func() { m.LoginServer.Set(typed) })
+		app.Settle()
+		if !app.Exists("id:login-server") || m.LoginPreset.Get() != PresetSelfHosted {
+			t.Fatalf("after typing %q the server choice is %v", typed, m.LoginPreset.Get())
+		}
+	}
+}
