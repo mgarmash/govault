@@ -1129,16 +1129,16 @@ sortModifiedOldest:
   description: Orders the vault list by when each item last changed, the oldest first.
 server:
   message: Server
-  description: Label above the choice of server on the sign-in screen (bitwarden.com, bitwarden.eu or self-hosted).
+  description: Label of the choice of server on the sign-in screen (bitwarden.com, bitwarden.eu or self-hosted).
 selfHosted:
   message: Self-hosted
   description: Sign-in server choice for a server you or your organization runs, such as Vaultwarden; shows a server URL field.
 serverBitwardenUS:
-  message: bitwarden.com
-  description: Sign-in server choice for Bitwarden's US cloud. Keep the domain name.
+  message: bitwarden.com (US)
+  description: Sign-in server choice for Bitwarden's US cloud. Keep the domain name; US is the region.
 serverBitwardenEU:
-  message: bitwarden.eu
-  description: Sign-in server choice for Bitwarden's EU cloud. Keep the domain name.
+  message: bitwarden.eu (EU)
+  description: Sign-in server choice for Bitwarden's EU cloud. Keep the domain name; EU is the region.
 appearance:
   message: Appearance
   description: Settings row that chooses a light or dark look for GoVault.

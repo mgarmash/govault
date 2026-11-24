@@ -37,12 +37,12 @@ func TestSignInServerPresets(t *testing.T) {
 	}, nsgotest.Size(1100, 900))
 	app.WaitFor("id:login-server-preset", 2*time.Second)
 
-	app.Press("id:login-server-eu")
+	app.Post(func() { m.SetServerPreset(PresetEU) })
 	app.WaitForGone("id:login-server", 2*time.Second)
 	if got := m.LoginServer.Get(); got != "https://vault.bitwarden.eu" {
 		t.Fatalf("EU preset server = %q", got)
 	}
-	app.Press("id:login-server-self")
+	app.Post(func() { m.SetServerPreset(PresetSelfHosted) })
 	app.WaitFor("id:login-server", 2*time.Second)
 	if got := m.LoginServer.Get(); got != "" {
 		t.Fatalf("self-hosted server = %q", got)

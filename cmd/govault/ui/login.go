@@ -145,28 +145,29 @@ func (m *AppModel) serverLocked() bool {
 	return m.LoginBusy.Get() || (m.CanReturnToUnlock() && m.ReSignInServer.Get() != "")
 }
 
-func serverPresets(cx *core.Scope, m *AppModel) core.Node {
-	toggle := func(testID, text string, p ServerPreset) core.Node {
-		return ui.ToggleButton{
-			TestID: testID,
-			Text:   text,
-			On:     func() bool { return ServerPresetOf(m.LoginServer.Get()) == p },
-			OnChange: func(bool) {
-				if ServerPresetOf(m.LoginServer.Get()) != p {
-					m.LoginServer.Set(presetURLs[p])
-				}
-			},
-		}
+// SetServerPreset signs in to a cloud preset's server, or clears the
+// server for a self-hosted one, unless the server is that preset already.
+func (m *AppModel) SetServerPreset(p ServerPreset) {
+	if ServerPresetOf(m.LoginServer.Get()) != p {
+		m.LoginServer.Set(presetURLs[p])
 	}
-	return formField(locales.Server(cx), ui.ToggleGroup{
-		TestID:   "login-server-preset",
-		Label:    locales.Server(cx),
-		Disabled: m.serverLocked,
-		Children: []core.Node{
-			toggle("login-server-us", locales.ServerBitwardenUS(cx), PresetUS),
-			toggle("login-server-eu", locales.ServerBitwardenEU(cx), PresetEU),
-			toggle("login-server-self", locales.SelfHosted(cx), PresetSelfHosted),
+}
+
+// serverPresets chooses the server, full width as the card's fields are, so
+// every language fits.
+func serverPresets(cx *core.Scope, m *AppModel) core.Node {
+	return formField(locales.Server(cx), ui.Select[ServerPreset]{
+		TestID: "login-server-preset",
+		Label:  locales.Server(cx),
+		Style:  core.Style{Width: core.Pct(100), Height: core.Pt(authFieldHeight)},
+		Options: []ui.Option[ServerPreset]{
+			{Value: PresetUS, Label: locales.ServerBitwardenUS(cx)},
+			{Value: PresetEU, Label: locales.ServerBitwardenEU(cx)},
+			{Value: PresetSelfHosted, Label: locales.SelfHosted(cx)},
 		},
+		Value:    func() ServerPreset { return ServerPresetOf(m.LoginServer.Get()) },
+		OnChange: m.SetServerPreset,
+		Disabled: m.serverLocked,
 	})
 }
 

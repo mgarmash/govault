@@ -3434,8 +3434,8 @@ var textsEn = i18n.NewTexts(""+
 	"Modified, oldest first"+
 	"Server"+
 	"Self-hosted"+
-	"bitwarden.com"+
-	"bitwarden.eu"+
+	"bitwarden.com (US)"+
+	"bitwarden.eu (EU)"+
 	"Appearance"+
 	"Show GoVault light or dark, or follow the system."+
 	"System"+
@@ -3993,8 +3993,8 @@ var textsEn = i18n.NewTexts(""+
 		22,
 		6,
 		11,
-		13,
-		12,
+		18,
+		17,
 		10,
 		49,
 		6,
@@ -26336,7 +26336,7 @@ func (msgs Messages) SortModifiedOldest() string { return msgs.text(textSortModi
 // Server says "Server"
 // in the language the app shows under cx.
 //
-// Label above the choice of server on the sign-in screen (bitwarden.com, bitwarden.eu or self-hosted).
+// Label of the choice of server on the sign-in screen (bitwarden.com, bitwarden.eu or self-hosted).
 func Server(cx *core.Scope) string { return For(cx).Server() }
 
 // Server is the package's Server in the language of msgs.
@@ -26351,19 +26351,19 @@ func SelfHosted(cx *core.Scope) string { return For(cx).SelfHosted() }
 // SelfHosted is the package's SelfHosted in the language of msgs.
 func (msgs Messages) SelfHosted() string { return msgs.text(textSelfHosted) }
 
-// ServerBitwardenUS says "bitwarden.com"
+// ServerBitwardenUS says "bitwarden.com (US)"
 // in the language the app shows under cx.
 //
-// Sign-in server choice for Bitwarden's US cloud. Keep the domain name.
+// Sign-in server choice for Bitwarden's US cloud. Keep the domain name; US is the region.
 func ServerBitwardenUS(cx *core.Scope) string { return For(cx).ServerBitwardenUS() }
 
 // ServerBitwardenUS is the package's ServerBitwardenUS in the language of msgs.
 func (msgs Messages) ServerBitwardenUS() string { return msgs.text(textServerBitwardenUS) }
 
-// ServerBitwardenEU says "bitwarden.eu"
+// ServerBitwardenEU says "bitwarden.eu (EU)"
 // in the language the app shows under cx.
 //
-// Sign-in server choice for Bitwarden's EU cloud. Keep the domain name.
+// Sign-in server choice for Bitwarden's EU cloud. Keep the domain name; EU is the region.
 func ServerBitwardenEU(cx *core.Scope) string { return For(cx).ServerBitwardenEU() }
 
 // ServerBitwardenEU is the package's ServerBitwardenEU in the language of msgs.
