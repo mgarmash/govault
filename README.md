@@ -36,7 +36,24 @@ GOTELEMETRY=off go tool nsgo build -target macos_arm64 -installers=false \
   -id local.govault.desktop -ldflags '-X main.vaultOrigin=https://vault.example.com' ./cmd/govault
 ```
 
-Replace the example origin on the build machine; do not commit it. Install the resulting ad-hoc signed `GoVault.app`. For demo data, open the bundle with `--args --demo`.
+Replace the example origin on the build machine; do not commit it. For demo data, open the bundle with `--args --demo`.
+
+For regular use, sign every build with the **same certificate and designated requirement** before installing. Ad-hoc builds change identity on every rebuild, so macOS may ask again for access to existing login Keychain entries. Use a dedicated local code-signing certificate, not a certificate belonging to another project or team. Keep the private key on the build Mac, outside the checkout in a directory accessible only to its owner.
+
+For a local self-signed identity, use `rcodesign` and pin the leaf certificate in the requirement; no system-wide trust or notarization is needed. Set `bundle`, `certificate`, and `private_key` to your local paths:
+
+```sh
+fingerprint=$(openssl x509 -in "$certificate" -outform DER | shasum | cut -d ' ' -f1)
+requirement="identifier \"local.govault.desktop\" and certificate leaf = H\"$fingerprint\""
+reqdir=$(mktemp -d)
+csreq -r "=$requirement" -b "$reqdir/govault.req" &&
+  rcodesign sign --timestamp-url none --pem-file "$private_key" --pem-file "$certificate" \
+    --code-requirements-file "$reqdir/govault.req" "$bundle" &&
+  codesign --verify --deep --strict -R "=$requirement" "$bundle"
+rm -r "$reqdir"
+```
+
+Keep the bundle ID and certificate unchanged for upgrades. Switching from ad-hoc to a certificate can still require granting the new build access to existing items once. Never broaden Keychain item access to all apps.
 
 The desktop HTTP transport permits only that HTTPS origin, including for attachments, WebSocket sync, and site icons. Cross-origin redirects and environment proxies cannot forward these requests. External attachment links are not supported on this branch. Icon requests contain the site hostname; Vaultwarden may log it or look up a cache miss itself. This transport is not an OS firewall.
 
