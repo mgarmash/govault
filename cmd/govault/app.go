@@ -59,7 +59,7 @@ func NewDesktopShell(app *core.Scope, demoMode bool) *DesktopShell {
 	}
 
 	dataDir := ensureDataDir(app)
-	secrets := NewBiometricSecretStore(NewSecretStoreAdapter(app.Secrets()), newHardwareKeychain())
+	secrets := NewBiometricSecretStore(NewSecretStoreAdapter(desktopSecrets(app)), newHardwareKeychain())
 	clip := NewClipboardAdapter(app)
 	app.Effect(func() { secrets.SetPrompt(locales.For(app).KeychainPromptReason()) })
 
@@ -77,6 +77,11 @@ func NewDesktopShell(app *core.Scope, demoMode bool) *DesktopShell {
 	}
 
 	tempPrefs := core.NewPersisted(app, govaultui.DefaultPrefsKey, govaultui.DefaultUserPrefs(), core.PersistOptions{Version: 1})
+	if runtime.GOOS == "darwin" {
+		if err := resetLegacyBiometricPreference(app.Storage(), tempPrefs); err != nil {
+			panic(err)
+		}
+	}
 	initialPrefs := govaultui.EnsureDeviceID(tempPrefs)
 
 	meta := DiscoverAccountSnapshot(dataDir, initialPrefs.AccountID)

@@ -14,7 +14,7 @@ import (
 const (
 	kCFStringEncodingUTF8                = 0x08000100
 	kSecAccessControlBiometryCurrentSet  = 1 << 3
-	biometricKeychainService             = "GoVault Biometric Unlock"
+	biometricKeychainService             = "GoVault Biometric Unlock v2"
 	biometricKeychainDefaultPromptReason = "unlock GoVault"
 )
 

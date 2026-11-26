@@ -223,6 +223,11 @@ func TestService_UnvalidatedCredentialsUnlockLocalOnly(t *testing.T) {
 		{"token from an older version", func(t *testing.T, env *vaultTestEnv, secrets *flakySecrets, _ store.Store) {
 			_ = secrets.memSecretStore.Set(refreshTokenKeyPrefix+env.profileID, "legacy-token")
 		}},
+		{"fresh Keychain namespace", func(t *testing.T, env *vaultTestEnv, secrets *flakySecrets, _ store.Store) {
+			if err := secrets.Delete(refreshTokenKeyPrefix + env.profileID); err != nil {
+				t.Fatal(err)
+			}
+		}},
 		{"key store unavailable", func(_ *testing.T, _ *vaultTestEnv, secrets *flakySecrets, _ store.Store) {
 			secrets.getFails = true
 		}},

@@ -53,7 +53,7 @@ csreq -r "=$requirement" -b "$reqdir/govault.req" &&
 rm -r "$reqdir"
 ```
 
-Keep the bundle ID and certificate unchanged for upgrades. Switching from ad-hoc to a certificate can still require granting the new build access to existing items once. Never broaden Keychain item access to all apps.
+Keep the bundle ID and certificate unchanged for upgrades. On macOS this branch uses a separate, versioned Keychain service and never reads, copies or deletes credentials saved by the old ad-hoc build. After upgrading, unlock with your master password, choose **Sign in again**, and re-enable Touch ID if desired. Your encrypted local cache and account settings stay in place. Never broaden Keychain item access to all apps.
 
 The desktop HTTP transport permits only that HTTPS origin, including for attachments, WebSocket sync, and site icons. Cross-origin redirects and environment proxies cannot forward these requests. External attachment links are not supported on this branch. Icon requests contain the site hostname; Vaultwarden may log it or look up a cache miss itself. This transport is not an OS firewall.
 
