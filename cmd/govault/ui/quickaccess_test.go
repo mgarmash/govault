@@ -130,7 +130,7 @@ func TestQuickAccessShiftEnterFillsPassword(t *testing.T) {
 	app.Key("shift+enter")
 
 	call := takeQuickFill(t, calls)
-	if call.user != "" || call.password != "gh-secret-password" || call.tab {
+	if call.user != "gh-secret-password" || call.password != "" || call.tab {
 		t.Fatal("Shift+Enter did not fill only the password")
 	}
 }
