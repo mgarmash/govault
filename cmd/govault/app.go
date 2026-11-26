@@ -57,6 +57,9 @@ func NewDesktopShell(app *core.Scope, demoMode bool) *DesktopShell {
 	if err != nil {
 		panic(err)
 	}
+	if runtime.GOOS == "darwin" && macKeychainAccessGroup == "" {
+		panic("GoVault requires an Apple-provisioned Keychain access group; use --demo to run without credentials")
+	}
 
 	dataDir := ensureDataDir(app)
 	secrets := NewBiometricSecretStore(NewSecretStoreAdapter(desktopSecrets(app)), newHardwareKeychain())

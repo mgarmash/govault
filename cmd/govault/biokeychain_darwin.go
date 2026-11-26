@@ -14,7 +14,7 @@ import (
 const (
 	kCFStringEncodingUTF8                = 0x08000100
 	kSecAccessControlBiometryCurrentSet  = 1 << 3
-	biometricKeychainService             = "GoVault Biometric Unlock v2"
+	biometricKeychainService             = "GoVault Biometric Unlock v3"
 	biometricKeychainDefaultPromptReason = "unlock GoVault"
 )
 
@@ -35,9 +35,9 @@ type cfFuncs struct {
 
 type secConsts struct {
 	keyCallbacks, valueCallbacks uintptr
-	booleanTrue, booleanFalse    uintptr
+	booleanTrue                  uintptr
 
-	class, classGenericPassword, attrService, attrAccount, valueData                   uintptr
+	class, classGenericPassword, attrService, attrAccount, attrAccessGroup, valueData  uintptr
 	returnData, returnAttributes, matchLimit, matchLimitOne                            uintptr
 	useDataProtectionKeychain, attrAccessControl, accessibleWhenUnlockedThisDeviceOnly uintptr
 	useOperationPrompt, useAuthenticationUI, useAuthenticationUIFail                   uintptr
@@ -89,12 +89,12 @@ func loadSecurity() error {
 		sc.keyCallbacks = sym(cfLib, "kCFTypeDictionaryKeyCallBacks", false)
 		sc.valueCallbacks = sym(cfLib, "kCFTypeDictionaryValueCallBacks", false)
 		sc.booleanTrue = sym(cfLib, "kCFBooleanTrue", true)
-		sc.booleanFalse = sym(cfLib, "kCFBooleanFalse", true)
 		for name, dst := range map[string]*uintptr{
 			"kSecClass":                                    &sc.class,
 			"kSecClassGenericPassword":                     &sc.classGenericPassword,
 			"kSecAttrService":                              &sc.attrService,
 			"kSecAttrAccount":                              &sc.attrAccount,
+			"kSecAttrAccessGroup":                          &sc.attrAccessGroup,
 			"kSecValueData":                                &sc.valueData,
 			"kSecReturnData":                               &sc.returnData,
 			"kSecReturnAttributes":                         &sc.returnAttributes,
@@ -154,11 +154,12 @@ func (s *cfScope) dict(pairs ...uintptr) uintptr {
 	return d
 }
 
-func (s *cfScope) baseQuery(account string, extra ...uintptr) uintptr {
+func (k dataProtectionKeychain) query(s *cfScope, account string, extra ...uintptr) uintptr {
 	pairs := []uintptr{
 		sc.class, sc.classGenericPassword,
 		sc.attrService, s.str(biometricKeychainService),
 		sc.attrAccount, s.str(account),
+		sc.attrAccessGroup, s.str(k.group),
 		sc.useDataProtectionKeychain, sc.booleanTrue,
 	}
 	return s.dict(append(pairs, extra...)...)
@@ -166,9 +167,9 @@ func (s *cfScope) baseQuery(account string, extra ...uintptr) uintptr {
 
 // dataProtectionKeychain stores items in the Data Protection keychain,
 // readable only after macOS verifies the current Touch ID enrollment.
-type dataProtectionKeychain struct{}
+type dataProtectionKeychain struct{ group string }
 
-func (dataProtectionKeychain) Add(account string, secret []byte) error {
+func (k dataProtectionKeychain) Add(account string, secret []byte) error {
 	if err := loadSecurity(); err != nil {
 		return err
 	}
@@ -184,11 +185,11 @@ func (dataProtectionKeychain) Add(account string, secret []byte) error {
 		}
 		return &accessControlError{code: code}
 	}
-	attrs := s.baseQuery(account, sc.attrAccessControl, access, sc.valueData, s.data(secret))
+	attrs := k.query(&s, account, sc.attrAccessControl, access, sc.valueData, s.data(secret))
 	return statusError(cf.SecItemAdd(attrs, nil))
 }
 
-func (dataProtectionKeychain) Copy(account, prompt string) ([]byte, error) {
+func (k dataProtectionKeychain) Copy(account, prompt string) ([]byte, error) {
 	if err := loadSecurity(); err != nil {
 		return nil, err
 	}
@@ -197,7 +198,7 @@ func (dataProtectionKeychain) Copy(account, prompt string) ([]byte, error) {
 	if prompt == "" {
 		prompt = biometricKeychainDefaultPromptReason
 	}
-	query := s.baseQuery(account,
+	query := k.query(&s, account,
 		sc.returnData, sc.booleanTrue,
 		sc.matchLimit, sc.matchLimitOne,
 		sc.useOperationPrompt, s.str(prompt),
@@ -215,13 +216,13 @@ func (dataProtectionKeychain) Copy(account, prompt string) ([]byte, error) {
 	return out, nil
 }
 
-func (dataProtectionKeychain) Exists(account string) (bool, error) {
+func (k dataProtectionKeychain) Exists(account string) (bool, error) {
 	if err := loadSecurity(); err != nil {
 		return false, err
 	}
 	var s cfScope
 	defer s.release()
-	query := s.baseQuery(account,
+	query := k.query(&s, account,
 		sc.returnAttributes, sc.booleanTrue,
 		sc.matchLimit, sc.matchLimitOne,
 		sc.useAuthenticationUI, sc.useAuthenticationUIFail,
@@ -238,13 +239,15 @@ func (dataProtectionKeychain) Exists(account string) (bool, error) {
 	return false, err
 }
 
-func (dataProtectionKeychain) Delete(account string) error {
+func (k dataProtectionKeychain) Delete(account string) error {
 	if err := loadSecurity(); err != nil {
 		return err
 	}
 	var s cfScope
 	defer s.release()
-	return statusError(cf.SecItemDelete(s.baseQuery(account)))
+	return statusError(cf.SecItemDelete(k.query(&s, account)))
 }
 
-func newHardwareKeychain() hardwareKeychain { return dataProtectionKeychain{} }
+func newHardwareKeychain() hardwareKeychain {
+	return dataProtectionKeychain{group: macKeychainAccessGroup}
+}

@@ -9,9 +9,8 @@ import (
 )
 
 type memSecrets struct {
-	mu        sync.Mutex
-	m         map[string]string
-	deleteErr error
+	mu sync.Mutex
+	m  map[string]string
 }
 
 func (s *memSecrets) Get(k string) (string, bool, error) {
@@ -31,9 +30,6 @@ func (s *memSecrets) Set(k, v string) error {
 func (s *memSecrets) Delete(k string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	if s.deleteErr != nil {
-		return s.deleteErr
-	}
 	delete(s.m, k)
 	return nil
 }
@@ -91,28 +87,26 @@ func (f *fakeHardware) Delete(account string) error {
 	return nil
 }
 
-func TestBiometricSecretStoreFallsBackWithoutEntitlement(t *testing.T) {
-	fallback := &memSecrets{m: map[string]string{}}
+func TestBiometricSecretStoreNeverFallsBackOnMac(t *testing.T) {
+	const account = "userkey:acct"
+	fallback := &memSecrets{m: map[string]string{account: "legacy"}}
 	hw := &fakeHardware{items: map[string][]byte{}, addErr: errMissingEntitlement}
 	s := NewBiometricSecretStore(fallback, hw)
-
-	if err := s.Set("userkey:acct", "wrapped"); err != nil {
-		t.Fatalf("Set: %v", err)
+	if err := s.Set(account, "wrapped"); !errors.Is(err, errMissingEntitlement) {
+		t.Fatalf("Set without entitlement: %v", err)
 	}
-	if v, ok, _ := fallback.Get("userkey:acct"); !ok || v != "wrapped" {
-		t.Fatal("key not stored in the fallback keychain")
+	if _, ok, err := s.Get(account); ok || !errors.Is(err, errMissingEntitlement) {
+		t.Fatalf("Get without entitlement: found=%v, err=%v", ok, err)
 	}
-	if s.HardwareBound("acct") {
-		t.Fatal("HardwareBound with a missing entitlement")
+	hw.addErr = nil
+	if _, ok, err := s.Get(account); ok || err != nil {
+		t.Fatalf("missing hardware item consulted login: found=%v, err=%v", ok, err)
 	}
-	if v, ok, err := s.Get("userkey:acct"); err != nil || !ok || v != "wrapped" {
-		t.Fatalf("Get = (%q, %v, %v)", v, ok, err)
+	if err := s.Delete(account); err != nil {
+		t.Fatal(err)
 	}
-	if err := s.Delete("userkey:acct"); err != nil {
-		t.Fatalf("Delete: %v", err)
-	}
-	if _, ok, _ := s.Get("userkey:acct"); ok {
-		t.Fatal("key survived Delete")
+	if v, ok, err := fallback.Get(account); !ok || v != "legacy" || err != nil {
+		t.Fatal("hardware operations modified the old login item")
 	}
 }
 
@@ -121,14 +115,11 @@ func TestBiometricSecretStoreUsesHardwareKeychain(t *testing.T) {
 	hw := &fakeHardware{items: map[string][]byte{}}
 	s := NewBiometricSecretStore(fallback, hw)
 
-	if v, ok, _ := s.Get("userkey:acct"); !ok || v != "legacy" {
-		t.Fatal("existing login keychain key not readable before migration")
-	}
 	if err := s.Set("userkey:acct", "wrapped"); err != nil {
 		t.Fatalf("Set: %v", err)
 	}
-	if _, ok, _ := fallback.Get("userkey:acct"); ok {
-		t.Fatal("weaker login keychain copy kept after hardware save")
+	if v, ok, _ := fallback.Get("userkey:acct"); !ok || v != "legacy" {
+		t.Fatal("hardware enrollment touched the previous store")
 	}
 	if !s.HardwareBound("acct") {
 		t.Fatal("HardwareBound = false after hardware save")
@@ -160,12 +151,5 @@ func TestBiometricSecretStoreUsesHardwareKeychain(t *testing.T) {
 	hw.deleteErr = errInteractionNotAllowed
 	if err := s.Delete("userkey:acct"); !errors.Is(err, errInteractionNotAllowed) {
 		t.Fatalf("transient hardware delete error = %v, want it surfaced", err)
-	}
-	hw.deleteErr = nil
-
-	fallback.m["userkey:acct"] = "legacy"
-	fallback.deleteErr = errors.New("keychain locked")
-	if err := s.Set("userkey:acct", "wrapped"); err == nil {
-		t.Fatal("Set reported success while the login keychain copy remains")
 	}
 }

@@ -18,9 +18,6 @@ func (e OSStatusError) Error() string { return fmt.Sprintf("keychain: OSStatus %
 
 const (
 	errUserCanceled          OSStatusError = -128
-	errUnimplemented         OSStatusError = -4
-	errParam                 OSStatusError = -50
-	errNotAvailable          OSStatusError = -25291
 	errAuthFailed            OSStatusError = -25293
 	errItemNotFound          OSStatusError = -25300
 	errInteractionNotAllowed OSStatusError = -25308
@@ -48,9 +45,8 @@ type hardwareKeychain interface {
 	Delete(account string) error
 }
 
-// BiometricSecretStore keeps the biometric unlock key in the hardware-gated
-// keychain when the build is entitled to it and in the fallback store
-// otherwise. Every other secret goes to the fallback store.
+// BiometricSecretStore keeps macOS biometric keys only in the hardware-gated
+// store. Credentials and biometric keys on other platforms use the platform store.
 type BiometricSecretStore struct {
 	fallback store.SecretStore
 	hw       hardwareKeychain
@@ -73,10 +69,11 @@ func (s *BiometricSecretStore) promptReason() string {
 
 func isBiometricKey(account string) bool { return strings.HasPrefix(account, biometricKeyPrefix) }
 
-func hardwareUnavailable(err error) bool {
-	var acErr *accessControlError
-	return errors.As(err, &acErr) || errors.Is(err, errMissingEntitlement) || errors.Is(err, errNotAvailable) ||
-		errors.Is(err, errParam) || errors.Is(err, errUnimplemented)
+func biometricStoreError(err error) error {
+	if errors.Is(err, errMissingEntitlement) {
+		return fmt.Errorf("GoVault needs an Apple provisioning profile for Touch ID: %w", err)
+	}
+	return err
 }
 
 func (s *BiometricSecretStore) Get(account string) (string, bool, error) {
@@ -87,8 +84,10 @@ func (s *BiometricSecretStore) Get(account string) (string, bool, error) {
 			return string(data), true, nil
 		case errors.Is(err, errUserCanceled), errors.Is(err, errAuthFailed):
 			return "", false, fmt.Errorf("%w: %v", govaultui.ErrBiometricCancelled, err)
-		case !errors.Is(err, errItemNotFound) && !hardwareUnavailable(err):
-			return "", false, err
+		case errors.Is(err, errItemNotFound):
+			return "", false, nil
+		default:
+			return "", false, biometricStoreError(err)
 		}
 	}
 	return s.fallback.Get(account)
@@ -96,32 +95,23 @@ func (s *BiometricSecretStore) Get(account string) (string, bool, error) {
 
 func (s *BiometricSecretStore) Set(account, value string) error {
 	if s.hw != nil && isBiometricKey(account) {
-		_ = s.hw.Delete(account)
-		err := s.hw.Add(account, []byte(value))
-		if err == nil {
-			if err := s.fallback.Delete(account); err != nil {
-				return fmt.Errorf("keychain: saved with Touch ID protection, but could not remove the login keychain copy: %w", err)
-			}
-			return nil
+		if err := s.hw.Delete(account); err != nil && !errors.Is(err, errItemNotFound) {
+			return biometricStoreError(err)
 		}
-		if !hardwareUnavailable(err) {
-			return err
-		}
+		return biometricStoreError(s.hw.Add(account, []byte(value)))
 	}
 	return s.fallback.Set(account, value)
 }
 
 func (s *BiometricSecretStore) Delete(account string) error {
-	var firstErr error
 	if s.hw != nil && isBiometricKey(account) {
-		if err := s.hw.Delete(account); err != nil && !errors.Is(err, errItemNotFound) && !errors.Is(err, errMissingEntitlement) {
-			firstErr = err
+		err := s.hw.Delete(account)
+		if errors.Is(err, errItemNotFound) {
+			return nil
 		}
+		return biometricStoreError(err)
 	}
-	if err := s.fallback.Delete(account); err != nil && firstErr == nil {
-		firstErr = err
-	}
-	return firstErr
+	return s.fallback.Delete(account)
 }
 
 // HardwareBound reports whether the biometric key of accountID is held by

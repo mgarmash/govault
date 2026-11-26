@@ -11,27 +11,37 @@ import (
 )
 
 func TestDesktopKeychainLeavesLegacyCredentialsUntouched(t *testing.T) {
+	previousGroup := macKeychainAccessGroup
+	macKeychainAccessGroup = "TESTTEAM.local.govault.desktop"
+	t.Cleanup(func() { macKeychainAccessGroup = previousGroup })
 	const account = "refresh:synthetic"
 	app := nsgotest.Start(t, func(cx *core.Scope) core.Node {
 		legacy := cx.Secrets()
 		if err := legacy.Set(account, "legacy-token"); err != nil {
 			t.Fatal(err)
 		}
+		legacy.Service += ".credentials-v2"
+		if err := legacy.Set(account, "previous-login-token"); err != nil {
+			t.Fatal(err)
+		}
 		fresh := desktopSecrets(cx)
 		if _, ok, err := fresh.Get(account); ok || err != nil {
-			t.Fatalf("v2 read a legacy item: found=%v, err=%v", ok, err)
+			t.Fatalf("profiled store read a legacy item: found=%v, err=%v", ok, err)
 		}
 		if err := fresh.Set(account, "fresh-token"); err != nil {
 			t.Fatal(err)
 		}
 		if token, ok, err := desktopSecrets(cx).Get(account); token != "fresh-token" || !ok || err != nil {
-			t.Fatalf("v2 cannot reopen its new token: found=%v, err=%v", ok, err)
+			t.Fatalf("profiled store cannot reopen its new token: found=%v, err=%v", ok, err)
 		}
 		if err := fresh.Delete(account); err != nil {
 			t.Fatal(err)
 		}
-		if token, ok, err := legacy.Get(account); token != "legacy-token" || !ok || err != nil {
-			t.Fatalf("legacy token changed: found=%v, err=%v", ok, err)
+		if token, ok, err := cx.Secrets().Get(account); token != "legacy-token" || !ok || err != nil {
+			t.Fatal("old ad-hoc token changed")
+		}
+		if token, ok, err := legacy.Get(account); token != "previous-login-token" || !ok || err != nil {
+			t.Fatalf("previous login token changed: found=%v, err=%v", ok, err)
 		}
 		return core.View{}
 	})

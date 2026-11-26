@@ -31,29 +31,20 @@
 
 The `local/vaultwarden-only` branch is for a self-hosted Vaultwarden with TLS on port 443. Automatic and manual update checks are removed. The macOS bundle does not ship `gv` or Sparkle; the desktop client and its updates are built from source.
 
-```sh
-GOTELEMETRY=off go tool nsgo build -target macos_arm64 -installers=false \
-  -id local.govault.desktop -ldflags '-X main.vaultOrigin=https://vault.example.com' ./cmd/govault
-```
+On macOS, normal use requires an Apple signing identity and a matching provisioning profile. The profile must authorize the app's own `com.apple.application-identifier` and private `keychain-access-groups` entry, for example `TEAMID.local.govault.desktop`. Do not share this group with other apps. GoVault uses the Data Protection Keychain for tokens and lets macOS protect the vault unlock key with the current Touch ID enrollment. It never falls back to the file-based `login` Keychain on macOS.
 
-Replace the example origin on the build machine; do not commit it. For demo data, open the bundle with `--args --demo`.
-
-For regular use, sign every build with the **same certificate and designated requirement** before installing. Ad-hoc builds change identity on every rebuild, so macOS may ask again for access to existing login Keychain entries. Use a dedicated local code-signing certificate, not a certificate belonging to another project or team. Keep the private key on the build Mac, outside the checkout in a directory accessible only to its owner.
-
-For a local self-signed identity, use `rcodesign` and pin the leaf certificate in the requirement; no system-wide trust or notarization is needed. Set `bundle`, `certificate`, and `private_key` to your local paths:
+Build locally without an update feed, using your actual HTTPS origin and the exact private group from the profile:
 
 ```sh
-fingerprint=$(openssl x509 -in "$certificate" -outform DER | shasum | cut -d ' ' -f1)
-requirement="identifier \"local.govault.desktop\" and certificate leaf = H\"$fingerprint\""
-reqdir=$(mktemp -d)
-csreq -r "=$requirement" -b "$reqdir/govault.req" &&
-  rcodesign sign --timestamp-url none --pem-file "$private_key" --pem-file "$certificate" \
-    --code-requirements-file "$reqdir/govault.req" "$bundle" &&
-  codesign --verify --deep --strict -R "=$requirement" "$bundle"
-rm -r "$reqdir"
+GOTELEMETRY=off go tool nsgo build -target macos_arm64 -installers=false -channel none \
+  -id local.govault.desktop \
+  -ldflags '-X main.vaultOrigin=https://vault.example.com -X main.macKeychainAccessGroup=TEAMID.local.govault.desktop' \
+  ./cmd/govault
 ```
 
-Keep the bundle ID and certificate unchanged for upgrades. On macOS this branch uses a separate, versioned Keychain service and never reads, copies or deletes credentials saved by the old ad-hoc build. After upgrading, unlock with your master password, choose **Sign in again**, and re-enable Touch ID if desired. Your encrypted local cache and account settings stay in place. Never broaden Keychain item access to all apps.
+Before signing, copy the matching Apple profile into `GoVault.app/Contents/embedded.provisionprofile`. Sign with its authorized Apple identity using `codesign`, with entitlements for the app identifier, team and private keychain group. Verify the signed bundle and that the exact same private group is allowed by the profile and present in the signed entitlements before installing. Keep the bundle ID and app access group fixed across updates. Keep the private key in the Mac Keychain; don't commit the profile or any signing material. Ad-hoc signing and the old local certificate are for demo use only (`--demo`).
+
+After the upgrade, unlock with your master password, choose **Sign in again** to create new protected tokens, then enable Touch ID again. The encrypted local cache and other settings are retained; no credentials from older stores are read, moved or removed.
 
 The desktop HTTP transport permits only that HTTPS origin, including for attachments, WebSocket sync, and site icons. Cross-origin redirects and environment proxies cannot forward these requests. External attachment links are not supported on this branch. Icon requests contain the site hostname; Vaultwarden may log it or look up a cache miss itself. This transport is not an OS firewall.
 
