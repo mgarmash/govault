@@ -271,6 +271,7 @@ type RepromptModal struct {
 	Open    bool
 	Action  RepromptAction
 	OnAllow func()
+	serial  uint64
 }
 
 type FolderModal struct {
@@ -482,10 +483,12 @@ type AppModel struct {
 
 	GenResult *core.Signal[string]
 
-	Reprompt      *core.Signal[RepromptModal]
-	RepromptPW    *core.Signal[string]
-	RepromptError *core.Signal[string]
-	RepromptBusy  *core.Signal[bool]
+	Reprompt       *core.Signal[RepromptModal]
+	RepromptPW     *core.Signal[string]
+	RepromptError  *core.Signal[string]
+	RepromptBusy   *core.Signal[bool]
+	quickReprompt  *core.Signal[bool]
+	repromptSerial uint64
 
 	FolderDialog *core.Signal[FolderModal]
 	FolderError  *core.Signal[string]
@@ -669,6 +672,7 @@ func NewAppModel(app *core.Scope, coreSvc state.VaultService, hooks PlatformHook
 		RepromptPW:          core.NewSignal(app, ""),
 		RepromptError:       core.NewSignal(app, ""),
 		RepromptBusy:        core.NewSignal(app, false),
+		quickReprompt:       core.NewSignal(app, false),
 		FolderDialog:        core.NewSignal(app, FolderModal{}),
 		FolderError:         core.NewSignal(app, ""),
 		FolderBusy:          core.NewSignal(app, false),
@@ -2505,6 +2509,9 @@ func (m *AppModel) GateReprompt(cx *core.Scope, cipher *state.Cipher, action Rep
 	}
 	if m.CanUseBiometric() && m.Prefs.Get().BiometricEnabled {
 		cx.AuthenticateBiometric(locales.RepromptBiometricReason(m.Scope, string(action)), func(res core.BiometricResult) {
+			if !m.StillUnlocked(gen) {
+				return
+			}
 			if res == core.BiometricSuccess {
 				onAllow()
 			} else if res != core.BiometricCancelled {
@@ -2517,16 +2524,20 @@ func (m *AppModel) GateReprompt(cx *core.Scope, cipher *state.Cipher, action Rep
 }
 
 func (m *AppModel) openRepromptDialog(action RepromptAction, onAllow func()) {
+	m.repromptSerial++
+	m.RepromptBusy.Set(false)
 	m.RepromptPW.Set("")
 	m.RepromptError.Set("")
 	m.Reprompt.Set(RepromptModal{
 		Open:    true,
 		Action:  action,
 		OnAllow: onAllow,
+		serial:  m.repromptSerial,
 	})
 }
 
 func (m *AppModel) CloseReprompt() {
+	m.RepromptBusy.Set(false)
 	m.RepromptPW.Set("")
 	m.RepromptError.Set("")
 	m.Reprompt.Set(RepromptModal{})
@@ -2535,6 +2546,10 @@ func (m *AppModel) CloseReprompt() {
 
 func (m *AppModel) SubmitReprompt() {
 	if m.RepromptBusy.Get() {
+		return
+	}
+	prompt := m.Reprompt.Get()
+	if !prompt.Open {
 		return
 	}
 	pw := m.RepromptPW.Get()
@@ -2550,13 +2565,15 @@ func (m *AppModel) SubmitReprompt() {
 	m.RepromptBusy.Set(true)
 	m.RepromptError.Set("")
 	pwBytes := []byte(pw)
-	cb := m.Reprompt.Get().OnAllow
 	accountID := m.Core.Account().ID
 
 	go func() {
 		defer crypto.ZeroBytes(pwBytes)
 		err := m.Hooks.VerifyMasterPassword(accountID, pwBytes)
 		m.Scope.Post(func() {
+			if m.Reprompt.Get().serial != prompt.serial {
+				return
+			}
 			m.RepromptBusy.Set(false)
 			if err != nil {
 				m.RepromptError.Set(locales.IncorrectMasterPassword(m.Scope))
@@ -2565,8 +2582,8 @@ func (m *AppModel) SubmitReprompt() {
 			m.RepromptPW.Set("")
 			m.Reprompt.Set(RepromptModal{})
 			m.ReleaseSecureInput()
-			if cb != nil {
-				cb()
+			if prompt.OnAllow != nil {
+				prompt.OnAllow()
 			}
 		})
 	}()

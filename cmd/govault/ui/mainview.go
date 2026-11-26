@@ -51,7 +51,10 @@ func mainWindowContent(m *AppModel) core.Node {
 					return LoginView(cx, m)
 				}
 			}),
-			whenUnlocked(m, func(*core.Scope) core.Node { return repromptDialog(m) }),
+			core.Show{
+				When: func() bool { return m.LockState.Get() == state.StatusUnlocked && !m.quickReprompt.Get() },
+				Then: func(*core.Scope) core.Node { return repromptDialog(m) },
+			},
 			whenUnlocked(m, func(cx *core.Scope) core.Node { return backupDialog(cx, m) }),
 			whenUnlocked(m, func(cx *core.Scope) core.Node { return bulkDialog(cx, m) }),
 			whenUnlocked(m, func(*core.Scope) core.Node { return folderDialog(m) }),

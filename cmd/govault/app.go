@@ -180,7 +180,7 @@ func (s *DesktopShell) finishSetup() {
 	shell := s
 	clip := s.clipboard
 
-	installApplicationMenu(app, runtime.GOOS)
+	installApplicationMenu(app, runtime.GOOS, startQuickAccess(s))
 
 	p := shell.model.Prefs.Get()
 	if runtime.GOOS == "darwin" && p.HideDockIcon && p.ShowTrayIcon {

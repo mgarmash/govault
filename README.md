@@ -40,6 +40,12 @@ Replace the example origin on the build machine; do not commit it. Install the r
 
 The desktop HTTP transport permits only that HTTPS origin, including for attachments, WebSocket sync, and site icons. Cross-origin redirects and environment proxies cannot forward these requests. External attachment links are not supported on this branch. Icon requests contain the site hostname; Vaultwarden may log it or look up a cache miss itself. This transport is not an OS firewall.
 
+### Quick Access on macOS
+
+While GoVault is running, focus the field you want to fill and press **Control–Shift–Space**. **GoVault → Quick Access** also opens the picker for search and copy. When the vault is locked, the shortcut opens the normal sign-in or unlock screen instead. Search for a login, select it with the arrow keys, and use the adjacent copy or fill buttons; Enter offers the available fill actions and Escape dismisses the panel.
+
+Copy works without Accessibility. To enable fill, open **GoVault → Autofill Accessibility Settings…** and grant access to your installed GoVault app. The picker shows the captured app and window and rechecks focus before writing to that one field. A password requires a secure text field; other fields must be single-line text fields. Supported browser fields must expose their HTTPS origin, all containing frames must have that same origin, and the selected login must have an exact HTTPS origin match. Native targets require confirmation. GoVault never presses Tab or submits, and falls back to copy when the target cannot be verified. Items that require a reprompt still require verification. Quick Access uses the existing vault and adds no network requests or helpers.
+
 The installation and CLI instructions below refer to upstream releases, not this branch.
 
 ## Install

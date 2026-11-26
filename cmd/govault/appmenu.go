@@ -8,9 +8,11 @@ import (
 
 // installApplicationMenu sets the menu bar for goos, again in each
 // language the app shows as it changes.
-func installApplicationMenu(app *core.Scope, goos string) {
+func installApplicationMenu(app *core.Scope, goos string, quickAccess func()) {
 	app.Effect(func() {
-		desktop.SetApplicationMenu(app, applicationMenu(locales.For(app), goos))
+		desktop.SetApplicationMenu(app, applicationMenu(locales.For(app), goos, quickAccess, func() {
+			app.OpenPermissionSettings(core.PermissionAccessibility, nil)
+		}))
 	})
 }
 
@@ -20,22 +22,27 @@ func installApplicationMenu(app *core.Scope, goos string) {
 // down the responder chain exactly as NSGo's default menu does. Elsewhere the
 // window draws the menu bar itself; it stays hidden until Alt (see
 // OpenMainWindow), so it only offers the app items.
-func applicationMenu(msgs locales.Messages, goos string) []desktop.MenuItem {
+func applicationMenu(msgs locales.Messages, goos string, quickAccess, accessSettings func()) []desktop.MenuItem {
 	if goos != "darwin" {
 		return []desktop.MenuItem{{Label: "GoVault", Items: []desktop.MenuItem{
 			{Role: desktop.MenuQuit},
 		}}}
 	}
+	appItems := []desktop.MenuItem{{Role: desktop.MenuAbout}}
+	if quickAccess != nil {
+		appItems = append(appItems, desktop.MenuItem{Label: "Quick Access", OnSelect: quickAccess})
+		appItems = append(appItems, desktop.MenuItem{Label: "Autofill Accessibility Settings…", OnSelect: accessSettings})
+	}
+	appItems = append(appItems,
+		desktop.MenuItem{Separator: true},
+		desktop.MenuItem{Role: desktop.MenuHide},
+		desktop.MenuItem{Role: desktop.MenuHideOthers},
+		desktop.MenuItem{Role: desktop.MenuShowAll},
+		desktop.MenuItem{Separator: true},
+		desktop.MenuItem{Role: desktop.MenuQuit},
+	)
 	return []desktop.MenuItem{
-		{Label: "GoVault", Items: []desktop.MenuItem{
-			{Role: desktop.MenuAbout},
-			{Separator: true},
-			{Role: desktop.MenuHide},
-			{Role: desktop.MenuHideOthers},
-			{Role: desktop.MenuShowAll},
-			{Separator: true},
-			{Role: desktop.MenuQuit},
-		}},
+		{Label: "GoVault", Items: appItems},
 		{Label: msgs.EditMenu(), Items: []desktop.MenuItem{
 			{Role: desktop.MenuUndo},
 			{Role: desktop.MenuRedo},

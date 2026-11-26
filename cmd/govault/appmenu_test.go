@@ -26,7 +26,7 @@ func roles(items []desktop.MenuItem) map[desktop.MenuRole]bool {
 }
 
 func TestApplicationMenuKeepsStandardRoles(t *testing.T) {
-	mac := roles(applicationMenu(locales.In("en"), "darwin"))
+	mac := roles(applicationMenu(locales.In("en"), "darwin", nil, nil))
 	for _, r := range []desktop.MenuRole{
 		desktop.MenuAbout, desktop.MenuHide, desktop.MenuHideOthers, desktop.MenuShowAll, desktop.MenuQuit,
 		desktop.MenuUndo, desktop.MenuRedo, desktop.MenuCut, desktop.MenuCopy, desktop.MenuPaste, desktop.MenuSelectAll,
@@ -37,7 +37,7 @@ func TestApplicationMenuKeepsStandardRoles(t *testing.T) {
 		}
 	}
 	for _, goos := range []string{"linux", "windows"} {
-		menu := applicationMenu(locales.In("en"), goos)
+		menu := applicationMenu(locales.In("en"), goos, nil, nil)
 		if len(menu) != 1 || roles(menu)[desktop.MenuCopy] {
 			t.Fatalf("%s menu = %+v, want only the app items", goos, menu)
 		}
@@ -48,7 +48,7 @@ func TestApplicationMenuKeepsVaultShortcuts(t *testing.T) {
 	copies, closings := 0, 0
 	var model *govaultui.AppModel
 	app := nsgotest.StartApp(t, func(cx *core.Scope) {
-		installApplicationMenu(cx, "darwin")
+		installApplicationMenu(cx, "darwin", nil)
 		cx.SetMainView(func(cx *core.Scope) core.Node {
 			model = govaultui.NewAppModel(cx, demo.NewService(state.StatusUnlocked), govaultui.PlatformHooks{
 				PrefsKey:   "govault.menu-test",
@@ -76,7 +76,7 @@ func TestApplicationMenuKeepsVaultShortcuts(t *testing.T) {
 func TestMenusFollowTheLanguage(t *testing.T) {
 	var shell *DesktopShell
 	app := nsgotest.StartApp(t, func(cx *core.Scope) {
-		installApplicationMenu(cx, "darwin")
+		installApplicationMenu(cx, "darwin", nil)
 		cx.SetMainView(func(cx *core.Scope) core.Node {
 			model := govaultui.NewAppModel(cx, demo.NewService(state.StatusUnlocked), govaultui.PlatformHooks{PrefsKey: "govault.menu-language-test"})
 			shell = &DesktopShell{scope: cx, model: model}
