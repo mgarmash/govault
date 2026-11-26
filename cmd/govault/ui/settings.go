@@ -25,6 +25,10 @@ func SettingsView(cx *core.Scope, m *AppModel) core.Node {
 				Class: "w-full max-w-[620px] self-center px-7 pt-6 pb-10 gap-6",
 				Children: []core.Node{
 					section(locales.General(cx), card(languageRow(cx, m), appearanceRow(cx, m))),
+					core.Show{
+						When: func() bool { return m.QuickAccessRegistration != nil },
+						Then: func(cx *core.Scope) core.Node { return quickAccessSettings(cx, m) },
+					},
 					section(locales.Account(cx), card(
 						core.View{
 							Class: "flex-row items-center gap-3 px-4 py-3.5",

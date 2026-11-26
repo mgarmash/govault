@@ -44,6 +44,8 @@ The desktop HTTP transport permits only that HTTPS origin, including for attachm
 
 While GoVault is running, focus the field you want to fill and press **Control–Shift–Space**. **GoVault → Quick Access** also opens the picker for search and copy. When the vault is locked, the shortcut opens the normal sign-in or unlock screen instead. Search for a login, select it with the arrow keys, and use the adjacent copy or fill buttons; Enter offers the available fill actions and Escape dismisses the panel.
 
+Change, disable, or restore the shortcut under **Settings → Quick Access → Hot Key**. The registration status shows conflicts; the GoVault menu works even if no shortcut is registered.
+
 Copy works without Accessibility. To enable fill, open **GoVault → Autofill Accessibility Settings…** and grant access to your installed GoVault app. The picker shows the captured app and window and rechecks focus before writing to that one field. A password requires a secure text field; other fields must be single-line text fields. Supported browser fields must expose their HTTPS origin, all containing frames must have that same origin, and the selected login must have an exact HTTPS origin match. Native targets require confirmation. GoVault never presses Tab or submits, and falls back to copy when the target cannot be verified. Items that require a reprompt still require verification. Quick Access uses the existing vault and adds no network requests or helpers.
 
 The installation and CLI instructions below refer to upstream releases, not this branch.

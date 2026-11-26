@@ -9,8 +9,6 @@ import (
 	"github.com/txchen/govault/internal/vaultcore/state"
 )
 
-const quickAccessKey = "ctrl+shift+space"
-
 func startQuickAccess(s *DesktopShell) func() {
 	app := s.scope
 	var panel *desktop.Window
@@ -69,6 +67,17 @@ func startQuickAccess(s *DesktopShell) func() {
 		}
 		panel.Show()
 	}
-	desktop.RegisterHotKey(app, quickAccessKey, open)
+	m := s.model
+	m.QuickAccessRegistration = core.NewSignal[*core.HotKey](app, nil)
+	m.RecordQuickAccessHotKey = core.NewSignal(app, false)
+	key := core.NewMemo(app, func() string { return m.Prefs.Get().QuickAccessHotKey })
+	app.Effect(func() {
+		shortcut := key.Get()
+		var registration *core.HotKey
+		if shortcut != "" && !m.RecordQuickAccessHotKey.Get() {
+			registration = desktop.RegisterHotKey(app, shortcut, open)
+		}
+		m.QuickAccessRegistration.Set(registration)
+	})
 	return open
 }

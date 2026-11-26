@@ -76,6 +76,7 @@ type UserPrefs struct {
 	LaunchAtLogin         bool                  `json:"launchAtLogin"`
 	HideDockIcon          bool                  `json:"hideDockIcon"`
 	ShowTrayIcon          bool                  `json:"showTrayIcon"`
+	QuickAccessHotKey     string                `json:"quickAccessHotKey"`
 	SidebarWidth          float32               `json:"sidebarWidth"`
 	ListWidth             float32               `json:"listWidth"`
 	FoldersCollapsed      bool                  `json:"foldersCollapsed"`
@@ -95,6 +96,7 @@ func DefaultUserPrefs() UserPrefs {
 		LockOnSleep:           true,
 		ClipboardClearSeconds: 30,
 		ShowTrayIcon:          true,
+		QuickAccessHotKey:     defaultQuickAccessHotKey,
 		SidebarWidth:          DefaultSidebarWidth,
 		ListWidth:             DefaultListWidth,
 		GeneratorMode:         "password",
@@ -401,6 +403,9 @@ type AppModel struct {
 	ReSignInServer *core.Signal[string]
 	LastSync       *core.Signal[time.Time]
 	Route          *core.Signal[MainRoute]
+
+	QuickAccessRegistration *core.Signal[*core.HotKey]
+	RecordQuickAccessHotKey *core.Signal[bool]
 
 	BiometricKind     *core.Signal[core.BiometricKind]
 	BiometricHardware *core.Signal[bool]
