@@ -63,7 +63,7 @@ While GoVault is running, focus the username field in the destination app and pr
 
 Change, disable, or restore the shortcut under **Settings → Quick Access → Hot Key**. The registration status shows conflicts; the GoVault menu works even if no shortcut is registered.
 
-Grant **Accessibility** from **Settings → Quick Access** or the button in the picker. No permission is required for search and copy. The picker shows the app that receives keystrokes; GoVault checks that it is still in front and sends only to its process. Browser context helps rank results when available, but is not a prerequisite for typing. GoVault never submits the form or uses the clipboard for autofill. Tab follows the destination app’s focus order, so use a single-field shortcut on multi-step or unusual forms. Items that require a master-password reprompt still require it. Quick Access adds no network requests or helpers.
+If **Send keystrokes** is not allowed, choose **Enable typing…** in **Settings → Quick Access** or the picker to ask macOS for permission. macOS may direct you to **Privacy & Security → Accessibility**. GoVault shows interface inspection and sending keystrokes separately; inspection is optional and only helps suggest logins. Search and copy need neither permission. GoVault sends only to the original target process while it is still in front. It never submits the form or uses the clipboard for autofill. Tab follows the destination app’s focus order, so use a single-field shortcut on multi-step or unusual forms. Items that require a master-password reprompt still require it. Quick Access adds no network requests or helpers.
 
 The installation and CLI instructions below refer to upstream releases, not this branch.
 

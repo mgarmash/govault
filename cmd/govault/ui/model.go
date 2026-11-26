@@ -404,9 +404,10 @@ type AppModel struct {
 	LastSync       *core.Signal[time.Time]
 	Route          *core.Signal[MainRoute]
 
-	QuickAccessRegistration *core.Signal[*core.HotKey]
-	RecordQuickAccessHotKey *core.Signal[bool]
-	QuickAccessPermission   func() bool
+	QuickAccessRegistration  *core.Signal[*core.HotKey]
+	RecordQuickAccessHotKey  *core.Signal[bool]
+	QuickAccessPermission    func() (interfaceAccess, keyboardAccess bool)
+	RequestQuickAccessTyping func() bool
 
 	BiometricKind     *core.Signal[core.BiometricKind]
 	BiometricHardware *core.Signal[bool]

@@ -85,28 +85,61 @@ func quickAccessSettings(cx *core.Scope, m *AppModel) core.Node {
 				Disabled: func() bool { return m.Prefs.Get().QuickAccessHotKey == defaultQuickAccessHotKey },
 				OnPress:  func() { set(defaultQuickAccessHotKey) }},
 		}},
-		quickAccessPermissionRow(cx, m),
+		quickAccessPermissionRow(cx, m, quickAccessPermissionSignals(cx, m)),
 	))
 }
 
-func quickAccessPermissionRow(cx *core.Scope, m *AppModel) core.Node {
+func quickAccessPermissionRow(cx *core.Scope, m *AppModel, access *core.Signal[quickAccessPermissions]) core.Node {
 	if m.QuickAccessPermission == nil {
 		return nil
 	}
-	allowed := core.NewSignal(cx, m.QuickAccessPermission())
+	return core.View{Children: []core.Node{
+		settingsMetaRow("Accessibility · inspect interface", func() string { return permissionLabel(access.Get().inspect) }),
+		settingsMetaRow("Autofill · send keystrokes", func() string { return permissionLabel(access.Get().typing) }),
+		core.Show{
+			When: func() bool { return !access.Get().typing },
+			Then: func(cx *core.Scope) core.Node {
+				return settingsRow("Enable typing", "Copy works without this permission.", core.View{
+					Class: "flex-col gap-1", Children: []core.Node{
+						ui.Button{TestID: "quick-enable-typing", Text: "Enable typing…", Variant: ui.ButtonPrimary, OnPress: func() {
+							if m.RequestQuickAccessTyping == nil {
+								return
+							}
+							m.RequestQuickAccessTyping()
+							access.Set(readQuickAccessPermissions(m))
+						}},
+						ui.Button{TestID: "quick-accessibility-settings", Text: "Open macOS Settings…", Variant: ui.ButtonSecondary, OnPress: func() {
+							cx.OpenPermissionSettings(core.PermissionAccessibility, nil)
+						}},
+					},
+				})
+			},
+		},
+	}}
+}
+
+type quickAccessPermissions struct{ inspect, typing bool }
+
+func readQuickAccessPermissions(m *AppModel) quickAccessPermissions {
+	if m.QuickAccessPermission == nil {
+		return quickAccessPermissions{typing: true}
+	}
+	inspect, typing := m.QuickAccessPermission()
+	return quickAccessPermissions{inspect: inspect, typing: typing}
+}
+
+func quickAccessPermissionSignals(cx *core.Scope, m *AppModel) *core.Signal[quickAccessPermissions] {
+	access := core.NewSignal(cx, readQuickAccessPermissions(m))
 	cx.Effect(func() {
 		_ = cx.Env().Lifecycle()
-		allowed.Set(m.QuickAccessPermission())
+		access.Set(readQuickAccessPermissions(m))
 	})
-	return core.Dynamic(func(cx *core.Scope) core.Node {
-		if allowed.Get() {
-			return settingsMetaRow("Autofill · Accessibility", func() string { return "Allowed" })
-		}
-		return settingsRow("Autofill · Accessibility", "Allow GoVault in macOS to type into other apps. Copy works without it.", ui.Button{
-			TestID: "quick-accessibility-settings", Text: "Open macOS Settings…", Variant: ui.ButtonSecondary,
-			OnPress: func() {
-				cx.OpenPermissionSettings(core.PermissionAccessibility, nil)
-			},
-		})
-	})
+	return access
+}
+
+func permissionLabel(allowed bool) string {
+	if allowed {
+		return "Allowed"
+	}
+	return "Not allowed"
 }

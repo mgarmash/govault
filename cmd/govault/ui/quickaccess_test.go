@@ -206,7 +206,8 @@ func TestQuickAccessDeniedFillKeepsCopy(t *testing.T) {
 		Fill: func(string, string, bool) error { fills.Add(1); return nil },
 	}
 	app := startQuickPanel(t, svc, target, func() { dismissed.Add(1) }, func(m *AppModel) {
-		m.QuickAccessPermission = func() bool { return false }
+		m.QuickAccessPermission = func() (bool, bool) { return true, false }
+		m.RequestQuickAccessTyping = func() bool { t.Error("permission requested without an explicit click"); return false }
 	})
 	app.WaitFor("id:quick-fill-password", 2*time.Second)
 	if !app.Find("id:quick-fill-password").Props.Disabled {
@@ -220,6 +221,27 @@ func TestQuickAccessDeniedFillKeepsCopy(t *testing.T) {
 	app.WaitUntil(2*time.Second, func() bool { return dismissed.Load() == 1 })
 	if fills.Load() != 0 {
 		t.Fatal("a copy filled the destination")
+	}
+}
+
+func TestQuickAccessEnableTypingUpdatesOpenPicker(t *testing.T) {
+	svc := newMockVaultService(state.StatusUnlocked)
+	allowed := false
+	requests, fills := 0, 0
+	target := QuickTarget{App: "Brave", Fill: func(string, string, bool) error { fills++; return nil }}
+	app := startQuickPanel(t, svc, target, func() {}, func(m *AppModel) {
+		m.QuickAccessPermission = func() (bool, bool) { return true, allowed }
+		m.RequestQuickAccessTyping = func() bool { requests++; allowed = true; return true }
+	})
+	app.WaitFor("id:quick-enable-typing", 2*time.Second)
+	if !app.Find("id:quick-fill-username").Props.Disabled || requests != 0 {
+		t.Fatal("typing enabled or requested before consent")
+	}
+	app.Press("id:quick-enable-typing")
+	app.WaitForGone("id:quick-enable-typing", 2*time.Second)
+	app.Press("id:quick-fill-username")
+	if requests != 1 || fills != 1 {
+		t.Fatalf("permission requests=%d, fills=%d; want one of each", requests, fills)
 	}
 }
 
@@ -258,7 +280,7 @@ func TestQuickAccessShowsDestinationError(t *testing.T) {
 	app.Post(func() {
 		notice = core.NewSignal(scope, "")
 		qa := &quickAccess{
-			m: model, permitted: true, notice: notice,
+			m: model, notice: notice,
 			target: QuickTarget{App: "Slack", Window: "#general", Fill: func(string, string, bool) error {
 				return errors.New("quick access: target changed")
 			}},
@@ -284,7 +306,7 @@ func TestQuickAccessFillRechecksLockAndReportsDenial(t *testing.T) {
 
 	app.Post(func() {
 		qa := &quickAccess{
-			m: model, permitted: true,
+			m: model,
 			target: QuickTarget{App: "Slack", Window: "#general", Fill: func(string, string, bool) error {
 				fills.Add(1)
 				return nil
@@ -303,7 +325,7 @@ func TestQuickAccessFillRechecksLockAndReportsDenial(t *testing.T) {
 	app.Post(func() {
 		notice = core.NewSignal(scope, "")
 		qa := &quickAccess{
-			m: model, permitted: true, notice: notice,
+			m: model, notice: notice,
 			target: QuickTarget{App: "Slack", Window: "#general"},
 		}
 		qa.fillValue("c-github", QuickPassword, model.LockGeneration(), true)

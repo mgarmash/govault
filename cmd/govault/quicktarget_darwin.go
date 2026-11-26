@@ -42,7 +42,7 @@ const (
 )
 
 var (
-	errQuickAccessPermission  = errors.New("quick access: allow GoVault to type into other apps in System Settings > Privacy & Security > Accessibility")
+	errQuickAccessPermission  = errors.New("macOS blocked sending keystrokes. Use Enable typing in Quick Access.")
 	errQuickAccessUnavailable = errors.New("quick access: macOS input events are unavailable")
 	errQuickTargetUnavailable = errors.New("quick access: no text field is available")
 	errQuickTargetChanged     = errors.New("quick access: the destination app changed")
@@ -121,6 +121,7 @@ type quickCoreGraphics struct {
 	eventSetUnicode     func(uintptr, uint64, *uint16)
 	eventPostToPid      func(int32, uintptr)
 	preflightPostEvent  func() bool
+	requestPostEvent    func() bool
 }
 
 type quickAccessibility struct {
@@ -206,6 +207,7 @@ func initQuickAccessTarget() error {
 		purego.RegisterLibFunc(&quickCG.eventSetUnicode, cgLib, "CGEventKeyboardSetUnicodeString")
 		purego.RegisterLibFunc(&quickCG.eventPostToPid, cgLib, "CGEventPostToPid")
 		purego.RegisterLibFunc(&quickCG.preflightPostEvent, cgLib, "CGPreflightPostEventAccess")
+		purego.RegisterLibFunc(&quickCG.requestPostEvent, cgLib, "CGRequestPostEventAccess")
 
 		purego.RegisterLibFunc(&quickAX.createApplication, axLib, "AXUIElementCreateApplication")
 		purego.RegisterLibFunc(&quickAX.copyAttribute, axLib, "AXUIElementCopyAttributeValue")
@@ -461,8 +463,8 @@ func quickCaptureContext(pid int32, browser bool) (title, origin string) {
 }
 
 // quickCaptureTarget describes the frontmost application's focused field
-// without prompting for permission. Without Accessibility, or with a blocked
-// app, Fill stays nil and only the app label is exposed.
+// without prompting. Only a missing or blocked target disables its writer;
+// the writer checks keyboard permission each time it is used.
 func captureQuickTarget() govaultui.QuickTarget {
 	if err := initQuickAccessTarget(); err != nil {
 		return govaultui.QuickTarget{}
@@ -472,9 +474,6 @@ func captureQuickTarget() govaultui.QuickTarget {
 		return govaultui.QuickTarget{}
 	}
 	if quickBlockedApps[bundle] {
-		return govaultui.QuickTarget{App: name}
-	}
-	if !quickAutofillAvailable() {
 		return govaultui.QuickTarget{App: name}
 	}
 	title, origin := quickCaptureContext(pid, quickSupportedBrowsers[bundle])
@@ -494,6 +493,20 @@ func quickAutofillAvailable() bool {
 		return false
 	}
 	return quickCG.preflightPostEvent()
+}
+
+func quickPermissionStatus() (interfaceAccess, keyboardAccess bool) {
+	if err := initQuickAccessTarget(); err != nil {
+		return false, false
+	}
+	return quickAX.processTrusted(), quickCG.preflightPostEvent()
+}
+
+func requestQuickAutofill() bool {
+	if err := initQuickAccessTarget(); err != nil {
+		return false
+	}
+	return quickCG.requestPostEvent()
 }
 
 type quickFillStep struct {

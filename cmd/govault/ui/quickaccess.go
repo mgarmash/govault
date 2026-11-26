@@ -65,10 +65,8 @@ type quickAccess struct {
 	target  QuickTarget
 	dismiss func()
 	win     *desktop.Window
-	// permitted is the platform's fill permission, read once when the panel
-	// opens; the target re-checks it before each write.
-	permitted bool
-	origin    string
+	access  *core.Signal[quickAccessPermissions]
+	origin  string
 
 	query  *core.Signal[string]
 	sel    *base.Selection
@@ -88,15 +86,15 @@ type quickAccess struct {
 func QuickAccessView(cx *core.Scope, m *AppModel, target QuickTarget, dismiss func()) core.Node {
 	cx.SetTheme(GovaultTheme())
 	qa := &quickAccess{
-		m:         m,
-		target:    target,
-		dismiss:   dismiss,
-		win:       desktop.CurrentWindow(cx),
-		permitted: m.QuickAccessPermission == nil || m.QuickAccessPermission(),
-		origin:    QuickWebOrigin(target.Origin),
-		query:     core.NewSignal(cx, ""),
-		sel:       base.NewSelection(cx, false),
-		notice:    core.NewSignal(cx, ""),
+		m:       m,
+		target:  target,
+		dismiss: dismiss,
+		win:     desktop.CurrentWindow(cx),
+		access:  quickAccessPermissionSignals(cx, m),
+		origin:  QuickWebOrigin(target.Origin),
+		query:   core.NewSignal(cx, ""),
+		sel:     base.NewSelection(cx, false),
+		notice:  core.NewSignal(cx, ""),
 	}
 	qa.items = core.NewMemoFunc(cx, qa.loadItems, nil)
 	qa.facts = core.NewMemo(cx, qa.loadFacts)
@@ -216,10 +214,7 @@ func (qa *quickAccess) content(cx *core.Scope) core.Node {
 				core.Text{Class: "text-[15px] font-semibold text-gv-fg", Content: "Quick Access"},
 				core.Text{TestID: "quick-target", Class: "text-[12px] text-gv-fg2", MaxLines: 2, ContentFunc: qa.targetLine},
 			}},
-			core.Show{
-				When: func() bool { return qa.m.QuickAccessPermission != nil },
-				Then: func(cx *core.Scope) core.Node { return quickAccessPermissionRow(cx, qa.m) },
-			},
+			quickAccessPermissionRow(cx, qa.m, qa.access),
 			searchField(cx, base.Input{
 				TestID:        "quick-search",
 				Placeholder:   locales.SearchVault(cx),
@@ -346,8 +341,8 @@ func (qa *quickAccess) details(cx *core.Scope) core.Node {
 		}
 		var note string
 		switch {
-		case !qa.permitted:
-			note = "Quick Access needs Accessibility permission to fill. Copy still works."
+		case !qa.typingAllowed():
+			note = "macOS blocked sending keystrokes. Copy still works."
 		case qa.target.Fill == nil:
 			note = "Fill is unavailable for this app. Copy still works."
 		case f.Hidden:
@@ -400,8 +395,12 @@ func (qa *quickAccess) details(cx *core.Scope) core.Node {
 	})
 }
 
+func (qa *quickAccess) typingAllowed() bool {
+	return qa.access == nil || qa.access.Get().typing
+}
+
 func (qa *quickAccess) fillAllowed(f quickFacts, field QuickField) bool {
-	if !qa.permitted || !f.Valid || qa.target.Fill == nil {
+	if !qa.typingAllowed() || !f.Valid || qa.target.Fill == nil {
 		return false
 	}
 	switch field {
@@ -463,8 +462,8 @@ func (qa *quickAccess) blockedReason(f quickFacts, field QuickField) string {
 	switch {
 	case !f.Valid:
 		return "This item is no longer available."
-	case !qa.permitted:
-		return "Quick Access needs Accessibility permission to fill. Use Copy instead."
+	case !qa.typingAllowed():
+		return "macOS blocked sending keystrokes. Use Enable typing or Copy."
 	case qa.target.Fill == nil:
 		return "Fill is unavailable for this app. Use Copy instead."
 	case f.Hidden:
@@ -719,8 +718,8 @@ func (qa *quickAccess) fillDenied(c *state.Cipher, field QuickField) string {
 	if c.DeletedDate != nil || c.ArchivedDate != nil {
 		return "This item is no longer available."
 	}
-	if !qa.permitted {
-		return "Quick Access needs Accessibility permission to fill. Use Copy instead."
+	if !qa.typingAllowed() {
+		return "macOS blocked sending keystrokes. Use Enable typing or Copy."
 	}
 	if qa.target.Fill == nil {
 		return "Fill is unavailable for this app. Use Copy instead."
