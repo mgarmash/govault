@@ -224,14 +224,13 @@ func (qa *quickAccess) loadFacts() quickFacts {
 }
 
 func (qa *quickAccess) content(cx *core.Scope) core.Node {
-	qa.items.Get()
 	return core.View{
 		TestID: "quick-access",
 		Class:  "flex-1 flex-col gap-2.5 p-3 bg-gv-canvas",
 		Children: []core.Node{
 			core.View{Class: "flex-col gap-[2px]", Children: []core.Node{
 				core.Text{Class: "text-[15px] font-semibold text-gv-fg", Content: "Quick Access"},
-				core.Text{TestID: "quick-target", Class: "text-[12px] text-gv-fg2", ContentFunc: qa.targetLine},
+				core.Text{TestID: "quick-target", Class: "text-[12px] text-gv-fg2", MaxLines: 2, ContentFunc: qa.targetLine},
 			}},
 			searchField(cx, base.Input{
 				TestID:        "quick-search",
@@ -296,7 +295,7 @@ func (qa *quickAccess) content(cx *core.Scope) core.Node {
 					}
 				},
 				Empty: core.Text{Class: "p-4 text-center text-[12px] text-gv-fg2", Content: "No logins match."},
-				Style: core.Style{FlexGrow: 1, MinHeight: core.Pt(100)},
+				Style: core.Style{FlexGrow: 1, FlexShrink: 1, FlexBasis: core.Pt(0), MinHeight: core.Pt(100)},
 			},
 			qa.details(cx),
 			core.Text{Class: "text-[11.5px] text-gv-fg3", Content: "↑↓ choose · Enter fill · Esc close"},
