@@ -6,7 +6,6 @@ import (
 	"github.com/nsgo-dev/nsgo/core"
 	"github.com/nsgo-dev/nsgo/icons/lucide"
 	"github.com/nsgo-dev/nsgo/ui"
-	"github.com/nsgo-dev/nsgo/updater"
 	"github.com/txchen/govault/cmd/govault/locales"
 )
 
@@ -284,17 +283,7 @@ func SettingsView(cx *core.Scope, m *AppModel) core.Node {
 						return card(rows...)
 					})),
 					section(locales.About(cx), card(
-						settingsRow(
-							locales.AppVersion(cx, appVersionLabel(cx)),
-							locales.UpdatesSigned(cx),
-							ui.Button{
-								TestID:  "settings-check-updates",
-								Text:    locales.CheckForUpdates(cx),
-								Icon:    lucide.RefreshCw,
-								Variant: ui.ButtonSecondary,
-								OnPress: func() { updater.Check(cx) },
-							},
-						),
+						settingsMetaRow(locales.AppVersion(cx, appVersionLabel(cx)), nil),
 					)),
 				},
 			},

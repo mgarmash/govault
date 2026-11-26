@@ -44,10 +44,16 @@ func signInView(cx *core.Scope, m *AppModel) core.Node {
 		core.View{
 			Class: "gap-3.5",
 			Children: []core.Node{
-				serverPresets(cx, m),
+				core.Show{
+					When: func() bool { return m.Hooks.FixedServerURL == "" },
+					Then: func(cx *core.Scope) core.Node { return serverPresets(cx, m) },
+				},
 				core.Show{
 					When: func() bool { return m.LoginPreset.Get() == PresetSelfHosted },
 					Then: func(cx *core.Scope) core.Node {
+						if m.Hooks.FixedServerURL != "" {
+							return formField(locales.ServerURL(cx), core.Text{Content: m.Hooks.FixedServerURL})
+						}
 						return formField(locales.ServerURL(cx), authInput(base.Input{
 							TestID:        "login-server",
 							Placeholder:   "https://vault.example.com",

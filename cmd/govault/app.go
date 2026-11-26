@@ -3,14 +3,12 @@ package main
 import (
 	"context"
 	_ "embed"
-	"github.com/txchen/govault/cmd/govault/clitool"
 	"path/filepath"
 	"runtime"
 	"sync"
 
 	"github.com/nsgo-dev/nsgo/core"
 	"github.com/nsgo-dev/nsgo/desktop"
-	"github.com/nsgo-dev/nsgo/updater"
 	"github.com/txchen/govault/cmd/govault/locales"
 	govaultui "github.com/txchen/govault/cmd/govault/ui"
 	"github.com/txchen/govault/internal/vaultcore/state"
@@ -55,6 +53,10 @@ func NewDesktopShell(app *core.Scope, demoMode bool) *DesktopShell {
 	if demoMode {
 		return newDemoShell(app)
 	}
+	client, err := vaultHTTPClient(vaultOrigin)
+	if err != nil {
+		panic(err)
+	}
 
 	dataDir := ensureDataDir(app)
 	secrets := NewBiometricSecretStore(NewSecretStoreAdapter(app.Secrets()), newHardwareKeychain())
@@ -68,7 +70,10 @@ func NewDesktopShell(app *core.Scope, demoMode bool) *DesktopShell {
 		sshAgent:  newSSHAgentHost(runtime.GOOS, dataDir),
 	}
 	if cacheDir := app.CacheDir(); cacheDir != "" {
-		shell.favicons = govaultui.NewFaviconStore(govaultui.FaviconStoreConfig{CacheDir: filepath.Join(cacheDir, "icons")})
+		shell.favicons = govaultui.NewFaviconStore(govaultui.FaviconStoreConfig{
+			CacheDir:   filepath.Join(cacheDir, "icons"),
+			HTTPClient: client,
+		})
 	}
 
 	tempPrefs := core.NewPersisted(app, govaultui.DefaultPrefsKey, govaultui.DefaultUserPrefs(), core.PersistOptions{Version: 1})
@@ -87,6 +92,7 @@ func NewDesktopShell(app *core.Scope, demoMode bool) *DesktopShell {
 		DeviceID:   initialPrefs.DeviceID,
 		DeviceName: "GoVault Desktop",
 		DeviceType: deviceTypeForOS(),
+		HTTPClient: client,
 		OnStatusChange: func(st state.LockStatus) {
 			if st != state.StatusUnlocked {
 				shell.sshAgent.Clear()
@@ -125,6 +131,7 @@ func NewDesktopShell(app *core.Scope, demoMode bool) *DesktopShell {
 	shell.service = svc
 
 	hooks := shell.platformHooks(secrets)
+	hooks.FixedServerURL = vaultOrigin
 	hooks.BiometricHardwareBound = secrets.HardwareBound
 	hooks.DiscoverSnapshot = func(preferred string) *govaultui.AccountSnapshotMeta {
 		return DiscoverAccountSnapshot(dataDir, preferred)
@@ -165,11 +172,6 @@ func (s *DesktopShell) platformHooks(secrets store.SecretStore) govaultui.Platfo
 	if s.sshAgent != nil {
 		hooks.SSHAgent = s.sshAgent
 	}
-	if runtime.GOOS == "darwin" {
-		if tool, err := clitool.New(); err == nil {
-			hooks.CommandLineTool = tool
-		}
-	}
 	return hooks
 }
 
@@ -178,7 +180,7 @@ func (s *DesktopShell) finishSetup() {
 	shell := s
 	clip := s.clipboard
 
-	installApplicationMenu(app, runtime.GOOS, func() { updater.Check(app) })
+	installApplicationMenu(app, runtime.GOOS)
 
 	p := shell.model.Prefs.Get()
 	if runtime.GOOS == "darwin" && p.HideDockIcon && p.ShowTrayIcon {
@@ -243,7 +245,6 @@ func (s *DesktopShell) trayMenu() []desktop.MenuItem {
 	msgs := locales.For(s.scope)
 	items := []desktop.MenuItem{
 		{Label: msgs.OpenGoVault(), OnSelect: s.OpenMainWindow},
-		{Label: msgs.CheckForUpdatesMenu(), OnSelect: func() { updater.Check(s.scope) }},
 		{Separator: true},
 		{
 			Label:    msgs.SyncNowMenu(),

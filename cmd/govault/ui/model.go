@@ -158,6 +158,7 @@ type PlatformHooks struct {
 	ReleaseSecureInput   func(force bool)
 	SleepLockSupported   bool
 	Favicons             *FaviconStore
+	FixedServerURL       string
 	DiscoverSnapshot     func(preferredAccountID string) *AccountSnapshotMeta
 	// VerifyMasterPassword checks password against accountID's vault. It
 	// runs on a worker, so it takes the account as an argument rather than
@@ -596,6 +597,10 @@ func NewAppModel(app *core.Scope, coreSvc state.VaultService, hooks PlatformHook
 	if p.Appearance != "" {
 		app.SetAppearance(appearanceOf(p.Appearance))
 	}
+	serverURL := p.ServerURL
+	if hooks.FixedServerURL != "" {
+		serverURL = hooks.FixedServerURL
+	}
 
 	m := &AppModel{
 		Scope:               app,
@@ -614,7 +619,7 @@ func NewAppModel(app *core.Scope, coreSvc state.VaultService, hooks PlatformHook
 		BiometricHardware:   core.NewSignal(app, false),
 		CommandLineTool:     core.NewSignal(app, clitool.Report{}),
 		CommandLineToolBusy: core.NewSignal(app, false),
-		LoginServer:         core.NewSignal(app, p.ServerURL),
+		LoginServer:         core.NewSignal(app, serverURL),
 		LoginEmail:          core.NewSignal(app, p.Email),
 		LoginPassword:       core.NewSignal(app, ""),
 		LoginBusy:           core.NewSignal(app, false),
@@ -996,6 +1001,12 @@ func (m *AppModel) loginRequest() (state.LoginRequest, bool) {
 		}
 		acct.ServerURL = req.ServerURL
 		req.Email, req.SameAccount = acct.Email, &acct
+	}
+	if m.Hooks.FixedServerURL != "" {
+		req.ServerURL = m.Hooks.FixedServerURL
+		if req.SameAccount != nil {
+			req.SameAccount.ServerURL = req.ServerURL
+		}
 	}
 	password := m.LoginPassword.Get()
 	if req.ServerURL == "" || req.Email == "" || password == "" {

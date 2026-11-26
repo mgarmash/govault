@@ -26,7 +26,7 @@ func roles(items []desktop.MenuItem) map[desktop.MenuRole]bool {
 }
 
 func TestApplicationMenuKeepsStandardRoles(t *testing.T) {
-	mac := roles(applicationMenu(locales.In("en"), "darwin", func() {}))
+	mac := roles(applicationMenu(locales.In("en"), "darwin"))
 	for _, r := range []desktop.MenuRole{
 		desktop.MenuAbout, desktop.MenuHide, desktop.MenuHideOthers, desktop.MenuShowAll, desktop.MenuQuit,
 		desktop.MenuUndo, desktop.MenuRedo, desktop.MenuCut, desktop.MenuCopy, desktop.MenuPaste, desktop.MenuSelectAll,
@@ -37,56 +37,46 @@ func TestApplicationMenuKeepsStandardRoles(t *testing.T) {
 		}
 	}
 	for _, goos := range []string{"linux", "windows"} {
-		menu := applicationMenu(locales.In("en"), goos, func() {})
+		menu := applicationMenu(locales.In("en"), goos)
 		if len(menu) != 1 || roles(menu)[desktop.MenuCopy] {
 			t.Fatalf("%s menu = %+v, want only the app items", goos, menu)
 		}
 	}
 }
 
-func TestCheckForUpdatesWhileLoggedOutAndShortcutsKept(t *testing.T) {
-	for _, status := range []state.LockStatus{state.StatusLoggedOut, state.StatusUnlocked} {
-		checks, copies, closings := 0, 0, 0
-		var model *govaultui.AppModel
-		app := nsgotest.StartApp(t, func(cx *core.Scope) {
-			installApplicationMenu(cx, "darwin", func() { checks++ })
-			cx.SetMainView(func(cx *core.Scope) core.Node {
-				model = govaultui.NewAppModel(cx, demo.NewService(status), govaultui.PlatformHooks{
-					PrefsKey:   "govault.menu-test",
-					CopySecret: func(string, time.Duration) (bool, error) { copies++; return true, nil },
-				})
-				model.MainWinVisible.Set(true)
-				model.RefreshVaultData()
-				desktop.CurrentWindow(cx).OnClosing(cx, func(*desktop.WindowClosing) { closings++ })
-				return govaultui.MainWindowView(cx, model)
+func TestApplicationMenuKeepsVaultShortcuts(t *testing.T) {
+	copies, closings := 0, 0
+	var model *govaultui.AppModel
+	app := nsgotest.StartApp(t, func(cx *core.Scope) {
+		installApplicationMenu(cx, "darwin")
+		cx.SetMainView(func(cx *core.Scope) core.Node {
+			model = govaultui.NewAppModel(cx, demo.NewService(state.StatusUnlocked), govaultui.PlatformHooks{
+				PrefsKey:   "govault.menu-test",
+				CopySecret: func(string, time.Duration) (bool, error) { copies++; return true, nil },
 			})
-		}, nsgotest.Environment(core.Environment{OS: core.OSMacOS, Idiom: core.IdiomDesktop}), nsgotest.Size(1100, 720))
+			model.MainWinVisible.Set(true)
+			model.RefreshVaultData()
+			desktop.CurrentWindow(cx).OnClosing(cx, func(*desktop.WindowClosing) { closings++ })
+			return govaultui.MainWindowView(cx, model)
+		})
+	}, nsgotest.Environment(core.Environment{OS: core.OSMacOS, Idiom: core.IdiomDesktop}), nsgotest.Size(1100, 720))
 
-		app.ChooseMenu("GoVault", locales.In("en").CheckForUpdatesMenu())
-		if checks != 1 {
-			t.Fatalf("status %v: Check for Updates ran %d times", status, checks)
-		}
-		if status != state.StatusUnlocked {
-			continue
-		}
-		app.Post(func() { model.SelectCipher(model.Scope, "c-netflix") })
-		app.WaitFor("id:detail-view", 2*time.Second)
-		app.Key("mod+c")
-		if copies != 1 {
-			t.Fatalf("mod+c copied %d times with the app menu installed", copies)
-		}
-		app.Key("mod+w")
-		if closings != 1 {
-			t.Fatalf("mod+w ran %d close handlers", closings)
-		}
+	app.Post(func() { model.SelectCipher(model.Scope, "c-netflix") })
+	app.WaitFor("id:detail-view", 2*time.Second)
+	app.Key("mod+c")
+	if copies != 1 {
+		t.Fatalf("mod+c copied %d times with the app menu installed", copies)
+	}
+	app.Key("mod+w")
+	if closings != 1 {
+		t.Fatalf("mod+w ran %d close handlers", closings)
 	}
 }
 
 func TestMenusFollowTheLanguage(t *testing.T) {
-	checks := 0
 	var shell *DesktopShell
 	app := nsgotest.StartApp(t, func(cx *core.Scope) {
-		installApplicationMenu(cx, "darwin", func() { checks++ })
+		installApplicationMenu(cx, "darwin")
 		cx.SetMainView(func(cx *core.Scope) core.Node {
 			model := govaultui.NewAppModel(cx, demo.NewService(state.StatusUnlocked), govaultui.PlatformHooks{PrefsKey: "govault.menu-language-test"})
 			shell = &DesktopShell{scope: cx, model: model}
@@ -102,17 +92,12 @@ func TestMenusFollowTheLanguage(t *testing.T) {
 		return labels
 	}
 	english, pseudo := locales.In("en"), locales.In(i18n.PseudoAccents)
-	app.ChooseMenu("GoVault", english.CheckForUpdatesMenu())
 	if got := trayLabels(); got[0] != english.OpenGoVault() {
 		t.Fatalf("tray menu = %q", got)
 	}
 
 	app.Post(func() { shell.model.SetLanguage(i18n.PseudoAccents) })
 	app.Settle()
-	app.ChooseMenu("GoVault", pseudo.CheckForUpdatesMenu())
-	if checks != 2 {
-		t.Fatalf("Check for Updates ran %d times, want once in each language", checks)
-	}
 	if got := trayLabels(); got[0] != pseudo.OpenGoVault() || got[len(got)-1] != pseudo.QuitGoVault() {
 		t.Fatalf("tray menu = %q, want it in the pseudo locale", got)
 	}

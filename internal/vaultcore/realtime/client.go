@@ -125,12 +125,12 @@ func (c *WSClient) runOnce(ctx context.Context, tokens Tokens, onConnect func(),
 	if err != nil {
 		return false, err
 	}
-	q := u.Query()
-	q.Set("access_token", token)
-	u.RawQuery = q.Encode()
+	// Vaultwarden accepts bearer auth; keep tokens out of proxy access logs.
+	header := http.Header{"Authorization": {"Bearer " + token}}
 
 	conn, resp, err := websocket.Dial(ctx, u.String(), &websocket.DialOptions{
 		HTTPClient: c.httpClient,
+		HTTPHeader: header,
 	})
 	if err != nil {
 		if resp != nil && (resp.StatusCode == http.StatusUnauthorized || resp.StatusCode == http.StatusForbidden) {

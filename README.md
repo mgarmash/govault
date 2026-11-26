@@ -27,6 +27,21 @@
 
 <p align="center"><sub>Follows the system appearance: <a href="docs/screenshots/vault-light.png">light</a> and <a href="docs/screenshots/vault-dark.png">dark</a>.</sub></p>
 
+## Local Vaultwarden-only build
+
+The `local/vaultwarden-only` branch is for a self-hosted Vaultwarden with TLS on port 443. Automatic and manual update checks are removed. The macOS bundle does not ship `gv` or Sparkle; the desktop client and its updates are built from source.
+
+```sh
+GOTELEMETRY=off go tool nsgo build -target macos_arm64 -installers=false \
+  -id local.govault.desktop -ldflags '-X main.vaultOrigin=https://vault.example.com' ./cmd/govault
+```
+
+Replace the example origin on the build machine; do not commit it. Install the resulting ad-hoc signed `GoVault.app`. For demo data, open the bundle with `--args --demo`.
+
+The desktop HTTP transport permits only that HTTPS origin, including for attachments, WebSocket sync, and site icons. Cross-origin redirects and environment proxies cannot forward these requests. External attachment links are not supported on this branch. Icon requests contain the site hostname; Vaultwarden may log it or look up a cache miss itself. This transport is not an OS firewall.
+
+The installation and CLI instructions below refer to upstream releases, not this branch.
+
 ## Install
 
 ### macOS (13 or later, Apple silicon and Intel)

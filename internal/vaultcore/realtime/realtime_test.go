@@ -75,7 +75,7 @@ func TestWSClient_HandshakePingNotificationAndShutdown(t *testing.T) {
 	pingAcked := make(chan struct{}, 1)
 
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path != "/notifications/hub" || r.URL.Query().Get("access_token") != "jwt-123" {
+		if r.URL.Path != "/notifications/hub" || r.URL.RawQuery != "" || r.Header.Get("Authorization") != "Bearer jwt-123" {
 			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
@@ -196,7 +196,7 @@ func (t *testTokens) Rejected(token string) {
 
 func TestWSClient_RefreshesARejectedTokenAndReportsEachConnect(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Query().Get("access_token") != "fresh" {
+		if r.Header.Get("Authorization") != "Bearer fresh" {
 			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}

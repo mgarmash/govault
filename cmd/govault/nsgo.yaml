@@ -23,20 +23,3 @@ linux:
   # AppImage's usr/share: the AppStream metadata, in place of NSGo's.
   share: linux/share
 
-# gv, the command-line client, ships in every desktop package: signed in
-# GoVault.app/Contents/MacOS, beside the executable on Windows and Linux,
-# linked into /usr/bin by the .deb and pacman packages.
-commands:
-  - name: gv
-    package: ../gv
-
-windows:
-  # Puts the installation directory, which holds gv.exe, on the user's Path.
-  path: true
-
-release:
-  github: txchen/govault
-
-updates:
-  key: 6iugV37IcMOWY8WgrigDXu+OMdyasUYzUuTomJPWB2E=
-  automatic: true
