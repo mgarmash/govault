@@ -18,26 +18,30 @@ import (
 	"github.com/txchen/govault/internal/vaultcore/totp"
 )
 
-// QuickField is one credential field Quick Access can copy or fill.
+// QuickField is one credential value Quick Access can copy or fill.
 type QuickField uint8
 
 const (
 	QuickUsername QuickField = iota
 	QuickPassword
 	QuickTOTP
+	// QuickLogin is the username/password pair: Fill receives the username,
+	// the password and tab true, and the target types a Tab between them
+	// without submitting.
+	QuickLogin
 )
 
 // QuickTarget is the app, window and optional browser origin Quick Access
 // fills. App and Window are human-readable and shown before every fill.
-// Origin is empty for a native target, or a browser HTTPS origin. CanFill
-// optionally reports the fields Fill accepts; nil means all. Fill must
-// verify the same app/window/field and fail closed; Close is nil or
-// idempotent.
+// Origin is empty for a native target, or a browser HTTPS origin; it only
+// ranks search results and never authorizes or blocks a fill.
+// Fill receives a single field's value as its first argument, an empty
+// second argument and tab false, or the QuickLogin pair as username and
+// password with tab true. It must verify the destination and fail closed.
+// Errors must be static, user-safe text; the panel shows them as-is.
 type QuickTarget struct {
 	App, Window, Origin string
-	Fill                func(QuickField, string) error
-	CanFill             func(QuickField) bool
-	Close               func()
+	Fill                func(user, password string, tab bool) error
 }
 
 const quickMaxRows = 200
@@ -54,15 +58,6 @@ type quickFacts struct {
 	HasPassword bool
 	HasTOTP     bool
 	Hidden      bool
-	OriginOK    bool
-}
-
-type quickConfirm struct {
-	Open   bool
-	Choose bool
-	Field  QuickField
-	ID     string
-	Name   string
 }
 
 type quickAccess struct {
@@ -70,17 +65,16 @@ type quickAccess struct {
 	target  QuickTarget
 	dismiss func()
 	win     *desktop.Window
+	// permitted is the platform's fill permission, read once when the panel
+	// opens; the target re-checks it before each write.
+	permitted bool
+	origin    string
 
-	native   bool
-	origin   string
-	originOK bool
-
-	query   *core.Signal[string]
-	sel     *base.Selection
-	notice  *core.Signal[string]
-	items   *core.Memo[[]state.CipherSummary]
-	facts   *core.Memo[quickFacts]
-	confirm *core.Signal[quickConfirm]
+	query  *core.Signal[string]
+	sel    *base.Selection
+	notice *core.Signal[string]
+	items  *core.Memo[[]state.CipherSummary]
+	facts  *core.Memo[quickFacts]
 
 	listRef core.Ref
 	closed  atomic.Bool
@@ -89,27 +83,20 @@ type quickAccess struct {
 // QuickAccessView is the native Quick Access panel: a search field over
 // login summaries, a keyboard-selected list, and explicit copy/fill
 // actions for the selected item. It owns no decrypted cipher: actions
-// re-read the item after any reprompt and re-check the lock, access and
-// origin immediately before use. dismiss closes the panel; the owner
-// disposes it and closes target.
+// re-read the item after any reprompt and re-check the lock and access
+// immediately before use. dismiss closes the panel; the owner disposes it.
 func QuickAccessView(cx *core.Scope, m *AppModel, target QuickTarget, dismiss func()) core.Node {
 	cx.SetTheme(GovaultTheme())
 	qa := &quickAccess{
-		m:       m,
-		target:  target,
-		dismiss: dismiss,
-		win:     desktop.CurrentWindow(cx),
-		native:  target.Origin == "",
-		query:   core.NewSignal(cx, ""),
-		sel:     base.NewSelection(cx, false),
-		notice:  core.NewSignal(cx, ""),
-		confirm: core.NewSignal(cx, quickConfirm{}),
-	}
-	if !qa.native {
-		qa.origin = QuickWebOrigin(target.Origin)
-		qa.originOK = target.Origin == qa.origin
-	} else {
-		qa.originOK = true
+		m:         m,
+		target:    target,
+		dismiss:   dismiss,
+		win:       desktop.CurrentWindow(cx),
+		permitted: m.QuickAccessPermission == nil || m.QuickAccessPermission(),
+		origin:    QuickWebOrigin(target.Origin),
+		query:     core.NewSignal(cx, ""),
+		sel:       base.NewSelection(cx, false),
+		notice:    core.NewSignal(cx, ""),
 	}
 	qa.items = core.NewMemoFunc(cx, qa.loadItems, nil)
 	qa.facts = core.NewMemo(cx, qa.loadFacts)
@@ -135,7 +122,6 @@ func QuickAccessView(cx *core.Scope, m *AppModel, target QuickTarget, dismiss fu
 	})
 	cx.Effect(func() {
 		if m.LockState.Get() != state.StatusUnlocked {
-			qa.confirm.Set(quickConfirm{})
 			qa.notice.Set("")
 			qa.cancelReprompt()
 		}
@@ -152,13 +138,16 @@ func QuickAccessView(cx *core.Scope, m *AppModel, target QuickTarget, dismiss fu
 	})
 	cx.Cleanup(func() {
 		qa.closed.Store(true)
-		qa.target.Fill = nil
 		qa.cancelReprompt()
 	})
 
 	cx.OnKeyWith("escape", core.KeyOptions{When: core.KeyAlways}, qa.escape)
 	cx.OnKeyWith("up", core.KeyOptions{When: core.KeyAlways, Repeat: true}, func() { qa.move(-1) })
 	cx.OnKeyWith("down", core.KeyOptions{When: core.KeyAlways, Repeat: true}, func() { qa.move(1) })
+	cx.OnKeyWith("shift+enter", core.KeyOptions{When: core.KeyAlways}, func() { qa.fillField(QuickPassword) })
+	cx.OnKeyWith("mod+1", core.KeyOptions{When: core.KeyAlways}, func() { qa.fillField(QuickUsername) })
+	cx.OnKeyWith("mod+2", core.KeyOptions{When: core.KeyAlways}, func() { qa.fillField(QuickPassword) })
+	cx.OnKeyWith("mod+3", core.KeyOptions{When: core.KeyAlways}, func() { qa.fillField(QuickTOTP) })
 
 	return core.Dynamic(func(cx *core.Scope) core.Node {
 		if m.LockState.Get() != state.StatusUnlocked {
@@ -209,18 +198,13 @@ func (qa *quickAccess) loadFacts() quickFacts {
 	if err != nil || !quickLoginUsable(c) {
 		return quickFacts{}
 	}
-	f := quickFacts{
+	return quickFacts{
 		Valid:       true,
 		HasUsername: strings.TrimSpace(c.Login.Username) != "",
 		HasPassword: c.Login.Password != "",
 		HasTOTP:     strings.TrimSpace(c.Login.TOTP) != "",
 		Hidden:      qa.m.PasswordHidden(c),
-		OriginOK:    qa.native,
 	}
-	if !qa.native && qa.originOK {
-		f.OriginOK = quickMatchesOrigin(qa.origin, quickLoginURIs(c))
-	}
-	return f
 }
 
 func (qa *quickAccess) content(cx *core.Scope) core.Node {
@@ -232,6 +216,10 @@ func (qa *quickAccess) content(cx *core.Scope) core.Node {
 				core.Text{Class: "text-[15px] font-semibold text-gv-fg", Content: "Quick Access"},
 				core.Text{TestID: "quick-target", Class: "text-[12px] text-gv-fg2", MaxLines: 2, ContentFunc: qa.targetLine},
 			}},
+			core.Show{
+				When: func() bool { return qa.m.QuickAccessPermission != nil },
+				Then: func(cx *core.Scope) core.Node { return quickAccessPermissionRow(cx, qa.m) },
+			},
 			searchField(cx, base.Input{
 				TestID:        "quick-search",
 				Placeholder:   locales.SearchVault(cx),
@@ -244,7 +232,7 @@ func (qa *quickAccess) content(cx *core.Scope) core.Node {
 					qa.notice.Set("")
 					qa.query.Set(q)
 				},
-				OnSubmit: func(string) { qa.requestChoose() },
+				OnSubmit: func(string) { qa.fillLogin() },
 			}, "", nil),
 			core.Show{
 				When: func() bool { return qa.notice.Get() != "" },
@@ -268,7 +256,7 @@ func (qa *quickAccess) content(cx *core.Scope) core.Node {
 					if i >= 0 && i < len(qa.items.GetUntracked()) {
 						qa.sel.Set(qa.itemAt(i).ID)
 					}
-					qa.requestChoose()
+					qa.fillLogin()
 				},
 				Row: func(cx *core.Scope, row core.ListRow) core.Node {
 					s := qa.itemAt(row.Index())
@@ -298,12 +286,14 @@ func (qa *quickAccess) content(cx *core.Scope) core.Node {
 				Style: core.Style{FlexGrow: 1, FlexShrink: 1, FlexBasis: core.Pt(0), MinHeight: core.Pt(100)},
 			},
 			qa.details(cx),
-			core.Text{Class: "text-[11.5px] text-gv-fg3", Content: "↑↓ choose · Enter fill · Esc close"},
+			core.View{Class: "flex-col gap-[2px]", Children: []core.Node{
+				core.Text{Class: "text-[11.5px] text-gv-fg3", Content: "↑↓ choose · Enter login · ⇧Enter password"},
+				core.Text{Class: "text-[11.5px] text-gv-fg3", Content: "⌘1/2/3 user · password · code · Esc close"},
+			}},
 			core.Show{
 				When: func() bool { return qa.m.quickReprompt.Get() },
 				Then: func(*core.Scope) core.Node { return repromptDialog(qa.m) },
 			},
-			qa.confirmDialog(cx),
 		},
 	}
 }
@@ -318,14 +308,12 @@ func (qa *quickAccess) targetLine() string {
 	}
 	line := app + " — " + window
 	switch {
-	case qa.native && qa.target.Fill != nil:
-		line += " · Native app"
-	case qa.native:
-		line += " · app/window only"
-	case qa.originOK:
+	case qa.origin != "":
 		line += " · " + qa.origin
+	case qa.target.Origin != "":
+		line += " · origin unavailable"
 	default:
-		line += " · origin not verified"
+		line += " · Native app"
 	}
 	return line
 }
@@ -358,14 +346,10 @@ func (qa *quickAccess) details(cx *core.Scope) core.Node {
 		}
 		var note string
 		switch {
-		case !qa.originOK:
-			note = "The destination origin could not be verified. Fill is unavailable; Copy still works."
+		case !qa.permitted:
+			note = "Quick Access needs Accessibility permission to fill. Copy still works."
 		case qa.target.Fill == nil:
 			note = "Fill is unavailable for this app. Copy still works."
-		case qa.target.App == "" || qa.target.Window == "":
-			note = "The destination app or window is not confirmed. Fill is unavailable; Copy still works."
-		case !qa.native && !f.OriginOK:
-			note = "This login's saved website does not match the current origin. Fill is unavailable; Copy still works."
 		case f.Hidden:
 			note = locales.HiddenByOrganization(cx)
 		}
@@ -376,7 +360,7 @@ func (qa *quickAccess) details(cx *core.Scope) core.Node {
 				Variant:  ui.ButtonSecondary,
 				Size:     ui.SizeSmall,
 				Disabled: func() bool { return !qa.fillAllowed(f, field) },
-				OnPress:  func() { qa.requestFill(field) },
+				OnPress:  func() { qa.fillField(field) },
 			}
 		}
 		copyBtn := func(id, label string, field QuickField, disabled bool) core.Node {
@@ -401,6 +385,7 @@ func (qa *quickAccess) details(cx *core.Scope) core.Node {
 					},
 				},
 				core.View{Class: "flex-row flex-wrap gap-1.5", Children: []core.Node{
+					fill("quick-fill-login", "Fill login", QuickLogin),
 					fill("quick-fill-username", "Fill user", QuickUsername),
 					fill("quick-fill-password", "Fill password", QuickPassword),
 					fill("quick-fill-totp", "Fill code", QuickTOTP),
@@ -415,94 +400,8 @@ func (qa *quickAccess) details(cx *core.Scope) core.Node {
 	})
 }
 
-func (qa *quickAccess) confirmDialog(cx *core.Scope) core.Node {
-	fieldLabel := func(f QuickField) string {
-		switch f {
-		case QuickUsername:
-			return locales.Username(cx)
-		case QuickPassword:
-			return locales.Password(cx)
-		case QuickTOTP:
-			return locales.VerificationCode(cx)
-		}
-		return ""
-	}
-	return ui.Dialog{
-		TestID:      "quick-fill-confirm",
-		Open:        func() bool { return qa.confirm.Get().Open },
-		OnOpenChange: func(open bool, _ base.Reason) {
-			if !open {
-				qa.confirm.Set(quickConfirm{})
-			}
-		},
-		OnConfirm: func() {
-			if c := qa.confirm.Get(); c.Open && !c.Choose {
-				qa.fillConfirmed(c.Field)
-			}
-		},
-		Title:       "Fill from GoVault",
-		Description: qa.targetLine(),
-		Children: []core.Node{core.Dynamic(func(*core.Scope) core.Node {
-			c := qa.confirm.Get()
-			if !c.Open {
-				return core.View{}
-			}
-			if !c.Choose {
-				return core.Text{Class: "text-[12px] text-gv-fg2", Content: "Only " + fieldLabel(c.Field) + " is filled. Nothing is submitted."}
-			}
-			f := qa.facts.Get()
-			var choices []core.Node
-			for _, field := range []QuickField{QuickUsername, QuickPassword, QuickTOTP} {
-				if !qa.fillAllowed(f, field) {
-					continue
-				}
-				field := field
-				label := fieldLabel(field)
-				choices = append(choices, ui.Button{
-					TestID:  "quick-fill-choice-" + quickFieldName(field),
-					Text:    "Fill " + strings.ToLower(label),
-					Variant: ui.ButtonSecondary,
-					OnPress: func() { qa.fillConfirmed(field) },
-				})
-			}
-			if len(choices) == 0 {
-				return core.Text{Class: "text-[12px] text-gv-warn", Content: "No field can be filled here. Use Copy instead."}
-			}
-			return core.View{Class: "flex-col gap-1.5", Children: choices}
-		})},
-		Footer: []core.Node{
-			ui.Button{Text: locales.Cancel(cx), Variant: ui.ButtonSecondary, OnPress: func() { qa.confirm.Set(quickConfirm{}) }},
-			core.Dynamic(func(*core.Scope) core.Node {
-				c := qa.confirm.Get()
-				if !c.Open || c.Choose {
-					return core.View{}
-				}
-				return ui.Button{TestID: "quick-fill-confirm-action", Text: "Fill", Variant: ui.ButtonPrimary, OnPress: func() { qa.fillConfirmed(c.Field) }}
-			}),
-		},
-	}
-}
-
-func quickFieldName(field QuickField) string {
-	switch field {
-	case QuickUsername:
-		return "username"
-	case QuickPassword:
-		return "password"
-	case QuickTOTP:
-		return "totp"
-	}
-	return "field"
-}
-
 func (qa *quickAccess) fillAllowed(f quickFacts, field QuickField) bool {
-	if !qa.originOK || !f.Valid || qa.target.Fill == nil || qa.target.App == "" || qa.target.Window == "" {
-		return false
-	}
-	if qa.target.CanFill != nil && !qa.target.CanFill(field) {
-		return false
-	}
-	if !qa.native && !f.OriginOK {
+	if !qa.permitted || !f.Valid || qa.target.Fill == nil {
 		return false
 	}
 	switch field {
@@ -512,11 +411,14 @@ func (qa *quickAccess) fillAllowed(f quickFacts, field QuickField) bool {
 		return f.HasPassword && !f.Hidden
 	case QuickTOTP:
 		return f.HasTOTP
+	case QuickLogin:
+		return f.HasUsername && f.HasPassword && !f.Hidden
 	}
 	return false
 }
 
-func (qa *quickAccess) requestFill(field QuickField) {
+// fillField fills one explicit field selected by a button or shortcut.
+func (qa *quickAccess) fillField(field QuickField) {
 	if !qa.live() {
 		return
 	}
@@ -525,20 +427,18 @@ func (qa *quickAccess) requestFill(field QuickField) {
 	if s == nil {
 		return
 	}
-	f := qa.facts.Get()
+	f := qa.loadFacts()
 	if !qa.fillAllowed(f, field) {
 		qa.notice.Set(qa.blockedReason(f, field))
 		return
 	}
 	qa.notice.Set("")
-	if qa.native {
-		qa.confirm.Set(quickConfirm{Open: true, Field: field, ID: s.ID, Name: s.Name})
-		return
-	}
 	qa.perform(s.ID, field, false)
 }
 
-func (qa *quickAccess) requestChoose() {
+// fillLogin runs Enter: the username/password pair with a Tab, or just the
+// password when the item has no username.
+func (qa *quickAccess) fillLogin() {
 	if !qa.live() {
 		return
 	}
@@ -547,55 +447,45 @@ func (qa *quickAccess) requestChoose() {
 	if s == nil {
 		return
 	}
-	f := qa.facts.Get()
-	var allowed []QuickField
-	for _, field := range []QuickField{QuickUsername, QuickPassword, QuickTOTP} {
-		if qa.fillAllowed(f, field) {
-			allowed = append(allowed, field)
-		}
+	f := qa.loadFacts()
+	switch {
+	case qa.fillAllowed(f, QuickLogin):
+		qa.notice.Set("")
+		qa.perform(s.ID, QuickLogin, false)
+	case f.Valid && !f.HasUsername && f.HasPassword && !f.Hidden:
+		qa.fillField(QuickPassword)
+	default:
+		qa.notice.Set(qa.blockedReason(f, QuickLogin))
 	}
-	if len(allowed) == 0 {
-		qa.notice.Set(qa.blockedReason(f, QuickPassword))
-		return
-	}
-	qa.notice.Set("")
-	if len(allowed) == 1 {
-		qa.confirm.Set(quickConfirm{Open: true, Field: allowed[0], ID: s.ID, Name: s.Name})
-		return
-	}
-	qa.confirm.Set(quickConfirm{Open: true, Choose: true, ID: s.ID, Name: s.Name})
-}
-
-func (qa *quickAccess) fillConfirmed(field QuickField) {
-	c := qa.confirm.Get()
-	qa.confirm.Set(quickConfirm{})
-	if c.ID == "" {
-		return
-	}
-	s := qa.selected()
-	if s == nil || s.ID != c.ID || (c.Name != "" && s.Name != c.Name) {
-		qa.notice.Set("The selected item changed. Choose it again.")
-		return
-	}
-	qa.perform(c.ID, field, false)
 }
 
 func (qa *quickAccess) blockedReason(f quickFacts, field QuickField) string {
 	switch {
 	case !f.Valid:
 		return "This item is no longer available."
-	case !qa.originOK:
-		return "The destination origin could not be verified. Use Copy instead."
+	case !qa.permitted:
+		return "Quick Access needs Accessibility permission to fill. Use Copy instead."
 	case qa.target.Fill == nil:
 		return "Fill is unavailable for this app. Use Copy instead."
-	case qa.target.CanFill != nil && !qa.target.CanFill(field):
-		return "This app cannot fill that field."
-	case qa.target.App == "" || qa.target.Window == "":
-		return "The destination app or window is not confirmed. Use Copy instead."
-	case !qa.native && !f.OriginOK:
-		return "This login does not match the current origin. Use Copy instead."
 	case f.Hidden:
 		return "The password is hidden by the organization."
+	}
+	switch field {
+	case QuickUsername:
+		return "This item has no username."
+	case QuickPassword:
+		return "This item has no password."
+	case QuickTOTP:
+		return "This item has no verification code."
+	case QuickLogin:
+		switch {
+		case !f.HasUsername && !f.HasPassword:
+			return "This item has no username or password."
+		case !f.HasUsername:
+			return "This item has no username."
+		default:
+			return "This item has no password."
+		}
 	}
 	return "This field is empty."
 }
@@ -631,10 +521,6 @@ func (qa *quickAccess) move(delta int) {
 }
 
 func (qa *quickAccess) escape() {
-	if qa.confirm.Get().Open {
-		qa.confirm.Set(quickConfirm{})
-		return
-	}
 	qa.close()
 }
 
@@ -676,7 +562,7 @@ func (qa *quickAccess) perform(id string, field QuickField, copy bool) {
 		qa.notice.Set(reason)
 		return
 	}
-	gated := c.Reprompt == 1 && (field == QuickPassword || field == QuickTOTP)
+	gated := c.Reprompt == 1 && quickGated(field)
 	if gated {
 		action := RepromptCopyPassword
 		if field == QuickTOTP {
@@ -726,7 +612,7 @@ func (qa *quickAccess) check(id string, field QuickField, fill bool) (*state.Cip
 	if err != nil || !quickLoginUsable(c) {
 		return nil, "This item is no longer available."
 	}
-	if field == QuickPassword && qa.m.PasswordHidden(c) {
+	if (field == QuickPassword || field == QuickLogin) && qa.m.PasswordHidden(c) {
 		return nil, "The password is hidden by the organization."
 	}
 	if fill {
@@ -737,6 +623,12 @@ func (qa *quickAccess) check(id string, field QuickField, fill bool) (*state.Cip
 	return c, ""
 }
 
+// quickGated reports whether a field's value needs the item's master
+// password reprompt.
+func quickGated(field QuickField) bool {
+	return field == QuickPassword || field == QuickTOTP || field == QuickLogin
+}
+
 // currentValue re-reads the item and applies current lock, access,
 // reprompt and (for fill) destination rules. It never keeps the cipher.
 func (qa *quickAccess) currentValue(id string, field QuickField, fill, gated bool) (string, error) {
@@ -744,10 +636,23 @@ func (qa *quickAccess) currentValue(id string, field QuickField, fill, gated boo
 	if reason != "" {
 		return "", quickDenied(reason)
 	}
-	if (field == QuickPassword || field == QuickTOTP) && c.Reprompt == 1 && !gated {
+	if quickGated(field) && c.Reprompt == 1 && !gated {
 		return "", quickDenied("This item now requires verification. Reopen Quick Access.")
 	}
 	return quickFieldValue(c, field)
+}
+
+// currentFill re-reads the item and returns the arguments for Fill. It
+// never keeps the cipher.
+func (qa *quickAccess) currentFill(id string, field QuickField, gated bool) (string, string, bool, error) {
+	c, reason := qa.check(id, field, true)
+	if reason != "" {
+		return "", "", false, quickDenied(reason)
+	}
+	if quickGated(field) && c.Reprompt == 1 && !gated {
+		return "", "", false, quickDenied("This item now requires verification. Reopen Quick Access.")
+	}
+	return quickFillArgs(c, field)
 }
 
 func (qa *quickAccess) copyValue(id string, field QuickField, gen uint64, gated bool) {
@@ -775,14 +680,11 @@ func (qa *quickAccess) fillValue(id string, field QuickField, gen uint64, gated 
 		if !qa.live() {
 			return errQuickAccessCanceled
 		}
-		value, err := qa.currentValue(id, field, true, gated)
+		user, password, tab, err := qa.currentFill(id, field, gated)
 		if err != nil {
 			return err
 		}
-		if err := qa.target.Fill(field, value); err != nil {
-			return quickDenied("Couldn't fill the field. The destination may have changed.")
-		}
-		return nil
+		return qa.target.Fill(user, password, tab)
 	})
 	if err != nil {
 		var denied quickDenied
@@ -793,7 +695,13 @@ func (qa *quickAccess) fillValue(id string, field QuickField, gen uint64, gated 
 			qa.notice.Set(string(denied))
 			return
 		}
-		qa.notice.Set("Couldn't fill the field.")
+		// The target returns static, user-safe errors, such as a changed
+		// app or a missing permission, so the user can tell them apart.
+		if msg := strings.TrimSpace(err.Error()); msg != "" {
+			qa.notice.Set(msg)
+		} else {
+			qa.notice.Set("Couldn't fill the field.")
+		}
 		return
 	}
 	if !ok {
@@ -802,8 +710,8 @@ func (qa *quickAccess) fillValue(id string, field QuickField, gen uint64, gated 
 	qa.close()
 }
 
-// fillDenied re-checks the record, target and exact destination origin.
-// It returns "" when the field may be filled.
+// fillDenied re-checks the record and target. It returns "" when the
+// field may be filled.
 func (qa *quickAccess) fillDenied(c *state.Cipher, field QuickField) string {
 	if c == nil || c.Login == nil || c.Type != api.CipherTypeLogin {
 		return "This item is not a login."
@@ -811,22 +719,11 @@ func (qa *quickAccess) fillDenied(c *state.Cipher, field QuickField) string {
 	if c.DeletedDate != nil || c.ArchivedDate != nil {
 		return "This item is no longer available."
 	}
+	if !qa.permitted {
+		return "Quick Access needs Accessibility permission to fill. Use Copy instead."
+	}
 	if qa.target.Fill == nil {
 		return "Fill is unavailable for this app. Use Copy instead."
-	}
-	if qa.target.CanFill != nil && !qa.target.CanFill(field) {
-		return "This app cannot fill that field."
-	}
-	if qa.target.App == "" || qa.target.Window == "" {
-		return "The destination app or window is not confirmed. Use Copy instead."
-	}
-	if !qa.native {
-		if !qa.originOK {
-			return "The destination origin could not be verified. Use Copy instead."
-		}
-		if !quickMatchesOrigin(qa.origin, quickLoginURIs(c)) {
-			return "This login does not match the current origin. Use Copy instead."
-		}
 	}
 	switch field {
 	case QuickUsername:
@@ -840,6 +737,10 @@ func (qa *quickAccess) fillDenied(c *state.Cipher, field QuickField) string {
 	case QuickTOTP:
 		if strings.TrimSpace(c.Login.TOTP) == "" {
 			return "This item has no verification code."
+		}
+	case QuickLogin:
+		if strings.TrimSpace(c.Login.Username) == "" || c.Login.Password == "" {
+			return "This item has no username or password."
 		}
 	}
 	return ""
@@ -876,6 +777,26 @@ func quickFieldValue(c *state.Cipher, field QuickField) (string, error) {
 		return code, nil
 	}
 	return "", quickDenied("This field is empty.")
+}
+
+// quickFillArgs maps a field to the target's Fill arguments.
+func quickFillArgs(c *state.Cipher, field QuickField) (string, string, bool, error) {
+	if field == QuickLogin {
+		user, err := quickFieldValue(c, QuickUsername)
+		if err != nil {
+			return "", "", false, err
+		}
+		password, err := quickFieldValue(c, QuickPassword)
+		if err != nil {
+			return "", "", false, err
+		}
+		return user, password, true, nil
+	}
+	value, err := quickFieldValue(c, field)
+	if err != nil {
+		return "", "", false, err
+	}
+	return value, "", false, nil
 }
 
 // QuickWebOrigin is the one HTTPS origin parser the UI and the platform's

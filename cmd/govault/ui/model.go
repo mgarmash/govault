@@ -406,6 +406,7 @@ type AppModel struct {
 
 	QuickAccessRegistration *core.Signal[*core.HotKey]
 	RecordQuickAccessHotKey *core.Signal[bool]
+	QuickAccessPermission   func() bool
 
 	BiometricKind     *core.Signal[core.BiometricKind]
 	BiometricHardware *core.Signal[bool]

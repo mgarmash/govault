@@ -8,37 +8,49 @@ import (
 	"runtime"
 	"strings"
 	"sync"
+	"time"
+	"unicode/utf16"
 
 	"github.com/ebitengine/purego"
 	"github.com/ebitengine/purego/objc"
 	govaultui "github.com/txchen/govault/cmd/govault/ui"
 )
 
-// Quick Access captures one focused text field of the frontmost application
-// and fills it with AXUIElementSetAttributeValue. It never injects keys, uses
-// the clipboard or activates the app. Before every write the field, window,
-// PID, role and browser web areas are checked again; any change or AX error
-// fails closed instead of targeting another element.
+// Quick Access fills the frontmost application's focused text field with
+// CoreGraphics Unicode key events posted to that process only. It never uses
+// the clipboard, Return, a global event tap or another key window. The panel
+// is nonactivating, so the target app stays frontmost while it is key; every
+// phase re-reads the frontmost PID and bundle and aborts without typing when
+// they changed. Accessibility is consulted only for the window title and the
+// browser origin shown in the panel, never to decide whether fill is allowed.
 
 const (
-	quickAXMaxAncestors    = 256
-	quickAXTimeout         = 2.0
-	quickAXErrorNoValue    = -25212
-	quickAXRoleWindow      = "AXWindow"
-	quickAXRoleSheet       = "AXSheet"
-	quickAXRoleApplication = "AXApplication"
-	quickAXRoleTextField   = "AXTextField"
-	quickAXRoleWebArea     = "AXWebArea"
-	quickAXSecureField     = "AXSecureTextField"
+	quickAXMaxAncestors = 64
+	quickAXTimeout      = 2.0
+	quickAXRoleWindow   = "AXWindow"
+	quickAXRoleSheet    = "AXSheet"
+	quickAXRoleApp      = "AXApplication"
+	quickAXRoleWebArea  = "AXWebArea"
+
+	quickKeyTab      = 48 // kVK_Tab
+	quickTabWait     = 250 * time.Millisecond
+	quickTabPoll     = 10 * time.Millisecond
+	quickTabFallback = 80 * time.Millisecond
+
+	// CGEventKeyboardSetUnicodeString takes at most 20 UTF-16 units per event.
+	quickUnicodeChunk = 20
 )
 
 var (
-	errQuickTargetUnavailable = errors.New("quick access: target is unavailable")
-	errQuickTargetChanged     = errors.New("quick access: target changed")
+	errQuickAccessPermission  = errors.New("quick access: allow GoVault to type into other apps in System Settings > Privacy & Security > Accessibility")
+	errQuickAccessUnavailable = errors.New("quick access: macOS input events are unavailable")
+	errQuickTargetUnavailable = errors.New("quick access: no text field is available")
+	errQuickTargetChanged     = errors.New("quick access: the destination app changed")
+	errQuickValueRejected     = errors.New("quick access: the value contains a line break or control character")
 )
 
 // Only known browsers may report a trustworthy AX web-area URL. Any other app
-// with web ancestry is rejected rather than filled.
+// with web ancestry is not asked for an origin, so suggestions stay copy-only.
 var quickSupportedBrowsers = map[string]bool{
 	"com.apple.Safari":                    true,
 	"com.apple.SafariTechnologyPreview":   true,
@@ -102,17 +114,19 @@ type quickCoreFoundation struct {
 	getTypeID        func(uintptr) uintptr
 	urlTypeID        func() uintptr
 	stringTypeID     func() uintptr
-	booleanTypeID    func() uintptr
-	booleanValue     func(uintptr) bool
+}
+
+type quickCoreGraphics struct {
+	eventCreateKeyboard func(uintptr, uint16, bool) uintptr
+	eventSetUnicode     func(uintptr, uint64, *uint16)
+	eventPostToPid      func(int32, uintptr)
+	preflightPostEvent  func() bool
 }
 
 type quickAccessibility struct {
 	createApplication func(int32) uintptr
 	copyAttribute     func(uintptr, uintptr, *uintptr) int32
-	setAttribute      func(uintptr, uintptr, uintptr) int32
-	isSettable        func(uintptr, uintptr, *uint8) int32
 	setTimeout        func(uintptr, float32) int32
-	elementPID        func(uintptr, *int32) int32
 	processTrusted    func() bool
 }
 
@@ -120,12 +134,9 @@ type quickAXAttributes struct {
 	focusedUIElement uintptr
 	focusedWindow    uintptr
 	role             uintptr
-	subrole          uintptr
 	title            uintptr
 	parent           uintptr
 	url              uintptr
-	value            uintptr
-	enabled          uintptr
 }
 
 type quickWorkspaceNames struct {
@@ -138,6 +149,7 @@ var (
 	quickAXOnce sync.Once
 	quickAXErr  error
 	quickCF     quickCoreFoundation
+	quickCG     quickCoreGraphics
 	quickAX     quickAccessibility
 	quickAttr   quickAXAttributes
 	quickWorks  quickWorkspaceNames
@@ -184,15 +196,20 @@ func initQuickAccessTarget() error {
 		purego.RegisterLibFunc(&quickCF.getTypeID, cfLib, "CFGetTypeID")
 		purego.RegisterLibFunc(&quickCF.urlTypeID, cfLib, "CFURLGetTypeID")
 		purego.RegisterLibFunc(&quickCF.stringTypeID, cfLib, "CFStringGetTypeID")
-		purego.RegisterLibFunc(&quickCF.booleanTypeID, cfLib, "CFBooleanGetTypeID")
-		purego.RegisterLibFunc(&quickCF.booleanValue, cfLib, "CFBooleanGetValue")
+
+		cgLib, err := purego.Dlopen("/System/Library/Frameworks/CoreGraphics.framework/CoreGraphics", purego.RTLD_NOW|purego.RTLD_GLOBAL)
+		if err != nil {
+			quickAXErr = err
+			return
+		}
+		purego.RegisterLibFunc(&quickCG.eventCreateKeyboard, cgLib, "CGEventCreateKeyboardEvent")
+		purego.RegisterLibFunc(&quickCG.eventSetUnicode, cgLib, "CGEventKeyboardSetUnicodeString")
+		purego.RegisterLibFunc(&quickCG.eventPostToPid, cgLib, "CGEventPostToPid")
+		purego.RegisterLibFunc(&quickCG.preflightPostEvent, cgLib, "CGPreflightPostEventAccess")
 
 		purego.RegisterLibFunc(&quickAX.createApplication, axLib, "AXUIElementCreateApplication")
 		purego.RegisterLibFunc(&quickAX.copyAttribute, axLib, "AXUIElementCopyAttributeValue")
-		purego.RegisterLibFunc(&quickAX.setAttribute, axLib, "AXUIElementSetAttributeValue")
-		purego.RegisterLibFunc(&quickAX.isSettable, axLib, "AXUIElementIsAttributeSettable")
 		purego.RegisterLibFunc(&quickAX.setTimeout, axLib, "AXUIElementSetMessagingTimeout")
-		purego.RegisterLibFunc(&quickAX.elementPID, axLib, "AXUIElementGetPid")
 		purego.RegisterLibFunc(&quickAX.processTrusted, axLib, "AXIsProcessTrusted")
 
 		quickWorks.workspace = objc.GetClass("NSWorkspace")
@@ -211,12 +228,9 @@ func initQuickAccessTarget() error {
 			"AXFocusedUIElement": &quickAttr.focusedUIElement,
 			"AXFocusedWindow":    &quickAttr.focusedWindow,
 			"AXRole":             &quickAttr.role,
-			"AXSubrole":          &quickAttr.subrole,
 			"AXTitle":            &quickAttr.title,
 			"AXParent":           &quickAttr.parent,
 			"AXURL":              &quickAttr.url,
-			"AXValue":            &quickAttr.value,
-			"AXEnabled":          &quickAttr.enabled,
 		} {
 			*dst = quickNewCFString(name)
 			if *dst == 0 {
@@ -228,7 +242,7 @@ func initQuickAccessTarget() error {
 	return quickAXErr
 }
 
-// Explicit length: CFStringCreateWithCString would truncate a secret at NUL.
+// Explicit length: CFStringCreateWithCString would truncate a value at NUL.
 func quickNewCFString(s string) uintptr {
 	b := []byte(s)
 	var p *byte
@@ -265,32 +279,12 @@ func quickCFString(ref uintptr) (string, bool) {
 }
 
 func quickAttrString(el, attr uintptr) (string, bool) {
-	s, code := quickAttrStringCode(el, attr)
-	return s, code == 0
-}
-
-func quickAttrStringCode(el, attr uintptr) (string, int32) {
 	v, code := quickCopyAttribute(el, attr)
 	if code != 0 {
-		return "", code
+		return "", false
 	}
 	defer quickCF.release(v)
-	if s, ok := quickCFString(v); ok {
-		return s, 0
-	}
-	return "", quickAXErrorNoValue
-}
-
-func quickAttrBool(el, attr uintptr) (bool, int32) {
-	v, code := quickCopyAttribute(el, attr)
-	if code != 0 {
-		return false, code
-	}
-	defer quickCF.release(v)
-	if quickCF.getTypeID(v) != quickCF.booleanTypeID() {
-		return false, quickAXErrorNoValue
-	}
-	return quickCF.booleanValue(v), 0
+	return quickCFString(v)
 }
 
 func quickCopyAttribute(el, attr uintptr) (uintptr, int32) {
@@ -301,7 +295,7 @@ func quickCopyAttribute(el, attr uintptr) (uintptr, int32) {
 		return 0, code
 	}
 	if v == 0 {
-		return 0, quickAXErrorNoValue
+		return 0, -25212 // kAXErrorNoValue
 	}
 	return v, 0
 }
@@ -343,32 +337,6 @@ func quickObjCString(v objc.ID) string {
 	return s
 }
 
-// quickAppFocus re-reads the application's focused window and UI element and
-// requires them to be the captured ones. AXFocusedUIElement is an application
-// attribute; the window may not answer it.
-func quickAppFocus(pid int32, app, window, field uintptr) bool {
-	front, _, _, ok := quickFrontmostApp()
-	if !ok || front != pid || int(front) == os.Getpid() {
-		return false
-	}
-	focusedWindow, code := quickCopyAttribute(app, quickAttr.focusedWindow)
-	if code != 0 {
-		return false
-	}
-	sameWindow := quickCF.equal(focusedWindow, window)
-	quickCF.release(focusedWindow)
-	if !sameWindow {
-		return false
-	}
-	focusedField, code := quickCopyAttribute(app, quickAttr.focusedUIElement)
-	if code != 0 {
-		return false
-	}
-	sameField := quickCF.equal(focusedField, field)
-	quickCF.release(focusedField)
-	return sameField
-}
-
 // quickTrustedOrigin returns the common origin of a web-area chain. "" means
 // no area, unverified area or a cross-origin nested frame, so a spoofing
 // wrapper never supplies its own origin.
@@ -385,13 +353,13 @@ func quickTrustedOrigin(origins []string) string {
 }
 
 type quickWebChain struct {
-	window, nearest, top uintptr
-	origin               string
+	window uintptr
+	origin string
 }
 
-// quickWebChainOf returns the window containing el, the nearest and outermost
-// AXWebArea, and the origin they all share. ok is false when the chain cannot
-// be read to a window or application root; callers fail closed.
+// quickWebChainOf returns the window containing el and the origin its web
+// areas share. ok is false when the chain cannot be read to a window or
+// application root; callers use it for the origin suggestion only.
 func quickWebChainOf(el uintptr) (chain quickWebChain, ok bool) {
 	if el == 0 {
 		return quickWebChain{}, false
@@ -411,15 +379,10 @@ func quickWebChainOf(el uintptr) (chain quickWebChain, ok bool) {
 		case quickAXRoleWebArea:
 			raw, _ := quickAttrURL(cur, quickAttr.url)
 			origins = append(origins, govaultui.QuickWebOrigin(raw))
-			if chain.nearest == 0 {
-				chain.nearest = quickCF.retain(cur)
-			}
-			quickRelease(chain.top)
-			chain.top = quickCF.retain(cur)
 		case quickAXRoleWindow, quickAXRoleSheet:
 			chain.window = quickCF.retain(cur)
 			root = true
-		case quickAXRoleApplication:
+		case quickAXRoleApp:
 			root = true
 		}
 		if root {
@@ -434,7 +397,7 @@ func quickWebChainOf(el uintptr) (chain quickWebChain, ok bool) {
 	}
 	quickCF.release(cur)
 	if !root {
-		quickRelease(chain.window, chain.nearest, chain.top)
+		quickRelease(chain.window)
 		return quickWebChain{}, false
 	}
 	chain.origin = quickTrustedOrigin(origins)
@@ -453,62 +416,53 @@ func quickAttrURL(el, attr uintptr) (string, bool) {
 	return quickCFString(v)
 }
 
-// Only single-line text fields qualify; a multiline chat composer must never
-// receive a credential, and a password needs the secure subrole.
-func quickRoleFieldAllowed(role, subrole string, field govaultui.QuickField) bool {
-	if field == govaultui.QuickPassword {
-		return role == quickAXRoleTextField && subrole == quickAXSecureField
+// quickCaptureContext reads the focused window title and, for a supported
+// browser, the trusted origin of its focused field. It never fails a fill:
+// without Accessibility both strings are empty and the panel shows Copy only.
+func quickCaptureContext(pid int32, browser bool) (title, origin string) {
+	if !quickAX.processTrusted() {
+		return "", ""
 	}
-	return role == quickAXRoleTextField && subrole != quickAXSecureField
-}
-
-// quickFieldFlags reads the field once and reports which QuickFields it can
-// take. Browsers do not expose AXEditable; a successful AXValue write is
-// authoritative, and settability is used when the app reports it reliably.
-func quickFieldFlags(el uintptr) (allowed [3]bool) {
-	role, ok := quickAttrString(el, quickAttr.role)
+	app := quickAX.createApplication(pid)
+	if app == 0 {
+		return "", ""
+	}
+	defer quickCF.release(app)
+	if quickAX.setTimeout(app, quickAXTimeout) != 0 {
+		return "", ""
+	}
+	window, code := quickCopyAttribute(app, quickAttr.focusedWindow)
+	if code != 0 {
+		return "", ""
+	}
+	defer quickCF.release(window)
+	role, ok := quickAttrString(window, quickAttr.role)
+	if !ok || (role != quickAXRoleWindow && role != quickAXRoleSheet) {
+		return "", ""
+	}
+	title, _ = quickAttrString(window, quickAttr.title)
+	if !browser {
+		return title, ""
+	}
+	field, code := quickCopyAttribute(app, quickAttr.focusedUIElement)
+	if code != 0 {
+		return title, ""
+	}
+	defer quickCF.release(field)
+	chain, ok := quickWebChainOf(field)
 	if !ok {
-		return allowed
+		return title, ""
 	}
-	subrole, code := quickAttrStringCode(el, quickAttr.subrole)
-	if code != 0 && code != quickAXErrorNoValue {
-		return allowed
+	defer quickRelease(chain.window)
+	if chain.window == 0 || !quickCF.equal(chain.window, window) {
+		return title, ""
 	}
-	enabled, code := quickAttrBool(el, quickAttr.enabled)
-	if code != 0 || !enabled {
-		return allowed
-	}
-	var settable uint8
-	if code := quickAX.isSettable(el, quickAttr.value, &settable); code == 0 && settable == 0 {
-		return allowed
-	}
-	allowed[0] = quickRoleFieldAllowed(role, subrole, govaultui.QuickUsername)
-	allowed[1] = quickRoleFieldAllowed(role, subrole, govaultui.QuickPassword)
-	allowed[2] = quickRoleFieldAllowed(role, subrole, govaultui.QuickTOTP)
-	return allowed
+	return title, chain.origin
 }
 
-func quickFieldAllowed(allowed [3]bool, field govaultui.QuickField) bool {
-	return int(field) < len(allowed) && allowed[field]
-}
-
-type quickAXTarget struct {
-	mu         sync.Mutex
-	closed     bool
-	pid        int32
-	browser    bool
-	app        uintptr
-	window     uintptr
-	field      uintptr
-	windowRole string
-	webArea    uintptr
-	topArea    uintptr
-	origin     string
-}
-
-// captureQuickTarget describes the frontmost application's focused field. It
-// never prompts for Accessibility: without the permission, or without a
-// suitable field, Fill stays nil and only the app/window label is exposed.
+// quickCaptureTarget describes the frontmost application's focused field
+// without prompting for permission. Without Accessibility, or with a blocked
+// app, Fill stays nil and only the app label is exposed.
 func captureQuickTarget() govaultui.QuickTarget {
 	if err := initQuickAccessTarget(); err != nil {
 		return govaultui.QuickTarget{}
@@ -520,134 +474,218 @@ func captureQuickTarget() govaultui.QuickTarget {
 	if quickBlockedApps[bundle] {
 		return govaultui.QuickTarget{App: name}
 	}
-	if !quickAX.processTrusted() {
+	if !quickAutofillAvailable() {
 		return govaultui.QuickTarget{App: name}
 	}
-
-	app := quickAX.createApplication(pid)
-	if app == 0 {
-		return govaultui.QuickTarget{App: name}
-	}
-	// Bound every AX query so a hung app cannot stall the panel or lock.
-	if quickAX.setTimeout(app, quickAXTimeout) != 0 {
-		quickRelease(app)
-		return govaultui.QuickTarget{App: name}
-	}
-	window, code := quickCopyAttribute(app, quickAttr.focusedWindow)
-	if code != 0 {
-		quickRelease(app)
-		return govaultui.QuickTarget{App: name}
-	}
-	windowRole, ok := quickAttrString(window, quickAttr.role)
-	if !ok || (windowRole != quickAXRoleWindow && windowRole != quickAXRoleSheet) {
-		quickRelease(window, app)
-		return govaultui.QuickTarget{App: name}
-	}
-	title, _ := quickAttrString(window, quickAttr.title)
-	field, code := quickCopyAttribute(app, quickAttr.focusedUIElement)
-	if code != 0 {
-		quickRelease(window, app)
-		return govaultui.QuickTarget{App: name, Window: title}
-	}
-
-	chain, walkOK := quickWebChainOf(field)
-	browser := quickSupportedBrowsers[bundle]
-	if !walkOK || chain.window == 0 || !quickCF.equal(chain.window, window) ||
-		(chain.nearest != 0 && !browser) ||
-		(browser && (chain.nearest == 0 || chain.origin == "")) {
-		quickRelease(chain.window, chain.nearest, chain.top, field, window, app)
-		return govaultui.QuickTarget{App: name, Window: title}
-	}
-	quickRelease(chain.window) // the same element as window, verified above
-	if !quickAppFocus(pid, app, window, field) {
-		quickRelease(chain.nearest, chain.top, field, window, app)
-		return govaultui.QuickTarget{App: name, Window: title}
-	}
-	allowed := quickFieldFlags(field)
-	if !allowed[0] && !allowed[1] && !allowed[2] {
-		quickRelease(chain.nearest, chain.top, field, window, app)
-		return govaultui.QuickTarget{App: name, Window: title, Origin: chain.origin}
-	}
-	t := &quickAXTarget{
-		pid: pid, browser: browser, app: app, window: window, field: field,
-		windowRole: windowRole, webArea: chain.nearest, topArea: chain.top, origin: chain.origin,
-	}
+	title, origin := quickCaptureContext(pid, quickSupportedBrowsers[bundle])
 	return govaultui.QuickTarget{
-		App: name, Window: title, Origin: chain.origin,
-		Fill: t.fill, Close: t.close,
-		CanFill: func(field govaultui.QuickField) bool {
-			return quickFieldAllowed(allowed, field)
+		App: name, Window: title, Origin: origin,
+		Fill: func(user, password string, tab bool) error {
+			return quickFill(pid, bundle, user, password, tab)
 		},
 	}
 }
 
-func (t *quickAXTarget) fill(field govaultui.QuickField, value string) error {
-	if value == "" {
-		return errQuickTargetUnavailable
+// quickAutofillAvailable reports whether macOS lets this process post the
+// synthetic key events autofill needs. It never prompts; Accessibility is not
+// required because origin and window are suggestions, not a gate.
+func quickAutofillAvailable() bool {
+	if err := initQuickAccessTarget(); err != nil {
+		return false
 	}
-	t.mu.Lock()
-	defer t.mu.Unlock()
-	if t.closed || t.app == 0 {
-		return errQuickTargetUnavailable
-	}
-	if err := initQuickAccessTarget(); err != nil || !quickAX.processTrusted() {
-		return errQuickTargetUnavailable
-	}
+	return quickCG.preflightPostEvent()
+}
 
-	// Every retained AX object must still belong to the captured process and
-	// the application must still report it as its focused element.
-	for _, el := range []uintptr{t.app, t.window, t.field} {
-		var elPID int32
-		if el == 0 || quickAX.elementPID(el, &elPID) != 0 || elPID != t.pid {
-			return errQuickTargetChanged
+type quickFillStep struct {
+	text string
+	tab  bool
+}
+
+// quickFillSteps is the one place that decides what a fill types: a single
+// field takes the first value, a login pair takes username, Tab, password.
+func quickFillSteps(user, password string, tab bool) ([]quickFillStep, error) {
+	if tab {
+		if user == "" || password == "" {
+			return nil, errQuickTargetUnavailable
+		}
+		return []quickFillStep{{text: user}, {tab: true}, {text: password}}, nil
+	}
+	if user == "" {
+		return nil, errQuickTargetUnavailable
+	}
+	return []quickFillStep{{text: user}}, nil
+}
+
+// quickTextSafe rejects ASCII C0 controls and DEL, notably CR, LF and Tab:
+// no value may submit the form or trigger a shortcut. It scans the UTF-8 bytes
+// in place, so no extra string copy is made.
+func quickTextSafe(s string) bool {
+	for i := range s {
+		if b := s[i]; b < 0x20 || b == 0x7f {
+			return false
 		}
 	}
-	if role, ok := quickAttrString(t.window, quickAttr.role); !ok || role != t.windowRole {
-		return errQuickTargetChanged
-	}
+	return true
+}
 
-	chain, walkOK := quickWebChainOf(t.field)
-	if !walkOK {
-		return errQuickTargetChanged
-	}
-	sameWindow := chain.window != 0 && quickCF.equal(chain.window, t.window)
-	web := chain.nearest != 0
-	sameWeb := !t.browser && !web
-	if t.browser {
-		sameWeb = web && chain.origin != "" && chain.origin == t.origin &&
-			t.webArea != 0 && t.topArea != 0 &&
-			quickCF.equal(chain.nearest, t.webArea) && quickCF.equal(chain.top, t.topArea)
-	}
-	quickRelease(chain.window, chain.nearest, chain.top)
-	if !sameWindow || !sameWeb {
-		return errQuickTargetChanged
-	}
+// quickTargetFrontmost is the target guard: the captured process must still be
+// the frontmost application and must not be GoVault itself or a blocked app.
+func quickTargetFrontmost(capturedPID int32, capturedBundle string, frontPID int32, frontBundle string) bool {
+	return capturedPID > 0 && frontPID == capturedPID && frontBundle == capturedBundle &&
+		frontPID != int32(os.Getpid()) && !quickBlockedApps[capturedBundle]
+}
 
-	// Keep the final focus check as close to the write as possible.
-	if !quickAppFocus(t.pid, t.app, t.window, t.field) ||
-		!quickFieldAllowed(quickFieldFlags(t.field), field) {
-		return errQuickTargetChanged
-	}
+// Injectable send seams: tests replace these to record a plan, production uses
+// the CoreGraphics writer below.
+var (
+	quickDeliverText = quickPostText
+	quickDeliverTab  = quickPostTab
+)
 
-	cfValue := quickNewCFString(value)
-	if cfValue == 0 {
-		return errQuickTargetUnavailable
+// quickFill types the credential through the captured process. The frontmost
+// PID and bundle are re-checked before every phase, including after Tab; any
+// change aborts without sending the remaining value.
+func quickFill(pid int32, bundle, user, password string, tab bool) error {
+	steps, err := quickFillSteps(user, password, tab)
+	if err != nil {
+		return err
 	}
-	code := quickAX.setAttribute(t.field, quickAttr.value, cfValue)
-	quickCF.release(cfValue)
-	if code != 0 {
-		return errQuickTargetUnavailable
+	// Validate the whole plan before the first event: a line break or control
+	// character could submit the form or trigger a shortcut.
+	for _, step := range steps {
+		if !step.tab && !quickTextSafe(step.text) {
+			return errQuickValueRejected
+		}
+	}
+	if err := initQuickAccessTarget(); err != nil {
+		return errQuickAccessUnavailable
+	}
+	if !quickAutofillAvailable() {
+		return errQuickAccessPermission
+	}
+	for _, step := range steps {
+		if err := quickGuardFront(pid, bundle); err != nil {
+			return err
+		}
+		if step.tab {
+			if err := quickTabAndWait(pid, bundle); err != nil {
+				return err
+			}
+			if err := quickGuardFront(pid, bundle); err != nil {
+				return err
+			}
+			continue
+		}
+		if err := quickDeliverText(pid, step.text); err != nil {
+			return err
+		}
 	}
 	return nil
 }
 
-func (t *quickAXTarget) close() {
-	t.mu.Lock()
-	defer t.mu.Unlock()
-	if t.closed {
-		return
+func quickGuardFront(pid int32, bundle string) error {
+	front, frontBundle, _, ok := quickFrontmostApp()
+	if !ok || !quickTargetFrontmost(pid, bundle, front, frontBundle) {
+		return errQuickTargetChanged
 	}
-	t.closed = true
-	quickRelease(t.webArea, t.topArea, t.field, t.window, t.app)
-	t.webArea, t.topArea, t.field, t.window, t.app = 0, 0, 0, 0, 0
+	return nil
+}
+
+// quickTabAndWait posts Tab to the captured process, then gives the app a
+// chance to move focus before the password is sent. If Accessibility could
+// read the focused element before and still reports the same one afterwards,
+// the fill fails instead of typing the password over the username. When focus
+// is unreadable, the short fallback delay keeps the original blind Tab fill.
+func quickTabAndWait(pid int32, bundle string) error {
+	var app, before uintptr
+	if quickAX.processTrusted() {
+		app = quickAX.createApplication(pid)
+		if app != 0 && quickAX.setTimeout(app, quickAXTimeout) == 0 {
+			before, _ = quickCopyAttribute(app, quickAttr.focusedUIElement)
+		}
+	}
+	defer func() { quickRelease(before, app) }()
+
+	// The AX pre-read above may take a moment, so re-guard as close to the
+	// Tab post as possible.
+	if err := quickGuardFront(pid, bundle); err != nil {
+		return err
+	}
+	if err := quickDeliverTab(pid); err != nil {
+		return err
+	}
+	if before == 0 {
+		time.Sleep(quickTabFallback)
+		return nil
+	}
+	readSucceeded := false
+	for deadline := time.Now().Add(quickTabWait); time.Now().Before(deadline); time.Sleep(quickTabPoll) {
+		cur, code := quickCopyAttribute(app, quickAttr.focusedUIElement)
+		if code != 0 {
+			continue
+		}
+		readSucceeded = true
+		moved := !quickCF.equal(cur, before)
+		quickCF.release(cur)
+		if moved {
+			return nil
+		}
+	}
+	return quickTabVerdict(before != 0, readSucceeded)
+}
+
+// quickTabVerdict is the post-Tab decision: a focus read before Tab that still
+// succeeds and stays unchanged means the password would overwrite the
+// username, so abort with a static error. Unreadable focus is not a gate.
+func quickTabVerdict(readable, readSucceeded bool) error {
+	if readable && readSucceeded {
+		return errQuickTargetChanged
+	}
+	return nil
+}
+
+// quickPostText types s as CoreGraphics Unicode key events delivered to the
+// captured process. No key code mapping, clipboard or Return is involved.
+func quickPostText(pid int32, s string) error {
+	units := utf16.Encode([]rune(s))
+	if len(units) == 0 {
+		return errQuickTargetUnavailable
+	}
+	for len(units) > 0 {
+		n := min(len(units), quickUnicodeChunk)
+		// Never split a surrogate pair across two events.
+		if n < len(units) && units[n-1] >= 0xD800 && units[n-1] <= 0xDBFF &&
+			units[n] >= 0xDC00 && units[n] <= 0xDFFF {
+			n++
+		}
+		if err := quickPostUnits(pid, units[:n]); err != nil {
+			return err
+		}
+		units = units[n:]
+	}
+	return nil
+}
+
+func quickPostUnits(pid int32, units []uint16) error {
+	event := quickCG.eventCreateKeyboard(0, 0, true)
+	if event == 0 {
+		return errQuickAccessUnavailable
+	}
+	quickCG.eventSetUnicode(event, uint64(len(units)), &units[0])
+	quickCG.eventPostToPid(pid, event)
+	quickCF.release(event)
+	runtime.KeepAlive(units)
+	return nil
+}
+
+func quickPostTab(pid int32) error {
+	for _, down := range []bool{true, false} {
+		event := quickCG.eventCreateKeyboard(0, quickKeyTab, down)
+		if event == 0 {
+			return errQuickAccessUnavailable
+		}
+		quickCG.eventPostToPid(pid, event)
+		quickCF.release(event)
+	}
+	return nil
 }

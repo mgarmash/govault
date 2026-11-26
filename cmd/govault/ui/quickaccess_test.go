@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"errors"
 	"strings"
 	"sync/atomic"
 	"testing"
@@ -10,6 +11,36 @@ import (
 	"github.com/nsgo-dev/nsgo/nsgotest"
 	"github.com/txchen/govault/internal/vaultcore/state"
 )
+
+type quickFillCall struct {
+	user, password string
+	tab            bool
+}
+
+func startQuickPanel(t *testing.T, svc *mockVaultService, target QuickTarget, dismiss func(), prepare func(*AppModel)) *nsgotest.App {
+	t.Helper()
+	return nsgotest.Start(t, func(cx *core.Scope) core.Node {
+		m := NewAppModel(cx, svc, PlatformHooks{
+			CopySecret: func(string, time.Duration) (bool, error) { return true, nil },
+			CopyPlain:  func(string) {},
+		})
+		if prepare != nil {
+			prepare(m)
+		}
+		return QuickAccessView(cx, m, target, dismiss)
+	}, nsgotest.Size(640, 520))
+}
+
+func takeQuickFill(t *testing.T, calls <-chan quickFillCall) quickFillCall {
+	t.Helper()
+	select {
+	case call := <-calls:
+		return call
+	case <-time.After(2 * time.Second):
+		t.Fatal("the target was not filled")
+		return quickFillCall{}
+	}
+}
 
 func TestQuickWebOriginStrictHTTPS(t *testing.T) {
 	cases := []struct{ raw, want string }{
@@ -43,7 +74,7 @@ func TestQuickWebOriginStrictHTTPS(t *testing.T) {
 	never := 5
 	record := &state.Cipher{Login: &state.Login{URIs: []state.LoginURI{{URI: origin, Match: &never}}}}
 	if quickMatchesOrigin(origin, quickLoginURIs(record)) {
-		t.Fatal("Never match URI authorized a fill")
+		t.Fatal("Never match URI matched")
 	}
 
 	list := []state.CipherSummary{
@@ -55,65 +86,140 @@ func TestQuickWebOriginStrictHTTPS(t *testing.T) {
 	}
 }
 
-func TestQuickAccessWrongOriginKeepsCopyOnly(t *testing.T) {
+func TestQuickAccessEnterFillsLoginPair(t *testing.T) {
 	svc := newMockVaultService(state.StatusUnlocked)
-	var fills, dismissed atomic.Int32
+	var dismissed atomic.Int32
+	calls := make(chan quickFillCall, 1)
 	target := QuickTarget{
-		App: "Safari", Window: "Evil", Origin: "https://evil.example",
-		Fill: func(QuickField, string) error { fills.Add(1); return nil },
+		App: "Safari", Window: "GitHub", Origin: "https://github.com",
+		Fill: func(user, password string, tab bool) error {
+			calls <- quickFillCall{user: user, password: password, tab: tab}
+			return nil
+		},
 	}
-	app := nsgotest.Start(t, func(cx *core.Scope) core.Node {
-		hooks := PlatformHooks{
-			CopySecret: func(string, time.Duration) (bool, error) { return true, nil },
-			CopyPlain:  func(string) {},
-		}
-		return QuickAccessView(cx, NewAppModel(cx, svc, hooks), target, func() { dismissed.Add(1) })
-	}, nsgotest.Size(640, 520))
-
+	app := startQuickPanel(t, svc, target, func() { dismissed.Add(1) }, nil)
 	app.WaitFor("id:quick-fill-password", 2*time.Second)
-	if !strings.Contains(app.Find("id:quick-target").Text, "https://evil.example") {
-		t.Fatalf("target line %q does not show the origin", app.Find("id:quick-target").Text)
+	app.Focus("id:quick-search")
+	app.Key("enter")
+
+	call := takeQuickFill(t, calls)
+	if call.user != "alice@example.com" || call.password != "gh-secret-password" || !call.tab {
+		t.Fatal("Enter did not fill the username/password pair with a Tab")
 	}
+	app.WaitUntil(2*time.Second, func() bool { return dismissed.Load() == 1 })
+	select {
+	case <-calls:
+		t.Fatal("Enter filled the target twice")
+	default:
+	}
+}
+
+func TestQuickAccessShiftEnterFillsPassword(t *testing.T) {
+	svc := newMockVaultService(state.StatusUnlocked)
+	calls := make(chan quickFillCall, 1)
+	target := QuickTarget{
+		App: "Safari", Window: "GitHub", Origin: "https://github.com",
+		Fill: func(user, password string, tab bool) error {
+			calls <- quickFillCall{user: user, password: password, tab: tab}
+			return nil
+		},
+	}
+	app := startQuickPanel(t, svc, target, func() {}, nil)
+	app.WaitFor("id:quick-fill-password", 2*time.Second)
+	app.Focus("id:quick-search")
+	app.Key("shift+enter")
+
+	call := takeQuickFill(t, calls)
+	if call.user != "" || call.password != "gh-secret-password" || call.tab {
+		t.Fatal("Shift+Enter did not fill only the password")
+	}
+}
+
+func TestQuickAccessEnterPasswordOnlyWithoutUsername(t *testing.T) {
+	svc := newMockVaultService(state.StatusUnlocked)
+	svc.ciphers["c-github"].Login.Username = ""
+	calls := make(chan quickFillCall, 1)
+	target := QuickTarget{
+		App: "Safari", Window: "GitHub", Origin: "https://github.com",
+		Fill: func(user, password string, tab bool) error {
+			calls <- quickFillCall{user: user, password: password, tab: tab}
+			return nil
+		},
+	}
+	app := startQuickPanel(t, svc, target, func() {}, nil)
+	app.WaitFor("id:quick-fill-password", 2*time.Second)
+	app.Focus("id:quick-search")
+	app.Key("enter")
+
+	call := takeQuickFill(t, calls)
+	if call.user != "gh-secret-password" || call.password != "" || call.tab {
+		t.Fatal("Enter with no username did not fill only the password")
+	}
+}
+
+func TestQuickAccessModifiersFillSingleFields(t *testing.T) {
+	cases := []struct {
+		name  string
+		key   string
+		check func(quickFillCall) bool
+	}{
+		{"username", "mod+1", func(c quickFillCall) bool {
+			return c.user == "alice@example.com" && c.password == "" && !c.tab
+		}},
+		{"password", "mod+2", func(c quickFillCall) bool {
+			return c.user == "gh-secret-password" && c.password == "" && !c.tab
+		}},
+		{"totp", "mod+3", func(c quickFillCall) bool {
+			digits := c.user != "" && strings.IndexFunc(c.user, func(r rune) bool { return r < '0' || r > '9' }) < 0
+			return digits && c.password == "" && !c.tab
+		}},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			svc := newMockVaultService(state.StatusUnlocked)
+			calls := make(chan quickFillCall, 1)
+			target := QuickTarget{
+				App: "Safari", Window: "GitHub", Origin: "https://github.com",
+				Fill: func(user, password string, tab bool) error {
+					calls <- quickFillCall{user: user, password: password, tab: tab}
+					return nil
+				},
+			}
+			app := startQuickPanel(t, svc, target, func() {}, nil)
+			app.WaitFor("id:quick-fill-password", 2*time.Second)
+			app.Focus("id:quick-search")
+			app.Key(tc.key)
+
+			if call := takeQuickFill(t, calls); !tc.check(call) {
+				t.Fatalf("%s did not fill its single field", tc.name)
+			}
+		})
+	}
+}
+
+func TestQuickAccessDeniedFillKeepsCopy(t *testing.T) {
+	svc := newMockVaultService(state.StatusUnlocked)
+	var dismissed atomic.Int32
+	var fills atomic.Int32
+	target := QuickTarget{
+		App: "Safari", Window: "GitHub", Origin: "https://github.com",
+		Fill: func(string, string, bool) error { fills.Add(1); return nil },
+	}
+	app := startQuickPanel(t, svc, target, func() { dismissed.Add(1) }, func(m *AppModel) {
+		m.QuickAccessPermission = func() bool { return false }
+	})
+	app.WaitFor("id:quick-fill-password", 2*time.Second)
 	if !app.Find("id:quick-fill-password").Props.Disabled {
-		t.Fatal("fill password is enabled for a non-matching origin")
+		t.Fatal("fill password is enabled without the platform permission")
 	}
 	if app.Find("id:quick-copy-password").Props.Disabled {
-		t.Fatal("copy password is disabled for a non-matching origin")
+		t.Fatal("copy password is disabled without the platform permission")
 	}
+	app.Find("id:quick-accessibility-settings")
 	app.Press("id:quick-copy-password")
 	app.WaitUntil(2*time.Second, func() bool { return dismissed.Load() == 1 })
 	if fills.Load() != 0 {
 		t.Fatal("a copy filled the destination")
-	}
-}
-
-func TestQuickAccessNativeFillConfirmsFirst(t *testing.T) {
-	svc := newMockVaultService(state.StatusUnlocked)
-	var dismissed atomic.Int32
-	filled := make(chan QuickField, 1)
-	value := make(chan string, 1)
-	target := QuickTarget{
-		App: "Slack", Window: "#general",
-		Fill: func(f QuickField, v string) error { filled <- f; value <- v; return nil },
-	}
-	app := nsgotest.Start(t, func(cx *core.Scope) core.Node {
-		return QuickAccessView(cx, NewAppModel(cx, svc, PlatformHooks{}), target, func() { dismissed.Add(1) })
-	}, nsgotest.Size(640, 520))
-
-	app.Press("id:quick-fill-password")
-	app.WaitFor("id:quick-fill-confirm", 2*time.Second)
-	select {
-	case <-filled:
-		t.Fatal("native fill happened before confirmation")
-	default:
-	}
-	app.Press("id:quick-fill-confirm-action")
-	app.WaitUntil(2*time.Second, func() bool { return dismissed.Load() == 1 })
-	if f := <-filled; f != QuickPassword {
-		t.Fatalf("filled %v, want password", f)
-	}
-	if v := <-value; v != "gh-secret-password" {
-		t.Fatalf("filled %q", v)
 	}
 }
 
@@ -122,12 +228,9 @@ func TestQuickAccessHiddenPasswordOffersNoSecretActions(t *testing.T) {
 	svc.ciphers["c-github"].HidePassword = true
 	target := QuickTarget{
 		App: "Safari", Window: "GitHub", Origin: "https://github.com",
-		Fill: func(QuickField, string) error { return nil },
+		Fill: func(string, string, bool) error { return nil },
 	}
-	app := nsgotest.Start(t, func(cx *core.Scope) core.Node {
-		return QuickAccessView(cx, NewAppModel(cx, svc, PlatformHooks{}), target, func() {})
-	}, nsgotest.Size(640, 520))
-
+	app := startQuickPanel(t, svc, target, func() {}, nil)
 	app.WaitFor("id:quick-fill-password", 2*time.Second)
 	if !app.Find("id:quick-fill-password").Props.Disabled {
 		t.Fatal("fill password is enabled for a hidden password")
@@ -141,25 +244,30 @@ func TestQuickAccessHiddenPasswordOffersNoSecretActions(t *testing.T) {
 	app.Find("id:quick-action-note")
 }
 
-func TestQuickAccessFieldHintAndMalformedOrigin(t *testing.T) {
-	qa := &quickAccess{
-		native: false, origin: "https://github.com", originOK: true,
-		target: QuickTarget{
-			App: "Safari", Window: "GitHub",
-			Fill:    func(QuickField, string) error { return nil },
-			CanFill: func(f QuickField) bool { return f == QuickUsername },
-		},
-	}
-	f := quickFacts{Valid: true, HasUsername: true, HasPassword: true, HasTOTP: true, OriginOK: true}
-	if qa.fillAllowed(f, QuickPassword) || qa.fillAllowed(f, QuickTOTP) {
-		t.Fatal("a field the adapter refuses is offered")
-	}
-	if !qa.fillAllowed(f, QuickUsername) {
-		t.Fatal("the adapter's allowed field is not offered")
-	}
-	qa.originOK = false // a malformed adapter origin
-	if qa.fillAllowed(f, QuickUsername) {
-		t.Fatal("fill is offered with a malformed origin")
+func TestQuickAccessShowsDestinationError(t *testing.T) {
+	svc := newMockVaultService(state.StatusUnlocked)
+	var model *AppModel
+	var scope *core.Scope
+	var notice *core.Signal[string]
+	app := nsgotest.Start(t, func(cx *core.Scope) core.Node {
+		scope = cx
+		model = NewAppModel(cx, svc, PlatformHooks{})
+		return core.Text{Content: "main"}
+	}, nsgotest.Size(640, 520))
+
+	app.Post(func() {
+		notice = core.NewSignal(scope, "")
+		qa := &quickAccess{
+			m: model, permitted: true, notice: notice,
+			target: QuickTarget{App: "Slack", Window: "#general", Fill: func(string, string, bool) error {
+				return errors.New("quick access: target changed")
+			}},
+		}
+		qa.fillValue("c-github", QuickPassword, model.LockGeneration(), true)
+	})
+	app.Settle()
+	if got := notice.Get(); !strings.Contains(got, "target changed") {
+		t.Fatalf("notice = %q, want the target's static error", got)
 	}
 }
 
@@ -176,8 +284,11 @@ func TestQuickAccessFillRechecksLockAndReportsDenial(t *testing.T) {
 
 	app.Post(func() {
 		qa := &quickAccess{
-			m: model, native: true, originOK: true,
-			target: QuickTarget{App: "Slack", Window: "#general", Fill: func(QuickField, string) error { fills.Add(1); return nil }},
+			m: model, permitted: true,
+			target: QuickTarget{App: "Slack", Window: "#general", Fill: func(string, string, bool) error {
+				fills.Add(1)
+				return nil
+			}},
 		}
 		gen := model.LockGeneration()
 		model.RevokePending()
@@ -192,7 +303,7 @@ func TestQuickAccessFillRechecksLockAndReportsDenial(t *testing.T) {
 	app.Post(func() {
 		notice = core.NewSignal(scope, "")
 		qa := &quickAccess{
-			m: model, native: true, originOK: true, notice: notice,
+			m: model, permitted: true, notice: notice,
 			target: QuickTarget{App: "Slack", Window: "#general"},
 		}
 		qa.fillValue("c-github", QuickPassword, model.LockGeneration(), true)

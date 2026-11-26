@@ -85,5 +85,28 @@ func quickAccessSettings(cx *core.Scope, m *AppModel) core.Node {
 				Disabled: func() bool { return m.Prefs.Get().QuickAccessHotKey == defaultQuickAccessHotKey },
 				OnPress:  func() { set(defaultQuickAccessHotKey) }},
 		}},
+		quickAccessPermissionRow(cx, m),
 	))
+}
+
+func quickAccessPermissionRow(cx *core.Scope, m *AppModel) core.Node {
+	if m.QuickAccessPermission == nil {
+		return nil
+	}
+	allowed := core.NewSignal(cx, m.QuickAccessPermission())
+	cx.Effect(func() {
+		_ = cx.Env().Lifecycle()
+		allowed.Set(m.QuickAccessPermission())
+	})
+	return core.Dynamic(func(cx *core.Scope) core.Node {
+		if allowed.Get() {
+			return settingsMetaRow("Autofill · Accessibility", func() string { return "Allowed" })
+		}
+		return settingsRow("Autofill · Accessibility", "Allow GoVault in macOS to type into other apps. Copy works without it.", ui.Button{
+			TestID: "quick-accessibility-settings", Text: "Open macOS Settings…", Variant: ui.ButtonSecondary,
+			OnPress: func() {
+				cx.OpenPermissionSettings(core.PermissionAccessibility, nil)
+			},
+		})
+	})
 }

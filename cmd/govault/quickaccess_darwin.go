@@ -40,11 +40,6 @@ func startQuickAccess(s *DesktopShell) func() {
 		closePanel = dismiss
 		panel = desktop.OpenPanel(app, desktop.PanelOptions{Width: 640, Height: 460, HideOnBlur: true}, func(cx *core.Scope) core.Node {
 			w := desktop.CurrentWindow(cx)
-			cx.Cleanup(func() {
-				if target.Close != nil {
-					target.Close()
-				}
-			})
 			cx.Effect(func() {
 				if w.Visible() && s.model.LockState.Get() == state.StatusUnlocked {
 					return
@@ -59,15 +54,13 @@ func startQuickAccess(s *DesktopShell) func() {
 			return govaultui.QuickAccessView(cx, s.model, target, dismiss)
 		})
 		if panel == nil {
-			if target.Close != nil {
-				target.Close()
-			}
 			closePanel = nil
 			return
 		}
 		panel.Show()
 	}
 	m := s.model
+	m.QuickAccessPermission = quickAutofillAvailable
 	m.QuickAccessRegistration = core.NewSignal[*core.HotKey](app, nil)
 	m.RecordQuickAccessHotKey = core.NewSignal(app, false)
 	key := core.NewMemo(app, func() string { return m.Prefs.Get().QuickAccessHotKey })

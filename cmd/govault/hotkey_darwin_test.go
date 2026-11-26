@@ -30,6 +30,12 @@ func TestHotKeySettingsRebindAndDisable(t *testing.T) {
 	app.Press("id:settings-quick-hotkey-off")
 	app.Find("text:Off")
 	app.Press("id:settings-quick-hotkey-reset")
+	if !quickAutofillAvailable() {
+		app.Press("id:quick-accessibility-settings")
+		if got := app.PermissionSettings; len(got) != 1 || got[0] != core.PermissionAccessibility {
+			t.Fatalf("opened permission settings %v, want Accessibility", got)
+		}
+	}
 	app.Find("text:Active")
 	app.Press("id:settings-quick-hotkey")
 	app.Key("escape")
